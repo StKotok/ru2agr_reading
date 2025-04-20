@@ -68,17 +68,16 @@
 
   <div class="controls">
     <label>Степень замены:
-  <input type="number" id="intensity" value="100" min="0" max="100" step="10" style="width: 60px;">
+  <input type="number" id="intensity" value="100" min="0" max="100" step="10" style="width: 60px;" oninput="transformText()">
   %
 </label>
-    <button onclick="transformText()">Преобразовать</button>
     <button onclick="toggleHighlight()">Подсветка</button>
-    <button onclick="resetText()">Сбросить</button>
+    <button onclick="resetText()">↻</button>
     <button onclick="copyOutput()">📋</button>
   </div>
 
   <div class="dual-column">
-    <textarea id="inputText" class="half" placeholder="Введите текст на русском:" oninput="originalText=''"></textarea>
+    <textarea id="inputText" class="half" placeholder="Введите текст на русском:" oninput="originalText=''; transformText()"></textarea>
     <div class="output half" id="output" aria-label="Древнегреческое чтение:"></div>
   </div>
 
@@ -203,9 +202,9 @@
     }
 
     function resetText() {
-      document.getElementById("inputText").value = originalText;
-      transformText();
-    }
+  document.getElementById("inputText").value = originalText;
+  transformText();
+}
 
     function copyOutput() {
       const output = document.getElementById("output");
