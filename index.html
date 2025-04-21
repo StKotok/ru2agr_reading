@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Russian → Ancient Greek Reading Trainer</title>
+  <title>Тренажер чтения Русский → Древнегреческий</title>
   <style>
     body {
       font-family: sans-serif;
@@ -71,9 +71,9 @@
   <input type="number" id="intensity" value="100" min="0" max="100" step="10" style="width: 60px;" oninput="transformText()">
   %
 </label>
-    <button onclick="toggleHighlight()">Подсветка</button>
-    <button onclick="resetText()">↻</button>
-    <button onclick="copyOutput()">📋</button>
+    <button onclick="toggleHighlight()" title="Включить/Отключить подсветку">Подсветка</button>
+    <button onclick="resetText()" title="Обновить результат">↻</button>
+    <button onclick="copyOutput()" title="Скопировать результат в буфер обмена">📋</button>
   </div>
 
   <div class="dual-column">
