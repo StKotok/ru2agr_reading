@@ -6,27 +6,50 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h1>Russian → Ancient Greek Reading Trainer</h1>
+<header class="header">
+  <h1>Russian → Ancient Greek Trainer</h1>
+  <button id="themeToggle" title="Сменить тему">🌙</button>
+</header>
 
-<div class="controls">
-  <label>Степень замены:
-    <input type="number" id="intensity" value="100" min="0" max="100" step="10" style="width: 60px;" oninput="updateOutput()">
-    %
-  </label>
-  <button onclick="toggleHighlight()">Подсветка</button>
-  <button onclick="resetText()">↻</button>
-  <button onclick="copyOutput()">📋</button>
-</div>
+<div class="main-container" id="mainContainer">
 
-<div class="dual-column">
-  <textarea id="inputText" class="half" placeholder="Введите текст на русском:" oninput="updateOutput()"></textarea>
-  <div class="output-wrapper half">
-    <button class="copy-button" onclick="copyOutput()" title="Скопировать результат в буфер обмена">📋</button>
-    <div class="output" id="output" aria-label="Транслитерация:"></div>
+  <!-- Центрированный блок "Степень замены" -->
+  <div class="replace-controls-floating">
+    <label>Степень замены:
+      <input type="number" id="intensity" value="100" min="0" max="100" step="10">%
+    </label>
+  </div>
+
+  <!-- левая зона -->
+  <div class="input-container half">
+    <div class="input-controls">
+      <button class="collapse-button" id="collapseInputBtn">🔽</button>
+      <button class="clear-button" title="Очистить текст">🧹</button>
+    </div>
+    <div class="input-wrapper" id="inputWrapper">
+      <textarea id="inputText" placeholder="Введите текст..."></textarea>
+    </div>
+  </div>
+
+  <!-- ресайзер + степень замены -->
+  <div class="resizer-container">
+    <div class="vertical-resizer" id="verticalResizer"></div>
+  </div>
+
+  <!-- правая зона -->
+  <div class="output-container half">
+    <div class="output-controls">
+      <button class="highlight-button" title="Подсветка">💡</button>
+      <button class="copy-button" title="Копировать">📋</button>
+    </div>
+    <div class="output-wrapper">
+      <div id="output" class="output" aria-label="Результат"></div>
+    </div>
   </div>
 </div>
 
-<script src="text-converter.js"></script>
-<script src="ui.js"></script>
+<div class="horizontal-resizer" id="horizontalResizer"></div>
+
+<script type="module" src="ui.js"></script>
 </body>
 </html>
