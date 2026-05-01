@@ -2,7 +2,7 @@
   --bg: #f8f9fa;
   --text: #222;
   --border: #ccc;
-  --highlight: #ffe08a;
+  --highlight: rgb(255 243 0 / 0.35);
   --btn-bg: #fff;
   --btn-hover: #eee;
 }
@@ -10,7 +10,7 @@ body.dark-mode {
   --bg: #121212;
   --text: #eee;
   --border: #333;
-  --highlight: #604a00;
+  --highlight: rgb(255 243 0 / 0.3);
   --btn-bg: #333;
   --btn-hover: #444;
 }
@@ -114,7 +114,7 @@ textarea {
 .output span:hover::before {
   content: attr(data-original);
   position: absolute;
-  top: -1.2em;
+  top: -2.0em;
   left: 0;
   padding: 0.2em 0.4em;
   border: 1px solid var(--border);
@@ -160,20 +160,20 @@ textarea {
   cursor: row-resize;
 }
 
-.replace-controls-floating {
-  position: absolute;
-  top: 3.5em;
-  left: 50%;
-  transform: translateX(-50%);
+.replace-controls-slider {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 10px;
+  padding: 0.5em 1em;
   background: var(--bg);
   border: 1px solid var(--border);
-  padding: 0.3em 0.6em;
-  font-size: 0.9em;
-  z-index: 100;
-  pointer-events: auto; /* можно поставить none, если нужно только для отображения */
-  white-space: nowrap;
   border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.replace-controls-slider input[type="range"] {
+  flex: 1;
+  max-width: 300px;
+  cursor: pointer;
 }
 
 /* --- Новые стили для Layout и Sidebar --- */

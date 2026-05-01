@@ -93,8 +93,7 @@ function updateOutput() {
     .filter(r => r.enabled)
     .sort((a, b) => b.ru.length - a.ru.length);
 
-  const result = converter.convert(inputElem.value, enabledRules, intensity, highlight);
-  document.getElementById("output").innerHTML = result;
+  document.getElementById("output").innerHTML = converter.convert(inputElem.value, enabledRules, intensity, highlight);
   
   clearTimeout(typeTimeout);
   typeTimeout = setTimeout(() => {
@@ -171,7 +170,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Bind Events
   inputElem.addEventListener('input', updateOutput);
-  intensityElem.addEventListener('input', updateOutput);
+  intensityElem.addEventListener('input', (e) => {
+    document.getElementById("intensityVal").innerText = e.target.value;
+    updateOutput();
+  });
   themeToggle.addEventListener('click', toggleTheme);
   highlightBtn.addEventListener('click', toggleHighlight);
   copyBtn.addEventListener('click', copyOutput);

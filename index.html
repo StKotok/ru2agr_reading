@@ -18,16 +18,14 @@
   </div>
 </header>
 
+<div class="replace-controls-slider">
+  <label for="intensity">Степень замены: <span id="intensityVal">100</span>%</label>
+  <input type="range" id="intensity" value="100" min="0" max="100" step="10">
+</div>
+
 <div class="layout-container">
   <div class="main-column">
     <div class="main-container" id="mainContainer">
-      <!-- Центрированный блок "Степень замены" -->
-      <div class="replace-controls-floating">
-        <label>Степень замены:
-          <input type="number" id="intensity" value="100" min="0" max="100" step="10">%
-        </label>
-      </div>
-
       <!-- левая зона -->
       <div class="input-container half">
         <div class="input-controls">
@@ -39,7 +37,7 @@
           </div>
         </div>
         <div class="input-wrapper" id="inputWrapper">
-          <textarea id="inputText" placeholder="Введите текст..."></textarea>
+          <textarea id="inputText" placeholder="Введите текст..." aria-label="Текст для преобразования"></textarea>
         </div>
       </div>
 
@@ -71,8 +69,8 @@
     </div>
     <div class="sidebar-content">
       <div class="add-rule-form">
-        <input type="text" id="newRuleRu" placeholder="Рус (напр. кс)">
-        <input type="text" id="newRuleGr" placeholder="Греч (напр. ξ)">
+        <input type="text" id="newRuleRu" placeholder="Рус (напр. кс)" aria-label="Новое правило: Русский текст">
+        <input type="text" id="newRuleGr" placeholder="Греч (напр. ξ)" aria-label="Новое правило: Греческий текст">
         <button id="addRuleBtn">➕</button>
       </div>
       <div class="rules-header">
