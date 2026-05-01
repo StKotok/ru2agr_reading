@@ -2,54 +2,99 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Тренажер чтения</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#222222">
+  <link rel="apple-touch-icon" href="icon.svg">
 </head>
 <body>
 <header class="header">
   <h1>Russian → Ancient Greek Trainer</h1>
-  <button id="themeToggle" title="Сменить тему">🌙</button>
+  <div class="header-controls">
+    <button id="themeToggle" title="Сменить тему">🌙</button>
+    <button id="settingsToggle" title="Настройки">⚙️</button>
+  </div>
 </header>
 
-<div class="main-container" id="mainContainer">
+<div class="layout-container">
+  <div class="main-container" id="mainContainer">
+    <!-- Центрированный блок "Степень замены" -->
+    <div class="replace-controls-floating">
+      <label>Степень замены:
+        <input type="number" id="intensity" value="100" min="0" max="100" step="10">%
+      </label>
+    </div>
 
-  <!-- Центрированный блок "Степень замены" -->
-  <div class="replace-controls-floating">
-    <label>Степень замены:
-      <input type="number" id="intensity" value="100" min="0" max="100" step="10">%
-    </label>
+    <!-- левая зона -->
+    <div class="input-container half">
+      <div class="input-controls">
+        <button class="collapse-button" id="collapseInputBtn">🔽</button>
+        <div class="file-and-clear">
+          <label for="fileInput" class="file-label btn-like" title="Загрузить файл (.txt, .md)">📄</label>
+          <input type="file" id="fileInput" accept=".txt,.md" style="display:none">
+          <button class="clear-button" title="Очистить текст">🧹</button>
+        </div>
+      </div>
+      <div class="input-wrapper" id="inputWrapper">
+        <textarea id="inputText" placeholder="Введите текст..."></textarea>
+      </div>
+    </div>
+
+    <!-- ресайзер -->
+    <div class="resizer-container">
+      <div class="vertical-resizer" id="verticalResizer"></div>
+    </div>
+
+    <!-- правая зона -->
+    <div class="output-container half">
+      <div class="output-controls">
+        <button class="highlight-button" title="Подсветка">💡</button>
+        <button class="copy-button" title="Копировать">📋</button>
+      </div>
+      <div class="output-wrapper" id="outputWrapper">
+        <div id="output" class="output" aria-label="Результат"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- левая зона -->
-  <div class="input-container half">
-    <div class="input-controls">
-      <button class="collapse-button" id="collapseInputBtn">🔽</button>
-      <button class="clear-button" title="Очистить текст">🧹</button>
-    </div>
-    <div class="input-wrapper" id="inputWrapper">
-      <textarea id="inputText" placeholder="Введите текст..."></textarea>
-    </div>
-  </div>
+  <div class="horizontal-resizer" id="horizontalResizer"></div>
 
-  <!-- ресайзер + степень замены -->
-  <div class="resizer-container">
-    <div class="vertical-resizer" id="verticalResizer"></div>
-  </div>
-
-  <!-- правая зона -->
-  <div class="output-container half">
-    <div class="output-controls">
-      <button class="highlight-button" title="Подсветка">💡</button>
-      <button class="copy-button" title="Копировать">📋</button>
+  <!-- Боковая панель настроек -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Правила</h2>
+      <button id="closeSidebarBtn" title="Закрыть">✖</button>
     </div>
-    <div class="output-wrapper">
-      <div id="output" class="output" aria-label="Результат"></div>
+    <div class="sidebar-content">
+      <div class="add-rule-form">
+        <input type="text" id="newRuleRu" placeholder="Рус (напр. кс)">
+        <input type="text" id="newRuleGr" placeholder="Греч (напр. ξ)">
+        <button id="addRuleBtn">➕</button>
+      </div>
+      <div class="rules-header">
+        <span>Комбинация</span>
+        <span title="Включено">Вкл</span>
+        <span title="Всегда заменять (игнорирует ползунок)">100%</span>
+        <span></span>
+      </div>
+      <div class="rules-list" id="rulesList">
+        <!-- Rules injected via JS -->
+      </div>
     </div>
-  </div>
+  </aside>
 </div>
 
-<div class="horizontal-resizer" id="horizontalResizer"></div>
-
 <script type="module" src="ui.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.warn('SW registration failed: ', err);
+      });
+    });
+  }
+</script>
 </body>
 </html>

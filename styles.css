@@ -54,6 +54,7 @@ button:hover {
   min-height: 10em;
   height: 30em;
   transition: height 0.2s;
+  position: relative;
 }
 
 .input-container,
@@ -179,4 +180,171 @@ textarea {
   white-space: nowrap;
   border-radius: 4px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* --- Новые стили для Layout и Sidebar --- */
+
+.layout-container {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  border: 1px solid var(--border);
+  min-height: 10em;
+  height: 30em;
+  transition: height 0.2s;
+  position: relative;
+}
+
+.header-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-like {
+  background: var(--btn-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.3em 0.6em;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 13.3333px; /* чтобы совпадало с кнопками */
+}
+.btn-like:hover {
+  background: var(--btn-hover);
+}
+
+.file-and-clear {
+  display: flex;
+  gap: 5px;
+}
+
+.sidebar {
+  width: 300px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: none; /* скрыт по умолчанию */
+  flex-direction: column;
+  height: 30em; /* как у main-container */
+}
+.sidebar.open {
+  display: flex;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.sidebar-content {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.add-rule-form {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+.add-rule-form input {
+  width: 40%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 4px;
+}
+.add-rule-form button {
+  width: 20%;
+}
+
+.rules-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+.rules-header span:first-child { flex: 1; }
+.rules-header span:nth-child(2), .rules-header span:nth-child(3) { width: 40px; text-align: center; }
+.rules-header span:last-child { width: 30px; }
+
+.rule-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.rule-item:last-child {
+  border-bottom: none;
+}
+.rule-text {
+  flex: 1;
+  font-family: monospace;
+  font-size: 1.1em;
+}
+.rule-checkboxes {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.rule-checkboxes label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.rule-checkboxes input {
+  cursor: pointer;
+}
+.delete-rule-btn {
+  background: transparent;
+  border: none;
+  color: #ff4444;
+  font-size: 1.2em;
+  padding: 0 5px;
+}
+.delete-rule-btn:hover {
+  background: rgba(255,0,0,0.1);
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+  .main-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 80vh;
+  }
+  .vertical-resizer {
+    display: none;
+  }
+  .input-container, .output-container {
+    flex-basis: auto !important;
+    min-height: 40vh;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+  }
+  .horizontal-resizer {
+    display: none;
+  }
 }

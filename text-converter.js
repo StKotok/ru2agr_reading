@@ -1,47 +1,86 @@
 export class TextConverter {
-  constructor(substitutions) {
-    this.substitutions = [...substitutions].sort((a, b) => b.ru.length - a.ru.length);
+  constructor() {
+    this.escapeHTML = (str) => {
+      return str.replace(/[&<>"']/g, function(m) {
+        switch (m) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#039;';
+        }
+      });
+    };
   }
 
-  convert(input, intensity = 100, highlight = true) {
+  convert(input, rules, intensity = 100, highlight = true) {
     let result = '';
     let index = 0;
+
+    const isPunctuationOrSpace = (char) => {
+      if (!char) return true;
+      return /[\s.,!?;:()\[\]{}"'\-]/.test(char);
+    };
 
     while (index < input.length) {
       let matched = false;
 
-      for (let rule of this.substitutions) {
-        const part = input.slice(index);
-        let match = null;
+      for (let rule of rules) {
+        let matchLen = 0;
+        let original = '';
 
         if (rule.regex) {
-          match = new RegExp('^' + rule.ru, 'i').exec(part);
-        } else if (part.toLowerCase().startsWith(rule.ru)) {
-          match = [part.slice(0, rule.ru.length)];
+          const part = input.substring(index);
+          const match = new RegExp('^' + rule.ru, 'i').exec(part);
+          if (match) {
+            matchLen = match[0].length;
+            original = match[0];
+          }
+        } else {
+          const part = input.substring(index, index + rule.ru.length);
+          if (part.toLowerCase() === rule.ru) {
+            matchLen = rule.ru.length;
+            original = part;
+          }
         }
 
-        if (match) {
-          const original = match[0];
+        if (matchLen > 0) {
           const isUpper = original[0] === original[0].toUpperCase();
           const isAllUpper = original.toUpperCase() === original;
-          const replacement = isAllUpper
-            ? rule.gr.toUpperCase()
-            : isUpper ? rule.gr[0].toUpperCase() + rule.gr.slice(1) : rule.gr;
+          
+          let replacement = rule.gr;
+          
+          // Final Sigma logic
+          if (rule.ru === 'с' && isPunctuationOrSpace(input[index + matchLen])) {
+             replacement = 'ς';
+          }
+          
+          replacement = isAllUpper && original.length > 1
+            ? replacement.toUpperCase()
+            : isUpper ? replacement[0].toUpperCase() + replacement.slice(1) : replacement;
 
-          const useReplacement = Math.random() * 100 <= intensity;
+          // If single char and isUpper, it should be upper
+          if (original.length === 1 && isUpper) {
+            replacement = replacement.toUpperCase();
+          }
 
-          result += useReplacement
-            ? `<span data-original="${original}"${highlight ? ' class="highlight"' : ''}>${replacement}</span>`
-            : original;
+          const useReplacement = rule.always || (Math.random() * 100 <= intensity);
 
-          index += original.length;
+          if (useReplacement) {
+            const safeOriginal = this.escapeHTML(original);
+            result += `<span data-original="${safeOriginal}"${highlight ? ' class="highlight"' : ''}>${replacement}</span>`;
+          } else {
+            result += this.escapeHTML(original);
+          }
+
+          index += matchLen;
           matched = true;
           break;
         }
       }
 
       if (!matched) {
-        result += input[index];
+        result += this.escapeHTML(input[index]);
         index++;
       }
     }
