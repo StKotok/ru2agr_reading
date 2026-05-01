@@ -1,0 +1,16 @@
+{
+  "name": "Russian to Ancient Greek Trainer",
+  "short_name": "Ru2Agr",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#222222",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

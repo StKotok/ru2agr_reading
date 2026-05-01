@@ -2,241 +2,99 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Тренажер чтения Русский → Древнегреческий</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
-    h1 {
-      font-size: 1.5em;
-      margin-bottom: 10px;
-    }
-    .controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .dual-column {
-      display: flex;
-      gap: 20px;
-    }
-    textarea, .output {
-      width: 100%;
-      height: 400px;
-      font-size: 1em;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    .output {
-      border: 1px solid #ccc;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    .output span {
-      position: relative;
-      cursor: help;
-    }
-    .output span:hover::before {
-      content: attr(data-original);
-      position: absolute;
-      background: #eee;
-      padding: 2px 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      top: -1.5em;
-      left: 0;
-      white-space: nowrap;
-      z-index: 10;
-      font-size: 0.85em;
-      color: #000;
-    }
-    .highlight {
-      background-color: #ffe08a;
-    }
-    .half {
-      width: 50%;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тренажер чтения</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#222222">
+  <link rel="apple-touch-icon" href="icon.svg">
 </head>
 <body>
-  <h1>Russian → Ancient Greek Reading Trainer</h1>
+<header class="header">
+  <h1>Russian → Ancient Greek Trainer</h1>
+  <div class="header-controls">
+    <button id="themeToggle" title="Сменить тему">🌙</button>
+    <button id="settingsToggle" title="Настройки">⚙️</button>
+  </div>
+</header>
 
-  <div class="controls">
-    <label>Степень замены:
-  <input type="number" id="intensity" value="100" min="0" max="100" step="10" style="width: 60px;" oninput="transformText()">
-  %
-</label>
-    <button onclick="toggleHighlight()" title="Включить/Отключить подсветку">Подсветка</button>
-    <button onclick="resetText()" title="Обновить результат">↻</button>
-    <button onclick="copyOutput()" title="Скопировать результат в буфер обмена">📋</button>
+<div class="replace-controls-slider">
+  <label for="intensity">Степень замены: <span id="intensityVal">100</span>%</label>
+  <input type="range" id="intensity" value="100" min="0" max="100" step="10">
+</div>
+
+<div class="layout-container">
+  <div class="main-column">
+    <div class="main-container" id="mainContainer">
+      <!-- левая зона -->
+      <div class="input-container half">
+        <div class="input-controls">
+          <button class="collapse-button" id="collapseInputBtn">🔽</button>
+          <div class="file-and-clear">
+            <label for="fileInput" class="file-label btn-like" title="Загрузить файл (.txt, .md)">📄</label>
+            <input type="file" id="fileInput" accept=".txt,.md" style="display:none">
+            <button class="clear-button" title="Очистить текст">🧹</button>
+          </div>
+        </div>
+        <div class="input-wrapper" id="inputWrapper">
+          <textarea id="inputText" placeholder="Введите текст..." aria-label="Текст для преобразования"></textarea>
+        </div>
+      </div>
+
+      <!-- ресайзер -->
+      <div class="resizer-container">
+        <div class="vertical-resizer" id="verticalResizer"></div>
+      </div>
+
+      <!-- правая зона -->
+      <div class="output-container half">
+        <div class="output-controls">
+          <button class="highlight-button" title="Подсветка">💡</button>
+          <button class="copy-button" title="Копировать">📋</button>
+        </div>
+        <div class="output-wrapper" id="outputWrapper">
+          <div id="output" class="output" aria-label="Результат"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="horizontal-resizer" id="horizontalResizer"></div>
   </div>
 
-  <div class="dual-column">
-    <textarea id="inputText" class="half" placeholder="Введите текст на русском:" oninput="originalText=''; transformText()">https://bible.by/desp/41/1/
-От Марка, глава 1, перевод Десницкого: 
- 
-1 Начало Евангелия Иисуса Христа, Сына Божьего.
-2 Так написано у пророка Исайи: «Вот, посылаю впереди Тебя вестника Моего, чтобы он проложил перед Тобой дорогу.
-3 Голос взывает в пустыне: приготовьте Господу дорогу, распрямите пути для Него!»
-4 Иоанн тогда стал крестить в пустыне. Он проповедовал крещение как обряд покаяния: в нем прощались грехи.
-5 И к нему собирались со всей страны Иудейской, все жители Иерусалима: исповедуя свои грехи, они принимали от него крещение в реке Иордане.
-6 Сам Иоанн носил верблюжью шерсть, опоясывался кожаным поясом, а ел саранчу и дикий мед.
-7 Он проповедовал так:
-— За мной грядет Тот, Кто меня сильней! Нагнуться и развязать ремешок на его сандалиях — я и того недостоин!
-8 Я вас крестил, омывая водой, а Он омоет Святым Духом.
-9 И как раз в те дни пришел Иисус из Назарета, что в Галилее, и принял от Иоанна крещение в Иордане.
-10 И сразу, когда Он выходил из воды, увидел, как разделились небеса и сошел на Него Дух, словно голубь слетел.
-11 И раздался с небес голос:
-— Ты — Мой возлюбленный Сын, с Тобой Мое благоволение.
-12 И сразу же Дух повел Его в пустыню.
-</textarea>
-    <div class="output half" id="output" aria-label="Древнегреческое чтение:"></div>
-  </div>
+  <!-- Боковая панель настроек -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Правила</h2>
+      <button id="closeSidebarBtn" title="Закрыть">✖</button>
+    </div>
+    <div class="sidebar-content">
+      <div class="add-rule-form">
+        <input type="text" id="newRuleRu" placeholder="Рус (напр. кс)" aria-label="Новое правило: Русский текст">
+        <input type="text" id="newRuleGr" placeholder="Греч (напр. ξ)" aria-label="Новое правило: Греческий текст">
+        <button id="addRuleBtn">➕</button>
+      </div>
+      <div class="rules-header">
+        <span>Комбинация</span>
+        <span title="Включено">Вкл</span>
+        <span title="Всегда заменять (игнорирует ползунок)">100%</span>
+        <span></span>
+      </div>
+      <div class="rules-list" id="rulesList">
+        <!-- Rules injected via JS -->
+      </div>
+    </div>
+  </aside>
+</div>
 
-  <script>
-    let originalText = '';
-    let highlight = true;
-
-    const substitutions = [
-      { ru: "ф", gr: "φ" },
-      { ru: "т", gr: "τ" },
-      { ru: "п", gr: "π" },
-      { ru: "з", gr: "ζ" },
-      { ru: "г(?=[еи])", gr: "γ", regex: true },
-      { ru: "г", gr: "γ" },
-      { ru: "х", gr: "χ" },
-      { ru: "в", gr: "β" },
-      { ru: "д", gr: "δ" },
-      { ru: "к", gr: "κ" },
-      { ru: "л", gr: "λ" },
-      { ru: "м", gr: "μ" },
-      { ru: "н", gr: "ν" },
-      { ru: "р", gr: "ρ" },
-      { ru: "с", gr: "σ" },
-      { ru: "у", gr: "υ" },
-      { ru: "а", gr: "α" },
-      { ru: "е", gr: "ε" },
-      { ru: "и", gr: "ι" },
-      { ru: "о", gr: "ο" },
-      { ru: "э", gr: "η" },
-      { ru: "я", gr: "ια" },
-      { ru: "ю", gr: "ιυ" },
-      { ru: "й", gr: "ι" },
-      { ru: "ё", gr: "ιο" },
-      { ru: "кс", gr: "ξ" },
-      { ru: "пс", gr: "ψ" },
-      { ru: "тх", gr: "θ" },
-      { ru: "дж", gr: "τζ" },
-      { ru: "йо", gr: "ιο" },
-      { ru: "иян", gr: "ιαν" },
-      { ru: "ия", gr: "ια" },
-      { ru: "ai", gr: "αι" },
-      { ru: "ei", gr: "ει" },
-      { ru: "oi", gr: "οι" },
-      { ru: "ou", gr: "ου" },
-      { ru: "eu", gr: "ευ" },
-      { ru: "au", gr: "αυ" }
-    ];
-
-    substitutions.sort((a, b) => b.ru.length - a.ru.length);
-
-    function transformText() {
-      const inputElem = document.getElementById("inputText");
-      const intensityElem = document.getElementById("intensity");
-      if (!intensityElem) return;
-      const percent = parseInt(intensityElem.value);
-      if (!originalText) originalText = inputElem.value;
-      const input = inputElem.value;
-
-      let result = '';
-      let index = 0;
-
-      while (index < input.length) {
-        let matched = false;
-
-        for (let rule of substitutions) {
-          let part = input.slice(index);
-          let match;
-
-          if (rule.regex) {
-            const regex = new RegExp('^' + rule.ru, 'i');
-            match = regex.exec(part);
-          } else {
-            if (part.toLowerCase().startsWith(rule.ru)) {
-              match = [part.slice(0, rule.ru.length)];
-            }
-          }
-
-          if (match) {
-            const original = match[0];
-            const isUpper = original[0] === original[0].toUpperCase();
-            const isAllUpper = original.toUpperCase() === original;
-            const replacement = isAllUpper
-              ? rule.gr.toUpperCase()
-              : isUpper ? rule.gr[0].toUpperCase() + rule.gr.slice(1) : rule.gr;
-
-            const useReplacement = Math.random() * 100 <= percent;
-
-            if (useReplacement) {
-              result += highlight ? `<span data-original="${original}" class="highlight">${replacement}</span>` : `<span data-original="${original}">${replacement}</span>`;
-            } else {
-              result += original;
-            }
-
-            index += original.length;
-            matched = true;
-            break;
-          }
-        }
-
-        if (!matched) {
-          result += input[index];
-          index++;
-        }
-      }
-
-      document.getElementById("output").innerHTML = result;
-    }
-
-    function toggleHighlight() {
-      highlight = !highlight;
-      transformText();
-    }
-
-    function adjustIntensity(delta) {
-      const input = document.getElementById("intensity");
-      if (!input) return;
-      let value = Math.round(parseInt(input.value) / 10) * 10 + delta;
-      if (value > 100) value = 100;
-      if (value < 1) value = 1;
-      input.value = value;
-      transformText();
-    }
-
-    function resetText() {
-  document.getElementById("inputText").value = originalText;
-  transformText();
-}
-
-    function copyOutput() {
-      const output = document.getElementById("output");
-      const temp = document.createElement("textarea");
-      temp.value = output.innerText;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      document.body.removeChild(temp);
-      alert("Результат скопирован!");
-    }
-window.addEventListener('DOMContentLoaded', () => {
-originalText = document.getElementById("inputText").value;
-transformText();
-});
+<script type="module" src="ui.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.warn('SW registration failed: ', err);
+      });
+    });
+  }
 </script>
 </body>
 </html>

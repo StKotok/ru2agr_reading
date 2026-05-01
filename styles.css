@@ -1,0 +1,351 @@
+:root {
+  --bg: #f8f9fa;
+  --text: #222;
+  --border: #ccc;
+  --highlight: rgb(255 243 0 / 0.35);
+  --btn-bg: #fff;
+  --btn-hover: #eee;
+}
+body.dark-mode {
+  --bg: #121212;
+  --text: #eee;
+  --border: #333;
+  --highlight: rgb(255 243 0 / 0.3);
+  --btn-bg: #333;
+  --btn-hover: #444;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  font: 1em sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5em;
+}
+
+button {
+  background: var(--btn-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.3em 0.6em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: var(--btn-hover);
+}
+
+/* .main-container styles are in the layout section below */
+
+.input-container,
+.output-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 5em;
+  transition: flex-basis 0.3s;
+  position: relative;
+}
+
+.input-controls,
+.output-controls {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3em;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.input-wrapper {
+  flex: 1;
+}
+.input-wrapper.collapsed {
+  flex: 0 0 2.5em;
+}
+.input-wrapper.collapsed textarea {
+  opacity: 0;
+  pointer-events: none;
+}
+
+textarea {
+  width: 100%;
+  height: 100%;
+  padding: 0.5em;
+  border: none;
+  resize: none;
+  background: var(--bg);
+  color: var(--text);
+  transition: opacity 0.2s;
+}
+
+.output-wrapper {
+  flex: 1;
+  padding: 0.5em;
+  overflow: auto;
+}
+
+.output {
+  height: 100%;
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+.highlight {
+  background: var(--highlight);
+}
+
+.output span {
+  position: relative;
+  cursor: help;
+}
+.output span:hover::before {
+  content: attr(data-original);
+  position: absolute;
+  top: -2.0em;
+  left: 0;
+  padding: 0.2em 0.4em;
+  border: 1px solid var(--border);
+  border-radius: 0.3em;
+  background: var(--btn-bg);
+  white-space: nowrap;
+  z-index: 1;
+  color: var(--text);
+  font-size: 0.85em;
+}
+
+.resizer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.replace-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.4em;
+  background: var(--bg);
+  font-size: 0.9em;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.vertical-resizer {
+  width: 0.6em;
+  height: 100%;
+  background: var(--border);
+  cursor: col-resize;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.horizontal-resizer {
+  height: 0.6em;
+  width: 100%;
+  background: var(--border);
+  cursor: row-resize;
+}
+
+.replace-controls-slider {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 10px;
+  padding: 0.5em 1em;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.replace-controls-slider input[type="range"] {
+  flex: 1;
+  max-width: 300px;
+  cursor: pointer;
+}
+
+/* --- Новые стили для Layout и Sidebar --- */
+
+.layout-container {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  height: calc(100vh - 120px);
+}
+
+.main-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  border: 1px solid var(--border);
+  min-height: 30em;
+  transition: height 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-like {
+  background: var(--btn-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.3em 0.6em;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 13.3333px; /* чтобы совпадало с кнопками */
+}
+.btn-like:hover {
+  background: var(--btn-hover);
+}
+
+.file-and-clear {
+  display: flex;
+  gap: 5px;
+}
+
+.sidebar {
+  width: 300px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: none; /* скрыт по умолчанию */
+  flex-direction: column;
+}
+.sidebar.open {
+  display: flex;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.sidebar-content {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.add-rule-form {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+.add-rule-form input {
+  width: 40%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 4px;
+}
+.add-rule-form button {
+  width: 20%;
+}
+
+.rules-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+.rules-header span:first-child { flex: 1; }
+.rules-header span:nth-child(2), .rules-header span:nth-child(3) { width: 40px; text-align: center; }
+.rules-header span:last-child { width: 30px; }
+
+.rule-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.rule-item:last-child {
+  border-bottom: none;
+}
+.rule-text {
+  flex: 1;
+  font-family: monospace;
+  font-size: 1.1em;
+}
+.rule-checkboxes {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.rule-checkboxes label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.rule-checkboxes input {
+  cursor: pointer;
+}
+.delete-rule-btn {
+  background: transparent;
+  border: none;
+  color: #ff4444;
+  font-size: 1.2em;
+  padding: 0 5px;
+}
+.delete-rule-btn:hover {
+  background: rgba(255,0,0,0.1);
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+  .main-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 80vh;
+  }
+  .vertical-resizer {
+    display: none;
+  }
+  .input-container, .output-container {
+    flex-basis: auto !important;
+    min-height: 40vh;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+  }
+  .horizontal-resizer {
+    display: none;
+  }
+}
