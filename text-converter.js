@@ -45,8 +45,9 @@ export class TextConverter {
         }
 
         if (matchLen > 0) {
-          const isUpper = original[0] === original[0].toUpperCase();
-          const isAllUpper = original.toUpperCase() === original;
+          const isLetter = /\p{L}/u.test(original[0]);
+          const isUpper = isLetter && original[0] === original[0].toUpperCase();
+          const isAllUpper = isLetter && original.toUpperCase() === original;
           
           let replacement = rule.gr;
           

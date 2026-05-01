@@ -19,47 +19,49 @@
 </header>
 
 <div class="layout-container">
-  <div class="main-container" id="mainContainer">
-    <!-- Центрированный блок "Степень замены" -->
-    <div class="replace-controls-floating">
-      <label>Степень замены:
-        <input type="number" id="intensity" value="100" min="0" max="100" step="10">%
-      </label>
-    </div>
+  <div class="main-column">
+    <div class="main-container" id="mainContainer">
+      <!-- Центрированный блок "Степень замены" -->
+      <div class="replace-controls-floating">
+        <label>Степень замены:
+          <input type="number" id="intensity" value="100" min="0" max="100" step="10">%
+        </label>
+      </div>
 
-    <!-- левая зона -->
-    <div class="input-container half">
-      <div class="input-controls">
-        <button class="collapse-button" id="collapseInputBtn">🔽</button>
-        <div class="file-and-clear">
-          <label for="fileInput" class="file-label btn-like" title="Загрузить файл (.txt, .md)">📄</label>
-          <input type="file" id="fileInput" accept=".txt,.md" style="display:none">
-          <button class="clear-button" title="Очистить текст">🧹</button>
+      <!-- левая зона -->
+      <div class="input-container half">
+        <div class="input-controls">
+          <button class="collapse-button" id="collapseInputBtn">🔽</button>
+          <div class="file-and-clear">
+            <label for="fileInput" class="file-label btn-like" title="Загрузить файл (.txt, .md)">📄</label>
+            <input type="file" id="fileInput" accept=".txt,.md" style="display:none">
+            <button class="clear-button" title="Очистить текст">🧹</button>
+          </div>
+        </div>
+        <div class="input-wrapper" id="inputWrapper">
+          <textarea id="inputText" placeholder="Введите текст..."></textarea>
         </div>
       </div>
-      <div class="input-wrapper" id="inputWrapper">
-        <textarea id="inputText" placeholder="Введите текст..."></textarea>
+
+      <!-- ресайзер -->
+      <div class="resizer-container">
+        <div class="vertical-resizer" id="verticalResizer"></div>
+      </div>
+
+      <!-- правая зона -->
+      <div class="output-container half">
+        <div class="output-controls">
+          <button class="highlight-button" title="Подсветка">💡</button>
+          <button class="copy-button" title="Копировать">📋</button>
+        </div>
+        <div class="output-wrapper" id="outputWrapper">
+          <div id="output" class="output" aria-label="Результат"></div>
+        </div>
       </div>
     </div>
 
-    <!-- ресайзер -->
-    <div class="resizer-container">
-      <div class="vertical-resizer" id="verticalResizer"></div>
-    </div>
-
-    <!-- правая зона -->
-    <div class="output-container half">
-      <div class="output-controls">
-        <button class="highlight-button" title="Подсветка">💡</button>
-        <button class="copy-button" title="Копировать">📋</button>
-      </div>
-      <div class="output-wrapper" id="outputWrapper">
-        <div id="output" class="output" aria-label="Результат"></div>
-      </div>
-    </div>
+    <div class="horizontal-resizer" id="horizontalResizer"></div>
   </div>
-
-  <div class="horizontal-resizer" id="horizontalResizer"></div>
 
   <!-- Боковая панель настроек -->
   <aside class="sidebar" id="sidebar">

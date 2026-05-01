@@ -48,14 +48,7 @@ button:hover {
   background: var(--btn-hover);
 }
 
-.main-container {
-  display: flex;
-  border: 1px solid var(--border);
-  min-height: 10em;
-  height: 30em;
-  transition: height 0.2s;
-  position: relative;
-}
+/* .main-container styles are in the layout section below */
 
 .input-container,
 .output-container {
@@ -101,6 +94,7 @@ textarea {
 .output-wrapper {
   flex: 1;
   padding: 0.5em;
+  overflow: auto;
 }
 
 .output {
@@ -187,17 +181,25 @@ textarea {
 .layout-container {
   display: flex;
   gap: 10px;
-  align-items: flex-start;
+  align-items: stretch;
+  height: calc(100vh - 120px);
+}
+
+.main-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-container {
   flex: 1;
   display: flex;
   border: 1px solid var(--border);
-  min-height: 10em;
-  height: 30em;
+  min-height: 30em;
   transition: height 0.2s;
   position: relative;
+  overflow: hidden;
 }
 
 .header-controls {
@@ -230,7 +232,6 @@ textarea {
   border-radius: 4px;
   display: none; /* скрыт по умолчанию */
   flex-direction: column;
-  height: 30em; /* как у main-container */
 }
 .sidebar.open {
   display: flex;

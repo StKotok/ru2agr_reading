@@ -2,10 +2,16 @@ const DB_NAME = 'ru2agr_db';
 const DB_VERSION = 1;
 const STORE_NAME = 'app_state';
 
+let dbPromise = null;
+
 function openDB() {
-  return new Promise((resolve, reject) => {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = () => reject(request.error);
+    request.onerror = () => {
+      dbPromise = null;
+      reject(request.error);
+    };
     request.onsuccess = () => resolve(request.result);
     request.onupgradeneeded = (e) => {
       const db = e.target.result;
@@ -14,6 +20,7 @@ function openDB() {
       }
     };
   });
+  return dbPromise;
 }
 
 export const Storage = {

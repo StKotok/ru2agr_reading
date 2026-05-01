@@ -73,7 +73,7 @@ function renderRules() {
   });
   list.querySelectorAll('.delete-rule-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      activeRules.splice(e.target.dataset.index, 1);
+      activeRules.splice(Number(e.target.dataset.index), 1);
       await saveRules();
       renderRules();
       updateOutput();
@@ -248,8 +248,8 @@ function setupResizers() {
       const percent = (offset / containerRect.width) * 100;
 
       if (percent > 10 && percent < 90) {
-        leftPane.style.flexBasis = \`calc(\${percent}% - 5px)\`;
-        rightPane.style.flexBasis = \`calc(\${100 - percent}% - 5px)\`;
+        leftPane.style.flexBasis = `calc(${percent}% - 5px)`;
+        rightPane.style.flexBasis = `calc(${100 - percent}% - 5px)`;
       }
     }
 
@@ -257,7 +257,7 @@ function setupResizers() {
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const containerTop = container.getBoundingClientRect().top;
       const newHeight = clientY - containerTop;
-      if (newHeight > 100) container.style.height = \`\${newHeight}px\`;
+      if (newHeight > 100) container.style.height = `${newHeight}px`;
     }
   };
 

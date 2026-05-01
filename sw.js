@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ru2agr-cache-v1';
+const CACHE_NAME = 'ru2agr-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -61,6 +61,9 @@ self.addEventListener('fetch', event => {
             });
 
           return response;
+        }).catch(() => {
+          // Offline and not in cache — return a simple offline fallback
+          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
         });
       })
   );
