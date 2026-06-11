@@ -380,16 +380,19 @@ function renderWindowed() {
       if (plainView) {
         // Чистый русский текст
         p.appendChild(document.createTextNode(verse.text));
-      } else if (settings.mode === 5 && grcBookData) {
+      } else if (settings.mode === 5) {
         // Режим 5: греческий как основной текст
         const chIdx = ch.n - 1;
         const vIdx = verse.n - 1;
-        const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+        const grcVerse = grcBookData?.chapters[chIdx]?.verses[vIdx];
         if (grcVerse && grcVerse.tokens) {
           const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
         } else {
-          p.appendChild(document.createTextNode(verse.text));
+          // Fallback: показываем русский текст через composeVerse
+          const segments = composeVerse(verse.text, { ...composeCtx, mode: 1 });
+          const frag = segmentsToFragment(segments, renderCtx);
+          p.appendChild(frag);
         }
       } else {
         // Добавляем grcVerse и alignment для режимов 4-5
@@ -439,6 +442,17 @@ function renderWindowed() {
 
   setupObserver(chaptersEls, textArea);
   setupChapterTracking();
+
+  // Если включён режим 5 но grc не загружен — грузим асинхронно
+  if (settings.mode === 5 && !grcBookData && bookData) {
+    showToast('Греческий текст недоступен — загружаем...', { timeout: 3000 });
+    loadBook('grc', bookData.id).then(grc => {
+      if (grc) {
+        grcBookData = grc;
+        reRenderWindowed();
+      }
+    }).catch(() => {});
+  }
 }
 
 function setupChapterTracking() {

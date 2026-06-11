@@ -59,8 +59,8 @@ export function composeVerse(verseText, ctx = {}) {
   }
 
   // Режим 5: греческий основной — обработка на уровне reading.js
-  // composeVerse не используется для режима 5
-  return null;
+  // Безопасный fallback: показываем русский текст
+  return [{ plain: verseText }];
 }
 
 function applyLetterToPlain(segments, activeLetters, intensity, seedPrefix, showDiacritics) {
