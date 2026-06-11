@@ -251,6 +251,79 @@ function renderThemeSection() {
   });
 
   container.appendChild(showSection);
+
+  // Дополнительно (свёрнутый блок)
+  renderAdvancedSection();
+}
+
+function renderAdvancedSection() {
+  const section = document.createElement('section');
+  section.className = 'progress-section';
+
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.textContent = 'Дополнительно';
+  details.appendChild(summary);
+
+  // show.diacritics
+  const diacriticsLabel = document.createElement('label');
+  diacriticsLabel.style.display = 'flex';
+  diacriticsLabel.style.alignItems = 'center';
+  diacriticsLabel.style.gap = '8px';
+  diacriticsLabel.style.padding = '4px 0';
+  const diacriticsCb = document.createElement('input');
+  diacriticsCb.type = 'checkbox';
+  diacriticsCb.checked = settings.show?.diacritics ?? false;
+  diacriticsCb.addEventListener('change', () => {
+    if (!settings.show) settings.show = {};
+    settings.show.diacritics = diacriticsCb.checked;
+    saveSettings(settings);
+    store.update(s => ({ ...s, settings: { ...settings } }));
+  });
+  diacriticsLabel.appendChild(diacriticsCb);
+  diacriticsLabel.appendChild(document.createTextNode('Показывать диакритику (ударения, придыхания)'));
+  details.appendChild(diacriticsLabel);
+
+  // show.strongs
+  const strongsLabel = document.createElement('label');
+  strongsLabel.style.display = 'flex';
+  strongsLabel.style.alignItems = 'center';
+  strongsLabel.style.gap = '8px';
+  strongsLabel.style.padding = '4px 0';
+  const strongsCb = document.createElement('input');
+  strongsCb.type = 'checkbox';
+  strongsCb.checked = settings.show?.strongs ?? false;
+  strongsCb.addEventListener('change', () => {
+    if (!settings.show) settings.show = {};
+    settings.show.strongs = strongsCb.checked;
+    saveSettings(settings);
+    store.update(s => ({ ...s, settings: { ...settings } }));
+  });
+  strongsLabel.appendChild(strongsCb);
+  strongsLabel.appendChild(document.createTextNode('Показывать номера Стронга (G3056)'));
+  details.appendChild(strongsLabel);
+
+  // show.ruHint (для режима 5)
+  const ruHintLabel = document.createElement('label');
+  ruHintLabel.style.display = 'flex';
+  ruHintLabel.style.alignItems = 'center';
+  ruHintLabel.style.gap = '8px';
+  ruHintLabel.style.padding = '4px 0';
+  const ruHintCb = document.createElement('input');
+  ruHintCb.type = 'checkbox';
+  ruHintCb.checked = settings.show?.ruHint !== false;
+  ruHintCb.addEventListener('change', () => {
+    if (!settings.show) settings.show = {};
+    settings.show.ruHint = ruHintCb.checked;
+    saveSettings(settings);
+    store.update(s => ({ ...s, settings: { ...settings } }));
+  });
+  ruHintLabel.appendChild(ruHintCb);
+  ruHintLabel.appendChild(document.createTextNode('Русская подсказка под стихом (режим 5)'));
+  details.appendChild(ruHintLabel);
+
+  section.appendChild(details);
+  container.appendChild(section);
 }
 
 function renderResetSection() {
