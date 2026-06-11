@@ -50,4 +50,49 @@ describe('composeVerse', () => {
     const r2 = composeVerse('ааа', opts);
     expect(r1).toEqual(r2);
   });
+
+  it('mode 4: word-layer fallback для невыровненных словарных слов', () => {
+    // Стих с alignment только для «Слово», но не для «Бог»
+    const verseText = 'В начале было Слово и Бог';
+    const grcTokens = [
+      { w: 'Ἐν', lemma: 'ἐν', morph: 'prep', strong: 1722 },
+      { w: 'ἀρχῇ', lemma: 'ἀρχή', morph: 'noun', strong: 746 },
+      { w: 'λόγος', lemma: 'λόγος', morph: 'noun', strong: 3056 },
+      { w: 'θεός', lemma: 'θεός', morph: 'noun', strong: 2316 },
+    ];
+    // alignment: только «Слово» (ru=3) → λόγος (gr=2)
+    const alignment = [{ ru: 3, gr: 2 }];
+
+    const segments = composeVerse(verseText, {
+      mode: 4,
+      intensity: 0,
+      progressLetters: {},
+      seedPrefix: 'test',
+      wordEntries: [
+        {
+          lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
+          regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
+          excludeRegexps: [],
+          intensityPct: 100, status: 'known', forms: 'all'
+        },
+        {
+          lexemeId: 'theos', lemma: 'θεός', strongNum: 2316,
+          regexps: [new RegExp('(?<![а-яё])[Бб]ог(а|у|ом|е)?(?![а-яё])', 'iu')],
+          excludeRegexps: [],
+          intensityPct: 100, status: 'known', forms: 'lemma'
+        }
+      ],
+      grcVerse: { tokens: grcTokens },
+      alignment
+    });
+
+    // «Слово» должно быть заменено формой (kind='form'), с заглавной буквы
+    const formSegs = segments.filter(s => s.kind === 'form');
+    expect(formSegs.length).toBeGreaterThanOrEqual(1);
+    expect(formSegs.some(s => s.greek.toLowerCase() === 'λόγος')).toBe(true);
+
+    // «Бог» должно быть заменено леммой через word-layer (kind='word')
+    const wordSegs = segments.filter(s => s.kind === 'word');
+    expect(wordSegs.some(s => s.greek.toLowerCase() === 'θεός')).toBe(true);
+  });
 });

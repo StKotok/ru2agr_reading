@@ -40,15 +40,19 @@ export function composeVerse(verseText, ctx = {}) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режим 4: формовый слой (если есть grc+align) → буквенный
+  // Режим 4: формовый слой (если есть grc+align) → word-layer fallback → буквенный
   if (mode === 4) {
     if (grcVerse && alignment && grcVerse.tokens) {
       const dictEntries = wordEntries.map(e => ({
         ...e,
         strong: e.strongNum || null
       }));
-      const formSegs = applyFormLayer(verseText, grcVerse.tokens, alignment, dictEntries, { seedPrefix });
-      return applyLetterToPlain(formSegs, activeLetters, intensity, seedPrefix, showDiacritics);
+      let segs = applyFormLayer(verseText, grcVerse.tokens, alignment, dictEntries, { seedPrefix });
+      // Fallback для невыровненных слов словаря: применяем word-layer к plain-сегментам
+      if (wordEntries.length > 0) {
+        segs = applyWordToPlainSegments(segs, wordEntries, seedPrefix);
+      }
+      return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics);
     }
     // Fallback: word-layer
     if (wordEntries.length > 0) {
@@ -61,6 +65,29 @@ export function composeVerse(verseText, ctx = {}) {
   // Режим 5: греческий основной — обработка на уровне reading.js
   // Безопасный fallback: показываем русский текст
   return [{ plain: verseText }];
+}
+
+/**
+ * Применяет word-layer к plain-сегментам, сохраняя form-сегменты.
+ * Детерминизм: seed использует позицию plain-текста от начала стиха.
+ */
+function applyWordToPlainSegments(segments, wordEntries, seedPrefix) {
+  const result = [];
+  let plainOffset = 0;
+
+  for (const seg of segments) {
+    if (seg.plain !== undefined) {
+      const wordSegs = applyWordLayer(seg.plain, wordEntries, {
+        seedPrefix: `${seedPrefix}:wp${plainOffset}`
+      });
+      result.push(...wordSegs);
+      plainOffset += seg.plain.length;
+    } else {
+      result.push(seg);
+    }
+  }
+
+  return result;
 }
 
 function applyLetterToPlain(segments, activeLetters, intensity, seedPrefix, showDiacritics) {
