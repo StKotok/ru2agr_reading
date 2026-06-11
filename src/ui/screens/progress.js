@@ -37,8 +37,34 @@ function render() {
   // Блок «Буквы»
   renderLettersSection();
 
+  // Блок «Слова»
+  renderWordsSection();
+
   // Блок «Чтение»
   renderReadingSection();
+}
+
+function renderWordsSection() {
+  const dict = store.get().dictionary || {};
+  const entries = Object.entries(dict);
+  if (entries.length === 0) return;
+
+  const section = document.createElement('section');
+  section.className = 'progress-section';
+  const h3 = document.createElement('h3');
+  h3.textContent = 'Слова';
+  section.appendChild(h3);
+
+  const known = entries.filter(([_, e]) => e.status === 'known').length;
+  const learning = entries.filter(([_, e]) => e.status === 'learning').length;
+  const newWords = entries.filter(([_, e]) => e.status === 'new').length;
+  const today = new Date().toISOString().split('T')[0];
+  const todayNew = (progress.wordsToday?.date === today) ? (progress.wordsToday.added || []).length : 0;
+
+  const p = document.createElement('p');
+  p.textContent = `${known} знакомы / ${learning} в изучении / ${todayNew} новых сегодня`;
+  section.appendChild(p);
+  container.appendChild(section);
 }
 
 function renderLettersSection() {
@@ -54,10 +80,23 @@ function renderLettersSection() {
     const e = progress.letters[l.lower];
     return e && (e.status === 'known' || e.status === 'learning');
   });
-  if (knownLetters.length > 0) {
+  const dict = store.get().dictionary || {};
+  const knownWords = Object.entries(dict).filter(([_, e]) => e.status === 'known' || e.status === 'learning');
+
+  if (knownLetters.length > 0 || knownWords.length > 0) {
     const p = document.createElement('p');
     p.className = 'progress-motto';
-    p.textContent = 'Ты уже узнаёшь: ' + knownLetters.map(l => l.lower).join(' ');
+    const parts = [];
+    if (knownLetters.length > 0) parts.push(knownLetters.map(l => l.lower).join(' '));
+    if (knownWords.length > 0) {
+      const coreLex = store.get().coreLexicon || [];
+      const wordNames = knownWords.slice(0, 5).map(([id]) => {
+        const lex = coreLex.find(l => l.id === id);
+        return lex ? lex.lemma : id;
+      });
+      parts.push(wordNames.join(' '));
+    }
+    p.textContent = 'Ты уже узнаёшь: ' + parts.join(' ');
     section.appendChild(p);
   }
 

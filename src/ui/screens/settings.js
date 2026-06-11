@@ -172,7 +172,85 @@ function renderThemeSection() {
     section.appendChild(label);
   });
 
-  container.appendChild(section);
+  // Новые слова за главу
+  const wordsSection = document.createElement('section');
+  wordsSection.className = 'progress-section';
+  const wordsH3 = document.createElement('h3');
+  wordsH3.textContent = 'Новые слова за главу';
+  wordsSection.appendChild(wordsH3);
+
+  [1, 3, 5, 10].forEach(n => {
+    const label = document.createElement('label');
+    label.className = 'settings-radio';
+    label.style.display = 'flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '8px';
+    label.style.padding = '4px 0';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'newWordsPerChapter';
+    radio.value = String(n);
+    radio.checked = settings.newWordsPerChapter === n;
+    radio.addEventListener('change', () => {
+      if (radio.checked) {
+        settings.newWordsPerChapter = n;
+        saveSettings(settings);
+        store.update(s => ({ ...s, settings: { ...settings } }));
+      }
+    });
+    label.appendChild(radio);
+    label.appendChild(document.createTextNode(String(n)));
+    wordsSection.appendChild(label);
+  });
+
+  const pauseLabel = document.createElement('label');
+  pauseLabel.style.display = 'flex';
+  pauseLabel.style.alignItems = 'center';
+  pauseLabel.style.gap = '8px';
+  pauseLabel.style.padding = '8px 0';
+  const pauseToggle = document.createElement('input');
+  pauseToggle.type = 'checkbox';
+  pauseToggle.checked = settings.pauseNewToday || false;
+  pauseToggle.addEventListener('change', () => {
+    settings.pauseNewToday = pauseToggle.checked;
+    saveSettings(settings);
+    store.update(s => ({ ...s, settings: { ...settings } }));
+  });
+  pauseLabel.appendChild(pauseToggle);
+  pauseLabel.appendChild(document.createTextNode('Сегодня не добавлять новое'));
+  wordsSection.appendChild(pauseLabel);
+
+  container.appendChild(wordsSection);
+
+  // Чекбоксы показа
+  const showSection = document.createElement('section');
+  showSection.className = 'progress-section';
+  const showH3 = document.createElement('h3');
+  showH3.textContent = 'Показывать';
+  showSection.appendChild(showH3);
+
+  [{ key: 'translit', label: 'Транслитерация' },
+   { key: 'gloss', label: 'Краткое значение' },
+   { key: 'grammar', label: 'Грамматика' }].forEach(({ key, label }) => {
+    const lbl = document.createElement('label');
+    lbl.style.display = 'flex';
+    lbl.style.alignItems = 'center';
+    lbl.style.gap = '8px';
+    lbl.style.padding = '4px 0';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = settings.show[key] !== false;
+    cb.addEventListener('change', () => {
+      settings.show[key] = cb.checked;
+      saveSettings(settings);
+      store.update(s => ({ ...s, settings: { ...settings } }));
+    });
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(label));
+    showSection.appendChild(lbl);
+  });
+
+  container.appendChild(showSection);
 }
 
 function renderResetSection() {
