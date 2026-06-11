@@ -345,3 +345,168 @@ p, h2, h3, span {
   overflow-wrap: break-word;
   word-break: break-word;
 }
+
+/* === Top Bar === */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 20;
+}
+
+.top-bar-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+}
+
+.top-bar-placeholder {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  padding: 6px 4px;
+}
+
+/* Book dropdown */
+.book-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 100;
+  min-width: 280px;
+}
+
+.book-dropdown-group {
+  padding: 8px 12px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.book-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text);
+  min-height: 40px;
+}
+
+.book-dropdown-item:hover {
+  background: var(--surface-card);
+}
+
+/* Chapter placeholder */
+.chapter-placeholder {
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+/* Skeleton */
+.skeleton {
+  padding: 16px 0;
+}
+
+.skeleton-line {
+  height: 1em;
+  background: var(--border);
+  border-radius: 4px;
+  margin-bottom: 0.75em;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line:nth-child(2) {
+  width: 80%;
+}
+
+.skeleton-line:nth-child(3) {
+  width: 60%;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* Error / offline state */
+.error-state {
+  text-align: center;
+  padding: 32px;
+  margin: 16px 0;
+}
+
+.error-state p {
+  margin-bottom: 16px;
+}
+
+/* Инспектор (десктопная правая колонка) — заглушка */
+.inspector-panel {
+  background: var(--surface-card);
+  border-left: 1px solid var(--border);
+  padding: 16px;
+  min-width: 260px;
+  max-width: 360px;
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .inspector-panel {
+    display: block;
+  }
+}
+
+/* Bottom sheet — заглушка */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  animation: overlay-in 0.2s ease;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.bottom-sheet {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+  max-height: 70dvh;
+  overflow-y: auto;
+  width: 100%;
+  animation: sheet-up 0.3s ease;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (min-width: 900px) {
+  .bottom-sheet-overlay {
+    display: none;
+  }
+}
