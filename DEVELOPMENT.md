@@ -543,12 +543,12 @@ system-ui sans-стек; текст чтения ≥18px / line-height 1.7 / max
 
 **Файлы:** создать `data/alphabet.json`, `tools/build-syn.mjs`, `data/books.json`, `data/bibles/syn/*.json` (27 книг), `src/data/bible-loader.js`, `tests/bible-data.test.js`.
 
-- [ ] `data/alphabet.json`: все 24 буквы по схеме из 3.3, `learnOrder` — педагогический порядок (α ο κ μ τ ε ι ν → σ λ π ρ δ γ → β υ η ω → θ χ φ ξ ψ ζ)
-- [ ] `tools/build-syn.mjs`: скачивает/читает Синодальный НЗ (bolls.life API, перевод `SYNOD`, либо локальный исходник из `tools/sources/`), валидирует (27 книг, число глав соответствует канону), пишет `data/bibles/syn/{bookId}.json` и `data/books.json`
-- [ ] bookId — латинские слаги (`matthew, mark, luke, john, acts, … revelation`)
-- [ ] `src/data/bible-loader.js`: `loadBook(translation, bookId)` c fetch + in-memory кеш; `loadBooks()` — манифест
-- [ ] Тест-валидатор данных: у каждой книги правильное число глав, стихи не пустые
-- [ ] `tools/sources/` добавить в `.gitignore`; сгенерированный `data/` закоммитить
+- [x] `data/alphabet.json`: все 24 буквы по схеме из 3.3, `learnOrder` — педагогический порядок (α ο κ μ τ ε ι ν → σ λ π ρ δ γ → β υ η ω → θ χ φ ξ ψ ζ)
+- [x] `tools/build-syn.mjs`: скачивает/читает Синодальный НЗ (bolls.life API, перевод `SYNOD`, либо локальный исходник из `tools/sources/`), валидирует (27 книг, число глав соответствует канону), пишет `data/bibles/syn/{bookId}.json` и `data/books.json`
+- [x] bookId — латинские слаги (`matthew, mark, luke, john, acts, … revelation`)
+- [x] `src/data/bible-loader.js`: `loadBook(translation, bookId)` c fetch + in-memory кеш; `loadBooks()` — манифест
+- [x] Тест-валидатор данных: у каждой книги правильное число глав, стихи не пустые
+- [x] `tools/sources/` добавить в `.gitignore`; сгенерированный `data/` закоммитить
 
 **Промпт:**
 
