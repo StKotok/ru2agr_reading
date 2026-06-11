@@ -25,7 +25,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,svg,json}'],
-        globIgnores: ['**/data/bibles/**', '**/data/lexicon/**', '**/data/bibles/grc/**', '**/data/bibles/align/**'],
+        globIgnores: ['**/public/data/bibles/**'],
         runtimeCaching: [
           {
             urlPattern: /\/data\/bibles\/.*/,

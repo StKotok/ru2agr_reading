@@ -12,8 +12,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const SYN_DIR = resolve(ROOT, 'data', 'bibles', 'syn');
-const LEXICON_PATH = resolve(ROOT, 'data', 'lexicon', 'core.json');
+const SYN_DIR = resolve(ROOT, 'public', 'data', 'bibles', 'syn');
+const LEXICON_PATH = resolve(ROOT, 'public', 'data', 'lexicon', 'core.json');
 
 function main() {
   console.log('=== Анализатор покрытия alignment ===\n');

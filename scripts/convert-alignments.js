@@ -28,10 +28,10 @@ const ROOT = resolve(__dirname, '..');
 const SBLGNT_TSV = resolve(ROOT, 'docs', 'clear-bible-alignments', 'SBLGNT.tsv');
 const RUSSYN_TSV = resolve(ROOT, 'docs', 'clear-bible-alignments', 'nt_RUSSYN.tsv');
 const MANUAL_JSON = resolve(ROOT, 'docs', 'clear-bible-alignments', 'SBLGNT-RUSSYN-manual.json');
-const LEXICON_JSON = resolve(ROOT, 'data', 'lexicon', 'core.json');
-const BOOKS_JSON = resolve(ROOT, 'data', 'books.json');
-const SYN_DIR = resolve(ROOT, 'data', 'bibles', 'syn');
-const GRC_DIR = resolve(ROOT, 'data', 'bibles', 'grc');
+const LEXICON_JSON = resolve(ROOT, 'public', 'data', 'lexicon', 'core.json');
+const BOOKS_JSON = resolve(ROOT, 'public', 'data', 'books.json');
+const SYN_DIR = resolve(ROOT, 'public', 'data', 'bibles', 'syn');
+const GRC_DIR = resolve(ROOT, 'public', 'data', 'bibles', 'grc');
 
 // USFM book number → project book id
 const BOOK_MAP = {
