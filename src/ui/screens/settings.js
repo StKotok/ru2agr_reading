@@ -37,6 +37,15 @@ function render() {
   // Тема
   renderThemeSection();
 
+  // Новые слова за главу
+  renderWordsSection();
+
+  // Чекбоксы показа
+  renderShowSection();
+
+  // Дополнительно
+  renderAdvancedSection();
+
   // Сброс
   renderResetSection();
 }
@@ -172,12 +181,15 @@ function renderThemeSection() {
     section.appendChild(label);
   });
 
-  // Новые слова за главу
-  const wordsSection = document.createElement('section');
-  wordsSection.className = 'progress-section';
-  const wordsH3 = document.createElement('h3');
-  wordsH3.textContent = 'Новые слова за главу';
-  wordsSection.appendChild(wordsH3);
+  container.appendChild(section);
+}
+
+function renderWordsSection() {
+  const section = document.createElement('section');
+  section.className = 'progress-section';
+  const h3 = document.createElement('h3');
+  h3.textContent = 'Новые слова за главу';
+  section.appendChild(h3);
 
   [1, 3, 5, 10].forEach(n => {
     const label = document.createElement('label');
@@ -200,7 +212,7 @@ function renderThemeSection() {
     });
     label.appendChild(radio);
     label.appendChild(document.createTextNode(String(n)));
-    wordsSection.appendChild(label);
+    section.appendChild(label);
   });
 
   const pauseLabel = document.createElement('label');
@@ -218,16 +230,17 @@ function renderThemeSection() {
   });
   pauseLabel.appendChild(pauseToggle);
   pauseLabel.appendChild(document.createTextNode('Сегодня не добавлять новое'));
-  wordsSection.appendChild(pauseLabel);
+  section.appendChild(pauseLabel);
 
-  container.appendChild(wordsSection);
+  container.appendChild(section);
+}
 
-  // Чекбоксы показа
-  const showSection = document.createElement('section');
-  showSection.className = 'progress-section';
-  const showH3 = document.createElement('h3');
-  showH3.textContent = 'Показывать';
-  showSection.appendChild(showH3);
+function renderShowSection() {
+  const section = document.createElement('section');
+  section.className = 'progress-section';
+  const h3 = document.createElement('h3');
+  h3.textContent = 'Показывать';
+  section.appendChild(h3);
 
   [{ key: 'translit', label: 'Транслитерация' },
    { key: 'gloss', label: 'Краткое значение' },
@@ -247,13 +260,10 @@ function renderThemeSection() {
     });
     lbl.appendChild(cb);
     lbl.appendChild(document.createTextNode(label));
-    showSection.appendChild(lbl);
+    section.appendChild(lbl);
   });
 
-  container.appendChild(showSection);
-
-  // Дополнительно (свёрнутый блок)
-  renderAdvancedSection();
+  container.appendChild(section);
 }
 
 function renderAdvancedSection() {
@@ -303,7 +313,7 @@ function renderAdvancedSection() {
   strongsLabel.appendChild(document.createTextNode('Показывать номера Стронга (G3056)'));
   details.appendChild(strongsLabel);
 
-  // show.ruHint (для режима 5)
+  // show.ruHint
   const ruHintLabel = document.createElement('label');
   ruHintLabel.style.display = 'flex';
   ruHintLabel.style.alignItems = 'center';
