@@ -286,6 +286,13 @@ input[type="checkbox"] {
   background-color: var(--selection);
 }
 
+.gr.show-original {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--muted);
+}
+
 /* === Текст чтения === */
 .scripture-text {
   font-family: 'Gentium Plus', serif;

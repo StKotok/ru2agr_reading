@@ -22,7 +22,10 @@ let letterNames = null;
 let scrollTimer = null;
 let chapterPlaceholders = [];
 let observer = null;
-let reRenderFn = null; // для вызова при изменении настроек
+let reRenderFn = null;
+let plainView = false; // эфемерный флаг: показывать чистый русский текст
+let longPressTimer = null;
+let longPressTarget = null;
 
 export async function mount(container, ctx) {
   const { store } = ctx;
@@ -54,7 +57,13 @@ export async function mount(container, ctx) {
   container.appendChild(skeleton);
 
   // Top bar
-  const { bar } = createTopBar(ctx);
+  const { bar } = createTopBar({
+    store,
+    onEyeToggle: (pressed) => {
+      plainView = pressed;
+      reRenderWindowed();
+    }
+  });
   container.appendChild(bar);
 
   // Добавляем слайдер интенсивности в top-bar
@@ -132,13 +141,72 @@ export async function mount(container, ctx) {
   textArea.addEventListener('click', (e) => {
     const span = e.target.closest('span.gr');
     if (!span) return;
+    // Если был долгий тап — не открываем карточку
+    if (span._wasLongPress) {
+      span._wasLongPress = false;
+      return;
+    }
     const letter = span.getAttribute('data-letter');
-    const lexemeId = span.getAttribute('data-lexeme');
-
     if (letter) {
       handleLetterTap(letter, span, container);
     }
-    // lexeme будет обработан в MVP 2
+  });
+
+  // Долгий тап (≥500ms) — показать оригинал
+  textArea.addEventListener('pointerdown', (e) => {
+    const span = e.target.closest('span.gr');
+    if (!span) return;
+    longPressTarget = span;
+    longPressTimer = setTimeout(() => {
+      if (longPressTarget) {
+        longPressTarget._wasLongPress = true;
+        // Показываем оригинал
+        const original = longPressTarget.getAttribute('data-original');
+        if (original) {
+          longPressTarget.setAttribute('data-restore', longPressTarget.textContent);
+          longPressTarget.textContent = original;
+          longPressTarget.classList.add('show-original');
+        }
+      }
+    }, 500);
+  });
+
+  textArea.addEventListener('pointerup', () => {
+    if (longPressTimer) clearTimeout(longPressTimer);
+    longPressTimer = null;
+  });
+
+  textArea.addEventListener('pointerleave', () => {
+    if (longPressTimer) clearTimeout(longPressTimer);
+    longPressTimer = null;
+    // Восстанавливаем если был показан оригинал
+    if (longPressTarget && longPressTarget.classList.contains('show-original')) {
+      const restore = longPressTarget.getAttribute('data-restore');
+      if (restore) {
+        longPressTarget.textContent = restore;
+      }
+      longPressTarget.classList.remove('show-original');
+      longPressTarget._wasLongPress = false;
+    }
+    longPressTarget = null;
+  });
+
+  // Восстановление после долгого тапа
+  textArea.addEventListener('pointerup', (e) => {
+    if (longPressTarget && longPressTarget.classList.contains('show-original')) {
+      // Даём пользователю увидеть оригинал и восстанавливаем
+      setTimeout(() => {
+        if (longPressTarget && longPressTarget.classList.contains('show-original')) {
+          const restore = longPressTarget.getAttribute('data-restore');
+          if (restore) {
+            longPressTarget.textContent = restore;
+          }
+          longPressTarget.classList.remove('show-original');
+          longPressTarget._wasLongPress = false;
+          longPressTarget = null;
+        }
+      }, 200);
+    }
   });
 
   // Клавиатурная доступность
@@ -228,10 +296,14 @@ function renderWindowed() {
       p.appendChild(sup);
       p.appendChild(document.createTextNode(' '));
 
-      // Применяем греческий слой
-      const segments = composeVerse(verse.text, composeCtx);
-      const frag = segmentsToFragment(segments, renderCtx);
-      p.appendChild(frag);
+      if (plainView) {
+        // Чистый русский текст
+        p.appendChild(document.createTextNode(verse.text));
+      } else {
+        const segments = composeVerse(verse.text, composeCtx);
+        const frag = segmentsToFragment(segments, renderCtx);
+        p.appendChild(frag);
+      }
 
       chapterEl.appendChild(p);
     }
@@ -291,9 +363,13 @@ function reRenderWindowed() {
       p.appendChild(sup);
       p.appendChild(document.createTextNode(' '));
 
-      const segments = composeVerse(verse.text, composeCtx);
-      const frag = segmentsToFragment(segments, renderCtx);
-      p.appendChild(frag);
+      if (plainView) {
+        p.appendChild(document.createTextNode(verse.text));
+      } else {
+        const segments = composeVerse(verse.text, composeCtx);
+        const frag = segmentsToFragment(segments, renderCtx);
+        p.appendChild(frag);
+      }
 
       section.appendChild(p);
     }

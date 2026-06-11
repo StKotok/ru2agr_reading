@@ -6,7 +6,7 @@ import { navigate } from '../../router.js';
  * Книга ▾ | Режим ▾ | Греческий: N% | глаз
  */
 export function createTopBar(ctx) {
-  const { store } = ctx;
+  const { store, onEyeToggle } = ctx;
   const bar = document.createElement('div');
   bar.className = 'top-bar';
 
@@ -96,6 +96,14 @@ export function createTopBar(ctx) {
   eyeBtn.textContent = '👁';
   eyeBtn.title = 'Показать обычный русский текст';
   eyeBtn.setAttribute('aria-pressed', 'false');
+  eyeBtn.addEventListener('click', () => {
+    const pressed = eyeBtn.getAttribute('aria-pressed') === 'true';
+    const newPressed = !pressed;
+    eyeBtn.setAttribute('aria-pressed', String(newPressed));
+    eyeBtn.style.background = newPressed ? 'var(--selection)' : '';
+    eyeBtn.title = newPressed ? 'Вернуть греческий слой' : 'Показать обычный русский текст';
+    if (onEyeToggle) onEyeToggle(newPressed);
+  });
   bar.appendChild(eyeBtn);
 
   // Загрузка списка книг
