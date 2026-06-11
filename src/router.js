@@ -1,5 +1,5 @@
 const ROUTES = [
-  { pattern: /^#\/read\/([a-z2]+)$/, screen: 'reading', paramNames: ['book'] },
+  { pattern: /^#\/read\/([a-z0-9]+)$/, screen: 'reading', paramNames: ['book'] },
   { pattern: /^#\/dictionary$/, screen: 'dictionary', paramNames: [] },
   { pattern: /^#\/progress$/, screen: 'progress', paramNames: [] },
   { pattern: /^#\/settings$/, screen: 'settings', paramNames: [] },
