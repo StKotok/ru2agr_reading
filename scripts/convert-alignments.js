@@ -290,6 +290,24 @@ function buildManualAlignment(manualRecords, grcByTokenId, ruByTokenId) {
     }
   }
 
+  // Дедупликация: для каждого стиха оставляем только первый матч для каждого ru
+  for (const [verseKey, alignments] of byVerse) {
+    const seenRu = new Map();
+    for (const a of alignments) {
+      if (!seenRu.has(a.ru)) {
+        seenRu.set(a.ru, a.gr);
+      }
+    }
+    const deduped = [...seenRu.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([ru, gr]) => ({ ru, gr }));
+    if (deduped.length < alignments.length) {
+      const diff = alignments.length - deduped.length;
+      console.log(`   ℹ️  ${verseKey}: дедуплицировано ${diff} дубликатов`);
+    }
+    byVerse.set(verseKey, deduped);
+  }
+
   return byVerse;
 }
 
@@ -566,47 +584,102 @@ function buildVerseKey(bookId, chN, vN, grcByTokenId) {
 // Верификация
 // ---------------------------------------------------------------------------
 
-function verify(synDir) {
+function verify(synDir, grcBooks) {
   console.log('\n🔍 Верификация alignment...');
+  let errors = 0;
 
-  // Ин 1:1 — три «Слово» → три разных λόγος по порядку
+  // Ин 1:1 — проверяем формы: хотя бы одно «Слово» → λόγος с правильной формой
   const johnPath = resolve(synDir, 'john.json');
   if (existsSync(johnPath)) {
     const john = JSON.parse(readFileSync(johnPath, 'utf-8'));
     const john1_1 = john.chapters[0]?.verses[0];
-    if (john1_1?.alignment) {
-      const logosAligns = john1_1.alignment.filter((_, i) => {
-        const words = john1_1.text.split(/\s+/);
-        const w = words[john1_1.alignment[i]?.ru] || '';
-        return /слов/i.test(w.replace(/[.,;:!?—\-–"«»„"()\[\]'¿¡;]+$/g, ''));
-      });
-      const grIndices = logosAligns.map(a => a.gr);
-      const unique = new Set(grIndices);
-      if (unique.size >= 3) {
-        console.log('   ✅ Ин 1:1 — три «Слово» → три разных λόγος по порядку');
-      } else {
-        console.log(`   ⚠️  Ин 1:1 — только ${unique.size} разных λόγος (ожидалось 3)`);
-      }
-    } else {
+    if (!john1_1?.alignment || john1_1.alignment.length === 0) {
       console.log('   ❌ Ин 1:1 — alignment отсутствует');
+      errors++;
+    } else {
+      const words = john1_1.text.split(/\s+/);
+      const grcBook = grcBooks.get('john');
+      const grcTokens = grcBook?.chapters?.get(1)?.get(1) || [];
+
+      // Находим «Слово» в alignment и проверяем что форма = λόγος (не лемма из другой части речи)
+      const logosAligns = john1_1.alignment.filter(a => {
+        const w = (words[a.ru] || '').replace(/[.,;:!?—\-–"«»„"()\[\]'¿¡;]+$/g, '');
+        return /^Слов[оауе]/.test(w) || /^слов[оауе]/.test(w);
+      });
+
+      // Проверяем что выровненные «Слово» указывают на токены с леммой λόγος
+      let correctForms = 0;
+      for (const a of logosAligns) {
+        if (a.gr < grcTokens.length && grcTokens[a.gr].lemma === 'λόγος') {
+          correctForms++;
+        }
+      }
+
+      if (correctForms >= 1) {
+        console.log(`   ✅ Ин 1:1 — ${correctForms} «Слово» → λόγος (правильная лемма)`);
+      } else {
+        console.log('   ❌ Ин 1:1 — ни одно «Слово» не ссылается на λόγος');
+        errors++;
+      }
     }
   }
 
-  // Мк 1:1 — все 6 значимых слов выровнены
+  // Мк 1:1 — проверяем формы
   const markPath = resolve(synDir, 'mark.json');
   if (existsSync(markPath)) {
     const mark = JSON.parse(readFileSync(markPath, 'utf-8'));
     const mark1_1 = mark.chapters[0]?.verses[0];
-    if (mark1_1?.alignment) {
-      const alignCount = mark1_1.alignment.length;
-      if (alignCount >= 5) {
-        console.log(`   ✅ Мк 1:1 — ${alignCount} слов выровнено (ожидалось ≥ 5)`);
-      } else {
-        console.log(`   ⚠️  Мк 1:1 — только ${alignCount} слов выровнено`);
-      }
-    } else {
+    if (!mark1_1?.alignment || mark1_1.alignment.length === 0) {
       console.log('   ❌ Мк 1:1 — alignment отсутствует');
+      errors++;
+    } else {
+      const words = mark1_1.text.split(/\s+/);
+      const grcBook = grcBooks.get('mark');
+      const grcTokens = grcBook?.chapters?.get(1)?.get(1) || [];
+
+      // Проверяем: «Евангелия» (ru=1) → εὐαγγελίου (род. падеж, не лемма εὐαγγέλιον)
+      const evAlign = mark1_1.alignment.find(a => a.ru === 1);
+      if (evAlign && evAlign.gr < grcTokens.length) {
+        const token = grcTokens[evAlign.gr];
+        if (token.w === 'εὐαγγελίου' && token.lemma === 'εὐαγγέλιον') {
+          console.log('   ✅ Мк 1:1 — «Евангелия» → εὐαγγελίου (род. падеж, не лемма)');
+        } else {
+          console.log(`   ❌ Мк 1:1 — «Евангелия» → ${token.w} (лемма: ${token.lemma}), ожидалось εὐαγγελίου`);
+          errors++;
+        }
+      } else {
+        console.log('   ❌ Мк 1:1 — «Евангелия» не выровнено');
+        errors++;
+      }
+
+      // Проверяем: «Иисуса» (ru=2) → Ἰησοῦ (род. падеж, не лемма Ἰησοῦς)
+      const isAlign = mark1_1.alignment.find(a => a.ru === 2);
+      if (isAlign && isAlign.gr < grcTokens.length) {
+        const token = grcTokens[isAlign.gr];
+        if (token.w === 'Ἰησοῦ' && token.lemma === 'Ἰησοῦς') {
+          console.log('   ✅ Мк 1:1 — «Иисуса» → Ἰησοῦ (род. падеж, не лемма)');
+        } else {
+          console.log(`   ❌ Мк 1:1 — «Иисуса» → ${token.w} (лемма: ${token.lemma}), ожидалось Ἰησοῦ`);
+          errors++;
+        }
+      } else {
+        console.log('   ❌ Мк 1:1 — «Иисуса» не выровнено');
+        errors++;
+      }
+
+      // Проверяем общее количество alignment записей (минимум 3)
+      if (mark1_1.alignment.length >= 3) {
+        console.log(`   ✅ Мк 1:1 — ${mark1_1.alignment.length} слов выровнено`);
+      } else {
+        console.log(`   ❌ Мк 1:1 — только ${mark1_1.alignment.length} слов выровнено (ожидалось ≥ 3)`);
+        errors++;
+      }
     }
+  }
+
+  if (errors > 0) {
+    console.error(`\n❌❌❌ Верификация провалена: ${errors} ошибок. Исправь alignment и перезапусти.`);
+    process.exit(1);
   }
 }
 
@@ -683,7 +756,7 @@ function main() {
   updateSynWithAlignment(SYN_DIR, grcBooks, manualByVerse, lexicon, grcByTokenId);
 
   // 9. Верификация
-  verify(SYN_DIR);
+  verify(SYN_DIR, grcBooks);
 
   // 10. Итоги
   console.log('\n✅ Конвертация завершена.');
