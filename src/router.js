@@ -4,6 +4,7 @@ const ROUTES = [
   { pattern: /^#\/progress$/, screen: 'progress', paramNames: [] },
   { pattern: /^#\/settings$/, screen: 'settings', paramNames: [] },
   { pattern: /^#\/onboarding$/, screen: 'onboarding', paramNames: [] },
+  { pattern: /^#\/about$/, screen: 'about', paramNames: [] },
 ];
 
 export function parse(hash) {

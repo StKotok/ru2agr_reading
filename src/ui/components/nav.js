@@ -5,6 +5,7 @@ const TABS = [
   { id: 'dictionary', label: 'Слова', hash: '#/dictionary' },
   { id: 'progress', label: 'Прогресс', hash: '#/progress' },
   { id: 'settings', label: '⚙', hash: '#/settings' },
+  { id: 'about', label: 'О', hash: '#/about' },
 ];
 
 export function createNav(store) {

@@ -8,6 +8,7 @@ import * as dictionaryScreen from './ui/screens/dictionary.js';
 import * as progressScreen from './ui/screens/progress.js';
 import * as settingsScreen from './ui/screens/settings.js';
 import * as onboardingScreen from './ui/screens/onboarding.js';
+import * as aboutScreen from './ui/screens/about.js';
 
 const SCREENS = {
   reading: readingScreen,
@@ -15,6 +16,7 @@ const SCREENS = {
   progress: progressScreen,
   settings: settingsScreen,
   onboarding: onboardingScreen,
+  about: aboutScreen,
 };
 
 const store = createStore({ screen: 'reading', book: 'john' });

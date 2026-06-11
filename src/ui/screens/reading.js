@@ -2,7 +2,7 @@ import { loadBook } from '../../data/bible-loader.js';
 import { loadProgress, saveProgress, markLetterKnown } from '../../state/progress.js';
 import { loadSettings, saveSettings } from '../../state/settings.js';
 import { loadAlphabet, loadCoreLexicon } from '../../data/lexicon-loader.js';
-import { loadDictionary } from '../../state/dictionary.js';
+import { loadDictionary, setWordStatus, saveDictionary, addWord } from '../../state/dictionary.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
 import { createTopBar } from '../components/top-bar.js';
@@ -411,6 +411,13 @@ function renderWindowed() {
       chapterEl.appendChild(p);
     }
 
+    // Sentinel для трекинга прочитанных глав
+    const sentinel = document.createElement('div');
+    sentinel.className = 'chapter-end-sentinel';
+    sentinel.setAttribute('data-chapter-end', String(ch.n));
+    sentinel.style.height = '1px';
+    chapterEl.appendChild(sentinel);
+
     chaptersEls.push(chapterEl);
   }
 
@@ -431,6 +438,40 @@ function renderWindowed() {
   }
 
   setupObserver(chaptersEls, textArea);
+  setupChapterTracking();
+}
+
+function setupChapterTracking() {
+  const sentinels = document.querySelectorAll('.chapter-end-sentinel');
+  if (sentinels.length === 0) return;
+
+  const readChapters = new Set(
+    progress.reading.books?.[bookData.id]?.chaptersRead || []
+  );
+
+  const chapterObserver = new IntersectionObserver((entries) => {
+    let changed = false;
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const chN = parseInt(entry.target.getAttribute('data-chapter-end'));
+        if (!isNaN(chN) && !readChapters.has(chN)) {
+          readChapters.add(chN);
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      // Сохраняем прочитанные главы
+      if (!progress.reading.books) progress.reading.books = {};
+      if (!progress.reading.books[bookData.id]) progress.reading.books[bookData.id] = {};
+      progress.reading.books[bookData.id].chaptersRead = [...readChapters];
+      saveProgress(progress);
+    }
+  }, { threshold: 0.5 });
+
+  for (const sentinel of sentinels) {
+    chapterObserver.observe(sentinel);
+  }
 }
 
 function getChapterCandidates(chapterText) {
@@ -641,7 +682,6 @@ function handleWordTap(lexemeId, span, container) {
 
   const card = renderWordCard(lexeme, dictEntry, { originalText }, {
     onMarkKnown: async (id) => {
-      const { setWordStatus, saveDictionary, getActive } = await import('../../state/dictionary.js');
       dictionary = setWordStatus(id, 'known', dictionary);
       await saveDictionary(dictionary);
       // Точечное обновление
@@ -649,7 +689,6 @@ function handleWordTap(lexemeId, span, container) {
       spans.forEach(s => s.classList.add('known'));
     },
     onAddToDict: async (id) => {
-      const { addWord, saveDictionary } = await import('../../state/dictionary.js');
       dictionary = addWord(id, dictionary);
       await saveDictionary(dictionary);
       buildWordEntries();
