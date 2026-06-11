@@ -1,0 +1,1560 @@
+{
+  "id": "2john",
+  "title": "ΙΩΑΝΝΟΥ Β'",
+  "short": "2Ιω",
+  "chapters": [
+    {
+      "n": 1,
+      "verses": [
+        {
+          "n": 1,
+          "text": "Ὁ πρεσβύτερος ἐκλεκτῇ κυρίᾳ καὶ τοῖς τέκνοις αὐτῆς οὓς ἐγὼ ἀγαπῶ ἐν ἀληθείᾳ καὶ οὐ ἐγὼ μόνος ἀλλὰ καὶ πάντες οἱ ἐγνωκότες τὴν ἀλήθειαν",
+          "tokens": [
+            {
+              "w": "Ὁ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "πρεσβύτερος",
+              "lemma": "πρεσβύτερος",
+              "morph": "adj",
+              "strong": 4245
+            },
+            {
+              "w": "ἐκλεκτῇ",
+              "lemma": "ἐκλεκτός",
+              "morph": "adj",
+              "strong": 1588
+            },
+            {
+              "w": "κυρίᾳ",
+              "lemma": "κυρία",
+              "morph": "noun",
+              "strong": 2959
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "τοῖς",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "τέκνοις",
+              "lemma": "τέκνον",
+              "morph": "noun",
+              "strong": 5043
+            },
+            {
+              "w": "αὐτῆς",
+              "lemma": "αὐτός",
+              "morph": "pron",
+              "strong": 846
+            },
+            {
+              "w": "οὓς",
+              "lemma": "ὅς",
+              "morph": "pron",
+              "strong": 3739
+            },
+            {
+              "w": "ἐγὼ",
+              "lemma": "ἐγώ",
+              "morph": "pron",
+              "strong": 1473
+            },
+            {
+              "w": "ἀγαπῶ",
+              "lemma": "ἀγαπάω",
+              "morph": "verb",
+              "strong": 25
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "ἀληθείᾳ",
+              "lemma": "ἀλήθεια",
+              "morph": "noun",
+              "strong": 225
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "οὐ",
+              "lemma": "οὐ",
+              "morph": "adv",
+              "strong": 3756
+            },
+            {
+              "w": "ἐγὼ",
+              "lemma": "ἐγώ",
+              "morph": "pron",
+              "strong": 1473
+            },
+            {
+              "w": "μόνος",
+              "lemma": "μόνος",
+              "morph": "adj",
+              "strong": 3441
+            },
+            {
+              "w": "ἀλλὰ",
+              "lemma": "ἀλλά",
+              "morph": "conj",
+              "strong": 235
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "adv",
+              "strong": 2532
+            },
+            {
+              "w": "πάντες",
+              "lemma": "πᾶς",
+              "morph": "adj",
+              "strong": 3956
+            },
+            {
+              "w": "οἱ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἐγνωκότες",
+              "lemma": "γινώσκω",
+              "morph": "verb",
+              "strong": 1097
+            },
+            {
+              "w": "τὴν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἀλήθειαν",
+              "lemma": "ἀλήθεια",
+              "morph": "noun",
+              "strong": 225
+            }
+          ]
+        },
+        {
+          "n": 2,
+          "text": "διὰ τὴν ἀλήθειαν τὴν μένουσαν ἐν ἡμῖν καὶ μεθ ἡμῶν ἔσται εἰς τὸν αἰῶνα",
+          "tokens": [
+            {
+              "w": "διὰ",
+              "lemma": "διά",
+              "morph": "prep",
+              "strong": 1223
+            },
+            {
+              "w": "τὴν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἀλήθειαν",
+              "lemma": "ἀλήθεια",
+              "morph": "noun",
+              "strong": 225
+            },
+            {
+              "w": "τὴν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "μένουσαν",
+              "lemma": "μένω",
+              "morph": "verb",
+              "strong": 3306
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "ἡμῖν",
+              "lemma": "ἐγώ",
+              "morph": "pron",
+              "strong": 2254
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "μεθ",
+              "lemma": "μετά",
+              "morph": "prep",
+              "strong": 3326
+            },
+            {
+              "w": "ἡμῶν",
+              "lemma": "ἐγώ",
+              "morph": "pron",
+              "strong": 2257
+            },
+            {
+              "w": "ἔσται",
+              "lemma": "εἰμί",
+              "morph": "verb",
+              "strong": 2071
+            },
+            {
+              "w": "εἰς",
+              "lemma": "εἰς",
+              "morph": "prep",
+              "strong": 1519
+            },
+            {
+              "w": "τὸν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "αἰῶνα",
+              "lemma": "αἰών",
+              "morph": "noun",
+              "strong": 165
+            }
+          ]
+        },
+        {
+          "n": 3,
+          "text": "ἔσται μεθ ἡμῶν χάρις ἔλεος εἰρήνη παρὰ θεοῦ πατρός καὶ παρὰ Ἰησοῦ Χριστοῦ τοῦ υἱοῦ τοῦ πατρός ἐν ἀληθείᾳ καὶ ἀγάπῃ",
+          "tokens": [
+            {
+              "w": "ἔσται",
+              "lemma": "εἰμί",
+              "morph": "verb",
+              "strong": 2071
+            },
+            {
+              "w": "μεθ",
+              "lemma": "μετά",
+              "morph": "prep",
+              "strong": 3326
+            },
+            {
+              "w": "ἡμῶν",
+              "lemma": "ἐγώ",
+              "morph": "pron",
+              "strong": 2257
+            },
+            {
+              "w": "χάρις",
+              "lemma": "χάρις",
+              "morph": "noun",
+              "strong": 5485
+            },
+            {
+              "w": "ἔλεος",
+              "lemma": "ἔλεος",
+              "morph": "noun",
+              "strong": 1656
+            },
+            {
+              "w": "εἰρήνη",
+              "lemma": "εἰρήνη",
+              "morph": "noun",
+              "strong": 1515
+            },
+            {
+              "w": "παρὰ",
+              "lemma": "παρά",
+              "morph": "prep",
+              "strong": 3844
+            },
+            {
+              "w": "θεοῦ",
+              "lemma": "θεός",
+              "morph": "noun",
+              "strong": 2316
+            },
+            {
+              "w": "πατρός",
+              "lemma": "πατήρ",
+              "morph": "noun",
+              "strong": 3962
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "παρὰ",
+              "lemma": "παρά",
+              "morph": "prep",
+              "strong": 3844
+            },
+            {
+              "w": "Ἰησοῦ",
+              "lemma": "Ἰησοῦς",
+              "morph": "noun",
+              "strong": 2424
+            },
+            {
+              "w": "Χριστοῦ",
+              "lemma": "Χριστός",
+              "morph": "noun",
+              "strong": 5547
+            },
+            {
+              "w": "τοῦ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "υἱοῦ",
+              "lemma": "υἱός",
+              "morph": "noun",
+              "strong": 5207
+            },
+            {
+              "w": "τοῦ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "πατρός",
+              "lemma": "πατήρ",
+              "morph": "noun",
+              "strong": 3962
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "ἀληθείᾳ",
+              "lemma": "ἀλήθεια",
+              "morph": "noun",
+              "strong": 225
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "ἀγάπῃ",
+              "lemma": "ἀγάπη",
+              "morph": "noun",
+              "strong": 26
+            }
+          ]
+        },
+        {
+          "n": 4,
+          "text": "Ἐχάρην λίαν ὅτι εὕρηκα ἐκ τῶν τέκνων σου περιπατοῦντας ἐν ἀληθείᾳ καθὼς ἐντολὴν ἐλάβομεν παρὰ τοῦ πατρός",
+          "tokens": [
+            {
+              "w": "Ἐχάρην",
+              "lemma": "χαίρω",
+              "morph": "verb",
+              "strong": 5463
+            },
+            {
+              "w": "λίαν",
+              "lemma": "λίαν",
+              "morph": "adv",
+              "strong": 3029
+            },
+            {
+              "w": "ὅτι",
+              "lemma": "ὅτι",
+              "morph": "conj",
+              "strong": 3754
+            },
+            {
+              "w": "εὕρηκα",
+              "lemma": "εὑρίσκω",
+              "morph": "verb",
+              "strong": 2147
+            },
+            {
+              "w": "ἐκ",
+              "lemma": "ἐκ",
+              "morph": "prep",
+              "strong": 1537
+            },
+            {
+              "w": "τῶν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "τέκνων",
+              "lemma": "τέκνον",
+              "morph": "noun",
+              "strong": 5043
+            },
+            {
+              "w": "σου",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 4675
+            },
+            {
+              "w": "περιπατοῦντας",
+              "lemma": "περιπατέω",
+              "morph": "verb",
+              "strong": 4043
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "ἀληθείᾳ",
+              "lemma": "ἀλήθεια",
+              "morph": "noun",
+              "strong": 225
+            },
+            {
+              "w": "καθὼς",
+              "lemma": "καθώς",
+              "morph": "conj",
+              "strong": 2531
+            },
+            {
+              "w": "ἐντολὴν",
+              "lemma": "ἐντολή",
+              "morph": "noun",
+              "strong": 1785
+            },
+            {
+              "w": "ἐλάβομεν",
+              "lemma": "λαμβάνω",
+              "morph": "verb",
+              "strong": 2983
+            },
+            {
+              "w": "παρὰ",
+              "lemma": "παρά",
+              "morph": "prep",
+              "strong": 3844
+            },
+            {
+              "w": "τοῦ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "πατρός",
+              "lemma": "πατήρ",
+              "morph": "noun",
+              "strong": 3962
+            }
+          ]
+        },
+        {
+          "n": 5,
+          "text": "καὶ νῦν ἐρωτῶ σε κυρία οὐ ὡς ἐντολὴν καινὴν γράφων σοι ἀλλὰ ἣν εἴχομεν ἀπ ἀρχῆς ἵνα ἀγαπῶμεν ἀλλήλους",
+          "tokens": [
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "νῦν",
+              "lemma": "νῦν",
+              "morph": "adv",
+              "strong": 3568
+            },
+            {
+              "w": "ἐρωτῶ",
+              "lemma": "ἐρωτάω",
+              "morph": "verb",
+              "strong": 2065
+            },
+            {
+              "w": "σε",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 4571
+            },
+            {
+              "w": "κυρία",
+              "lemma": "κυρία",
+              "morph": "noun",
+              "strong": 2959
+            },
+            {
+              "w": "οὐ",
+              "lemma": "οὐ",
+              "morph": "adv",
+              "strong": 3756
+            },
+            {
+              "w": "ὡς",
+              "lemma": "ὡς",
+              "morph": "conj",
+              "strong": 5613
+            },
+            {
+              "w": "ἐντολὴν",
+              "lemma": "ἐντολή",
+              "morph": "noun",
+              "strong": 1785
+            },
+            {
+              "w": "καινὴν",
+              "lemma": "καινός",
+              "morph": "adj",
+              "strong": 2537
+            },
+            {
+              "w": "γράφων",
+              "lemma": "γράφω",
+              "morph": "verb",
+              "strong": 1125
+            },
+            {
+              "w": "σοι",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 4671
+            },
+            {
+              "w": "ἀλλὰ",
+              "lemma": "ἀλλά",
+              "morph": "conj",
+              "strong": 235
+            },
+            {
+              "w": "ἣν",
+              "lemma": "ὅς",
+              "morph": "pron",
+              "strong": 3739
+            },
+            {
+              "w": "εἴχομεν",
+              "lemma": "ἔχω",
+              "morph": "verb",
+              "strong": 2192
+            },
+            {
+              "w": "ἀπ",
+              "lemma": "ἀπό",
+              "morph": "prep",
+              "strong": 575
+            },
+            {
+              "w": "ἀρχῆς",
+              "lemma": "ἀρχή",
+              "morph": "noun",
+              "strong": 746
+            },
+            {
+              "w": "ἵνα",
+              "lemma": "ἵνα",
+              "morph": "conj",
+              "strong": 2443
+            },
+            {
+              "w": "ἀγαπῶμεν",
+              "lemma": "ἀγαπάω",
+              "morph": "verb",
+              "strong": 25
+            },
+            {
+              "w": "ἀλλήλους",
+              "lemma": "ἀλλήλων",
+              "morph": "pron",
+              "strong": 240
+            }
+          ]
+        },
+        {
+          "n": 6,
+          "text": "καὶ αὕτη ἐστὶν ἡ ἀγάπη ἵνα περιπατῶμεν κατὰ τὰς ἐντολὰς αὐτοῦ αὕτη ἡ ἐντολή ἐστιν καθὼς ἠκούσατε ἀπ ἀρχῆς ἵνα ἐν αὐτῇ περιπατῆτε",
+          "tokens": [
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "αὕτη",
+              "lemma": "οὗτος",
+              "morph": "pron",
+              "strong": 3778
+            },
+            {
+              "w": "ἐστὶν",
+              "lemma": "εἰμί",
+              "morph": "verb",
+              "strong": 2076
+            },
+            {
+              "w": "ἡ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἀγάπη",
+              "lemma": "ἀγάπη",
+              "morph": "noun",
+              "strong": 26
+            },
+            {
+              "w": "ἵνα",
+              "lemma": "ἵνα",
+              "morph": "adv",
+              "strong": 2443
+            },
+            {
+              "w": "περιπατῶμεν",
+              "lemma": "περιπατέω",
+              "morph": "verb",
+              "strong": 4043
+            },
+            {
+              "w": "κατὰ",
+              "lemma": "κατά",
+              "morph": "prep",
+              "strong": 2596
+            },
+            {
+              "w": "τὰς",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἐντολὰς",
+              "lemma": "ἐντολή",
+              "morph": "noun",
+              "strong": 1785
+            },
+            {
+              "w": "αὐτοῦ",
+              "lemma": "αὐτός",
+              "morph": "pron",
+              "strong": 846
+            },
+            {
+              "w": "αὕτη",
+              "lemma": "οὗτος",
+              "morph": "pron",
+              "strong": 3778
+            },
+            {
+              "w": "ἡ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἐντολή",
+              "lemma": "ἐντολή",
+              "morph": "noun",
+              "strong": 1785
+            },
+            {
+              "w": "ἐστιν",
+              "lemma": "εἰμί",
+              "morph": "verb",
+              "strong": 2076
+            },
+            {
+              "w": "καθὼς",
+              "lemma": "καθώς",
+              "morph": "conj",
+              "strong": 2531
+            },
+            {
+              "w": "ἠκούσατε",
+              "lemma": "ἀκούω",
+              "morph": "verb",
+              "strong": 191
+            },
+            {
+              "w": "ἀπ",
+              "lemma": "ἀπό",
+              "morph": "prep",
+              "strong": 575
+            },
+            {
+              "w": "ἀρχῆς",
+              "lemma": "ἀρχή",
+              "morph": "noun",
+              "strong": 746
+            },
+            {
+              "w": "ἵνα",
+              "lemma": "ἵνα",
+              "morph": "adv",
+              "strong": 2443
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "αὐτῇ",
+              "lemma": "αὐτός",
+              "morph": "pron",
+              "strong": 846
+            },
+            {
+              "w": "περιπατῆτε",
+              "lemma": "περιπατέω",
+              "morph": "verb",
+              "strong": 4043
+            }
+          ]
+        },
+        {
+          "n": 7,
+          "text": "ὅτι πολλοὶ πλάνοι ἐξῆλθον εἰς τὸν κόσμον οἱ μὴ ὁμολογοῦντες Ἰησοῦν Χριστὸν ἐρχόμενον ἐν σαρκί οὗτός ἐστιν ὁ πλάνος καὶ ὁ ἀντίχριστος",
+          "tokens": [
+            {
+              "w": "ὅτι",
+              "lemma": "ὅτι",
+              "morph": "conj",
+              "strong": 3754
+            },
+            {
+              "w": "πολλοὶ",
+              "lemma": "πολύς",
+              "morph": "adj",
+              "strong": 4183
+            },
+            {
+              "w": "πλάνοι",
+              "lemma": "πλάνος",
+              "morph": "adj",
+              "strong": 4108
+            },
+            {
+              "w": "ἐξῆλθον",
+              "lemma": "ἐξέρχομαι",
+              "morph": "verb",
+              "strong": 1831
+            },
+            {
+              "w": "εἰς",
+              "lemma": "εἰς",
+              "morph": "prep",
+              "strong": 1519
+            },
+            {
+              "w": "τὸν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "κόσμον",
+              "lemma": "κόσμος",
+              "morph": "noun",
+              "strong": 2889
+            },
+            {
+              "w": "οἱ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "μὴ",
+              "lemma": "μή",
+              "morph": "adv",
+              "strong": 3361
+            },
+            {
+              "w": "ὁμολογοῦντες",
+              "lemma": "ὁμολογέω",
+              "morph": "verb",
+              "strong": 3670
+            },
+            {
+              "w": "Ἰησοῦν",
+              "lemma": "Ἰησοῦς",
+              "morph": "noun",
+              "strong": 2424
+            },
+            {
+              "w": "Χριστὸν",
+              "lemma": "Χριστός",
+              "morph": "noun",
+              "strong": 5547
+            },
+            {
+              "w": "ἐρχόμενον",
+              "lemma": "ἔρχομαι",
+              "morph": "verb",
+              "strong": 2064
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "σαρκί",
+              "lemma": "σάρξ",
+              "morph": "noun",
+              "strong": 4561
+            },
+            {
+              "w": "οὗτός",
+              "lemma": "οὗτος",
+              "morph": "pron",
+              "strong": 3778
+            },
+            {
+              "w": "ἐστιν",
+              "lemma": "εἰμί",
+              "morph": "verb",
+              "strong": 2076
+            },
+            {
+              "w": "ὁ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "πλάνος",
+              "lemma": "πλάνος",
+              "morph": "adj",
+              "strong": 4108
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "ὁ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἀντίχριστος",
+              "lemma": "ἀντίχριστος",
+              "morph": "noun",
+              "strong": 500
+            }
+          ]
+        },
+        {
+          "n": 8,
+          "text": "βλέπετε ἑαυτούς ἵνα μὴ ἀπολέσητε ἃ εἰργασάμεθα ἀλλὰ μισθὸν πλήρη ἀπολάβητε",
+          "tokens": [
+            {
+              "w": "βλέπετε",
+              "lemma": "βλέπω",
+              "morph": "verb",
+              "strong": 991
+            },
+            {
+              "w": "ἑαυτούς",
+              "lemma": "ἑαυτοῦ",
+              "morph": "pron",
+              "strong": 1438
+            },
+            {
+              "w": "ἵνα",
+              "lemma": "ἵνα",
+              "morph": "conj",
+              "strong": 2443
+            },
+            {
+              "w": "μὴ",
+              "lemma": "μή",
+              "morph": "adv",
+              "strong": 3361
+            },
+            {
+              "w": "ἀπολέσητε",
+              "lemma": "ἀπόλλυμι",
+              "morph": "verb",
+              "strong": 622
+            },
+            {
+              "w": "ἃ",
+              "lemma": "ὅς",
+              "morph": "pron",
+              "strong": 3739
+            },
+            {
+              "w": "εἰργασάμεθα",
+              "lemma": "ἐργάζομαι",
+              "morph": "verb",
+              "strong": 2038
+            },
+            {
+              "w": "ἀλλὰ",
+              "lemma": "ἀλλά",
+              "morph": "conj",
+              "strong": 235
+            },
+            {
+              "w": "μισθὸν",
+              "lemma": "μισθός",
+              "morph": "noun",
+              "strong": 3408
+            },
+            {
+              "w": "πλήρη",
+              "lemma": "πλήρης",
+              "morph": "adj",
+              "strong": 4134
+            },
+            {
+              "w": "ἀπολάβητε",
+              "lemma": "ἀπολαμβάνω",
+              "morph": "verb",
+              "strong": 618
+            }
+          ]
+        },
+        {
+          "n": 9,
+          "text": "πᾶς ὁ προάγων καὶ μὴ μένων ἐν τῇ διδαχῇ τοῦ Χριστοῦ θεὸν οὐ ἔχει ὁ μένων ἐν τῇ διδαχῇ οὗτος καὶ τὸν πατέρα καὶ τὸν υἱὸν ἔχει",
+          "tokens": [
+            {
+              "w": "πᾶς",
+              "lemma": "πᾶς",
+              "morph": "adj",
+              "strong": 3956
+            },
+            {
+              "w": "ὁ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "προάγων",
+              "lemma": "προάγω",
+              "morph": "verb",
+              "strong": 4254
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "μὴ",
+              "lemma": "μή",
+              "morph": "adv",
+              "strong": 3361
+            },
+            {
+              "w": "μένων",
+              "lemma": "μένω",
+              "morph": "verb",
+              "strong": 3306
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "τῇ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "διδαχῇ",
+              "lemma": "διδαχή",
+              "morph": "noun",
+              "strong": 1322
+            },
+            {
+              "w": "τοῦ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "Χριστοῦ",
+              "lemma": "Χριστός",
+              "morph": "noun",
+              "strong": 5547
+            },
+            {
+              "w": "θεὸν",
+              "lemma": "θεός",
+              "morph": "noun",
+              "strong": 2316
+            },
+            {
+              "w": "οὐ",
+              "lemma": "οὐ",
+              "morph": "adv",
+              "strong": 3756
+            },
+            {
+              "w": "ἔχει",
+              "lemma": "ἔχω",
+              "morph": "verb",
+              "strong": 2192
+            },
+            {
+              "w": "ὁ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "μένων",
+              "lemma": "μένω",
+              "morph": "verb",
+              "strong": 3306
+            },
+            {
+              "w": "ἐν",
+              "lemma": "ἐν",
+              "morph": "prep",
+              "strong": 1722
+            },
+            {
+              "w": "τῇ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "διδαχῇ",
+              "lemma": "διδαχή",
+              "morph": "noun",
+              "strong": 1322
+            },
+            {
+              "w": "οὗτος",
+              "lemma": "οὗτος",
+              "morph": "pron",
+              "strong": 3778
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "τὸν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "πατέρα",
+              "lemma": "πατήρ",
+              "morph": "noun",
+              "strong": 3962
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "τὸν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "υἱὸν",
+              "lemma": "υἱός",
+              "morph": "noun",
+              "strong": 5207
+            },
+            {
+              "w": "ἔχει",
+              "lemma": "ἔχω",
+              "morph": "verb",
+              "strong": 2192
+            }
+          ]
+        },
+        {
+          "n": 10,
+          "text": "εἴ τις ἔρχεται πρὸς ὑμᾶς καὶ ταύτην τὴν διδαχὴν οὐ φέρει μὴ λαμβάνετε αὐτὸν εἰς οἰκίαν καὶ χαίρειν αὐτῷ μὴ λέγετε",
+          "tokens": [
+            {
+              "w": "εἴ",
+              "lemma": "εἰ",
+              "morph": "conj",
+              "strong": 1487
+            },
+            {
+              "w": "τις",
+              "lemma": "τις",
+              "morph": "pron",
+              "strong": 5100
+            },
+            {
+              "w": "ἔρχεται",
+              "lemma": "ἔρχομαι",
+              "morph": "verb",
+              "strong": 2064
+            },
+            {
+              "w": "πρὸς",
+              "lemma": "πρός",
+              "morph": "prep",
+              "strong": 4314
+            },
+            {
+              "w": "ὑμᾶς",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 5209
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "ταύτην",
+              "lemma": "οὗτος",
+              "morph": "pron",
+              "strong": 5026
+            },
+            {
+              "w": "τὴν",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "διδαχὴν",
+              "lemma": "διδαχή",
+              "morph": "noun",
+              "strong": 1322
+            },
+            {
+              "w": "οὐ",
+              "lemma": "οὐ",
+              "morph": "adv",
+              "strong": 3756
+            },
+            {
+              "w": "φέρει",
+              "lemma": "φέρω",
+              "morph": "verb",
+              "strong": 5342
+            },
+            {
+              "w": "μὴ",
+              "lemma": "μή",
+              "morph": "adv",
+              "strong": 3361
+            },
+            {
+              "w": "λαμβάνετε",
+              "lemma": "λαμβάνω",
+              "morph": "verb",
+              "strong": 2983
+            },
+            {
+              "w": "αὐτὸν",
+              "lemma": "αὐτός",
+              "morph": "pron",
+              "strong": 846
+            },
+            {
+              "w": "εἰς",
+              "lemma": "εἰς",
+              "morph": "prep",
+              "strong": 1519
+            },
+            {
+              "w": "οἰκίαν",
+              "lemma": "οἰκία",
+              "morph": "noun",
+              "strong": 3614
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "χαίρειν",
+              "lemma": "χαίρω",
+              "morph": "verb",
+              "strong": 5463
+            },
+            {
+              "w": "αὐτῷ",
+              "lemma": "αὐτός",
+              "morph": "pron",
+              "strong": 846
+            },
+            {
+              "w": "μὴ",
+              "lemma": "μή",
+              "morph": "adv",
+              "strong": 3361
+            },
+            {
+              "w": "λέγετε",
+              "lemma": "λέγω",
+              "morph": "verb",
+              "strong": 3004
+            }
+          ]
+        },
+        {
+          "n": 11,
+          "text": "ὁ λέγων γὰρ αὐτῷ χαίρειν κοινωνεῖ τοῖς ἔργοις αὐτοῦ τοῖς πονηροῖς",
+          "tokens": [
+            {
+              "w": "ὁ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "λέγων",
+              "lemma": "λέγω",
+              "morph": "verb",
+              "strong": 3004
+            },
+            {
+              "w": "γὰρ",
+              "lemma": "γάρ",
+              "morph": "conj",
+              "strong": 1063
+            },
+            {
+              "w": "αὐτῷ",
+              "lemma": "αὐτός",
+              "morph": "pron",
+              "strong": 846
+            },
+            {
+              "w": "χαίρειν",
+              "lemma": "χαίρω",
+              "morph": "verb",
+              "strong": 5463
+            },
+            {
+              "w": "κοινωνεῖ",
+              "lemma": "κοινωνέω",
+              "morph": "verb",
+              "strong": 2841
+            },
+            {
+              "w": "τοῖς",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἔργοις",
+              "lemma": "ἔργον",
+              "morph": "noun",
+              "strong": 2041
+            },
+            {
+              "w": "αὐτοῦ",
+              "lemma": "αὐτός",
+              "morph": "pron",
+              "strong": 846
+            },
+            {
+              "w": "τοῖς",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "πονηροῖς",
+              "lemma": "πονηρός",
+              "morph": "adj",
+              "strong": 4190
+            }
+          ]
+        },
+        {
+          "n": 12,
+          "text": "Πολλὰ ἔχων ὑμῖν γράφειν οὐ ἐβουλήθην διὰ χάρτου καὶ μέλανος ἀλλὰ ἐλπίζω γενέσθαι πρὸς ὑμᾶς καὶ στόμα πρὸς στόμα λαλῆσαι ἵνα ἡ χαρὰ ὑμῶν πεπληρωμένη ᾖ",
+          "tokens": [
+            {
+              "w": "Πολλὰ",
+              "lemma": "πολύς",
+              "morph": "adj",
+              "strong": 4183
+            },
+            {
+              "w": "ἔχων",
+              "lemma": "ἔχω",
+              "morph": "verb",
+              "strong": 2192
+            },
+            {
+              "w": "ὑμῖν",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 5213
+            },
+            {
+              "w": "γράφειν",
+              "lemma": "γράφω",
+              "morph": "verb",
+              "strong": 1125
+            },
+            {
+              "w": "οὐ",
+              "lemma": "οὐ",
+              "morph": "adv",
+              "strong": 3756
+            },
+            {
+              "w": "ἐβουλήθην",
+              "lemma": "βούλομαι",
+              "morph": "verb",
+              "strong": 1014
+            },
+            {
+              "w": "διὰ",
+              "lemma": "διά",
+              "morph": "prep",
+              "strong": 1223
+            },
+            {
+              "w": "χάρτου",
+              "lemma": "χάρτης",
+              "morph": "noun",
+              "strong": 5489
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "μέλανος",
+              "lemma": "μέλαν",
+              "morph": "noun",
+              "strong": 3188
+            },
+            {
+              "w": "ἀλλὰ",
+              "lemma": "ἀλλά",
+              "morph": "conj",
+              "strong": 235
+            },
+            {
+              "w": "ἐλπίζω",
+              "lemma": "ἐλπίζω",
+              "morph": "verb",
+              "strong": 1679
+            },
+            {
+              "w": "γενέσθαι",
+              "lemma": "γίνομαι",
+              "morph": "verb",
+              "strong": 1096
+            },
+            {
+              "w": "πρὸς",
+              "lemma": "πρός",
+              "morph": "prep",
+              "strong": 4314
+            },
+            {
+              "w": "ὑμᾶς",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 5209
+            },
+            {
+              "w": "καὶ",
+              "lemma": "καί",
+              "morph": "conj",
+              "strong": 2532
+            },
+            {
+              "w": "στόμα",
+              "lemma": "στόμα",
+              "morph": "noun",
+              "strong": 4750
+            },
+            {
+              "w": "πρὸς",
+              "lemma": "πρός",
+              "morph": "prep",
+              "strong": 4314
+            },
+            {
+              "w": "στόμα",
+              "lemma": "στόμα",
+              "morph": "noun",
+              "strong": 4750
+            },
+            {
+              "w": "λαλῆσαι",
+              "lemma": "λαλέω",
+              "morph": "verb",
+              "strong": 2980
+            },
+            {
+              "w": "ἵνα",
+              "lemma": "ἵνα",
+              "morph": "conj",
+              "strong": 2443
+            },
+            {
+              "w": "ἡ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "χαρὰ",
+              "lemma": "χαρά",
+              "morph": "noun",
+              "strong": 5479
+            },
+            {
+              "w": "ὑμῶν",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 4675
+            },
+            {
+              "w": "πεπληρωμένη",
+              "lemma": "πληρόω",
+              "morph": "verb",
+              "strong": 4137
+            },
+            {
+              "w": "ᾖ",
+              "lemma": "εἰμί",
+              "morph": "verb",
+              "strong": 5600
+            }
+          ]
+        },
+        {
+          "n": 13,
+          "text": "Ἀσπάζεταί σε τὰ τέκνα τῆς ἀδελφῆς σου τῆς ἐκλεκτῆς",
+          "tokens": [
+            {
+              "w": "Ἀσπάζεταί",
+              "lemma": "ἀσπάζομαι",
+              "morph": "verb",
+              "strong": 782
+            },
+            {
+              "w": "σε",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 4571
+            },
+            {
+              "w": "τὰ",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "τέκνα",
+              "lemma": "τέκνον",
+              "morph": "noun",
+              "strong": 5043
+            },
+            {
+              "w": "τῆς",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἀδελφῆς",
+              "lemma": "ἀδελφή",
+              "morph": "noun",
+              "strong": 79
+            },
+            {
+              "w": "σου",
+              "lemma": "σύ",
+              "morph": "pron",
+              "strong": 4675
+            },
+            {
+              "w": "τῆς",
+              "lemma": "ὁ",
+              "morph": "det",
+              "strong": 3588
+            },
+            {
+              "w": "ἐκλεκτῆς",
+              "lemma": "ἐκλεκτός",
+              "morph": "adj",
+              "strong": 1588
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
