@@ -1,16 +1,19 @@
 import { createStore } from './state/store.js';
 import { parse, onChange } from './router.js';
 import { createNav } from './ui/components/nav.js';
+import { loadSettings } from './state/settings.js';
 import * as readingScreen from './ui/screens/reading.js';
 import * as dictionaryScreen from './ui/screens/dictionary.js';
 import * as progressScreen from './ui/screens/progress.js';
 import * as settingsScreen from './ui/screens/settings.js';
+import * as onboardingScreen from './ui/screens/onboarding.js';
 
 const SCREENS = {
   reading: readingScreen,
   dictionary: dictionaryScreen,
   progress: progressScreen,
   settings: settingsScreen,
+  onboarding: onboardingScreen,
 };
 
 const store = createStore({ screen: 'reading', book: 'john' });
@@ -27,6 +30,7 @@ screenContainer.className = 'screen-container';
 appEl.appendChild(screenContainer);
 
 let currentScreen = null;
+let onboardingChecked = false;
 
 function switchScreen(screenName, params) {
   if (currentScreen && currentScreen.unmount) {
@@ -41,7 +45,32 @@ function switchScreen(screenName, params) {
 }
 
 // Реакция на hash-изменения
-function handleRoute(route) {
+async function handleRoute(route) {
+  // Проверка онбординга
+  if (!onboardingChecked) {
+    try {
+      const settings = await loadSettings();
+      onboardingChecked = true;
+      if (!settings.onboarded) {
+        location.hash = '#/onboarding';
+        return;
+      }
+    } catch (_) {
+      onboardingChecked = true;
+    }
+  }
+
+  // Если пытаемся уйти с онбординга без завершения — блокируем
+  if (route.screen !== 'onboarding') {
+    try {
+      const settings = await loadSettings();
+      if (!settings.onboarded) {
+        location.hash = '#/onboarding';
+        return;
+      }
+    } catch (_) { /* ignore */ }
+  }
+
   switchScreen(route.screen, route.params);
 }
 
