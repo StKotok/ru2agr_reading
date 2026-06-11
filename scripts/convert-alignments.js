@@ -382,7 +382,7 @@ function filterAndDedupAlignment(rawAlignments, verseText, grcTokens, lexicon) {
       if (GR_FUNCTION_MORPH_PREFIXES.includes(morphPrefix)) continue;
     }
 
-    filtered.push(a);
+    filtered.push({ ru: a.ru, gr: a.gr });
   }
 
   // Фаза 3: order-aware re-matching для повторяющихся Strong
@@ -910,6 +910,27 @@ function verify(synDir, grcBooks) {
       }
     }
   }
+
+  // Проверяем что alignment-пары не содержат отладочных полей
+  const allowedKeys = new Set(['ru', 'gr']);
+  for (const bookId of grcBooks.keys()) {
+    const synPath = resolve(synDir, `${bookId}.json`);
+    if (!existsSync(synPath)) continue;
+    const synBook = JSON.parse(readFileSync(synPath, 'utf-8'));
+    for (const ch of synBook.chapters) {
+      for (const verse of ch.verses) {
+        if (!verse.alignment) continue;
+        for (const a of verse.alignment) {
+          const keys = Object.keys(a).filter(k => !allowedKeys.has(k));
+          if (keys.length > 0) {
+            console.log(`   ❌ ${bookId} ${ch.n}:${verse.n} — лишние ключи в alignment: ${keys.join(', ')}`);
+            errors++;
+          }
+        }
+      }
+    }
+  }
+  if (errors === 0) console.log('   ✅ Все alignment-пары содержат только {ru, gr}');
 
   if (errors > 0) {
     console.error(`\n❌❌❌ Верификация провалена: ${errors} ошибок. Исправь alignment и перезапусти.`);
