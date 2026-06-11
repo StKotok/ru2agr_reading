@@ -10,6 +10,7 @@ import { createIntensitySlider } from '../components/intensity-slider.js';
 import { renderLetterCard, renderWordCard } from '../components/word-card.js';
 import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
 import { getInspectorPanel, showEmptyState, showInInspector } from '../components/inspector.js';
+import { showToast } from '../components/toast.js';
 import { navigate } from '../../router.js';
 
 const DEBOUNCE_MS = 500;
@@ -18,6 +19,7 @@ const WINDOW_SIZE = 3;
 let progress = null;
 let settings = null;
 let bookData = null;
+let grcBookData = null;
 let alphabet = null;
 let letterNames = null;
 let scrollTimer = null;
@@ -92,9 +94,16 @@ export async function mount(container, ctx) {
   textArea.id = 'scripture-text';
   container.appendChild(textArea);
 
-  // Загружаем книгу
+  // Загружаем книгу (и греческий текст для режимов 3+)
   try {
-    bookData = await loadBook('syn', bookId);
+    const loadPromises = [loadBook('syn', bookId)];
+    // Грузим греческий текст только для режимов 3+
+    if (settings.mode >= 3) {
+      loadPromises.push(loadBook('grc', bookId));
+    }
+    const results = await Promise.all(loadPromises);
+    bookData = results[0];
+    grcBookData = results[1] || null;
   } catch (e) {
     skeleton.remove();
     container.appendChild(createErrorState(bookId));
@@ -105,6 +114,11 @@ export async function mount(container, ctx) {
     skeleton.remove();
     container.appendChild(createOfflineState(bookId));
     return;
+  }
+
+  // Если grc не загрузился для режима 4-5 — предупреждаем
+  if (!grcBookData && settings.mode >= 4) {
+    showToast('Греческий текст недоступен — показываем словарные формы', { timeout: 5000 });
   }
 
   skeleton.remove();
@@ -316,7 +330,18 @@ function renderWindowed() {
         // Чистый русский текст
         p.appendChild(document.createTextNode(verse.text));
       } else {
-        const segments = composeVerse(verse.text, composeCtx);
+        // Добавляем grcVerse и alignment для режимов 4-5
+        const verseCtx = { ...composeCtx };
+        if (grcBookData && settings.mode >= 4) {
+          const chIdx = ch.n - 1;
+          const vIdx = verse.n - 1;
+          const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+          if (grcVerse) {
+            verseCtx.grcVerse = grcVerse;
+            verseCtx.alignment = verse.alignment || null;
+          }
+        }
+        const segments = composeVerse(verse.text, verseCtx);
         const frag = segmentsToFragment(segments, renderCtx);
         p.appendChild(frag);
       }
@@ -384,6 +409,7 @@ function buildWordEntries() {
     wordEntries.push({
       lexemeId: lexeme.id,
       lemma: lexeme.lemma,
+      strongNum: lexeme.strong,
       regexps: lexeme.ruMatches.map(r => new RegExp(r, 'iu')),
       excludeRegexps: (lexeme.ruExclude || []).map(r => new RegExp(r, 'iu')),
       intensityPct: intensityMap[entry.intensity] || 100,
@@ -431,7 +457,17 @@ function reRenderWindowed() {
       if (plainView) {
         p.appendChild(document.createTextNode(verse.text));
       } else {
-        const segments = composeVerse(verse.text, composeCtx);
+        const verseCtx = { ...composeCtx };
+        if (grcBookData && settings.mode >= 4) {
+          const chIdx = ch.n - 1;
+          const vIdx = verse.n - 1;
+          const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+          if (grcVerse) {
+            verseCtx.grcVerse = grcVerse;
+            verseCtx.alignment = verse.alignment || null;
+          }
+        }
+        const segments = composeVerse(verse.text, verseCtx);
         const frag = segmentsToFragment(segments, renderCtx);
         p.appendChild(frag);
       }
