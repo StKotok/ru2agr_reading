@@ -47,38 +47,51 @@ function switchScreen(screenName, params) {
   store.update(s => ({ ...s, screen: screenName, book: params.book || s.book }));
 }
 
+// Применяем сохранённую тему до первого рендера
+(async () => {
+  try {
+    const settings = await loadSettings();
+    const theme = settings.theme || 'auto';
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (_) { /* theme fallback: auto */ }
+})();
+
 // Регистрация service worker (vite-plugin-pwa)
 registerSW({ immediate: true });
 
 // Реакция на hash-изменения
 async function handleRoute(route) {
-  // TODO: ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ТЕСТИРОВАНИЯ (stkotok, 2026-06-11)
-  // Убрать комментарии ниже, чтобы вернуть экран онбординга/авторизации.
-  //
-  // // Проверка онбординга
-  // if (!onboardingChecked) {
-  //   try {
-  //     const settings = await loadSettings();
-  //     onboardingChecked = true;
-  //     if (!settings.onboarded) {
-  //       location.hash = '#/onboarding';
-  //       return;
-  //     }
-  //   } catch (_) {
-  //     onboardingChecked = true;
-  //   }
-  // }
+  // Флаг для разработки: пропустить онбординг
+  const SKIP_ONBOARDING = (() => {
+    try { return localStorage.getItem('dev_skip_onboarding') === '1'; } catch (_) { return false; }
+  })();
 
-  // // Если пытаемся уйти с онбординга без завершения — блокируем
-  // if (route.screen !== 'onboarding') {
-  //   try {
-  //     const settings = await loadSettings();
-  //     if (!settings.onboarded) {
-  //       location.hash = '#/onboarding';
-  //       return;
-  //     }
-  //   } catch (_) { /* ignore */ }
-  // }
+  if (!SKIP_ONBOARDING) {
+    // Проверка онбординга
+    if (!onboardingChecked) {
+      try {
+        const settings = await loadSettings();
+        onboardingChecked = true;
+        if (!settings.onboarded) {
+          location.hash = '#/onboarding';
+          return;
+        }
+      } catch (_) {
+        onboardingChecked = true;
+      }
+    }
+
+    // Если пытаемся уйти с онбординга без завершения — блокируем
+    if (route.screen !== 'onboarding') {
+      try {
+        const settings = await loadSettings();
+        if (!settings.onboarded) {
+          location.hash = '#/onboarding';
+          return;
+        }
+      } catch (_) { /* ignore */ }
+    }
+  }
 
   switchScreen(route.screen, route.params);
 }
