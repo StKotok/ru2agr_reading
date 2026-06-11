@@ -252,7 +252,39 @@ function serializeGrcBook(bookId, bookData, booksMeta) {
 }
 
 // ---------------------------------------------------------------------------
-// Alignment — трёхуровневая стратегия
+// Стоп-списки для фильтрации ложных пар
+// ---------------------------------------------------------------------------
+
+// Русские служебные слова — не должны выравниваться на знаменательные греческие
+const RU_STOP_WORDS = new Set([
+  'и', 'в', 'у', 'с', 'на', 'к', 'не', 'же', 'а', 'о', 'по', 'за',
+  'от', 'до', 'из', 'со', 'об', 'при', 'без', 'но', 'ли', 'бы', 'то',
+  'как', 'что', 'он', 'она', 'они', 'оно', 'мы', 'вы', 'я', 'ты',
+  'его', 'ее', 'её', 'их', 'им', 'нас', 'вас', 'мне', 'тебе', 'тебя',
+  'себя', 'себе', 'мой', 'твой', 'свой', 'наш', 'ваш',
+  'это', 'эта', 'этот', 'эти', 'там', 'тут', 'где', 'кто', 'когда',
+  'весь', 'вся', 'всё', 'все', 'ещё', 'уже', 'так', 'да', 'нет',
+  'был', 'была', 'было', 'были', 'есть', 'будет', 'будут',
+  'или', 'чтобы', 'если', 'хотя', 'ибо', 'потому', 'посему',
+  'один', 'одна', 'одно', 'одни', 'два', 'три',
+  'более', 'менее', 'очень', 'лишь', 'только', 'вот',
+]);
+
+// Греческие функциональные слова: артикли, союзы, предлоги, частицы, отрицания
+const GR_FUNCTION_LEMMAS = new Set([
+  'ὁ', 'καί', 'δέ', 'τε', 'γάρ', 'οὖν', 'μέν', 'ἀλλά', 'ἤ', 'εἰ',
+  'ἐάν', 'ὅτι', 'ἵνα', 'ὡς', 'καθώς', 'ὅτε', 'ὅταν', 'ἕως', 'πρίν',
+  'ἐν', 'εἰς', 'ἐκ', 'πρός', 'ἀπό', 'διά', 'μετά', 'περί', 'ὑπό',
+  'ἐπί', 'παρά', 'κατά', 'ὑπέρ', 'σύν', 'πρό', 'ἀντί', 'χωρίς',
+  'οὐ', 'μή', 'οὐκ', 'οὐχ', 'μήτι', 'οὐδείς', 'μηδείς',
+  'αὐτός', 'ἐγώ', 'σύ', 'ἐκεῖνος', 'οὗτος', 'ὅς', 'τίς',
+  'εἰμί', 'λέγω', 'γίνομαι', 'ἔχω',  // ultra-common verbs rarely useful for dictionary
+]);
+
+const GR_FUNCTION_MORPH_PREFIXES = ['T-', 'CONJ', 'PREP', 'PRT', 'D-', 'I-', 'X-'];
+
+// ---------------------------------------------------------------------------
+// Alignment — четырёхуровневая стратегия
 // ---------------------------------------------------------------------------
 
 /**
@@ -262,10 +294,9 @@ function serializeGrcBook(bookId, bookData, booksMeta) {
  * @returns {Map<string, Array>} verseKey → alignment[]
  */
 function buildManualAlignment(manualRecords, grcByTokenId, ruByTokenId) {
-  const byVerse = new Map(); // "BBCCCVVV" → [{ru, gr}]
+  const byVerse = new Map(); // "BBCCCVVV" → [{ru, gr, srcId, tgtId}]
 
   for (const record of manualRecords) {
-    // Для каждого source ID находим verseRef и позицию
     for (const srcId of record.sourceIds) {
       const grcInfo = grcByTokenId.get(srcId);
       if (!grcInfo) continue;
@@ -273,9 +304,7 @@ function buildManualAlignment(manualRecords, grcByTokenId, ruByTokenId) {
       for (const tgtId of record.targetIds) {
         const ruInfo = ruByTokenId.get(tgtId);
         if (!ruInfo) continue;
-        // Пропускаем пунктуационные токены (у них wordIndex = -1)
         if (ruInfo.isPunct || ruInfo.wordIndex < 0) continue;
-
         if (grcInfo.verseRef !== ruInfo.verseRef) continue;
 
         const verseKey = grcInfo.verseRef;
@@ -284,31 +313,188 @@ function buildManualAlignment(manualRecords, grcByTokenId, ruByTokenId) {
         }
         byVerse.get(verseKey).push({
           ru: ruInfo.wordIndex,
-          gr: grcInfo.indexInVerse
+          gr: grcInfo.indexInVerse,
+          srcId,
+          tgtId
         });
       }
     }
   }
 
-  // Дедупликация: для каждого стиха оставляем только первый матч для каждого ru
-  for (const [verseKey, alignments] of byVerse) {
-    const seenRu = new Map();
-    for (const a of alignments) {
-      if (!seenRu.has(a.ru)) {
-        seenRu.set(a.ru, a.gr);
+  return byVerse;
+}
+
+/**
+ * Фильтрует и дедуплицирует alignment для одного стиха.
+ *
+ * Фазы:
+ * 1) Удалить пары где русское слово — служебное (< 3 букв или в стоп-списке)
+ *    И греческий токен — знаменательный (Strong в лексиконе)
+ * 2) Удалить пары где греческий токен — функциональный (артикль/союз/предлог/частица)
+ * 3) Order-aware re-matching: для Strong с несколькими вхождениями в стихе
+ *    собрать ВСЕ русские слова, матчащиеся по regex лексикона, и ВСЕ греческие
+ *    токены с этим Strong — сопоставить 1-е→1-е, 2-е→2-е по порядку
+ *
+ * @returns {{ alignment: Array, droppedFunc: number, totalBefore: number }}
+ */
+function filterAndDedupAlignment(rawAlignments, verseText, grcTokens, lexicon) {
+  const totalBefore = rawAlignments.length;
+  const words = verseText.split(/\s+/);
+  const strongSet = new Set(lexicon.filter(l => l.strong && !l.skip).map(l => l.strong));
+
+  // Строим карту Strong → [ruMatches regex] из лексикона
+  const strongRegexps = new Map();
+  for (const lexeme of lexicon) {
+    if (!lexeme.strong || lexeme.skip) continue;
+    const patterns = [];
+    for (const p of lexeme.ruMatches) {
+      try { patterns.push(new RegExp(p, 'iu')); } catch (_) {}
+    }
+    if (patterns.length > 0) {
+      if (!strongRegexps.has(lexeme.strong)) strongRegexps.set(lexeme.strong, { patterns, excludes: [] });
+      // Объединяем exclude-паттерны
+      for (const ep of (lexeme.ruExclude || [])) {
+        try { strongRegexps.get(lexeme.strong).excludes.push(new RegExp(ep, 'iu')); } catch (_) {}
       }
     }
-    const deduped = [...seenRu.entries()]
-      .sort((a, b) => a[0] - b[0])
-      .map(([ru, gr]) => ({ ru, gr }));
-    if (deduped.length < alignments.length) {
-      const diff = alignments.length - deduped.length;
-      console.log(`   ℹ️  ${verseKey}: дедуплицировано ${diff} дубликатов`);
-    }
-    byVerse.set(verseKey, deduped);
   }
 
-  return byVerse;
+  // Фаза 1-2: фильтрация
+  const filtered = [];
+  let droppedFunc = 0;
+
+  for (const a of rawAlignments) {
+    const ruWord = words[a.ru] || '';
+    const cleanRu = ruWord.replace(/[.,;:!?—\-–"'«»„"()\[\]¿¡;]+$/g, '').replace(/^[«»"'(\[\]]+/g, '').toLowerCase();
+
+    // Фаза 1: русское служебное → греческое знаменательное
+    if ((cleanRu.length < 3 || RU_STOP_WORDS.has(cleanRu)) &&
+        a.gr < grcTokens.length && strongSet.has(grcTokens[a.gr]?.strong)) {
+      droppedFunc++;
+      continue;
+    }
+
+    // Фаза 2: греческий функциональный токен
+    const grToken = grcTokens[a.gr];
+    if (grToken) {
+      if (GR_FUNCTION_LEMMAS.has(grToken.lemma)) continue;
+      const morphPrefix = (grToken.morph || '').split('-')[0] || '';
+      if (GR_FUNCTION_MORPH_PREFIXES.includes(morphPrefix)) continue;
+    }
+
+    filtered.push(a);
+  }
+
+  // Фаза 3: order-aware re-matching для повторяющихся Strong
+  const grStrongMap = new Map(); // strong → [grIndices sorted]
+  for (let i = 0; i < grcTokens.length; i++) {
+    const s = grcTokens[i].strong;
+    if (s && strongSet.has(s)) {
+      if (!grStrongMap.has(s)) grStrongMap.set(s, []);
+      grStrongMap.get(s).push(i);
+    }
+  }
+
+  // Собираем alignment через order-aware matching
+  const strongAware = [];
+  const usedRu = new Set();
+  const usedGr = new Set();
+
+  // Сначала: обрабатываем Strong, у которых несколько вхождений
+  for (const [strong, grIndices] of grStrongMap) {
+    if (grIndices.length <= 1) continue;
+
+    const regexInfo = strongRegexps.get(strong);
+    if (!regexInfo) continue;
+
+    // Находим ВСЕ русские слова в стихе, матчащиеся по regex этого Strong
+    const matchingRuIndices = [];
+    for (let wi = 0; wi < words.length; wi++) {
+      const clean = words[wi].replace(/[.,;:!?—\-–"'«»„"()\[\]¿¡;]+$/g, '').replace(/^[«»"'(\[\]]+/g, '').toLowerCase();
+      if (clean.length < 3 || RU_STOP_WORDS.has(clean)) continue;
+
+      let matched = false;
+      for (const re of regexInfo.patterns) {
+        if (re.test(words[wi])) {
+          let excluded = false;
+          for (const excRe of regexInfo.excludes) {
+            if (excRe.test(words[wi])) { excluded = true; break; }
+          }
+          if (!excluded) { matched = true; break; }
+        }
+      }
+      if (matched) matchingRuIndices.push(wi);
+    }
+
+    // Также собираем уже существующие пары из filtered для этого Strong
+    for (const a of filtered) {
+      if (a.gr < grcTokens.length && grcTokens[a.gr].strong === strong) {
+        if (!matchingRuIndices.includes(a.ru)) matchingRuIndices.push(a.ru);
+      }
+    }
+
+    // Сортируем и дедуплицируем
+    const uniqueRu = [...new Set(matchingRuIndices)].sort((a, b) => a - b);
+    const uniqueGr = [...grIndices].sort((a, b) => a - b);
+
+    // Сопоставляем по порядку
+    const maxLen = Math.min(uniqueRu.length, uniqueGr.length);
+    for (let i = 0; i < maxLen; i++) {
+      strongAware.push({ ru: uniqueRu[i], gr: uniqueGr[i] });
+      usedRu.add(uniqueRu[i]);
+      usedGr.add(uniqueGr[i]);
+    }
+  }
+
+  // Добавляем оставшиеся пары из filtered (не part of multi-Strong)
+  for (const a of filtered) {
+    if (usedRu.has(a.ru) || usedGr.has(a.gr)) continue;
+    strongAware.push(a);
+    usedRu.add(a.ru);
+    usedGr.add(a.gr);
+  }
+
+  // Финальная сортировка
+  const alignment = strongAware
+    .sort((a, b) => a.ru - b.ru)
+    .filter((a, i, arr) => i === 0 || a.ru !== arr[i - 1].ru); // дедуп по ru
+
+  return { alignment, droppedFunc, totalBefore };
+}
+
+/**
+ * Подсчитывает качество manual alignment: % пар где русское служебное слово
+ */
+function computeQualityMetrics(manualByVerse, synDir, grcBooks, lexicon) {
+  const strongSet = new Set(lexicon.filter(l => l.strong && !l.skip).map(l => l.strong));
+  let totalManualPairs = 0;
+  let badPairs = 0;
+
+  const files = readdirSync(synDir).filter(f => f.endsWith('.json'));
+  for (const file of files) {
+    const synBook = JSON.parse(readFileSync(resolve(synDir, file), 'utf-8'));
+    const bookId = synBook.id;
+    const grcBook = grcBooks.get(bookId);
+
+    for (const ch of synBook.chapters) {
+      for (const verse of ch.verses) {
+        if (!verse.alignment || verse.alignment.length === 0) continue;
+        const words = verse.text.split(/\s+/);
+        const grcTokens = grcBook?.chapters?.get(ch.n)?.get(verse.n) || [];
+
+        for (const a of verse.alignment) {
+          totalManualPairs++;
+          const ruWord = (words[a.ru] || '').replace(/[.,;:!?—\-–"'«»„"()\[\]¿¡;]+$/g, '').toLowerCase();
+          if ((ruWord.length < 3 || RU_STOP_WORDS.has(ruWord)) &&
+              a.gr < grcTokens.length && strongSet.has(grcTokens[a.gr]?.strong)) {
+            badPairs++;
+          }
+        }
+      }
+    }
+  }
+
+  return { totalManualPairs, badPairs, pct: totalManualPairs > 0 ? (badPairs / totalManualPairs * 100).toFixed(1) : '0.0' };
 }
 
 /**
@@ -590,14 +776,20 @@ function updateSynWithAlignment(synDir, grcBooks, manualByVerse, lexicon, grcByT
         // Получаем grcTokens для этого стиха
         const grcTokens = grcVerseMap.get(`${ch.n}:${verse.n}`);
 
-        const { alignment, tier } = buildAlignment(
+        // Для manual alignment применяем фильтрацию служебных слов
+        let { alignment, tier } = buildAlignment(
           verseKey, verse.text, grcTokens, manualByVerse, lexicon
         );
+
+        if (alignment && tier === 'manual') {
+          const result = filterAndDedupAlignment(alignment, verse.text, grcTokens, lexicon);
+          alignment = result.alignment.length > 0 ? result.alignment : null;
+          if (!alignment) tier = 'none';
+        }
 
         if (alignment) {
           verse.alignment = alignment;
         } else {
-          // Удаляем старое alignment если был
           delete verse.alignment;
         }
 
@@ -814,7 +1006,17 @@ function main() {
   console.log('\n🔗 Обновление syn-файлов с alignment (трёхуровневая стратегия)...');
   updateSynWithAlignment(SYN_DIR, grcBooks, manualByVerse, lexicon, grcByTokenId);
 
-  // 9. Верификация
+  // 9. Метрика качества manual alignment
+  console.log('\n📊 Метрика качества manual alignment...');
+  const quality = computeQualityMetrics(manualByVerse, SYN_DIR, grcBooks, lexicon);
+  console.log(`   Всего manual-пар: ${quality.totalManualPairs}`);
+  console.log(`   Ложных пар (служебное RU → знаменательное GR): ${quality.badPairs} (${quality.pct}%)`);
+  if (parseFloat(quality.pct) >= 0.5) {
+    console.error(`   ❌ Качество неприемлемо: ${quality.pct}% ложных пар (лимит 0.5%)`);
+    process.exit(1);
+  }
+
+  // 10. Верификация
   verify(SYN_DIR, grcBooks);
 
   // 10. Итоги
