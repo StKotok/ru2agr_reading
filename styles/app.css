@@ -797,6 +797,16 @@ p, h2, h3, span {
   font-style: italic;
 }
 
+.onboarding-example {
+  color: var(--accent) !important;
+  font-style: normal !important;
+  background: var(--surface2);
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-family: 'Gentium Plus', serif;
+  font-size: 0.8rem !important;
+}
+
 /* Settings */
 .settings-group-header {
   font-size: 0.75rem;

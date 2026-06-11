@@ -20,14 +20,16 @@ const PRESETS = [
   {
     id: 3,
     title: 'Хочу узнавать греческие слова',
-    desc: 'Режим 3 (пока режим 2) — слова из личного словаря. Все буквы известны.',
-    mode: 3, introduce: 0, allLettersKnown: true
+    desc: 'Режим 3 — слова из личного словаря заменяются на греческие леммы.',
+    mode: 3, introduce: 0, allLettersKnown: true,
+    example: 'Пример: «Слово» → λόγος (лемма, всегда одна словарная форма)'
   },
   {
     id: 4,
     title: 'Хочу читать ближе к оригиналу',
-    desc: 'Режим 4 (пока режим 3) — греческий текст с русской подсказкой.',
-    mode: 3, introduce: 0, allLettersKnown: true, note: 'TODO: режим 4 в MVP 3'
+    desc: 'Режим 4 — греческий текст с реальными формами слов (падежи, спряжения).',
+    mode: 4, introduce: 0, allLettersKnown: true,
+    example: 'Пример: «Слову» → λόγῳ (реальная форма, зависит от падежа!)'
   },
 ];
 
@@ -68,6 +70,9 @@ function renderStep1() {
     const card = document.createElement('button');
     card.className = 'card onboarding-card';
     card.innerHTML = `<strong>${preset.title}</strong><p>${preset.desc}</p>`;
+    if (preset.example) {
+      card.innerHTML += `<small class="onboarding-example">${preset.example}</small>`;
+    }
     if (preset.note) {
       card.innerHTML += `<small>${preset.note}</small>`;
     }
