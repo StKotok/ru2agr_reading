@@ -22,17 +22,73 @@ export function createTopBar(ctx) {
   bookList.hidden = true;
   bar.appendChild(bookList);
 
-  // Плейсхолдер режима
-  const modePlaceholder = document.createElement('span');
-  modePlaceholder.className = 'top-bar-placeholder';
-  modePlaceholder.textContent = 'Режим 1';
-  bar.appendChild(modePlaceholder);
+  // Селектор режима
+  const modeBtn = document.createElement('button');
+  modeBtn.className = 'btn top-bar-btn mode-selector';
+  modeBtn.setAttribute('aria-haspopup', 'listbox');
+  bar.appendChild(modeBtn);
 
-  // Плейсхолдер интенсивности
-  const intensityPlaceholder = document.createElement('span');
-  intensityPlaceholder.className = 'top-bar-placeholder';
-  intensityPlaceholder.textContent = 'Греческий: 35%';
-  bar.appendChild(intensityPlaceholder);
+  const modeList = document.createElement('div');
+  modeList.className = 'book-dropdown mode-dropdown';
+  modeList.setAttribute('role', 'listbox');
+  modeList.hidden = true;
+  bar.appendChild(modeList);
+
+  const MODES = [
+    { id: 1, label: '1. Только буквы', group: 'Учебный мостик', enabled: true },
+    { id: 2, label: '2. Буквы + подсказки', group: 'Учебный мостик', enabled: true },
+    { id: 3, label: '3. Слова из словаря', group: 'Учебный мостик', enabled: false, note: 'скоро' },
+    { id: 4, label: '4. Формы оригинала', group: 'Ближе к оригиналу', enabled: false, note: 'скоро' },
+    { id: 5, label: '5. Почти оригинал', group: 'Ближе к оригиналу', enabled: false, note: 'скоро' },
+  ];
+
+  function renderModeButton() {
+    const state = store.get();
+    const m = MODES.find(m => m.id === (state.settings?.mode || 1)) || MODES[0];
+    modeBtn.textContent = 'Режим ' + m.id + ' ▾';
+  }
+
+  function renderModeList() {
+    modeList.innerHTML = '';
+    let currentGroup = '';
+    for (const m of MODES) {
+      if (m.group !== currentGroup) {
+        currentGroup = m.group;
+        const header = document.createElement('div');
+        header.className = 'book-dropdown-group';
+        header.textContent = currentGroup;
+        modeList.appendChild(header);
+      }
+      const btn = document.createElement('button');
+      btn.className = 'book-dropdown-item';
+      btn.textContent = m.label + (m.note ? ' (' + m.note + ')' : '');
+      btn.setAttribute('role', 'option');
+      if (!m.enabled) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+      } else {
+        btn.addEventListener('click', () => {
+          const state = store.get();
+          if (state.settings) {
+            state.settings.mode = m.id;
+            store.update(s => ({ ...s, settings: { ...state.settings } }));
+          }
+          modeList.hidden = true;
+          renderModeButton();
+        });
+      }
+      modeList.appendChild(btn);
+    }
+  }
+
+  modeBtn.addEventListener('click', () => {
+    renderModeList();
+    modeList.hidden = !modeList.hidden;
+    if (!modeList.hidden) {
+      const firstEnabled = modeList.querySelector('button:not([disabled])');
+      firstEnabled?.focus();
+    }
+  });
 
   // Кнопка «глаз» — plain view
   const eyeBtn = document.createElement('button');
@@ -103,6 +159,10 @@ export function createTopBar(ctx) {
   });
 
   store.subscribe(['book'], () => renderBookButton());
+  store.subscribe(['settings'], () => renderModeButton());
+
+  // Изначальная отрисовка
+  renderModeButton();
 
   return { bar, eyeBtn };
 }

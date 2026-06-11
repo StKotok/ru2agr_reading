@@ -615,12 +615,12 @@ system-ui sans-стек; текст чтения ≥18px / line-height 1.7 / max
 
 **Файлы:** создать `src/state/settings.js`, `src/engine/compose.js`, `src/ui/components/intensity-slider.js`, `tests/compose.test.js`; изменить `src/ui/screens/reading.js`, `src/ui/components/top-bar.js`.
 
-- [ ] `src/state/settings.js`: дефолты из 3.3, load/save через `db.js`
-- [ ] `src/engine/compose.js`: `composeVerse(verseText, ctx)` — для режимов 1–2 вызывает letter-layer (словарный слой добавится в MVP 2) + тесты
-- [ ] Слайдер интенсивности в топбаре (десктоп — инлайн, мобайл — в выпадашке ⚙ топбара): `Греческий: 35%`
-- [ ] Селектор режима в топбаре (пока доступны 1 и 2, остальные disabled с подписью «скоро»)
-- [ ] Перерендер видимых глав при изменении настроек (подписка на store), без прыжка скролла
-- [ ] `activeLetters` берётся из `progress.letters` (learning + known); если прогресса нет — пусто, текст чистый
+- [x] `src/state/settings.js`: дефолты из 3.3, load/save через `db.js`
+- [x] `src/engine/compose.js`: `composeVerse(verseText, ctx)` — для режимов 1–2 вызывает letter-layer (словарный слой добавится в MVP 2) + тесты
+- [x] Слайдер интенсивности в топбаре (десктоп — инлайн, мобайл — в выпадашке ⚙ топбара): `Греческий: 35%`
+- [x] Селектор режима в топбаре (пока доступны 1 и 2, остальные disabled с подписью «скоро»)
+- [x] Перерендер видимых глав при изменении настроек (подписка на store), без прыжка скролла
+- [x] `activeLetters` берётся из `progress.letters` (learning + known); если прогресса нет — пусто, текст чистый
 
 **Промпт:**
 
