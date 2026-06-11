@@ -172,4 +172,49 @@ describe('applyFormLayer', () => {
     // Без явного forms должен быть grToken.w (реальная форма)
     expect(seg.greek.toLowerCase()).toBe('εὐαγγελίου');
   });
+
+  it('ruMatches-валидация: служебное слово «у» → λόγος НЕ заменяется', () => {
+    // Симулируем ошибочный alignment: русское «у» выровнено на греческий λόγος
+    const verseText = 'В начале было Слово и Слово было у Бога';
+    const grcTokens = [
+      { w: 'λόγος', lemma: 'λόγος', morph: 'N-NSM', strong: 3056 },
+      { w: 'λόγος', lemma: 'λόγος', morph: 'N-NSM', strong: 3056 },
+    ];
+    // alignment: ru=7 («у») → gr=0 (λόγος)
+    const alignment = [{ ru: 7, gr: 0 }];
+
+    const segments = applyFormLayer(verseText, grcTokens, alignment, [
+      {
+        lexemeId: 'logos', lemma: 'λόγος', strong: 3056,
+        intensityPct: 100, status: 'known', forms: 'all',
+        regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
+        excludeRegexps: [new RegExp('словно', 'iu'), new RegExp('условие', 'iu'), new RegExp('словарь', 'iu')],
+      }
+    ], { seedPrefix: 'test' });
+
+    // «у» (ru=7) не матчится на «слово» → НЕ должен быть заменён
+    const formSegs = segments.filter(s => s.kind === 'form');
+    expect(formSegs.length).toBe(0);
+  });
+
+  it('ruMatches-валидация: «Слово» → λόγος — замена проходит', () => {
+    const verseText = 'В начале было Слово';
+    const grcTokens = [
+      { w: 'λόγος', lemma: 'λόγος', morph: 'N-NSM', strong: 3056 },
+    ];
+    const alignment = [{ ru: 3, gr: 0 }]; // ru=3 = «Слово,»
+
+    const segments = applyFormLayer(verseText, grcTokens, alignment, [
+      {
+        lexemeId: 'logos', lemma: 'λόγος', strong: 3056,
+        intensityPct: 100, status: 'known', forms: 'all',
+        regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
+        excludeRegexps: [new RegExp('словно', 'iu'), new RegExp('условие', 'iu'), new RegExp('словарь', 'iu')],
+      }
+    ], { seedPrefix: 'test' });
+
+    const formSegs = segments.filter(s => s.kind === 'form');
+    expect(formSegs.length).toBe(1);
+    expect(formSegs[0].greek.toLowerCase()).toBe('λόγος');
+  });
 });

@@ -55,6 +55,28 @@ export function applyFormLayer(verseText, grcTokens, alignment, dictEntries, opt
       const dictEntry = dictByStrong.get(strongStr);
 
       if (dictEntry) {
+        // Защита: валидируем русское слово через ruMatches лексикона
+        // Если у словарной записи есть regexps, cleanWord должен матчиться
+        if (dictEntry.regexps && dictEntry.regexps.length > 0) {
+          let regexMatched = false;
+          for (const re of dictEntry.regexps) {
+            if (re.test(cleanWord)) {
+              // Проверяем exclude-паттерны
+              let excluded = false;
+              for (const excRe of (dictEntry.excludeRegexps || [])) {
+                if (excRe.test(cleanWord)) { excluded = true; break; }
+              }
+              if (!excluded) { regexMatched = true; break; }
+            }
+          }
+          if (!regexMatched) {
+            // Слово не матчится ни одной регулярке лексикона — пропускаем замену
+            segments.push({ plain: ruWord });
+            if (wi < ruWords.length - 1) segments.push({ plain: ' ' });
+            continue;
+          }
+        }
+
         const seed = `${seedPrefix}:${wi}:${grToken.strong}`;
         const intensityMap = { often: 100, sometimes: 50, rare: 25 };
         const pct = intensityMap[dictEntry.intensity] || 100;
