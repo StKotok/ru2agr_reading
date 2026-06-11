@@ -651,3 +651,99 @@ p, h2, h3, span {
   min-width: 2.5em;
   text-align: right;
 }
+
+/* Progress screen */
+.progress-section {
+  margin-bottom: 24px;
+}
+
+.progress-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.progress-motto {
+  font-family: 'Gentium Plus', serif;
+  font-size: 1rem;
+  color: var(--greek);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.letter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.letter-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-family: 'Gentium Plus', serif;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.letter-cell.letter-known {
+  background: var(--progress);
+  color: #fff;
+  border-color: var(--progress);
+}
+
+.letter-cell.letter-learning {
+  background: var(--selection);
+  color: var(--greek);
+  border-color: var(--greek);
+}
+
+.letter-cell.letter-locked {
+  color: var(--muted);
+  opacity: 0.4;
+}
+
+.letter-cell:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.progress-add-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.progress-book-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.progress-book-status {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.progress-book-status.status-read {
+  color: var(--progress);
+}
+
+.progress-book-status.status-started {
+  color: var(--greek);
+}

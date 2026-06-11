@@ -42,17 +42,6 @@ export async function mount(container, ctx) {
     }
   }
 
-  // TODO (временно): если прогресс букв пуст — задаём первые 3 буквы для теста
-  // Уберёт онбординг (задача 1.7)
-  if (Object.keys(progress.letters).length === 0 && alphabet && alphabet.length > 0) {
-    const first3 = alphabet.filter(l => l.learnOrder <= 3);
-    const today = new Date().toISOString().split('T')[0];
-    for (const l of first3) {
-      progress.letters[l.lower] = { status: 'known', introducedAt: today };
-    }
-    await saveProgress(progress);
-  }
-
   // Публикуем в store
   store.update(s => ({ ...s, settings, progress }));
 
@@ -112,6 +101,15 @@ export async function mount(container, ctx) {
 
   // Восстановление позиции скролла
   restoreScroll(bookId);
+
+  // Подписка на изменения прогресса (буквы)
+  store.subscribe(['progress'], () => {
+    const newProgress = store.get().progress;
+    if (newProgress && newProgress !== progress) {
+      progress = newProgress;
+      reRenderWindowed();
+    }
+  });
 
   // Подписка на изменения настроек
   store.subscribe(['settings'], () => {
