@@ -470,13 +470,13 @@ logos
 
 **Файлы:** создать `styles/tokens.css`, `styles/app.css`, `fonts/*.woff2`; изменить `index.html`, `manifest.json`; удалить `styles.css`.
 
-- [ ] Скачать Gentium Plus (regular, bold, italic) в woff2, положить в `fonts/`, прописать `@font-face` — только для текста Писания; UI — системный sans-стек
-- [ ] `styles/tokens.css`: токены ролей из 4.9 (`--surface`, `--surface-card`, `--text`, `--muted`, `--greek`, `--hint`, `--focus`, `--selection`, `--progress`, `--danger`, `--border`), светлая + тёмная тема (`[data-theme="dark"]` и `prefers-color-scheme`)
-- [ ] Типографика чтения: размер ≥18px на мобильном, line-height ≥1.7, ширина колонки текста ≤ 65ch
-- [ ] Базовые компоненты: кнопка, карточка, слайдер, радио, чекбокс, тост
-- [ ] Стили греческих вставок: `.gr` — цвет `--greek`, лёгкое подчёркивание пунктиром; без «ошибочного» красного
-- [ ] Обновить `manifest.json` (имя «Греческая читалка НЗ», цвета под палитру)
-- [ ] Удалить старый `styles.css`
+- [x] Скачать Gentium Plus (regular, bold, italic) в woff2, положить в `fonts/`, прописать `@font-face` — только для текста Писания; UI — системный sans-стек
+- [x] `styles/tokens.css`: токены ролей из 4.9 (`--surface`, `--surface-card`, `--text`, `--muted`, `--greek`, `--hint`, `--focus`, `--selection`, `--progress`, `--danger`, `--border`), светлая + тёмная тема (`[data-theme="dark"]` и `prefers-color-scheme`)
+- [x] Типографика чтения: размер ≥18px на мобильном, line-height ≥1.7, ширина колонки текста ≤ 65ch
+- [x] Базовые компоненты: кнопка, карточка, слайдер, радио, чекбокс, тост
+- [x] Стили греческих вставок: `.gr` — цвет `--greek`, лёгкое подчёркивание пунктиром; без «ошибочного» красного
+- [x] Обновить `manifest.json` (имя «Греческая читалка НЗ», цвета под палитру)
+- [x] Удалить старый `styles.css`
 
 **Промпт:**
 
