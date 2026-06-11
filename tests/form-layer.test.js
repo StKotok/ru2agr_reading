@@ -143,6 +143,23 @@ describe('applyFormLayer', () => {
     expect(form1.length).toBe(form2.length);
   });
 
+  it('пунктуация: trailing punctuation отделяется как plain-сегмент', () => {
+    const { verseText, alignment, grcTokens } = getVerse(1, 1);
+    const segments = applyFormLayer(verseText, grcTokens, alignment, [
+      { lexemeId: 'iesous', lemma: 'Ἰησοῦς', strong: 2424, intensityPct: 100, status: 'known', forms: 'all' }
+    ], { seedPrefix: 'mark' });
+
+    // Находим form-сегмент для Иисуса (у него нет trailing punct)
+    const formSegs = segments.filter(s => s.kind === 'form');
+    expect(formSegs.length).toBeGreaterThan(0);
+
+    // Проверяем что plain-сегменты содержат пунктуацию
+    const plainTexts = segments.filter(s => s.plain !== undefined).map(s => s.plain);
+    const allText = plainTexts.join('');
+    // В стихе должна быть запятая
+    expect(allText).toContain(',');
+  });
+
   it('forms не указан (по умолчанию) → использует реальную форму', () => {
     const { verseText, alignment, grcTokens } = getVerse(1, 1);
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
