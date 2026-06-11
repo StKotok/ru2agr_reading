@@ -130,11 +130,14 @@ function parseSblgnt(filePath) {
 /**
  * Парсит nt_RUSSYN.tsv.
  * Колонки: id, source_verse, text, skip_space_after, exclude, id_range_end, source_verse_range_end
- * Возвращает Map<tokenId, {verseRef, positionInVerse}>.
+ * Возвращает Map<tokenId, {verseRef, wordIndex, isPunct}>.
+ * wordIndex — индекс среди НЕ-пунктуационных токенов (0-based),
+ * соответствует позиции слова в verseText.split(/\s+/).
+ * Пунктуационные токены (exclude='y' — знаки препинания) не учитываются в wordIndex.
  */
 function parseRussyn(filePath) {
   const byTokenId = new Map();
-  const verseCounters = new Map(); // verseRef → nextIndex
+  const verseWordCounters = new Map(); // verseRef → nextWordIndex (без пунктуации)
 
   const text = readFileSync(filePath, 'utf-8');
   const lines = text.split('\n');
@@ -146,17 +149,27 @@ function parseRussyn(filePath) {
 
     const tokenId = cols[0];         // 40001001001
     const verseRefRaw = cols[1];     // 40001001
+    const tokenText = cols[2] || ''; // текст токена
+    const exclude = cols[4] || '';   // 'y' для пунктуационных токенов
 
     if (!verseRefRaw || verseRefRaw.length < 8) continue;
 
     const verseRef = verseRefRaw.slice(0, 8);
 
-    if (!verseCounters.has(verseRef)) {
-      verseCounters.set(verseRef, 0);
+    // Пунктуация помечена exclude='y' в данных Clear-Bible
+    const isPunct = exclude === 'y';
+
+    if (!verseWordCounters.has(verseRef)) {
+      verseWordCounters.set(verseRef, 0);
     }
-    const idx = verseCounters.get(verseRef);
-    byTokenId.set(tokenId, { verseRef, indexInVerse: idx });
-    verseCounters.set(verseRef, idx + 1);
+
+    if (isPunct) {
+      byTokenId.set(tokenId, { verseRef, wordIndex: -1, isPunct: true });
+    } else {
+      const wordIdx = verseWordCounters.get(verseRef);
+      byTokenId.set(tokenId, { verseRef, wordIndex: wordIdx, isPunct: false });
+      verseWordCounters.set(verseRef, wordIdx + 1);
+    }
   }
 
   return byTokenId;
@@ -260,6 +273,8 @@ function buildManualAlignment(manualRecords, grcByTokenId, ruByTokenId) {
       for (const tgtId of record.targetIds) {
         const ruInfo = ruByTokenId.get(tgtId);
         if (!ruInfo) continue;
+        // Пропускаем пунктуационные токены (у них wordIndex = -1)
+        if (ruInfo.isPunct || ruInfo.wordIndex < 0) continue;
 
         if (grcInfo.verseRef !== ruInfo.verseRef) continue;
 
@@ -268,7 +283,7 @@ function buildManualAlignment(manualRecords, grcByTokenId, ruByTokenId) {
           byVerse.set(verseKey, []);
         }
         byVerse.get(verseKey).push({
-          ru: ruInfo.indexInVerse,
+          ru: ruInfo.wordIndex,
           gr: grcInfo.indexInVerse
         });
       }
