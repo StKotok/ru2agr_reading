@@ -24,11 +24,11 @@
 
 **Файлы:** изменить `src/router.js`, создать `tests/router.test.js`.
 
-- [ ] `router.js:2`: заменить `[a-z2]+` на `[a-z0-9]+`
-- [ ] Написать `tests/router.test.js`: проверить что все 27 bookId матчатся
-- [ ] Проверить: `#/read/1corinthians` → screen=`reading`, params=`{book: '1corinthians'}`
-- [ ] Проверить: дефолтный редирект (`''` → `reading`, book=`john`)
-- [ ] Проверить: `#/dictionary` → `dictionary`, `#/about` → `about`
+- [x] `router.js:2`: заменить `[a-z2]+` на `[a-z0-9]+`
+- [x] Написать `tests/router.test.js`: проверить что все 27 bookId матчатся
+- [x] Проверить: `#/read/1corinthians` → screen=`reading`, params=`{book: '1corinthians'}`
+- [x] Проверить: дефолтный редирект (`''` → `reading`, book=`john`)
+- [x] Проверить: `#/dictionary` → `dictionary`, `#/about` → `about`
 
 **Промпт:**
 ```text
@@ -58,11 +58,11 @@
 
 **Файлы:** изменить `src/app.js`.
 
-- [ ] Раскомментировать блок проверки `settings.onboarded` в `handleRoute()`
-- [ ] Добавить флаг `SKIP_ONBOARDING` (из `localStorage`) для разработки
-- [ ] Проверить с чистой IndexedDB: первый запуск → редирект на `#/onboarding`
-- [ ] Проверить после онбординга: `onboarded = true` → свободная навигация
-- [ ] Блокировать уход с онбординга до завершения
+- [x] Раскомментировать блок проверки `settings.onboarded` в `handleRoute()`
+- [x] Добавить флаг `SKIP_ONBOARDING` (из `localStorage`) для разработки
+- [x] Проверить с чистой IndexedDB: первый запуск → редирект на `#/onboarding`
+- [x] Проверить после онбординга: `onboarded = true` → свободная навигация
+- [x] Блокировать уход с онбординга до завершения
 
 **Промпт:**
 ```text
@@ -97,9 +97,9 @@
 
 **Файлы:** изменить `src/app.js`.
 
-- [ ] При старте приложения загрузить settings и применить тему через `document.documentElement.setAttribute('data-theme', theme)`
-- [ ] Вынести `applyTheme()` в `src/app.js` (или импортировать из settings)
-- [ ] Применить тему ДО первого рендера (чтобы избежать вспышки неправильной темы)
+- [x] При старте приложения загрузить settings и применить тему через `document.documentElement.setAttribute('data-theme', theme)`
+- [x] Вынести `applyTheme()` в `src/app.js` (или импортировать из settings)
+- [x] Применить тему ДО первого рендера (чтобы избежать вспышки неправильной темы)
 
 **Промпт:**
 ```text
@@ -136,9 +136,9 @@
 
 **Файлы:** изменить `src/ui/screens/reading.js`, `src/engine/compose.js`.
 
-- [ ] В `renderWindowed()` и `reRenderWindowed()`: для mode 5 без grcBookData — показать заглушку «Греческий текст недоступен» вместо вызова composeVerse
-- [ ] В `compose.js`: вместо `return null` — вернуть `[{ plain: verseText }]` как fallback (показывает русский текст)
-- [ ] При переключении на mode ≥ 4 без grcBookData: загрузить grc асинхронно и перерендерить
+- [x] В `renderWindowed()` и `reRenderWindowed()`: для mode 5 без grcBookData — показать заглушку «Греческий текст недоступен» вместо вызова composeVerse
+- [x] В `compose.js`: вместо `return null` — вернуть `[{ plain: verseText }]` как fallback (показывает русский текст)
+- [x] При переключении на mode ≥ 4 без grcBookData: загрузить grc асинхронно и перерендерить
 
 **Промпт:**
 ```text
@@ -175,10 +175,10 @@
 
 **Файлы:** изменить `vite.config.js`; изменить структуру — переместить `data/` → `public/data/`.
 
-- [ ] Переместить `data/` → `public/data/` (Vite копирует `public/` в `dist/` как есть)
-- [ ] Обновить все fetch-пути в `bible-loader.js`, `lexicon-loader.js`: `./data/...` → `./data/...` (без изменений — public доступен по корню)
-- [ ] В `vite.config.js`: убрать `data/` из `globIgnores` (теперь он в public)
-- [ ] Проверить: `npm run build && npm run preview` → открыть книгу → данные загружаются
+- [x] Переместить `data/` → `public/data/` (Vite копирует `public/` в `dist/` как есть)
+- [x] Обновить все fetch-пути в `bible-loader.js`, `lexicon-loader.js`: `./data/...` → `./data/...` (без изменений — public доступен по корню)
+- [x] В `vite.config.js`: убрать `data/` из `globIgnores` (теперь он в public)
+- [x] Проверить: `npm run build && npm run preview` → открыть книгу → данные загружаются
 
 **Промпт:**
 ```text
@@ -216,12 +216,12 @@
 
 **Файлы:** изменить `scripts/convert-alignments.js`.
 
-- [ ] В `buildManualAlignment()`: дедуплицировать alignment по `ru` индексу — оставлять **первый** матч для каждого ru
-- [ ] После построения alignment для каждой книги: запустить verification assertions для известных стихов
-- [ ] Ин 1:1: в русском тексте 3 слова «Слово» → alignment должен указывать на 3 разных гр. индекса (по порядку)
-- [ ] Мк 1:1: «Начало» → ἀρχή (grIdx=0), «Евангелия» → εὐαγγέλιον (grIdx=2), «Христа» → Χριστός (grIdx=4), «Сына» → υἱός (grIdx=5), «Божия» → θεός (grIdx=6 или 7)
-- [ ] `npm run build:data` должен **падать с ошибкой** если verification assertion не проходит
-- [ ] После исправлений перегенерировать данные
+- [x] В `buildManualAlignment()`: дедуплицировать alignment по `ru` индексу — оставлять **первый** матч для каждого ru
+- [x] После построения alignment для каждой книги: запустить verification assertions для известных стихов
+- [x] Ин 1:1: в русском тексте 3 слова «Слово» → alignment должен указывать на 3 разных гр. индекса (по порядку)
+- [x] Мк 1:1: «Начало» → ἀρχή (grIdx=0), «Евангелия» → εὐαγγέλιον (grIdx=2), «Христа» → Χριστός (grIdx=4), «Сына» → υἱός (grIdx=5), «Божия» → θεός (grIdx=6 или 7)
+- [x] `npm run build:data` должен **падать с ошибкой** если verification assertion не проходит
+- [x] После исправлений перегенерировать данные
 
 **Промпт:**
 ```text
@@ -260,10 +260,10 @@
 
 **Файлы:** изменить `src/ui/screens/settings.js`.
 
-- [ ] Вынести блок «Новые слова за главу» в отдельную функцию `renderWordsSection()`
-- [ ] Вынести блок «Показывать» (translit, gloss, grammar) в `renderShowSection()`
-- [ ] Вызывать обе из `render()` после `renderThemeSection()`
-- [ ] Добавить `renderAdvancedSection()` для diacritics/strongs (свёрнутый `<details>`)
+- [x] Вынести блок «Новые слова за главу» в отдельную функцию `renderWordsSection()`
+- [x] Вынести блок «Показывать» (translit, gloss, grammar) в `renderShowSection()`
+- [x] Вызывать обе из `render()` после `renderThemeSection()`
+- [x] Добавить `renderAdvancedSection()` для diacritics/strongs (свёрнутый `<details>`)
 
 **Промпт:**
 ```text
@@ -304,10 +304,10 @@
 
 **Файлы:** изменить `src/ui/components/word-card.js`, `src/ui/screens/reading.js`.
 
-- [ ] `renderWordCard()`: принимать параметр `show` с флагами `{translit, gloss, grammar, strongs}`
-- [ ] Условно рендерить: `.word-card-translit` только если `show.translit`, `.word-card-gloss` только если `show.gloss`
-- [ ] В reading.js: передавать `settings.show` при вызове `renderWordCard()`
-- [ ] В режиме 5 (`handleGrcTokenTap`): показывать morphology через `formatMorphRu()` если `show.grammar`
+- [x] `renderWordCard()`: принимать параметр `show` с флагами `{translit, gloss, grammar, strongs}`
+- [x] Условно рендерить: `.word-card-translit` только если `show.translit`, `.word-card-gloss` только если `show.gloss`
+- [x] В reading.js: передавать `settings.show` при вызове `renderWordCard()`
+- [x] В режиме 5 (`handleGrcTokenTap`): показывать morphology через `formatMorphRu()` если `show.grammar`
 
 **Промпт:**
 ```text
@@ -341,9 +341,9 @@
 
 **Файлы:** изменить `src/ui/screens/reading.js`.
 
-- [ ] В `setupObserver()`: сохранять ссылку на массив sentinel-элементов
-- [ ] При разворачивании/сворачивании глав: пересоздавать sentinel'ы для новых placeholder'ов
-- [ ] В `unmount()`: `observer.disconnect()` + очистка sentinel'ов
+- [x] В `setupObserver()`: сохранять ссылку на массив sentinel-элементов
+- [x] При разворачивании/сворачивании глав: пересоздавать sentinel'ы для новых placeholder'ов
+- [x] В `unmount()`: `observer.disconnect()` + очистка sentinel'ов
 
 **Промпт:**
 ```text
@@ -379,9 +379,9 @@ sentinel удаляется из DOM, но новый не создаётся. �
 
 **Файлы:** изменить `src/ui/screens/reading.js`.
 
-- [ ] Объединить два обработчика `pointerup` в один
-- [ ] Использовать флаг `wasLongPress` вместо setTimeout-восстановления
-- [ ] Восстановление: при следующем `pointerup` (не долгом) — вернуть оригинальный текст
+- [x] Объединить два обработчика `pointerup` в один
+- [x] Использовать флаг `wasLongPress` вместо setTimeout-восстановления
+- [x] Восстановление: при следующем `pointerup` (не долгом) — вернуть оригинальный текст
 
 **Промпт:**
 ```text
@@ -413,32 +413,32 @@ sentinel удаляется из DOM, но новый не создаётся. �
 
 **Не код, а чеклист.** Пройти все сценарии и записать результаты.
 
-- [ ] **Онбординг (чистая IndexedDB):**
+- [x] **Онбординг (чистая IndexedDB):**
   - Открыть приложение → редирект на `#/onboarding`
   - Пройти шаг 1 (выбрать вариант 1) → шаг 2 (выбрать Иоанн 1)
   - Тост «Сегодня добавим 3 буквы»
   - Переход на чтение Ин 1 с буквенным слоем
-- [ ] **Режимы:**
+- [x] **Режимы:**
   - Режим 1 → буквы в тексте, тап по букве → карточка
   - Режим 2 → то же + hover на десктопе
   - Режим 3 → слова из словаря (если есть в IndexedDB)
   - Режим 4 → реальные формы (если grc загружен)
   - Режим 5 → греческий текст + русский подстрочник
   - Переключение 1→3→5→1 без crash
-- [ ] **Слайдер интенсивности:**
+- [x] **Слайдер интенсивности:**
   - 0% → чистый русский
   - 100% → все активные буквы заменены
   - Изменение не прыгает (детерминизм)
-- [ ] **Словарь:**
+- [x] **Словарь:**
   - Фильтры Все/Новые/Учу/Знаю
   - Добавление слова через «+ Добавить слова»
   - Настройка per-word (статус, интенсивность, показывать)
-- [ ] **Прогресс:**
+- [x] **Прогресс:**
   - Буквы: сетка 24 букв, статусы
   - Слова: счётчики
   - Мотивирующая строка
   - Кнопка «+ Добавить буквы»
-- [ ] **Настройки:**
+- [x] **Настройки:**
   - Все 5 режимов доступны
   - Слайдер интенсивности
   - Тема: светлая/тёмная/авто (применяется сразу)
@@ -446,16 +446,16 @@ sentinel удаляется из DOM, но новый не создаётся. �
   - Чекбоксы показа (translit, gloss, grammar)
   - Дополнительно (diacritics, strongs)
   - Сброс прогресса
-- [ ] **Plain view:** кнопка «глаз» → чистый русский, повторно → слой возвращается
-- [ ] **Долгий тап:** на мобильном и десктопе показывает оригинал
-- [ ] **Оффлайн:** `npm run build && npm run preview`, открыть книгу, выключить сеть → читается
-- [ ] **Тёмная тема:** переключить → все экраны читаемые, контраст ок
-- [ ] **Мобильная вёрстка (375px):**
+- [x] **Plain view:** кнопка «глаз» → чистый русский, повторно → слой возвращается
+- [x] **Долгий тап:** на мобильном и десктопе показывает оригинал
+- [x] **Оффлайн:** `npm run build && npm run preview`, открыть книгу, выключить сеть → читается
+- [x] **Тёмная тема:** переключить → все экраны читаемые, контраст ок
+- [x] **Мобильная вёрстка (375px):**
   - Нижняя навигация
   - Bottom sheet для карточек
   - Текст ≥ 18px, line-height ≥ 1.7
   - Touch targets ≥ 44px
-- [ ] **Десктоп (1280px):**
+- [x] **Десктоп (1280px):**
   - Три колонки (nav | текст | инспектор)
   - Инспектор показывает карточку
   - Sticky-заголовок главы
@@ -478,13 +478,13 @@ sentinel удаляется из DOM, но новый не создаётся. �
 
 **Файлы:** изменить `package.json`.
 
-- [ ] Версия `1.0.0` в `package.json`
-- [ ] `npm test` — все тесты зелёные
-- [ ] `npm run build` — без ошибок и warnings
-- [ ] `npm run build:data` — alignment verification assertions проходят
-- [ ] `dist/` содержит `data/` (проверить: `ls dist/data/books.json`)
-- [ ] Все чекбоксы DEVELOPMENT_2.md и DEVELOPMENT_3.md отмечены
-- [ ] Git status: clean on `dev2`
+- [x] Версия `1.0.0` в `package.json`
+- [x] `npm test` — все тесты зелёные
+- [x] `npm run build` — без ошибок и warnings
+- [x] `npm run build:data` — alignment verification assertions проходят
+- [x] `dist/` содержит `data/` (проверить: `ls dist/data/books.json`)
+- [x] Все чекбоксы DEVELOPMENT_2.md и DEVELOPMENT_3.md отмечены
+- [x] Git status: clean on `dev2`
 
 **Промпт:**
 ```text
@@ -511,16 +511,16 @@ sentinel удаляется из DOM, но новый не создаётся. �
 
 ## Definition of Done (release)
 
-- [ ] `npm test` — 87+ тестов, все зелёные
-- [ ] `npm run build` — без ошибок и warnings
-- [ ] `npm run build:data` — alignment verification assertions проходят
-- [ ] Все 27 книг доступны через роутер
-- [ ] Все 5 режимов работают без crash
-- [ ] Онбординг работает (чистая IndexedDB)
-- [ ] Тема применяется при загрузке
-- [ ] `dist/data/` содержит все данные
-- [ ] Оффлайн: прочитанная книга доступна без сети
-- [ ] Режим 4 показывает реальные греческие формы (не леммы, не ошибочные матчи)
-- [ ] Все настройки сохраняются и применяются
-- [ ] Полный ручной прогон пройден (задача 4.1)
-- [ ] DEVELOPMENT_2.md и DEVELOPMENT_3.md — все чекбоксы отмечены
+- [x] `npm test` — 87+ тестов, все зелёные
+- [x] `npm run build` — без ошибок и warnings
+- [x] `npm run build:data` — alignment verification assertions проходят
+- [x] Все 27 книг доступны через роутер
+- [x] Все 5 режимов работают без crash
+- [x] Онбординг работает (чистая IndexedDB)
+- [x] Тема применяется при загрузке
+- [x] `dist/data/` содержит все данные
+- [x] Оффлайн: прочитанная книга доступна без сети
+- [x] Режим 4 показывает реальные греческие формы (не леммы, не ошибочные матчи)
+- [x] Все настройки сохраняются и применяются
+- [x] Полный ручной прогон пройден (задача 4.1)
+- [x] DEVELOPMENT_2.md и DEVELOPMENT_3.md — все чекбоксы отмечены
