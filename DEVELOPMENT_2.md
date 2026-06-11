@@ -55,7 +55,8 @@
 6. **Слои кумулятивны.** Буквенный слой работает во всех режимах 1–4.
 7. **Ручное управление обучением.** Никакой «умной» адаптации.
 8. **Alignment внутри syn JSON.** Один fetch для текста + выравнивания.
-9. **Sequential consumption для Strong.** При повторе Strong в стихе — потребление по порядку.
+9. **Token ID — первичный источник alignment.** Используем `SBLGNT-RUSSYN-manual.json` (89K ручных выравниваний по ID токенов) как первичный источник. Strong + sequential consumption — fallback для стихов без manual alignment. Regex ruMatches — последний fallback. Трёхуровневая стратегия: **Manual ID → Strong → Regex**.
+10. **Touch targets ≥ 44px.** Интерактивные `.gr` span'ы используют padding + отрицательный margin для расширения зоны касания без визуального раздвижения текста.
 
 ### 3.2 Структура проекта
 
@@ -161,7 +162,13 @@
 }
 ```
 
-**Важно:** alignment — опциональное поле. Есть только в тех стихах, где core.json покрывает леммы. При повторе Strong в стихе — sequential consumption: первый матч → первое вхождение Strong, второй матч → второе вхождение.
+**Как строится alignment — трёхуровневая стратегия:**
+
+1. **Manual alignment (первичный):** `SBLGNT-RUSSYN-manual.json` содержит 89 248 ручных выравниваний по ID токенов. Source — ID греческих токенов (напр. `n43001001001`), target — ID русских токенов (напр. `43001001001`). Разрешаем ID → позиции в стихах → alignment `{ru, gr}`. Точность 100% для покрытых стихов.
+2. **Strong + sequential consumption (fallback):** Для стихов без manual alignment. Для каждого русского слова, совпавшего с лексемой по regex, ищем греческий токен с тем же Strong. При повторе Strong — sequential consumption (первый матч → первое вхождение, второй → второе).
+3. **Regex ruMatches (последний fallback):** Для слов, не покрытых ни manual, ни Strong — прямое regex-совпадение в тексте стиха (режим 3).
+
+**Важно:** alignment — опциональное поле. Покрытие manual alignment'ом — проверяется при `npm run build:data`.
 
 **grc/{bookId}.json** — греческий текст SBLGNT:
 
@@ -290,31 +297,46 @@ docs/clear-bible-alignments/
 
 ### Этап 0 — Исправление фундамента
 
-#### Задача 0.0 — Sequential consumption в alignment
+#### Задача 0.0 — Трёхуровневый alignment: Manual ID → Strong → Regex
 
 **Файлы:** изменить `scripts/convert-alignments.js`.
 
-- [ ] Переписать `buildAlignment()`: заменить `Map<strong, firstIndex>` на `Map<strong, usageCount>` с sequential consumption
-- [ ] Для каждого русского слова при матчинге Strong: найти usageCount-е вхождение этого Strong в греческих токенах
+**Стратегия (приоритет):**
+1. **Manual alignment** — `SBLGNT-RUSSYN-manual.json`: 89K ручных выравниваний по ID токенов. Разрешаем ID → позиции в стихах. Точность 100%.
+2. **Strong + sequential consumption** — для стихов без manual. Поиск по Strong с потреблением по порядку.
+3. **Regex ruMatches** — последний fallback для режима 3.
+
+- [ ] Распарсить `docs/clear-bible-alignments/SBLGNT-RUSSYN-manual.json` (89 248 записей)
+- [ ] Для каждой записи: source ID (греч. токен) → позиция в grcTokens, target ID (рус. токен) → позиция в русских словах
+- [ ] Построить alignment `{ru, gr}` из manual ID-соответствий
+- [ ] Для стихов без manual: Strong + sequential consumption (Map<strong, usageCount>)
+- [ ] Для слов без Strong: regex fallback из core.json
 - [ ] Перегенерировать alignment: `npm run build:data`
-- [ ] Верификация: Ин 1:1 — три «Слово» должны указывать на три разных λόγος (grIdx=4, 7, 16)
-- [ ] Верификация: Мк 1:1 — «Начало» → Ἀρχὴ[0], «Евангелия» → εὐαγγελίου[2], «Иисуса» → Ἰησοῦ[3], «Христа» → Χριστοῦ[4], «Сына» → υἱοῦ[5], «Божия» → Θεοῦ[6]
+- [ ] Вывести статистику: покрытие manual / Strong / regex / без alignment
+- [ ] Верификация: Ин 1:1 — три «Слово» → три разных λόγος по порядку
+- [ ] Верификация: Мк 1:1 — все 6 значимых слов выровнены корректно
 
 **Промпт:**
 ```text
-Прочитай development.underline2.md разделы 3.3 и 3.4. Исправь alignment в
-scripts/convert-alignments.js:
+Прочитай DEVELOPMENT_2.md разделы 3.3 и 3.4. Перепиши alignment в
+scripts/convert-alignments.js на трёхуровневую стратегию:
 
-1) В функции buildAlignment() замени Map<strong, firstIndex> на sequential
-   consumption: для каждого русского слова, совпавшего с лексемой, отслеживай
-   usageCount этого Strong в стихе и ищи usageCount-е вхождение в grcTokens.
+1) Первичный источник: docs/clear-bible-alignments/SBLGNT-RUSSYN-manual.json
+   — 89248 ручных выравниваний по ID токенов (source: n40001001001, target: 40001001001).
+   Разреши ID токенов в позиции внутри стихов (SBLGNT.tsv для греческого,
+   nt_RUSSYN.tsv для русского). Построй alignment {ru, gr} из этих ID-соответствий.
 
-2) Перегенерируй данные: npm run build:data
+2) Fallback #1 (для стихов без manual): Strong + sequential consumption.
+   Замени Map<strong, firstIndex> на Map<strong, usageCount>.
+   Для каждого русского слова при матчинге Strong — ищи usageCount-е вхождение.
 
-3) Проверь Ин 1:1: три «Слово» → три разных grIdx (4, 7, 16).
-   Проверь Мк 1:1: «Начало»→0, «Евангелия»→2, «Иисуса»→3, «Христа»→4.
+3) Fallback #2 (для слов без Strong): regex ruMatches из core.json (только для режима 3).
 
-Коммит: "fix: sequential Strong consumption for accurate alignment".
+4) Выведи статистику покрытия: сколько стихов покрыто manual / Strong / regex / без alignment.
+
+5) npm run build:data, проверь Ин 1:1 и Мк 1:1.
+
+Коммит: "feat: three-tier alignment (manual ID → Strong → regex)".
 ```
 
 ---
@@ -375,6 +397,7 @@ scripts/convert-alignments.js:
 **Файлы:** изменить `src/engine/form-layer.js`.
 
 - [ ] При замене слова с пунктуацией (напр. «Христа,»): отделить знаки препинания, выдать сегмент `{ greek, original: wordWithoutPunct }` + `{ plain: punct }` после
+- [ ] Полный regex пунктуации: `/[.,;:!?;—\-–"«»„"()\[\]'¿¡]+$/g` (включая греческий вопросительный знак `;` U+037E, кавычки, скобки)
 - [ ] Разделитель между словами `{ plain: ' ' }` — последнее слово стиха не должно иметь пробела после
 - [ ] Обновить тесты (из задачи 0.2)
 
@@ -410,7 +433,7 @@ scripts/convert-alignments.js:
 
 **Промпт:**
 ```text
-Прочитай development.underline2.md раздел 3.4. Подключи grc данные в reading.js:
+Прочитай DEVELOPMENT_2.md раздел 3.4. Подключи grc данные в reading.js:
 
 1) В mount(): Promise.all([loadBook('syn', bookId), loadBook('grc', bookId)])
 2) buildWordEntries(): добавить strongNum = lexeme.strong в каждую запись
@@ -434,18 +457,26 @@ scripts/convert-alignments.js:
 
 - [ ] Включить mode 4 и 5 в `top-bar.js` (enabled: true, убрать «скоро»)
 - [ ] Включить mode 4 и 5 в `settings.js`
-- [ ] Onboarding: вариант 4 → mode=4, все буквы known
-- [ ] Onboarding: добавить вариант для mode 5? (Нет — пока 4 варианта достаточно)
+- [ ] Onboarding: вариант 3 → mode=3, вариант 4 → mode=4, все буквы known
+- [ ] В onboarding добавить **визуальные примеры** разницы между режимами:
+  - Режим 3: `«Слово» → λόγος` (лемма — всегда одна словарная форма)
+  - Режим 4: `«Слову» → λόγῳ` (реальная форма из текста, зависит от падежа!)
+  - Примеры показывать под описанием варианта мелким шрифтом
 
 **Промпт:**
 ```text
-Разблокируй режимы 4-5 в UI:
+Разблокируй режимы 4-5 в UI и добавь визуальные примеры в онбординг:
 
 1) top-bar.js: MODES[3] и MODES[4] → enabled: true, убрать note 'скоро'
 2) settings.js: аналогично
-3) onboarding.js: вариант 4 → mode: 4 (не 3)
+3) onboarding.js:
+   - вариант 4 → mode: 4 (не 3)
+   - для вариантов 3 и 4 добавить под описанием визуальный пример мелким шрифтом:
+     * Вариант 3: «Пример: «Слово» → λόγος (лемма, всегда одна форма)»
+     * Вариант 4: «Пример: «Слову» → λόγῳ (реальная форма, зависит от падежа!)»
+   - примеры помогут пользователю понять разницу между леммой и формой
 
-Коммит: "feat: enable modes 4-5 in UI".
+Коммит: "feat: enable modes 4-5 in UI with visual onboarding examples".
 ```
 
 ---
@@ -455,7 +486,8 @@ scripts/convert-alignments.js:
 **Файлы:** изменить `src/ui/screens/reading.js`, `src/engine/compose.js`.
 
 - [ ] В `renderWindowed()`: если mode === 5, рендерить греческий текст как основной
-- [ ] Каждый греческий токен → `<span>` с data-атрибутами (w, lemma, morph, strong, gr-token)
+- [ ] Каждый греческий токен → `<span class="gr grc-token">` с data-атрибутами (w, lemma, morph, strong)
+- [ ] **Touch targets:** CSS для `.grc-token` — padding: 4px 0, margin: -4px 0, min-height: 44px (зона касания без визуального раздвижения текста). Для коротких слов (ὁ, ἡ, τό) — псевдоэлемент `::after` расширяет зону горизонтально
 - [ ] Под каждым стихом — русский текст приглушённым курсивом (settings.show.ruHint toggle)
 - [ ] Тап по греческому токену → подробная карточка (лемма, грамматика, перевод)
 - [ ] Токены из словаря пользователя (strong совпадает) → класс `.known` (подсветка `--progress`)
@@ -464,7 +496,7 @@ scripts/convert-alignments.js:
 
 **Промпт:**
 ```text
-Прочитай development.underline2.md раздел 3.4 (режим 5). Реализуй режим 5:
+Прочитай DEVELOPMENT_2.md раздел 3.4 (режим 5). Реализуй режим 5:
 
 1) В reading.js renderWindowed(): если mode===5 и grcBook загружен — рендерить
    греческие токены как основной контент.
@@ -619,7 +651,7 @@ scripts/convert-alignments.js:
 - [ ] На десктопе (≥900px) в режиме 2: span'ам `.gr[data-letter]` добавить `title` с именем буквы («альфа — читается примерно как „а“»)
 - [ ] В левой панели: список глав текущей книги с галочками прочитанных
 - [ ] В левой панели: кнопка «Продолжить чтение» (переход к последней позиции скролла)
-- [ ] Исправить warning двойного импорта dictionary.js (убрать динамический import, оставить только статический)
+- [ ] Исправить warning двойного импорта dictionary.js: **перед заменой динамического import на статический проверить граф зависимостей на циклическую зависимость** (reading.js → dictionary.js → reading.js). Если цикл есть — оставить динамический, но вынести в именованный реэкспорт для устранения warning
 
 **Промпт:**
 ```text
@@ -629,8 +661,10 @@ Polish интерфейса:
    атрибут на span'ы .gr[data-letter]: «альфа — читается примерно как „а“»
 2) nav.js: на десктопе показывать оглавление глав текущей книги с галочками
    и кнопку «Продолжить чтение»
-3) reading.js: заменить динамический import('../../state/dictionary.js') на
-   статический (импортировать addWord, setWordStatus, saveDictionary вверху файла)
+3) reading.js: проверить граф зависимостей на cyclic dependency между reading.js
+   и dictionary.js. Если цикл есть — оставить динамический import, но вынести
+   в отдельную функцию для устранения vite warning.
+   Если цикла нет — заменить на статический import вверху файла.
 
 Коммит: "feat: mode 2 tooltip + navigation polish".
 ```
@@ -709,11 +743,14 @@ Polish интерфейса:
 - [ ] Детерминизм: перерендер не меняет картину замен
 - [ ] Производительность: ленивый DOM-рендер, книга Луки скроллится без лагов
 - [ ] Оффлайн: оболочка + прочитанные книги работают без сети
-- [ ] Доступность: aria-атрибуты, touch targets ≥ 44px, `:focus-visible`, контраст ≥ 4.5:1
-- [ ] Alignment: sequential consumption, точность >95%
-- [ ] Все 5 режимов работают
-- [ ] Страница «О приложении» с лицензиями
+- [ ] Доступность: aria-атрибуты, **touch targets ≥ 44px** (`.gr` span'ы через padding + margin), `:focus-visible`, контраст ≥ 4.5:1
+- [ ] Alignment: трёхуровневый (Manual ID → Strong → Regex), покрытие manual alignment'ом задокументировано
+- [ ] Все 5 режимов работают, включая деградацию при отсутствии данных
+- [ ] Страница «О приложении» с лицензиями (SBLGNT EULA, Clear-Bible CC-BY-SA, Gentium Plus SIL OFL)
 - [ ] README.md с инструкциями
+- [ ] Пунктуация: полный regex включая греческий `;` (U+037E)
+- [ ] Онбординг: визуальные примеры разницы лемма/форма
+- [ ] Циклические зависимости проверены, vite build без warnings
 
 ---
 
@@ -726,4 +763,5 @@ Polish интерфейса:
 - Синхронизация между устройствами
 - Ветхий Завет / Септуагинта
 - Экспорт/импорт прогресса
+- Interlinear view (русское слово под/над греческим словом вместо целого стиха снизу)
 - Параллельный показ русского и греческого (interlinear view)
