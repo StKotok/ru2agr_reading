@@ -346,6 +346,31 @@ function renderWindowed() {
   setupObserver(chaptersEls, textArea);
 }
 
+function getChapterCandidates(chapterText) {
+  // Находит слова core-лексикона, встречающиеся в тексте главы и отсутствующие в словаре
+  if (!coreLexicon || coreLexicon.length === 0) return [];
+  const candidates = [];
+  for (const lexeme of coreLexicon) {
+    if (dictionary[lexeme.id]) continue; // уже в словаре
+    for (const matchPattern of lexeme.ruMatches) {
+      const re = new RegExp(matchPattern, 'iu');
+      if (re.test(chapterText)) {
+        // Проверяем exclude
+        let excluded = false;
+        for (const excPattern of (lexeme.ruExclude || [])) {
+          const excRe = new RegExp(excPattern, 'iu');
+          if (excRe.test(chapterText)) { excluded = true; break; }
+        }
+        if (!excluded) {
+          candidates.push(lexeme);
+          break;
+        }
+      }
+    }
+  }
+  return candidates.sort((a, b) => (b.freqNT || 0) - (a.freqNT || 0));
+}
+
 function buildWordEntries() {
   wordEntries = [];
   if (!coreLexicon || coreLexicon.length === 0) return;

@@ -809,3 +809,53 @@ p, h2, h3, span {
   min-height: 44px;
   cursor: pointer;
 }
+
+/* Dictionary */
+.dict-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dict-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dict-row {
+  cursor: pointer;
+  padding: 8px 12px;
+}
+
+.dict-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dict-lemma {
+  font-family: 'Gentium Plus', serif;
+  color: var(--greek);
+  font-size: 1.125rem;
+}
+
+.dict-gloss {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.dict-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.badge-new { background: var(--selection); color: var(--greek); }
+.badge-learning { background: #f0e6c0; color: #8a7a30; }
+.badge-known { background: var(--progress); color: #fff; }
+
+.dict-add-section {
+  margin-top: 16px;
+}
