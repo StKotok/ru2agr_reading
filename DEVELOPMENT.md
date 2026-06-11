@@ -785,12 +785,12 @@ npm test зелёный. Коммит: "feat: letter layer in reader with mode &
 
 **Файлы:** изменить `vite.config.js`, `index.html`, `src/ui/screens/settings.js`, `src/state/progress.js`; удалить `sw.js`.
 
-- [ ] Подключить `vite-plugin-pwa`: precache оболочки из манифеста сборки (бандл, styles, fonts, `data/alphabet.json`, `data/books.json`), автообновление SW
-- [ ] Книги (`data/bibles/**`, `data/lexicon/**`) — runtime-кеш stale-while-revalidate (Workbox `runtimeCaching`)
-- [ ] `navigator.storage.persist()` при первом сохранении прогресса — защита кешей и IndexedDB от вытеснения
-- [ ] Удалить старый `sw.js` и ручную регистрацию SW из `index.html`
-- [ ] Экран «Настройки» (первая версия): режим, интенсивность, тема; кнопка «Сбросить прогресс» с confirm
-- [ ] Проверка оффлайна (`npm run build && npm run preview`): открытая ранее книга читается без сети
+- [x] Подключить `vite-plugin-pwa`: precache оболочки из манифеста сборки (бандл, styles, fonts, `data/alphabet.json`, `data/books.json`), автообновление SW
+- [x] Книги (`data/bibles/**`, `data/lexicon/**`) — runtime-кеш stale-while-revalidate (Workbox `runtimeCaching`)
+- [x] `navigator.storage.persist()` при первом сохранении прогресса — защита кешей и IndexedDB от вытеснения
+- [x] Удалить старый `sw.js` и ручную регистрацию SW из `index.html`
+- [x] Экран «Настройки» (первая версия): режим, интенсивность, тема; кнопка «Сбросить прогресс» с confirm
+- [x] Проверка оффлайна (`npm run build && npm run preview`): открытая ранее книга читается без сети
 
 **Промпт:**
 

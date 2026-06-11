@@ -1,3 +1,4 @@
+import { registerSW } from 'virtual:pwa-register';
 import { createStore } from './state/store.js';
 import { parse, onChange } from './router.js';
 import { createNav } from './ui/components/nav.js';
@@ -43,6 +44,9 @@ function switchScreen(screenName, params) {
 
   store.update(s => ({ ...s, screen: screenName, book: params.book || s.book }));
 }
+
+// Регистрация service worker (vite-plugin-pwa)
+registerSW({ immediate: true });
 
 // Реакция на hash-изменения
 async function handleRoute(route) {
