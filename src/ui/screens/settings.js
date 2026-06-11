@@ -52,7 +52,7 @@ function renderModeSection() {
   const modes = [
     { id: 1, label: '1. Только греческие буквы', group: 'Учебный мостик', enabled: true },
     { id: 2, label: '2. Буквы + подсказки', group: 'Учебный мостик', enabled: true },
-    { id: 3, label: '3. Слова из моего словаря', group: 'Учебный мостик', enabled: true },
+    { id: 3, label: '3. Слова из моего словаря', group: 'Учебный мостик', enabled: true }
     { id: 4, label: '4. Реальные формы оригинала', group: 'Ближе к оригиналу', enabled: false, note: 'после привязки к оригиналу' },
     { id: 5, label: '5. Почти оригинал', group: 'Ближе к оригиналу', enabled: false, note: 'после привязки к оригиналу' },
   ];

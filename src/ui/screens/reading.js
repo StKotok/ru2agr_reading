@@ -1,12 +1,13 @@
 import { loadBook } from '../../data/bible-loader.js';
 import { loadProgress, saveProgress, markLetterKnown } from '../../state/progress.js';
 import { loadSettings, saveSettings } from '../../state/settings.js';
-import { loadAlphabet } from '../../data/lexicon-loader.js';
+import { loadAlphabet, loadCoreLexicon } from '../../data/lexicon-loader.js';
+import { loadDictionary } from '../../state/dictionary.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
 import { createTopBar } from '../components/top-bar.js';
 import { createIntensitySlider } from '../components/intensity-slider.js';
-import { renderLetterCard } from '../components/word-card.js';
+import { renderLetterCard, renderWordCard } from '../components/word-card.js';
 import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
 import { getInspectorPanel, showEmptyState, showInInspector } from '../components/inspector.js';
 import { navigate } from '../../router.js';
@@ -23,18 +24,23 @@ let scrollTimer = null;
 let chapterPlaceholders = [];
 let observer = null;
 let reRenderFn = null;
-let plainView = false; // эфемерный флаг: показывать чистый русский текст
+let plainView = false;
 let longPressTimer = null;
 let longPressTarget = null;
+let dictionary = {};
+let coreLexicon = [];
+let wordEntries = [];
 
 export async function mount(container, ctx) {
   const { store } = ctx;
 
   // Загружаем всё
-  [progress, settings, alphabet] = await Promise.all([
+  [progress, settings, alphabet, dictionary, coreLexicon] = await Promise.all([
     loadProgress(),
     loadSettings(),
-    loadAlphabet()
+    loadAlphabet(),
+    loadDictionary(),
+    loadCoreLexicon()
   ]);
 
   // Строим карту имён букв для aria-label
@@ -149,6 +155,11 @@ export async function mount(container, ctx) {
     const letter = span.getAttribute('data-letter');
     if (letter) {
       handleLetterTap(letter, span, container);
+      return;
+    }
+    const lexemeId = span.getAttribute('data-lexeme');
+    if (lexemeId) {
+      handleWordTap(lexemeId, span, container);
     }
   });
 
@@ -268,12 +279,17 @@ function renderWindowed() {
   const chapters = bookData.chapters;
   const chaptersEls = [];
 
+  // Строим wordEntries из словаря + лексикона
+  buildWordEntries();
+
   // Строим контекст для composeVerse
   const composeCtx = {
     mode: settings.mode,
     intensity: settings.intensity,
     progressLetters: progress.letters,
-    seedPrefix: bookData.id
+    seedPrefix: bookData.id,
+    wordEntries,
+    showDiacritics: settings.show?.diacritics ?? false
   };
 
   const renderCtx = { letterNames };
@@ -330,16 +346,40 @@ function renderWindowed() {
   setupObserver(chaptersEls, textArea);
 }
 
+function buildWordEntries() {
+  wordEntries = [];
+  if (!coreLexicon || coreLexicon.length === 0) return;
+
+  for (const lexeme of coreLexicon) {
+    const entry = dictionary[lexeme.id];
+    if (!entry || entry.showInText === false) continue;
+    if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
+
+    const intensityMap = { often: 100, sometimes: 50, rare: 25 };
+    wordEntries.push({
+      lexemeId: lexeme.id,
+      lemma: lexeme.lemma,
+      regexps: lexeme.ruMatches.map(r => new RegExp(r, 'iu')),
+      excludeRegexps: (lexeme.ruExclude || []).map(r => new RegExp(r, 'iu')),
+      intensityPct: intensityMap[entry.intensity] || 100,
+      status: entry.status
+    });
+  }
+}
+
 function reRenderWindowed() {
   // Перерендер только уже видимых глав
   const textArea = document.getElementById('scripture-text');
   if (!textArea || !bookData) return;
 
+  buildWordEntries();
   const composeCtx = {
     mode: settings.mode,
     intensity: settings.intensity,
     progressLetters: progress.letters,
-    seedPrefix: bookData.id
+    seedPrefix: bookData.id,
+    wordEntries,
+    showDiacritics: settings.show?.diacritics ?? false
   };
   const renderCtx = { letterNames };
 
@@ -455,6 +495,39 @@ function createOfflineState(bookId) {
     location.reload();
   });
   return div;
+}
+
+function handleWordTap(lexemeId, span, container) {
+  if (!coreLexicon) return;
+  const lexeme = coreLexicon.find(l => l.id === lexemeId);
+  if (!lexeme) return;
+
+  const dictEntry = dictionary[lexemeId];
+  const originalText = span.getAttribute('data-original');
+
+  const card = renderWordCard(lexeme, dictEntry, { originalText }, {
+    onMarkKnown: async (id) => {
+      const { setWordStatus, saveDictionary, getActive } = await import('../../state/dictionary.js');
+      dictionary = setWordStatus(id, 'known', dictionary);
+      await saveDictionary(dictionary);
+      // Точечное обновление
+      const spans = document.querySelectorAll(`span.gr[data-lexeme="${id}"]`);
+      spans.forEach(s => s.classList.add('known'));
+    },
+    onAddToDict: async (id) => {
+      const { addWord, saveDictionary } = await import('../../state/dictionary.js');
+      dictionary = addWord(id, dictionary);
+      await saveDictionary(dictionary);
+      buildWordEntries();
+      reRenderWindowed();
+    }
+  });
+
+  if (window.innerWidth >= 900) {
+    showInInspector(card);
+  } else {
+    openBottomSheet(card);
+  }
 }
 
 function handleLetterTap(letterChar, span, container) {

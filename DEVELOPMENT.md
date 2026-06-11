@@ -855,12 +855,12 @@ npm test зелёный. Коммит: "feat: letter layer in reader with mode &
 
 **Файлы:** создать `src/engine/word-layer.js`, `src/state/dictionary.js`, `tests/word-layer.test.js`; изменить `src/engine/compose.js`, `tests/compose.test.js`.
 
-- [ ] `src/state/dictionary.js`: CRUD словаря (ключ `dictionary` в IndexedDB): `addWord(id)`, `setStatus(id, status)`, `setWordSetting(id, key, value)`, `getActive()` — записи с `showInText !== false`
-- [ ] `src/engine/word-layer.js`: `applyWordLayer(text, entries, { intensity, seedPrefix }) → Segment[]` — находит вхождения по `ruMatches` (минус `ruExclude`), заменяет на лемму с учётом пер-словной интенсивности (often/sometimes/rare × детерминированный хеш)
-- [ ] **Только слова из личного словаря** со статусом new/learning/known и `showInText: true`
-- [ ] `compose.js`: режим ≥3 — сначала word-layer, потом letter-layer на plain-сегментах
-- [ ] Включить режим 3 в селекторе топбара и настройках
-- [ ] Тесты: замена «Слово» → `λόγος` с `lexemeId`; `ruExclude` не заменяется; слово не из словаря не заменяется; статус `known` заменяется всегда (интенсивность игнорируется); детерминизм
+- [x] `src/state/dictionary.js`: CRUD словаря (ключ `dictionary` в IndexedDB): `addWord(id)`, `setStatus(id, status)`, `setWordSetting(id, key, value)`, `getActive()` — записи с `showInText !== false`
+- [x] `src/engine/word-layer.js`: `applyWordLayer(text, entries, { intensity, seedPrefix }) → Segment[]` — находит вхождения по `ruMatches` (минус `ruExclude`), заменяет на лемму с учётом пер-словной интенсивности (often/sometimes/rare × детерминированный хеш)
+- [x] **Только слова из личного словаря** со статусом new/learning/known и `showInText: true`
+- [x] `compose.js`: режим ≥3 — сначала word-layer, потом letter-layer на plain-сегментах
+- [x] Включить режим 3 в селекторе топбара и настройках
+- [x] Тесты: замена «Слово» → `λόγος` с `lexemeId`; `ruExclude` не заменяется; слово не из словаря не заменяется; статус `known` заменяется всегда (интенсивность игнорируется); детерминизм
 
 **Промпт:**
 

@@ -21,13 +21,13 @@ const PRESETS = [
     id: 3,
     title: 'Хочу узнавать греческие слова',
     desc: 'Режим 3 (пока режим 2) — слова из личного словаря. Все буквы известны.',
-    mode: 2, introduce: 0, allLettersKnown: true, note: 'TODO: переключить на режим 3 в MVP 2'
+    mode: 3, introduce: 0, allLettersKnown: true
   },
   {
     id: 4,
     title: 'Хочу читать ближе к оригиналу',
-    desc: 'Режим 4 (пока режим 2) — греческий текст с русской подсказкой.',
-    mode: 2, introduce: 0, allLettersKnown: true, note: 'TODO: режим 4 в MVP 3'
+    desc: 'Режим 4 (пока режим 3) — греческий текст с русской подсказкой.',
+    mode: 3, introduce: 0, allLettersKnown: true, note: 'TODO: режим 4 в MVP 3'
   },
 ];
 
