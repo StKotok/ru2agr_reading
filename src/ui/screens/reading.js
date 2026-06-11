@@ -202,9 +202,27 @@ export async function mount(container, ctx) {
     }, 500);
   });
 
+  // Единый обработчик pointerup: сброс таймера + восстановление после долгого тапа
   textArea.addEventListener('pointerup', () => {
+    // Сбрасываем таймер долгого нажатия
     if (longPressTimer) clearTimeout(longPressTimer);
     longPressTimer = null;
+
+    // Если был долгий тап (показан оригинал) — даём увидеть и восстанавливаем
+    if (longPressTarget && longPressTarget.classList.contains('show-original')) {
+      const target = longPressTarget;
+      longPressTarget = null;
+      setTimeout(() => {
+        if (target.classList.contains('show-original')) {
+          const restore = target.getAttribute('data-restore');
+          if (restore) {
+            target.textContent = restore;
+          }
+          target.classList.remove('show-original');
+          target._wasLongPress = false;
+        }
+      }, 200);
+    }
   });
 
   textArea.addEventListener('pointerleave', () => {
@@ -220,24 +238,6 @@ export async function mount(container, ctx) {
       longPressTarget._wasLongPress = false;
     }
     longPressTarget = null;
-  });
-
-  // Восстановление после долгого тапа
-  textArea.addEventListener('pointerup', (e) => {
-    if (longPressTarget && longPressTarget.classList.contains('show-original')) {
-      // Даём пользователю увидеть оригинал и восстанавливаем
-      setTimeout(() => {
-        if (longPressTarget && longPressTarget.classList.contains('show-original')) {
-          const restore = longPressTarget.getAttribute('data-restore');
-          if (restore) {
-            longPressTarget.textContent = restore;
-          }
-          longPressTarget.classList.remove('show-original');
-          longPressTarget._wasLongPress = false;
-          longPressTarget = null;
-        }
-      }, 200);
-    }
   });
 
   // Клавиатурная доступность
@@ -606,12 +606,15 @@ function reRenderWindowed() {
 }
 
 function setupObserver(chaptersEls, textArea) {
+  // Создаём sentinel'ы как независимые элементы перед каждым placeholder'ом
+  const sentinels = [];
   for (const ph of chapterPlaceholders) {
     const sentinel = document.createElement('div');
     sentinel.className = 'chapter-sentinel';
     sentinel.style.height = '1px';
     sentinel.setAttribute('data-chapter-idx', String(ph.chapterIndex));
     ph.el.parentNode?.insertBefore(sentinel, ph.el);
+    sentinels.push({ el: sentinel, chapterIndex: ph.chapterIndex });
   }
 
   observer = new IntersectionObserver((entries) => {
@@ -656,11 +659,9 @@ function setupObserver(chaptersEls, textArea) {
     }
   }, { rootMargin: '200px 0px' });
 
-  for (const ph of chapterPlaceholders) {
-    const sentinel = ph.el.previousElementSibling;
-    if (sentinel && sentinel.classList.contains('chapter-sentinel')) {
-      observer.observe(sentinel);
-    }
+  // Observe sentinels напрямую (они не удаляются при expand/collapse)
+  for (const s of sentinels) {
+    observer.observe(s.el);
   }
 }
 
@@ -708,7 +709,7 @@ function handleWordTap(lexemeId, span, container) {
       buildWordEntries();
       reRenderWindowed();
     }
-  });
+  }, settings.show || {});
 
   if (window.innerWidth >= 900) {
     showInInspector(card);
@@ -727,11 +728,13 @@ function handleGrcTokenTap(span, container) {
 
   const card = document.createElement('div');
   card.className = 'card word-card';
+  const showGrammar = settings.show?.grammar !== false;
+  const showStrongs = settings.show?.strongs === true;
   card.innerHTML = `
     <h3 class="greek-word">${w}</h3>
     ${lemma ? `<p><strong>Лемма:</strong> ${lemma}</p>` : ''}
-    ${morph ? `<p><strong>Грамматика:</strong> ${morph}</p>` : ''}
-    ${strong ? `<p><strong>Strong:</strong> G${strong}</p>` : ''}
+    ${showGrammar && morph ? `<p><strong>Грамматика:</strong> ${morph}</p>` : ''}
+    ${showStrongs && strong ? `<p><strong>Strong:</strong> G${strong}</p>` : ''}
   `;
 
   if (window.innerWidth >= 900) {

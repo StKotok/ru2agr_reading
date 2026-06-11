@@ -55,17 +55,22 @@ export function renderLetterCard(letter, progressEntry, onMarkKnown) {
  * @param {object} callbacks — { onMarkKnown, onAddToDict, onShowDetails }
  * @returns {HTMLElement}
  */
-export function renderWordCard(lexeme, dictEntry, context = {}, callbacks = {}) {
+export function renderWordCard(lexeme, dictEntry, context = {}, callbacks = {}, show = {}) {
   const card = document.createElement('div');
   card.className = 'card word-card';
 
   const inDict = !!dictEntry;
   const status = dictEntry?.status;
 
+  const showTranslit = show.translit !== false;
+  const showGloss = show.gloss !== false;
+  const showStrongs = show.strongs === true;
+
   card.innerHTML = `
     <div class="word-card-lemma">${lexeme.lemma}</div>
-    <div class="word-card-translit">${lexeme.translit}</div>
-    <div class="word-card-gloss">${lexeme.gloss}</div>
+    ${showTranslit ? `<div class="word-card-translit">${lexeme.translit}</div>` : ''}
+    ${showGloss ? `<div class="word-card-gloss">${lexeme.gloss}</div>` : ''}
+    ${showStrongs && lexeme.strong ? `<div class="word-card-strong">Strong G${lexeme.strong}</div>` : ''}
     ${context.originalText ? `<div class="word-card-replaces">Сейчас заменяет: «${context.originalText}»</div>` : ''}
     <div class="word-card-actions"></div>
     <div class="word-card-details" hidden></div>
