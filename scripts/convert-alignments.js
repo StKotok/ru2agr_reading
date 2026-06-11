@@ -675,64 +675,9 @@ function buildAlignment(verseKey, verseText, grcTokens, manualByVerse, lexicon) 
       return { alignment: regexAlign, tier: 'regex' };
     }
 
-    // Уровень 4: позиционное выравнивание (последний fallback)
-    // Маппим русские слова на греческие токены по порядку,
-    // исключая артикли (ὁ, ἡ, τό) и союзы (καί, δέ)
-    const positionalAlign = buildPositionalAlignment(verseText, grcTokens);
-    if (positionalAlign) {
-      return { alignment: positionalAlign, tier: 'positional' };
-    }
   }
 
   return { alignment: null, tier: 'none' };
-}
-
-/**
- * Уровень 4: позиционное выравнивание.
- * Последний fallback для стихов без manual/Strong/regex покрытия.
- * Маппим знаменательные русские слова на знаменательные греческие токены
- * по порядку, исключая артикли/союзы.
- */
-function buildPositionalAlignment(verseText, grcTokens) {
-  const words = verseText.split(/\s+/).filter(w => w.length > 0);
-  if (words.length === 0 || grcTokens.length === 0) return null;
-
-  // Функциональные греческие слова (артикли, союзы, предлоги) — не выравниваем
-  const FUNCTION_WORDS = new Set([
-    'ὁ', 'ἡ', 'τό', 'οἱ', 'αἱ', 'τά', 'τοῦ', 'τῷ', 'τῆς', 'τῶν', 'τόν', 'τήν', 'τούς', 'τῇ', 'τάς',  // артикли
-    'καί', 'δέ', 'τε', 'γάρ', 'οὖν', 'ἀλλά', 'μέν', 'ἤ', 'εἰ', 'ἐάν', 'ὅτι', 'ἵνα', 'ὡς', 'καθώς',  // союзы
-    'ἐν', 'εἰς', 'ἐκ', 'πρός', 'ἀπό', 'διά', 'μετά', 'περί', 'ὑπό', 'ἐπί', 'παρά', 'κατά', 'ὑπέρ',  // предлоги
-    'οὐ', 'μή', 'οὐκ', 'οὐχ', 'μήτι',  // отрицания
-  ]);
-
-  // Фильтруем: только знаменательные токены (с сильным номером и не функциональные)
-  const contentTokens = [];
-  const contentIndices = [];
-  for (let i = 0; i < grcTokens.length; i++) {
-    const t = grcTokens[i];
-    if (t.strong && !FUNCTION_WORDS.has(t.w) && !FUNCTION_WORDS.has(t.lemma)) {
-      contentTokens.push(i);
-    }
-  }
-
-  if (contentTokens.length === 0) return null;
-
-  // Фильтруем русские слова: убираем пунктуацию и короткие слова (предлоги/союзы)
-  const contentWords = [];
-  for (let i = 0; i < words.length; i++) {
-    const clean = words[i].replace(/[.,;:!?—\-–"'«»„"()\[\]¿¡;]+$/g, '');
-    if (clean.length <= 2 && !/^[A-ZА-ЯЁ]/.test(clean)) continue; // пропускаем короткие строчные (в, и, с, на...)
-    contentWords.push({ idx: i, word: clean });
-  }
-
-  // Выравниваем по порядку: i-е русское слово → i-й греческий токен
-  const alignment = [];
-  const maxLen = Math.min(contentWords.length, contentTokens.length);
-  for (let i = 0; i < maxLen; i++) {
-    alignment.push({ ru: contentWords[i].idx, gr: contentTokens[i] });
-  }
-
-  return alignment.length > 0 ? alignment : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -747,7 +692,6 @@ function updateSynWithAlignment(synDir, grcBooks, manualByVerse, lexicon, grcByT
   let manualCount = 0;
   let strongCount = 0;
   let regexCount = 0;
-  let positionalCount = 0;
   let noneCount = 0;
 
   for (const file of files) {
@@ -797,7 +741,6 @@ function updateSynWithAlignment(synDir, grcBooks, manualByVerse, lexicon, grcByT
           case 'manual': manualCount++; break;
           case 'strong': strongCount++; break;
           case 'regex': regexCount++; break;
-          case 'positional': positionalCount++; break;
           default: noneCount++; break;
         }
       }
@@ -811,7 +754,6 @@ function updateSynWithAlignment(synDir, grcBooks, manualByVerse, lexicon, grcByT
   console.log(`   Manual ID:    ${manualCount} (${(manualCount / totalVerses * 100).toFixed(1)}%)`);
   console.log(`   Strong+seq:   ${strongCount} (${(strongCount / totalVerses * 100).toFixed(1)}%)`);
   console.log(`   Regex:        ${regexCount} (${(regexCount / totalVerses * 100).toFixed(1)}%)`);
-  console.log(`   Positional:   ${positionalCount} (${(positionalCount / totalVerses * 100).toFixed(1)}%)`);
   console.log(`   Без alignment: ${noneCount} (${(noneCount / totalVerses * 100).toFixed(1)}%)`);
   console.log(`   Общее покрытие: ${totalVerses - noneCount} / ${totalVerses} (${((totalVerses - noneCount) / totalVerses * 100).toFixed(1)}%)`);
 }
