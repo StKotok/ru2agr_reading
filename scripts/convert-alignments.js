@@ -839,63 +839,112 @@ function verify(synDir, grcBooks) {
   console.log('\n🔍 Верификация alignment...');
   let errors = 0;
 
-  // Ин 1:1 — проверяем формы: хотя бы одно «Слово» → λόγος с правильной формой
+  const STOP_RU = new Set(['в', 'и', 'у', 'с', 'на', 'к', 'не', 'а', 'о', 'было', 'был', 'были', 'есть']);
+  const FN_GR_LEMMAS = new Set(['ὁ', 'καί', 'δέ', 'ἐν', 'εἰς', 'ἐκ', 'πρός', 'εἰμί']);
+
+  // === Ин 1:1 ===
   const johnPath = resolve(synDir, 'john.json');
   if (existsSync(johnPath)) {
     const john = JSON.parse(readFileSync(johnPath, 'utf-8'));
-    const john1_1 = john.chapters[0]?.verses[0];
-    if (!john1_1?.alignment || john1_1.alignment.length === 0) {
+    const v = john.chapters[0]?.verses[0];
+    if (!v?.alignment || v.alignment.length === 0) {
       console.log('   ❌ Ин 1:1 — alignment отсутствует');
       errors++;
     } else {
-      const words = john1_1.text.split(/\s+/);
-      const grcBook = grcBooks.get('john');
-      const grcTokens = grcBook?.chapters?.get(1)?.get(1) || [];
+      const words = v.text.split(/\s+/);
+      const grcTokens = grcBooks.get('john')?.chapters?.get(1)?.get(1) || [];
+      const alignMap = new Map(v.alignment.map(a => [a.ru, a.gr]));
 
-      // Находим «Слово» в alignment и проверяем что форма = λόγος (не лемма из другой части речи)
-      const logosAligns = john1_1.alignment.filter(a => {
-        const w = (words[a.ru] || '').replace(/[.,;:!?—\-–"«»„"()\[\]'¿¡;]+$/g, '');
-        return /^Слов[оауе]/.test(w) || /^слов[оауе]/.test(w);
-      });
+      // 1) Все 3 «Слово» → 3 разных λόγος
+      const logosRus = [3, 5, 10]; // ожидаемые позиции трёх «Слово»
+      const logosGrs = logosRus.map(ru => alignMap.get(ru)).filter(g => g !== undefined);
+      const uniqueLogos = new Set(logosGrs);
+      const allAreLogos = logosGrs.every(g => g < grcTokens.length && grcTokens[g].lemma === 'λόγος');
+      const formsAreNom = logosGrs.every(g => g < grcTokens.length && grcTokens[g].w === 'λόγος');
 
-      // Проверяем что выровненные «Слово» указывают на токены с леммой λόγος
-      let correctForms = 0;
-      for (const a of logosAligns) {
-        if (a.gr < grcTokens.length && grcTokens[a.gr].lemma === 'λόγος') {
-          correctForms++;
-        }
+      if (logosGrs.length === 3 && uniqueLogos.size === 3 && allAreLogos && formsAreNom) {
+        console.log(`   ✅ Ин 1:1 — 3 «Слово» → 3 разных λόγος (gr=${logosGrs.join(',')})`);
+      } else {
+        console.log(`   ❌ Ин 1:1 — «Слово»: найдено ${logosGrs.length}/3, уникальных gr=${uniqueLogos.size}/3`);
+        if (!allAreLogos) console.log('      НЕ все указывают на лемму λόγος');
+        if (!formsAreNom) console.log('      НЕ все формы = λόγος (именительный)');
+        errors++;
       }
 
-      if (correctForms >= 1) {
-        console.log(`   ✅ Ин 1:1 — ${correctForms} «Слово» → λόγος (правильная лемма)`);
+      // 2) «Бог» (ru=12) → θεὸς (номинатив), НЕ θεόν
+      const bogGr = alignMap.get(12);
+      if (bogGr !== undefined && bogGr < grcTokens.length) {
+        const t = grcTokens[bogGr];
+        if (t.w === 'θεὸς' && t.lemma === 'θεός') {
+          console.log('   ✅ Ин 1:1 — «Бог» → θεὸς (именительный)');
+        } else {
+          console.log(`   ❌ Ин 1:1 — «Бог» → ${t.w} (${t.lemma}), ожидалось θεὸς`);
+          errors++;
+        }
       } else {
-        console.log('   ❌ Ин 1:1 — ни одно «Слово» не ссылается на λόγος');
+        console.log('   ❌ Ин 1:1 — «Бог» не выровнен');
+        errors++;
+      }
+
+      // 3) «Бога» (ru=8) → θεόν
+      const bogaGr = alignMap.get(8);
+      if (bogaGr !== undefined && bogaGr < grcTokens.length) {
+        const t = grcTokens[bogaGr];
+        if (t.w === 'θεόν' && t.lemma === 'θεός') {
+          console.log('   ✅ Ин 1:1 — «Бога» → θεόν (винительный)');
+        } else {
+          console.log(`   ❌ Ин 1:1 — «Бога» → ${t.w} (${t.lemma}), ожидалось θεόν`);
+          errors++;
+        }
+      } else {
+        console.log('   ❌ Ин 1:1 — «Бога» не выровнен');
+        errors++;
+      }
+
+      // 4) НЕТ служебных слов в alignment
+      const funcWordPairs = v.alignment.filter(a => {
+        const w = (words[a.ru] || '').replace(/[.,;:!?—\-–"'«»„"()\[\]¿¡;]+$/g, '').toLowerCase();
+        const grToken = grcTokens[a.gr];
+        return STOP_RU.has(w) && grToken && FN_GR_LEMMAS.has(grToken.lemma);
+      });
+      if (funcWordPairs.length === 0) {
+        console.log('   ✅ Ин 1:1 — нет служебных слов в alignment');
+      } else {
+        console.log(`   ❌ Ин 1:1 — ${funcWordPairs.length} служебных слов в alignment`);
         errors++;
       }
     }
   }
 
-  // Мк 1:1 — проверяем формы
+  // === Мк 1:1 ===
   const markPath = resolve(synDir, 'mark.json');
   if (existsSync(markPath)) {
     const mark = JSON.parse(readFileSync(markPath, 'utf-8'));
-    const mark1_1 = mark.chapters[0]?.verses[0];
-    if (!mark1_1?.alignment || mark1_1.alignment.length === 0) {
+    const v = mark.chapters[0]?.verses[0];
+    if (!v?.alignment || v.alignment.length === 0) {
       console.log('   ❌ Мк 1:1 — alignment отсутствует');
       errors++;
     } else {
-      const words = mark1_1.text.split(/\s+/);
-      const grcBook = grcBooks.get('mark');
-      const grcTokens = grcBook?.chapters?.get(1)?.get(1) || [];
+      const grcTokens = grcBooks.get('mark')?.chapters?.get(1)?.get(1) || [];
+      const alignMap = new Map(v.alignment.map(a => [a.ru, a.gr]));
 
-      // Проверяем: «Евангелия» (ru=1) → εὐαγγελίου (род. падеж, не лемма εὐαγγέλιον)
-      const evAlign = mark1_1.alignment.find(a => a.ru === 1);
-      if (evAlign && evAlign.gr < grcTokens.length) {
-        const token = grcTokens[evAlign.gr];
-        if (token.w === 'εὐαγγελίου' && token.lemma === 'εὐαγγέλιον') {
-          console.log('   ✅ Мк 1:1 — «Евангелия» → εὐαγγελίου (род. падеж, не лемма)');
+      // 1) «Начало» (ru=0) → gr=0 (Ἀρχὴ)
+      const nachaloGr = alignMap.get(0);
+      if (nachaloGr === 0 && grcTokens[0]?.w === 'Ἀρχὴ') {
+        console.log('   ✅ Мк 1:1 — «Начало» → Ἀρχὴ (gr=0)');
+      } else {
+        console.log(`   ❌ Мк 1:1 — «Начало» → gr=${nachaloGr}, ожидалось gr=0 (Ἀρχὴ)`);
+        errors++;
+      }
+
+      // 2) «Евангелия» (ru=1) → εὐαγγελίου
+      const evGr = alignMap.get(1);
+      if (evGr !== undefined && evGr < grcTokens.length) {
+        const t = grcTokens[evGr];
+        if (t.w === 'εὐαγγελίου' && t.lemma === 'εὐαγγέλιον') {
+          console.log('   ✅ Мк 1:1 — «Евангелия» → εὐαγγελίου (род. падеж)');
         } else {
-          console.log(`   ❌ Мк 1:1 — «Евангелия» → ${token.w} (лемма: ${token.lemma}), ожидалось εὐαγγελίου`);
+          console.log(`   ❌ Мк 1:1 — «Евангелия» → ${t.w} (${t.lemma}), ожидалось εὐαγγελίου`);
           errors++;
         }
       } else {
@@ -903,26 +952,18 @@ function verify(synDir, grcBooks) {
         errors++;
       }
 
-      // Проверяем: «Иисуса» (ru=2) → Ἰησοῦ (род. падеж, не лемма Ἰησοῦς)
-      const isAlign = mark1_1.alignment.find(a => a.ru === 2);
-      if (isAlign && isAlign.gr < grcTokens.length) {
-        const token = grcTokens[isAlign.gr];
-        if (token.w === 'Ἰησοῦ' && token.lemma === 'Ἰησοῦς') {
-          console.log('   ✅ Мк 1:1 — «Иисуса» → Ἰησοῦ (род. падеж, не лемма)');
+      // 3) «Иисуса» (ru=2) → Ἰησοῦ
+      const isGr = alignMap.get(2);
+      if (isGr !== undefined && isGr < grcTokens.length) {
+        const t = grcTokens[isGr];
+        if (t.w === 'Ἰησοῦ' && t.lemma === 'Ἰησοῦς') {
+          console.log('   ✅ Мк 1:1 — «Иисуса» → Ἰησοῦ (род. падеж)');
         } else {
-          console.log(`   ❌ Мк 1:1 — «Иисуса» → ${token.w} (лемма: ${token.lemma}), ожидалось Ἰησοῦ`);
+          console.log(`   ❌ Мк 1:1 — «Иисуса» → ${t.w} (${t.lemma}), ожидалось Ἰησοῦ`);
           errors++;
         }
       } else {
         console.log('   ❌ Мк 1:1 — «Иисуса» не выровнено');
-        errors++;
-      }
-
-      // Проверяем общее количество alignment записей (минимум 3)
-      if (mark1_1.alignment.length >= 3) {
-        console.log(`   ✅ Мк 1:1 — ${mark1_1.alignment.length} слов выровнено`);
-      } else {
-        console.log(`   ❌ Мк 1:1 — только ${mark1_1.alignment.length} слов выровнено (ожидалось ≥ 3)`);
         errors++;
       }
     }
