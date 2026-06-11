@@ -1,0 +1,85 @@
+import { hash01 } from './hash.js';
+
+/**
+ * Применяет формовый слой (режим 4): заменяет русские слова на реальные
+ * греческие формы из выравнивания.
+ *
+ * @param {string} verseText — русский текст стиха
+ * @param {Array} grcTokens — токены греческого стиха [{w, lemma, morph, strong}]
+ * @param {Array} alignment — [{ru: индекс_русского_слова, gr: индекс_греческого_токена}]
+ * @param {Array} dictEntries — записи словаря [{lexemeId, lemma, intensityPct, forms, status}]
+ * @param {object} opts — {seedPrefix, verseRef}
+ * @returns {Array} Segment[]
+ */
+export function applyFormLayer(verseText, grcTokens, alignment, dictEntries, opts = {}) {
+  const { seedPrefix = '' } = opts;
+  if (!grcTokens || !alignment || alignment.length === 0) {
+    // Fallback: размечаем как word-layer
+    return [{ plain: verseText }];
+  }
+
+  const ruWords = verseText.split(/\s+/);
+  const segments = [];
+
+  // Строим карту: индекс русского слова → греческий токен
+  const alignMap = new Map();
+  for (const a of alignment) {
+    alignMap.set(a.ru, a.gr);
+  }
+
+  // Карта strong → dictEntry для быстрого поиска
+  const dictByStrong = new Map();
+  for (const entry of dictEntries) {
+    const strongNum = entry.strong;
+    if (strongNum) dictByStrong.set(String(strongNum), entry);
+  }
+
+  for (let wi = 0; wi < ruWords.length; wi++) {
+    const ruWord = ruWords[wi];
+    const grIdx = alignMap.get(wi);
+
+    if (grIdx !== undefined && grIdx < grcTokens.length) {
+      const grToken = grcTokens[grIdx];
+      const strongStr = String(grToken.strong);
+      const dictEntry = dictByStrong.get(strongStr);
+
+      if (dictEntry) {
+        const seed = `${seedPrefix}:${wi}:${grToken.strong}`;
+        const intensityMap = { often: 100, sometimes: 50, rare: 25 };
+        const pct = intensityMap[dictEntry.intensity] || 100;
+        const shouldReplace = dictEntry.status === 'known' || hash01(seed) * 100 < pct;
+
+        if (shouldReplace) {
+          const display = dictEntry.forms === 'lemma' ? grToken.lemma : grToken.w;
+          const isUpper = ruWord[0] === ruWord[0].toUpperCase();
+          let greekText = display;
+          if (isUpper && greekText.length > 0) {
+            greekText = greekText[0].toUpperCase() + greekText.slice(1);
+          }
+
+          segments.push({
+            greek: greekText,
+            original: ruWord,
+            kind: 'form',
+            lexemeId: dictEntry.lexemeId,
+            morph: grToken.morph,
+            strong: grToken.strong
+          });
+
+          if (wi < ruWords.length - 1) {
+            segments.push({ plain: ' ' });
+          }
+          continue;
+        }
+      }
+    }
+
+    // Не заменяем — оставляем как plain
+    segments.push({ plain: ruWord });
+    if (wi < ruWords.length - 1) {
+      segments.push({ plain: ' ' });
+    }
+  }
+
+  return segments;
+}
