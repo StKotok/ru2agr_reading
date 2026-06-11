@@ -472,6 +472,7 @@ function buildWordEntries() {
       lexemeId: lexeme.id,
       lemma: lexeme.lemma,
       strongNum: lexeme.strong,
+      forms: entry.forms || 'lemma',
       regexps: lexeme.ruMatches.map(r => new RegExp(r, 'iu')),
       excludeRegexps: (lexeme.ruExclude || []).map(r => new RegExp(r, 'iu')),
       intensityPct: intensityMap[entry.intensity] || 100,

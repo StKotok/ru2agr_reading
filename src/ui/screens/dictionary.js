@@ -124,6 +124,26 @@ function showWordSettings(id, entry, lexeme) {
   toggleLabel.appendChild(document.createTextNode('Показывать в тексте'));
   sheet.appendChild(toggleLabel);
 
+  // Формы: лемма / все формы
+  const formsDiv = document.createElement('div');
+  formsDiv.style.margin = '8px 0';
+  formsDiv.innerHTML = '<span>Формы в тексте: </span>';
+  [{ value: 'lemma', label: 'Только λόγος (лемма)' },
+   { value: 'all', label: 'Все формы (λόγος, λόγον...)' }].forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'btn' + ((entry.forms || 'lemma') === opt.value ? ' btn-primary' : '');
+    btn.textContent = opt.label;
+    btn.style.fontSize = '0.8rem';
+    btn.addEventListener('click', async () => {
+      dict = setWordSetting(id, 'forms', opt.value, dict);
+      await saveDictionary(dict);
+      store.update(s2 => ({ ...s2, dictionary: dict }));
+      render();
+    });
+    formsDiv.appendChild(btn);
+  });
+  sheet.appendChild(formsDiv);
+
   // Интенсивность
   const intensityDiv = document.createElement('div');
   intensityDiv.style.margin = '8px 0';
