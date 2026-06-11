@@ -15,15 +15,25 @@ npm run build:data
 
 ## Сборка данных
 
-Для генерации данных нужны исходные файлы в `docs/clear-bible-alignments/`:
-
-- `SBLGNT.tsv` — греческие токены
-- `nt_RUSSYN.tsv` — русские токены
-- `SBLGNT-RUSSYN-manual.json` — ручное выравнивание
-
 ```bash
 npm run build:data
 ```
+
+Единственный исходник — `docs/clear-bible-alignments/SBLGNT.tsv` (греческие
+токены с леммами, морфологией и номерами Стронга; происхождение и лицензии —
+в [docs/clear-bible-alignments/README.md](docs/clear-bible-alignments/README.md)).
+Скрипт генерирует греческие книги (`public/data/bibles/grc/`) и выравнивание
+русский ↔ греческий в syn-файлах: русское слово, совпавшее с
+`ruMatches`-регуляркой лексемы из `public/data/lexicon/core.json`,
+сопоставляется очередному греческому токену с тем же номером Стронга.
+Выравниваются только слова лексикона — ровно то, что потребляет режим 4;
+каждая пара проверяется корпусными инвариантами при сборке (провал — ошибка
+сборки). Стихи без выравнивания (в т.ч. 18 стихов Textus Receptus,
+отсутствующих в SBLGNT) деградируют в замену леммами — это различие
+текстуальных традиций, не баг.
+
+Русский текст Синодального перевода загружается отдельно:
+`node tools/build-syn.mjs` (API bolls.life).
 
 ## Запуск
 
@@ -79,7 +89,7 @@ MIT — см. [LICENSE](LICENSE).
 
 ### Данные
 
-- **SBLGNT** — Society of Biblical Literature (SBLGNT EULA)
+- **SBLGNT** — © SBL и Logos Bible Software, CC-BY 4.0; метаданные токенов —
+  © Clear Bible, Inc., CC-BY 4.0
 - **Синодальный перевод** — общественное достояние
-- **Clear-Bible Alignments** — CC-BY-SA 4.0
-- **Gentium Plus** — SIL Open Font License
+- **Gentium Plus** — SIL Open Font License 1.1

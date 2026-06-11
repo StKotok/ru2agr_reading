@@ -10,7 +10,7 @@ export async function mount(container, _ctx) {
         <h3>Греческая читалка Нового Завета</h3>
         <p>Спокойная читалка с регулируемым греческим слоем: от знакомого
         Синодального текста — к оригиналу.</p>
-        <p>Версия: 0.1.0</p>
+        <p>Версия: ${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}</p>
       </section>
 
       <section class="progress-section">
@@ -18,14 +18,17 @@ export async function mount(container, _ctx) {
 
         <h4>Греческий текст (SBLGNT)</h4>
         <p>Scripture quotations marked SBLGNT are from the SBL Greek New Testament.
-        Copyright © 2010 Society of Biblical Literature. Used by permission.</p>
+        Copyright © 2010 Society of Biblical Literature and Logos Bible Software.
+        Лицензия CC-BY 4.0. Метаданные токенов (леммы, номера Стронга) —
+        © 2023 Clear Bible, Inc., CC-BY 4.0,
+        <a href="https://github.com/Clear-Bible/Alignments" target="_blank" rel="noopener">источник на GitHub</a>.</p>
 
         <h4>Синодальный перевод</h4>
         <p>Русский Синодальный перевод Библии — общественное достояние (public domain).</p>
 
-        <h4>Выравнивание (Clear-Bible Alignments)</h4>
-        <p>Используются данные Clear-Bible Alignments под лицензией CC-BY-SA 4.0.
-        <a href="https://github.com/Clear-Bible/macula-greek/tree/main/Nestle1904/alignments" target="_blank" rel="noopener">Источник на GitHub</a>.</p>
+        <h4>Выравнивание русский ↔ греческий</h4>
+        <p>Строится автоматически по номерам Стронга и словарю приложения;
+        каждая пара проверяется при сборке данных.</p>
 
         <h4>Шрифт Gentium Plus</h4>
         <p>Шрифт Gentium Plus распространяется под лицензией SIL Open Font License (OFL).
