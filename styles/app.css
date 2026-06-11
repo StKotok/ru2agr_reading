@@ -510,3 +510,144 @@ p, h2, h3, span {
     display: none;
   }
 }
+
+/* Bottom sheet handle */
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 12px;
+}
+
+.bottom-sheet-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+}
+
+/* Word card */
+.word-card {
+  padding: 16px;
+  min-width: 240px;
+}
+
+.word-card-letter {
+  font-family: 'Gentium Plus', serif;
+  font-size: 2.5rem;
+  color: var(--greek);
+  line-height: 1.2;
+}
+
+.word-card-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.word-card-sound {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.word-card-equiv {
+  font-size: 0.875rem;
+  margin-bottom: 12px;
+}
+
+.word-card-actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.word-card-badge {
+  font-size: 0.875rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--progress);
+  color: #fff;
+}
+
+.word-card-disclaimer {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 12px;
+  font-style: italic;
+}
+
+.word-card-lemma {
+  font-family: 'Gentium Plus', serif;
+  font-size: 2rem;
+  color: var(--greek);
+}
+
+.word-card-translit {
+  font-size: 1rem;
+  color: var(--muted);
+  margin: 4px 0;
+}
+
+.word-card-gloss {
+  font-size: 1rem;
+  margin: 8px 0;
+}
+
+.word-card-replaces {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* Inspector */
+.inspector-panel {
+  background: var(--surface-card);
+  border-left: 1px solid var(--border);
+  padding: 16px;
+  min-width: 260px;
+  max-width: 360px;
+  display: none;
+  overflow-y: auto;
+}
+
+@media (min-width: 900px) {
+  .inspector-panel {
+    display: block;
+  }
+}
+
+.inspector-empty {
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 32px 8px;
+}
+
+/* Top bar slider */
+.top-bar-slider {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.intensity-slider {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.intensity-slider input[type="range"] {
+  width: 80px;
+}
+
+.intensity-value {
+  min-width: 2.5em;
+  text-align: right;
+}

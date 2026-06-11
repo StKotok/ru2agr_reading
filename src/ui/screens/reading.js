@@ -1,11 +1,14 @@
 import { loadBook } from '../../data/bible-loader.js';
-import { loadProgress, saveProgress } from '../../state/progress.js';
+import { loadProgress, saveProgress, markLetterKnown } from '../../state/progress.js';
 import { loadSettings, saveSettings } from '../../state/settings.js';
 import { loadAlphabet } from '../../data/lexicon-loader.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
 import { createTopBar } from '../components/top-bar.js';
 import { createIntensitySlider } from '../components/intensity-slider.js';
+import { renderLetterCard } from '../components/word-card.js';
+import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
+import { getInspectorPanel, showEmptyState, showInInspector } from '../components/inspector.js';
 import { navigate } from '../../router.js';
 
 const DEBOUNCE_MS = 500;
@@ -118,6 +121,37 @@ export async function mount(container, ctx) {
       settings = newSettings;
       saveSettings(settings);
       reRenderWindowed();
+    }
+  });
+
+  // Десктоп: инспектор
+  if (window.innerWidth >= 900) {
+    const inspector = getInspectorPanel(container);
+    showEmptyState();
+  }
+
+  // Обработчик кликов по греческим вставкам
+  textArea.addEventListener('click', (e) => {
+    const span = e.target.closest('span.gr');
+    if (!span) return;
+    const letter = span.getAttribute('data-letter');
+    const lexemeId = span.getAttribute('data-lexeme');
+
+    if (letter) {
+      handleLetterTap(letter, span, container);
+    }
+    // lexeme будет обработан в MVP 2
+  });
+
+  // Клавиатурная доступность
+  textArea.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const span = e.target.closest('span.gr');
+      if (!span) return;
+      const letter = span.getAttribute('data-letter');
+      if (letter) {
+        handleLetterTap(letter, span, container);
+      }
     }
   });
 
@@ -347,6 +381,39 @@ function createOfflineState(bookId) {
     location.reload();
   });
   return div;
+}
+
+function handleLetterTap(letterChar, span, container) {
+  if (!alphabet) return;
+
+  const letterData = alphabet.find(l => l.lower === letterChar);
+  if (!letterData) return;
+
+  const progEntry = progress.letters[letterChar];
+
+  const card = renderLetterCard(letterData, progEntry, async (ch) => {
+    progress = markLetterKnown(ch, progress);
+    await saveProgress(progress);
+
+    // Точечное обновление классов (без перерендера)
+    const spans = document.querySelectorAll(`span.gr[data-letter="${ch}"]`);
+    // Просто обновляем карточку если она открыта
+    const updatedCard = renderLetterCard(letterData, progress.letters[ch], () => {});
+    if (window.innerWidth >= 900) {
+      showInInspector(updatedCard);
+    } else if (isSheetOpen()) {
+      openBottomSheet(updatedCard);
+    }
+  });
+
+  if (window.innerWidth >= 900) {
+    showInInspector(card);
+  } else {
+    openBottomSheet(card);
+  }
+
+  // Режим 2: на десктопе hover-подсказка уже через title
+  // title устанавливается в render.js через aria-label
 }
 
 export function unmount() {
