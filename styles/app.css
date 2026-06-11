@@ -291,6 +291,49 @@ input[type="checkbox"] {
   text-decoration-color: var(--muted);
 }
 
+/* === Режим 5: греческие токены как основной текст === */
+.grc-token {
+  padding: 4px 0;
+  margin: -4px 0;
+  min-height: 44px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* Touch target для коротких слов (ὁ, ἡ, τό) */
+.grc-token::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+}
+
+.grc-token.known {
+  color: var(--progress);
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-decoration-color: var(--progress);
+  text-underline-offset: 2px;
+}
+
+.grc-token:hover {
+  background-color: var(--selection);
+}
+
+.grc-token:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Русская подсказка под стихом в режиме 5 */
+.ru-hint {
+  display: block;
+  font-style: italic;
+  opacity: 0.6;
+  font-size: 0.85em;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
 /* === Текст чтения === */
 .scripture-text {
   font-family: 'Gentium Plus', serif;

@@ -174,6 +174,12 @@ export async function mount(container, ctx) {
     const lexemeId = span.getAttribute('data-lexeme');
     if (lexemeId) {
       handleWordTap(lexemeId, span, container);
+      return;
+    }
+    // Режим 5: токен с data-strong
+    const strong = span.getAttribute('data-strong');
+    if (strong && span.classList.contains('grc-token')) {
+      handleGrcTokenTap(span, container);
     }
   });
 
@@ -269,6 +275,51 @@ function restoreScroll(bookId) {
   }
 }
 
+/**
+ * Строит DocumentFragment для режима 5: греческие токены как основной текст,
+ * русский стих снизу как подсказка.
+ */
+function buildMode5Fragment(grcTokens, ruText, settings) {
+  const frag = document.createDocumentFragment();
+
+  // Греческие токены
+  for (const token of grcTokens) {
+    if (token.w) {
+      const span = document.createElement('span');
+      span.className = 'gr grc-token';
+      span.textContent = token.w;
+      span.setAttribute('data-w', token.w);
+      span.setAttribute('data-lemma', token.lemma || '');
+      span.setAttribute('data-morph', token.morph || '');
+      span.setAttribute('data-strong', String(token.strong || ''));
+      span.setAttribute('tabindex', '0');
+      span.setAttribute('role', 'button');
+      span.setAttribute('aria-label', `греческое слово ${token.w}`);
+
+      // Если слово есть в словаре пользователя — подсветка
+      if (token.strong && dictionary[Object.keys(dictionary).find(id => {
+        const lex = coreLexicon.find(l => l.id === id);
+        return lex && lex.strong === token.strong;
+      })]) {
+        span.classList.add('known');
+      }
+
+      frag.appendChild(span);
+      frag.appendChild(document.createTextNode(' '));
+    }
+  }
+
+  // Русская подсказка под стихом
+  if (settings.show?.ruHint !== false) {
+    const ruHint = document.createElement('p');
+    ruHint.className = 'ru-hint';
+    ruHint.textContent = ruText;
+    frag.appendChild(ruHint);
+  }
+
+  return frag;
+}
+
 function onScroll() {
   if (scrollTimer) clearTimeout(scrollTimer);
   scrollTimer = setTimeout(() => {
@@ -329,6 +380,17 @@ function renderWindowed() {
       if (plainView) {
         // Чистый русский текст
         p.appendChild(document.createTextNode(verse.text));
+      } else if (settings.mode === 5 && grcBookData) {
+        // Режим 5: греческий как основной текст
+        const chIdx = ch.n - 1;
+        const vIdx = verse.n - 1;
+        const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+        if (grcVerse && grcVerse.tokens) {
+          const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
+          p.appendChild(frag);
+        } else {
+          p.appendChild(document.createTextNode(verse.text));
+        }
       } else {
         // Добавляем grcVerse и alignment для режимов 4-5
         const verseCtx = { ...composeCtx };
@@ -456,6 +518,16 @@ function reRenderWindowed() {
 
       if (plainView) {
         p.appendChild(document.createTextNode(verse.text));
+      } else if (settings.mode === 5 && grcBookData) {
+        const chIdx = ch.n - 1;
+        const vIdx = verse.n - 1;
+        const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+        if (grcVerse && grcVerse.tokens) {
+          const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
+          p.appendChild(frag);
+        } else {
+          p.appendChild(document.createTextNode(verse.text));
+        }
       } else {
         const verseCtx = { ...composeCtx };
         if (grcBookData && settings.mode >= 4) {
@@ -583,6 +655,30 @@ function handleWordTap(lexemeId, span, container) {
       reRenderWindowed();
     }
   });
+
+  if (window.innerWidth >= 900) {
+    showInInspector(card);
+  } else {
+    openBottomSheet(card);
+  }
+}
+
+function handleGrcTokenTap(span, container) {
+  const w = span.getAttribute('data-w');
+  const lemma = span.getAttribute('data-lemma');
+  const morph = span.getAttribute('data-morph');
+  const strong = parseInt(span.getAttribute('data-strong')) || 0;
+
+  if (!w) return;
+
+  const card = document.createElement('div');
+  card.className = 'card word-card';
+  card.innerHTML = `
+    <h3 class="greek-word">${w}</h3>
+    ${lemma ? `<p><strong>Лемма:</strong> ${lemma}</p>` : ''}
+    ${morph ? `<p><strong>Грамматика:</strong> ${morph}</p>` : ''}
+    ${strong ? `<p><strong>Strong:</strong> G${strong}</p>` : ''}
+  `;
 
   if (window.innerWidth >= 900) {
     showInInspector(card);
