@@ -268,6 +268,19 @@ const RU_STOP_WORDS = new Set([
   'или', 'чтобы', 'если', 'хотя', 'ибо', 'потому', 'посему',
   'один', 'одна', 'одно', 'одни', 'два', 'три',
   'более', 'менее', 'очень', 'лишь', 'только', 'вот',
+  'для', 'ради', 'через', 'между', 'перед', 'после', 'против', 'кроме', 'среди',
+  'под', 'над', 'около', 'вокруг', 'вместо', 'вопреки', 'благодаря',
+  'вследствие', 'насчёт', 'вроде', 'путём', 'посредством',
+  'во',
+]);
+
+// Расширенный стоп-лист для НЕЗАВИСИМОЙ метрики качества
+// Не используется в фильтре — только для валидации финального результата
+const QUALITY_STOP_WORDS = new Set([
+  ...RU_STOP_WORDS,
+  'ради', 'через', 'между', 'перед', 'после', 'против', 'кроме', 'среди',
+  'под', 'над', 'около', 'вокруг', 'вместо', 'вопреки', 'благодаря',
+  'вследствие', 'насчёт', 'вроде', 'путём', 'посредством',
 ]);
 
 // Греческие функциональные слова: артикли, союзы, предлоги, частицы, отрицания
@@ -485,7 +498,7 @@ function computeQualityMetrics(manualByVerse, synDir, grcBooks, lexicon) {
         for (const a of verse.alignment) {
           totalManualPairs++;
           const ruWord = (words[a.ru] || '').replace(/[.,;:!?—\-–"'«»„"()\[\]¿¡;]+$/g, '').toLowerCase();
-          if ((ruWord.length < 3 || RU_STOP_WORDS.has(ruWord)) &&
+          if ((ruWord.length < 3 || QUALITY_STOP_WORDS.has(ruWord)) &&
               a.gr < grcTokens.length && strongSet.has(grcTokens[a.gr]?.strong)) {
             badPairs++;
           }
@@ -1015,8 +1028,8 @@ function main() {
   const quality = computeQualityMetrics(manualByVerse, SYN_DIR, grcBooks, lexicon);
   console.log(`   Всего manual-пар: ${quality.totalManualPairs}`);
   console.log(`   Ложных пар (служебное RU → знаменательное GR): ${quality.badPairs} (${quality.pct}%)`);
-  if (parseFloat(quality.pct) >= 0.5) {
-    console.error(`   ❌ Качество неприемлемо: ${quality.pct}% ложных пар (лимит 0.5%)`);
+  if (quality.badPairs > 0) {
+    console.error(`   ❌ Качество неприемлемо: ${quality.badPairs} ложных пар (порог: 0)`);
     process.exit(1);
   }
 
