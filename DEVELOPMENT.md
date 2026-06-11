@@ -502,14 +502,14 @@ system-ui sans-стек; текст чтения ≥18px / line-height 1.7 / max
 
 **Файлы:** создать `src/engine/hash.js`, `src/engine/rules.js`, `src/engine/letter-layer.js`, `src/ui/render.js`, `tests/hash.test.js`, `tests/letter-layer.test.js`; удалить `text-converter.js`, `config.js`, `ui.js`.
 
-- [ ] `src/engine/hash.js`: `hash01(str)` — FNV-1a → число `[0,1)` + тесты (детерминизм, равномерность на глаз)
-- [ ] `src/engine/rules.js`: перенести правила из `config.js`; диграфы раньше одиночных букв; финальная сигма; сохранение регистра (логика из `text-converter.js`)
-- [ ] `src/engine/letter-layer.js`: `applyLetterLayer(text, { activeLetters, intensity, seedPrefix }) → Segment[]` — чистая функция, без DOM и HTML-строк
-- [ ] Заменять только буквы из `activeLetters` (Set строчных греческих букв)
-- [ ] Детерминизм: `hash01(seedPrefix + ':' + offset + ':' + rule.ru) * 100 < intensity`
-- [ ] `src/ui/render.js`: `segmentsToFragment(segments) → DocumentFragment` — span'ы `.gr` с `data-original`, `data-letter`/`data-lexeme`
-- [ ] Тесты: интенсивность 0 → текст без замен; 100 → все активные буквы заменены; повторный вызов даёт идентичный результат; финальная сигма (`нос` → `νος` с `ς`); регистр (`Слово` → `Σλοβο`); неактивные буквы не трогаются
-- [ ] Удалить `text-converter.js`, `config.js`, `ui.js`
+- [x] `src/engine/hash.js`: `hash01(str)` — FNV-1a → число `[0,1)` + тесты (детерминизм, равномерность на глаз)
+- [x] `src/engine/rules.js`: перенести правила из `config.js`; диграфы раньше одиночных букв; финальная сигма; сохранение регистра (логика из `text-converter.js`)
+- [x] `src/engine/letter-layer.js`: `applyLetterLayer(text, { activeLetters, intensity, seedPrefix }) → Segment[]` — чистая функция, без DOM и HTML-строк
+- [x] Заменять только буквы из `activeLetters` (Set строчных греческих букв)
+- [x] Детерминизм: `hash01(seedPrefix + ':' + offset + ':' + rule.ru) * 100 < intensity`
+- [x] `src/ui/render.js`: `segmentsToFragment(segments) → DocumentFragment` — span'ы `.gr` с `data-original`, `data-letter`/`data-lexeme`
+- [x] Тесты: интенсивность 0 → текст без замен; 100 → все активные буквы заменены; повторный вызов даёт идентичный результат; финальная сигма (`нос` → `νος` с `ς`); регистр (`Слово` → `Σλοβο`); неактивные буквы не трогаются
+- [x] Удалить `text-converter.js`, `config.js`, `ui.js`
 
 **Промпт:**
 
