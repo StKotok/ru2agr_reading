@@ -33,14 +33,15 @@ describe('composeVerse', () => {
     expect(s1).toEqual(s2);
   });
 
-  it('empty progress returns plain text', () => {
+  it('empty progress activates all letters (no onboarding)', () => {
     const segments = composeVerse('текст', {
       mode: 1, intensity: 100,
       progressLetters: {},
       seedPrefix: 'test'
     });
-    expect(segments.length).toBe(1);
-    expect(segments[0].plain).toBe('текст');
+    // Без онбординга все буквы активны, при intensity=100 все должны замениться
+    const text = segments.map(s => s.greek || s.plain || '').join('');
+    expect(text).toBe('τεξτ');
   });
 
   it('is deterministic', () => {

@@ -238,22 +238,20 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--greek);
-  border: 2px solid var(--surface);
+  border: none;
   cursor: pointer;
-  min-width: 44px;
-  min-height: 44px;
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--greek);
-  border: 2px solid var(--surface);
+  border: none;
   cursor: pointer;
 }
 
@@ -640,6 +638,8 @@ p, h2, h3, span {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .intensity-slider {
@@ -648,10 +648,12 @@ p, h2, h3, span {
   gap: 4px;
   font-size: 0.8125rem;
   color: var(--muted);
+  flex: 1;
+  min-width: 0;
 }
 
 .intensity-slider input[type="range"] {
-  width: 80px;
+  width: 100%;
 }
 
 .intensity-value {

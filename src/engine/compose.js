@@ -1,7 +1,7 @@
 import { applyLetterLayer } from './letter-layer.js';
 import { applyWordLayer } from './word-layer.js';
 import { applyFormLayer } from './form-layer.js';
-import { stripDiacritics } from './rules.js';
+import { getRules, stripDiacritics } from './rules.js';
 
 export function composeVerse(verseText, ctx = {}) {
   const {
@@ -14,6 +14,15 @@ export function composeVerse(verseText, ctx = {}) {
   for (const [letter, data] of Object.entries(progressLetters)) {
     if (data.status === 'learning' || data.status === 'known') {
       activeLetters.add(letter);
+    }
+  }
+
+  // Если ни одна буква ещё не введена (нет онбординга/прогресса),
+  // считаем все буквы активными, чтобы слайдер интенсивности работал.
+  if (activeLetters.size === 0) {
+    // Все первые буквы греческих замен из правил (строчные)
+    for (const rule of getRules()) {
+      activeLetters.add(rule.gr[0].toLowerCase());
     }
   }
 

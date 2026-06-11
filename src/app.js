@@ -50,30 +50,33 @@ registerSW({ immediate: true });
 
 // Реакция на hash-изменения
 async function handleRoute(route) {
-  // Проверка онбординга
-  if (!onboardingChecked) {
-    try {
-      const settings = await loadSettings();
-      onboardingChecked = true;
-      if (!settings.onboarded) {
-        location.hash = '#/onboarding';
-        return;
-      }
-    } catch (_) {
-      onboardingChecked = true;
-    }
-  }
+  // TODO: ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ТЕСТИРОВАНИЯ (stkotok, 2026-06-11)
+  // Убрать комментарии ниже, чтобы вернуть экран онбординга/авторизации.
+  //
+  // // Проверка онбординга
+  // if (!onboardingChecked) {
+  //   try {
+  //     const settings = await loadSettings();
+  //     onboardingChecked = true;
+  //     if (!settings.onboarded) {
+  //       location.hash = '#/onboarding';
+  //       return;
+  //     }
+  //   } catch (_) {
+  //     onboardingChecked = true;
+  //   }
+  // }
 
-  // Если пытаемся уйти с онбординга без завершения — блокируем
-  if (route.screen !== 'onboarding') {
-    try {
-      const settings = await loadSettings();
-      if (!settings.onboarded) {
-        location.hash = '#/onboarding';
-        return;
-      }
-    } catch (_) { /* ignore */ }
-  }
+  // // Если пытаемся уйти с онбординга без завершения — блокируем
+  // if (route.screen !== 'onboarding') {
+  //   try {
+  //     const settings = await loadSettings();
+  //     if (!settings.onboarded) {
+  //       location.hash = '#/onboarding';
+  //       return;
+  //     }
+  //   } catch (_) { /* ignore */ }
+  // }
 
   switchScreen(route.screen, route.params);
 }
