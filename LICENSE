@@ -1,9 +1,69 @@
-Copyright (c) [2025] [Your Name]
+MIT License
 
-All rights reserved.
+Copyright (c) 2025–2026 stkotok
 
-Unauthorized copying, distribution, modification, or use of this code is strictly prohibited.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-If you wish to use any part of this codebase, you must obtain explicit written permission from the author.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-Contact: [your_email@example.com]
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Third-Party Data Licenses
+
+MIT covers the **source code** of this project. The following data files and
+fonts are distributed under their respective licenses:
+
+### SBL Greek New Testament (SBLGNT)
+
+Files in `public/data/bibles/grc/*.json` and `docs/clear-bible-alignments/SBLGNT.tsv`
+are derived from the SBL Greek New Testament.
+
+> Scripture quotations marked SBLGNT are from the SBL Greek New Testament.
+> Copyright © 2010 Society of Biblical Literature. Used by permission.
+
+**License:** SBLGNT End User License Agreement (SBLGNT EULA)
+**Source:** https://github.com/Clear-Bible/macula-greek/
+
+### Clear-Bible Alignments
+
+Files in `docs/clear-bible-alignments/SBLGNT-RUSSYN-manual.json` and
+`docs/clear-bible-alignments/nt_RUSSYN.tsv` are from the Clear-Bible Macula
+Greek alignments project.
+
+**License:** Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA 4.0)
+
+The derived alignment data in `public/data/bibles/syn/*.json` inherits the
+CC-BY-SA 4.0 license as a derivative work.
+
+**Source:** https://github.com/Clear-Bible/macula-greek/
+
+### Синодальный перевод (Russian Synodal Bible)
+
+The Russian Synodal translation text in `public/data/bibles/syn/*.json` is in
+the **public domain**.
+
+### Gentium Plus Font
+
+Font files in `fonts/GentiumPlus-*.woff2` are Copyright © 2003–2022
+SIL International.
+
+**License:** SIL Open Font License 1.1 (OFL-1.1)
+**Source:** https://software.sil.org/gentium/
+
+### bolls.life API
+
+The Synodal translation data was obtained via the open bolls.life API.
