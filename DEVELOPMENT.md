@@ -427,15 +427,15 @@ logos
 
 **Файлы:** создать `package.json`, `vite.config.js`, `src/app.js`, `src/router.js`, `src/state/store.js`, `src/storage/db.js`, `src/ui/screens/{reading,dictionary,progress,settings}.js`, `src/ui/components/nav.js`, `tests/store.test.js`; изменить `index.html`; перенести `storage.js → src/storage/db.js`.
 
-- [ ] Создать `package.json` (`"type": "module"`, devDependencies `vite`, `vite-plugin-pwa`, `vitest`; скрипты `dev`, `build`, `preview`, `test`, `build:data`) и `vite.config.js` (`base: './'`; PWA-плагин подключается в задаче 1.8)
-- [ ] Перенести `storage.js` в `src/storage/db.js`, добавить `del(key)`
-- [ ] Написать `src/state/store.js` (`createStore`: `get/update/subscribe`) + тесты
-- [ ] Написать `src/router.js`: hash-роутинг, маршруты `#/read/:book`, `#/dictionary`, `#/progress`, `#/settings`, дефолт `#/read/john`
-- [ ] Создать четыре экрана-заглушки с интерфейсом `mount(container, ctx)` / `unmount()`
-- [ ] `src/ui/components/nav.js`: нижняя навигация (мобайл) / левая колонка (десктоп) — `Читать | Слова | Прогресс | ⚙`
-- [ ] Переписать `index.html`: один `<div id="app">`, подключение `src/app.js`
-- [ ] Старые `ui.js`, `text-converter.js`, `config.js` пока не удалять (понадобятся в 0.3)
-- [ ] `npm test` зелёный; навигация переключает экраны на обоих брейкпоинтах
+- [x] Создать `package.json` (`"type": "module"`, devDependencies `vite`, `vite-plugin-pwa`, `vitest`; скрипты `dev`, `build`, `preview`, `test`, `build:data`) и `vite.config.js` (`base: './'`; PWA-плагин подключается в задаче 1.8)
+- [x] Перенести `storage.js` в `src/storage/db.js`, добавить `del(key)`
+- [x] Написать `src/state/store.js` (`createStore`: `get/update/subscribe`) + тесты
+- [x] Написать `src/router.js`: hash-роутинг, маршруты `#/read/:book`, `#/dictionary`, `#/progress`, `#/settings`, дефолт `#/read/john`
+- [x] Создать четыре экрана-заглушки с интерфейсом `mount(container, ctx)` / `unmount()`
+- [x] `src/ui/components/nav.js`: нижняя навигация (мобайл) / левая колонка (десктоп) — `Читать | Слова | Прогресс | ⚙`
+- [x] Переписать `index.html`: один `<div id="app">`, подключение `src/app.js`
+- [x] Старые `ui.js`, `text-converter.js`, `config.js` пока не удалять (понадобятся в 0.3)
+- [x] `npm test` зелёный; навигация переключает экраны на обоих брейкпоинтах
 
 **Промпт:**
 
