@@ -1,7 +1,7 @@
 import { loadBook } from '../../data/bible-loader.js';
 import { loadProgress, saveProgress, markLetterKnown } from '../../state/progress.js';
 import { loadSettings, saveSettings } from '../../state/settings.js';
-import { loadAlphabet, loadCoreLexicon } from '../../data/lexicon-loader.js';
+import { loadAlphabet, loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadDictionary, setWordStatus, saveDictionary, addWord } from '../../state/dictionary.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
@@ -31,18 +31,20 @@ let longPressTimer = null;
 let longPressTarget = null;
 let dictionary = {};
 let coreLexicon = [];
+let frequencyList = null;
 let wordEntries = [];
 
 export async function mount(container, ctx) {
   const { store } = ctx;
 
   // Загружаем всё
-  [progress, settings, alphabet, dictionary, coreLexicon] = await Promise.all([
+  [progress, settings, alphabet, dictionary, coreLexicon, frequencyList] = await Promise.all([
     loadProgress(),
     loadSettings(),
     loadAlphabet(),
     loadDictionary(),
-    loadCoreLexicon()
+    loadCoreLexicon(),
+    loadFrequency()
   ]);
 
   // Строим карту имён букв для aria-label
@@ -499,21 +501,52 @@ function setupChapterTracking() {
 
 function buildWordEntries() {
   wordEntries = [];
-  if (!coreLexicon || coreLexicon.length === 0) return;
+  const intensityMap = { often: 100, sometimes: 50, rare: 25 };
 
-  for (const lexeme of coreLexicon) {
-    const entry = dictionary[lexeme.id];
+  // Индекс coreLexicon по id для быстрого поиска ruMatches
+  const coreById = new Map((coreLexicon || []).map(l => [l.id, l]));
+
+  // Индекс frequencyList по strong (строка) для freq-* записей
+  const freqByStrong = new Map();
+  if (frequencyList) {
+    for (const item of frequencyList) {
+      freqByStrong.set(String(item.strong), item);
+    }
+  }
+
+  // Итерируем ВСЕ записи словаря (включая freq-*)
+  for (const [lexemeId, entry] of Object.entries(dictionary)) {
     if (!entry || entry.showInText === false) continue;
     if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
 
-    const intensityMap = { often: 100, sometimes: 50, rare: 25 };
+    const core = coreById.get(lexemeId);
+
+    let lemma, strongNum, regexps, excludeRegexps;
+
+    if (core) {
+      // Слово из coreLexicon — полный ruMatches guard
+      lemma = core.lemma;
+      strongNum = core.strong;
+      regexps = core.ruMatches.map(r => new RegExp(r, 'iu'));
+      excludeRegexps = (core.ruExclude || []).map(r => new RegExp(r, 'iu'));
+    } else {
+      // freq-* запись — ищем в frequencyList по Strong
+      const strongKey = lexemeId.startsWith('freq-') ? lexemeId.replace('freq-', '') : null;
+      const freqItem = strongKey ? freqByStrong.get(strongKey) : null;
+      if (!freqItem) continue;
+      lemma = freqItem.lemma;
+      strongNum = freqItem.strong;
+      regexps = [];         // нет guard'а — выравнивание достаточная гарантия
+      excludeRegexps = [];
+    }
+
     wordEntries.push({
-      lexemeId: lexeme.id,
-      lemma: lexeme.lemma,
-      strongNum: lexeme.strong,
+      lexemeId,
+      lemma,
+      strongNum,
       forms: entry.forms || 'lemma',
-      regexps: lexeme.ruMatches.map(r => new RegExp(r, 'iu')),
-      excludeRegexps: (lexeme.ruExclude || []).map(r => new RegExp(r, 'iu')),
+      regexps,
+      excludeRegexps,
       intensityPct: intensityMap[entry.intensity] || 100,
       status: entry.status
     });
