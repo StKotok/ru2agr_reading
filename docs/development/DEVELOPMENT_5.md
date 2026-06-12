@@ -422,16 +422,16 @@ npm run dev + DevTools. Проверь чекбоксы задачи 2.2 в DEVE
 
 **Файлы:** `src/ui/components/inspector.js`.
 
-- [ ] `getInspectorPanel(parent)`: если панель есть, но
+- [x] `getInspectorPanel(parent)`: если панель есть, но
       `panelEl.parentElement !== parent` — `parent.appendChild(panelEl)`
       (appendChild сам перемещает узел; это покрывает и detached-случай).
-- [ ] Не создавать вторую панель никогда.
-- [ ] `showEmptyState()` работает после перемещения.
-- [ ] `npm test` зелёный.
+- [x] Не создавать вторую панель никогда.
+- [x] `showEmptyState()` работает после перемещения.
+- [x] `npm test` зелёный.
 - [ ] Ручная проверка desktop: чтение (карточка работает) → словарь →
       чтение — карточка снова работает.
-- [ ] `npm run build` зелёный.
-- [ ] Коммит.
+- [x] `npm run build` зелёный.
+- [x] Коммит.
 
 **Промпт:**
 

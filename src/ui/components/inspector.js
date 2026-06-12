@@ -10,17 +10,15 @@ let panelEl = null;
  * @returns {HTMLElement}
  */
 export function getInspectorPanel(parent) {
-  if (panelEl) return panelEl;
-
-  panelEl = document.createElement('aside');
-  panelEl.className = 'inspector-panel';
-  panelEl.setAttribute('aria-label', 'Инспектор слова');
-  showEmptyState();
-
-  if (parent) {
-    parent.appendChild(panelEl);
+  if (!panelEl) {
+    panelEl = document.createElement('aside');
+    panelEl.className = 'inspector-panel';
+    panelEl.setAttribute('aria-label', 'Инспектор слова');
+    showEmptyState();
   }
-
+  if (parent && panelEl.parentElement !== parent) {
+    parent.appendChild(panelEl); // appendChild перемещает узел
+  }
   return panelEl;
 }
 
