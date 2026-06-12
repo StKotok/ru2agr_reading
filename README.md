@@ -22,9 +22,9 @@ npm run build:data
 Единственный исходник — `docs/clear-bible-alignments/SBLGNT.tsv` (греческие
 токены с леммами, морфологией и номерами Стронга; происхождение и лицензии —
 в [docs/clear-bible-alignments/README.md](docs/clear-bible-alignments/README.md)).
-Скрипт генерирует греческие книги (`public/data/bibles/grc/`) и выравнивание
+Скрипт генерирует греческие книги (`assets/data/bibles/grc/`) и выравнивание
 русский ↔ греческий в syn-файлах: русское слово, совпавшее с
-`ruMatches`-регуляркой лексемы из `public/data/lexicon/core.json`,
+`ruMatches`-регуляркой лексемы из `assets/data/lexicon/core.json`,
 сопоставляется очередному греческому токену с тем же номером Стронга.
 Выравниваются только слова лексикона — ровно то, что потребляет режим 4;
 каждая пара проверяется корпусными инвариантами при сборке (провал — ошибка
@@ -33,7 +33,7 @@ npm run build:data
 текстуальных традиций, не баг.
 
 Русский текст Синодального перевода загружается отдельно:
-`node tools/build-syn.mjs` (API bolls.life).
+`node scripts/build-syn.mjs` (API bolls.life).
 
 ## Запуск
 
@@ -52,7 +52,7 @@ npm test        # Vitest
 ## Архитектура
 
 Подробная архитектура, план задач и функциональная спецификация —
-в [DEVELOPMENT_2.md](DEVELOPMENT_2.md).
+в [docs/development/DEVELOPMENT_2.md](docs/development/DEVELOPMENT_2.md).
 
 ### Стек
 
@@ -68,9 +68,9 @@ npm test        # Vitest
 - `src/state/` — состояние (store, settings, progress, dictionary)
 - `src/storage/` — IndexedDB-обёртка
 - `src/ui/` — экраны и компоненты
-- `data/` — статические данные (bibles, lexicon)
-- `scripts/` — скрипты пайплайна данных
-- `tools/` — утилиты (build-syn)
+- `assets/` — статика приложения: data (bibles, lexicon), fonts, styles, icon
+- `scripts/` — пайплайн данных (build-syn, convert-alignments)
+- `docs/` — исходные данные и архив (roadmap'ы в `docs/development/`)
 - `tests/` — юнит-тесты
 
 ### Режимы

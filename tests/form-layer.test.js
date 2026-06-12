@@ -6,8 +6,8 @@ let synMark = null;
 let grcMark = null;
 
 beforeAll(async () => {
-  synMark = await import('../public/data/bibles/syn/mark.json', { assert: { type: 'json' } });
-  grcMark = await import('../public/data/bibles/grc/mark.json', { assert: { type: 'json' } });
+  synMark = await import('../assets/data/bibles/syn/mark.json', { assert: { type: 'json' } });
+  grcMark = await import('../assets/data/bibles/grc/mark.json', { assert: { type: 'json' } });
 });
 
 /**

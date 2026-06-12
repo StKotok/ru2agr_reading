@@ -6,13 +6,16 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 
 export default defineConfig({
   base: './',
+  // Статика приложения (data, fonts, styles, icon) живёт в assets/
+  // и копируется в dist/ как есть.
+  publicDir: 'assets',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version)
   },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icon.svg'],
+      includeAssets: ['icon.svg'],
       manifest: {
         name: 'Греческая читалка Нового Завета',
         short_name: 'Читалка НЗ',

@@ -9,7 +9,7 @@ function loadJSON(path) {
 }
 
 describe('core lexicon', () => {
-  const lexicon = loadJSON('public/data/lexicon/core.json');
+  const lexicon = loadJSON('assets/data/lexicon/core.json');
 
   it('exists and has at least 40 entries', () => {
     expect(lexicon).not.toBeNull();

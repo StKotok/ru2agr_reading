@@ -11,10 +11,10 @@ function loadJSON(relativePath) {
 describe('bible data', () => {
   it('books.json exists and has 27 books', () => {
     if (!existsSync(resolve(__dirname, '..', 'data', 'books.json'))) {
-      console.warn('public/data/books.json not found — skipping');
+      console.warn('assets/data/books.json not found — skipping');
       return;
     }
-    const books = loadJSON('public/data/books.json');
+    const books = loadJSON('assets/data/books.json');
     expect(books.length).toBe(27);
     // Проверяем структуру
     for (const book of books) {
@@ -28,10 +28,10 @@ describe('bible data', () => {
 
   it('john.json exists and has correct structure', () => {
     if (!existsSync(resolve(__dirname, '..', 'data', 'bibles', 'syn', 'john.json'))) {
-      console.warn('public/data/bibles/syn/john.json not found — skipping');
+      console.warn('assets/data/bibles/syn/john.json not found — skipping');
       return;
     }
-    const john = loadJSON('public/data/bibles/syn/john.json');
+    const john = loadJSON('assets/data/bibles/syn/john.json');
     expect(john.id).toBe('john');
     expect(john.chapters.length).toBe(21);
 
@@ -45,7 +45,7 @@ describe('bible data', () => {
   });
 
   it('all syn books have correct chapter counts', () => {
-    const books = loadJSON('public/data/books.json');
+    const books = loadJSON('assets/data/books.json');
     if (!books) return;
 
     const expected = {

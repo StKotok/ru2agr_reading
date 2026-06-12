@@ -3,7 +3,7 @@
 /**
  * build-syn.mjs — скачивает/валидирует Синодальный перевод НЗ
  * Источник: bolls.life API (перевод SYNOD, книги НЗ 40–66).
- * Результат: data/bibles/syn/{bookId}.json + data/books.json
+ * Результат: assets/data/bibles/syn/{bookId}.json + assets/data/books.json
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const DATA_DIR = resolve(ROOT, 'data', 'bibles', 'syn');
+const DATA_DIR = resolve(ROOT, 'assets', 'data', 'bibles', 'syn');
 
 const NT_BOOKS = [
   { num: 40, id: 'matthew', title: 'От Матфея святое благовествование', short: 'Мф', chapters: 28 },
@@ -154,7 +154,7 @@ async function main() {
   }
 
   // Пишем манифест
-  const manifestPath = resolve(ROOT, 'data', 'books.json');
+  const manifestPath = resolve(ROOT, 'assets', 'data', 'books.json');
   writeFileSync(manifestPath, JSON.stringify(books, null, 2), 'utf-8');
   console.log(`\nВсего: ${books.length} книг. Манифест: ${manifestPath}`);
 }

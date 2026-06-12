@@ -2,12 +2,12 @@
  * Генератор греческих данных и выравнивания рус↔греч.
  *
  * Из SBLGNT.tsv (греческие токены с леммами, морфологией и номерами Стронга):
- *   1. data/bibles/grc/*.json — греческий текст по книгам {w, lemma, morph, strong}
- *   2. Обновляет data/bibles/syn/*.json — добавляет alignment [{ru, gr}] к стихам
+ *   1. assets/data/bibles/grc/*.json — греческий текст по книгам {w, lemma, morph, strong}
+ *   2. Обновляет assets/data/bibles/syn/*.json — добавляет alignment [{ru, gr}] к стихам
  *
  * МЕТОД ВЫРАВНИВАНИЯ: Strong + ruMatches + последовательное потребление.
  * Для каждого русского слова стиха, совпавшего с ruMatches-регуляркой лексемы
- * из data/lexicon/core.json (и не попавшего в ruExclude), берётся k-е ещё не
+ * из assets/data/lexicon/core.json (и не попавшего в ruExclude), берётся k-е ещё не
  * использованное вхождение греческого токена с тем же номером Стронга.
  * Каждая пара корректна по построению: русская сторона проверена регуляркой,
  * греческая — равенством Strong; повторы леммы сопоставляются по порядку.
@@ -48,10 +48,10 @@ const ROOT = resolve(__dirname, '..');
 // ---------------------------------------------------------------------------
 
 const SBLGNT_TSV = resolve(ROOT, 'docs', 'clear-bible-alignments', 'SBLGNT.tsv');
-const LEXICON_JSON = resolve(ROOT, 'public', 'data', 'lexicon', 'core.json');
-const BOOKS_JSON = resolve(ROOT, 'public', 'data', 'books.json');
-const SYN_DIR = resolve(ROOT, 'public', 'data', 'bibles', 'syn');
-const GRC_DIR = resolve(ROOT, 'public', 'data', 'bibles', 'grc');
+const LEXICON_JSON = resolve(ROOT, 'assets', 'data', 'lexicon', 'core.json');
+const BOOKS_JSON = resolve(ROOT, 'assets', 'data', 'books.json');
+const SYN_DIR = resolve(ROOT, 'assets', 'data', 'bibles', 'syn');
+const GRC_DIR = resolve(ROOT, 'assets', 'data', 'bibles', 'grc');
 
 // USFM book number → project book id
 const BOOK_MAP = {
