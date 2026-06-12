@@ -38,3 +38,25 @@ export async function loadCoreLexicon() {
     return null;
   }
 }
+
+let frequencyCache = null;
+
+/**
+ * Загружает частотный список лемм НЗ.
+ * @returns {Promise<Array|null>}
+ */
+export async function loadFrequency() {
+  if (frequencyCache) return frequencyCache;
+  try {
+    const res = await fetch('./data/lexicon/frequency.json');
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`HTTP ${res.status}`);
+    }
+    frequencyCache = await res.json();
+    return frequencyCache;
+  } catch (e) {
+    console.warn('loadFrequency error:', e);
+    return null;
+  }
+}

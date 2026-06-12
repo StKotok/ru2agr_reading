@@ -866,51 +866,132 @@ p, h2, h3, span {
 }
 
 /* Dictionary */
+.dict-search-container {
+  margin-bottom: 12px;
+}
+
+.dict-search {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
 .dict-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
+}
+
+.dict-counter {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 8px;
 }
 
 .dict-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .dict-row {
-  cursor: pointer;
-  padding: 8px 12px;
-}
-
-.dict-row-main {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.dict-row:hover { background: var(--selection); }
+
+.dict-row--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dict-row--disabled:hover { background: transparent; }
+
+.dict-rank {
+  width: 36px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
 .dict-lemma {
   font-family: 'Gentium Plus', serif;
   color: var(--greek);
-  font-size: 1.125rem;
+  font-size: 1rem;
+  flex-shrink: 0;
+  min-width: 100px;
 }
 
-.dict-gloss {
-  font-size: 0.875rem;
-  color: var(--text);
+.dict-translit {
+  font-size: 0.8rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.dict-freq {
+  width: 48px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
 .dict-badge {
-  font-size: 0.75rem;
-  padding: 2px 8px;
+  font-size: 0.7rem;
+  padding: 1px 6px;
   border-radius: 4px;
-  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.dict-badge-placeholder {
+  min-width: 48px;
+  flex-shrink: 0;
 }
 
 .badge-new { background: var(--selection); color: var(--greek); }
 .badge-learning { background: #f0e6c0; color: #8a7a30; }
 .badge-known { background: var(--progress); color: #fff; }
 
-.dict-add-section {
-  margin-top: 16px;
+.dict-check {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.dict-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.dict-sentinel {
+  height: 1px;
+}
+
+.word-card-frequency,
+.word-card-freq {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 4px 0;
+}
+
+.word-card-warning {
+  font-size: 0.8rem;
+  color: var(--danger);
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #fff3cd;
+  border-radius: 4px;
 }
