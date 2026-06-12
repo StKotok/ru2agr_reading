@@ -40,6 +40,11 @@ function getFilteredList() {
     );
   }
 
+  // Фильтр «Доступные»: только слова с hasAlignment
+  if (filterStatus === 'available') {
+    return filtered.filter(item => item.hasAlignment);
+  }
+
   // Фильтр по статусу
   if (filterStatus !== 'all') {
     return filtered.filter(item => {
@@ -98,6 +103,7 @@ function render() {
   tabs.className = 'dict-tabs';
   [
     { value: 'all', label: 'Все' },
+    { value: 'available', label: 'Доступные' },
     { value: 'new', label: 'Новые' },
     { value: 'learning', label: 'Учу' },
     { value: 'known', label: 'Знаю' }
@@ -181,7 +187,7 @@ function renderBatch(list, filtered) {
       <span class="dict-translit">${item.translit}</span>
       <span class="dict-freq">${item.count}</span>
       ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${{ new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое'}</span>` : '<span class="dict-badge-placeholder"></span>'}
-      <label class="dict-check" title="${available ? 'Показывать в тексте' : 'Не участвует в подстановках (слово не выровнено ни в одном стихе НЗ)'}">
+      <label class="dict-check" title="${available ? 'Показывать в тексте' : 'Нет проверенного русско-греческого соответствия — слово пока не участвует в подстановках'}">
         <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} ${!available ? 'disabled' : ''} aria-label="Показывать ${item.lemma} в тексте">
       </label>
     `;

@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 const items = JSON.parse(readFileSync('assets/data/lexicon/frequency.json', 'utf8'));
+const core = Object.values(JSON.parse(readFileSync('assets/data/lexicon/core.json', 'utf8')));
+const coreStrongs = new Set(core.map(e => e.strong));
 
 describe('frequency.json', () => {
   it('ровно 1000 записей с непрерывным rank с 1', () => {
@@ -37,5 +39,14 @@ describe('frequency.json', () => {
     expect(items[0]).toMatchObject({ strong: 3588, lemma: 'ὁ' });
     expect(items[1]).toMatchObject({ strong: 2532, lemma: 'καί' });
     expect(items[2]).toMatchObject({ strong: 846, lemma: 'αὐτός' });
+  });
+
+  it('hasAlignment=true ⊆ core.json (текущее ограничение alignment)', () => {
+    items.filter(i => i.hasAlignment)
+         .forEach(i => expect(coreStrongs.has(i.strong)).toBe(true));
+  });
+
+  it('включаемых слов больше 50', () => {
+    expect(items.filter(i => i.hasAlignment).length).toBeGreaterThan(50);
   });
 });
