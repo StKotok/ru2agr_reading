@@ -55,14 +55,6 @@ export async function mount(container, ctx) {
     }
   }
 
-	// ВРЕМЕННО: если онбординг пропущен и буквы не введены — вводим все буквы как known
-	if (Object.keys(progress.letters).length === 0 && alphabet && alphabet.length > 0) {
-		const today = new Date().toISOString().split('T')[0];
-		for (const l of alphabet) {
-			progress.letters[l.lower] = { status: 'known', introducedAt: today };
-		}
-		saveProgress(progress);
-	}
 
   // Публикуем в store
   store.update(s => ({ ...s, settings, progress }));

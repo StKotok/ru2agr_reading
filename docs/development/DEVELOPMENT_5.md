@@ -158,15 +158,15 @@ license review (`docs/greek-nt-frequency-sources/notes/license-review.md`).
 
 **Файлы:** `src/ui/screens/reading.js`.
 
-- [ ] Удалить блок «ВРЕМЕННО: если онбординг пропущен…» (`reading.js:58-65`).
-- [ ] Не менять `composeVerse`: тест `empty letter progress leaves text
+- [x] Удалить блок «ВРЕМЕННО: если онбординг пропущен…» (`reading.js:58-65`).
+- [x] Не менять `composeVerse`: тест `empty letter progress leaves text
       untouched` в `tests/compose.test.js` остаётся зелёным.
-- [ ] Проверить `grep -rn "ВРЕМЕННО" src/` — таких блоков больше нет.
-- [ ] `npm test` зелёный.
+- [x] Проверить `grep -rn "ВРЕМЕННО" src/` — таких блоков больше нет.
+- [x] `npm test` зелёный.
 - [ ] Ручная проверка: с чистой IndexedDB режим 1 при intensity 100 показывает
       чистый русский текст.
-- [ ] `npm run build` зелёный.
-- [ ] Коммит.
+- [x] `npm run build` зелёный.
+- [x] Коммит.
 
 **Промпт:**
 
