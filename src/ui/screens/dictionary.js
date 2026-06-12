@@ -222,7 +222,51 @@ function renderBatch(list, filtered) {
   renderedCount = end;
 }
 
-function showWordCard(item, lexeme, dictEntry, dictId) {
+/**
+ * Точечное обновление строки словаря (бейдж + чекбокс) без перерендера.
+ */
+function updateRow(item) {
+  if (!container) return;
+  const row = container.querySelector(`.dict-row[data-strong="${item.strong}"]`);
+  if (!row) return; // строка может быть не отрендерена (DOM-окно)
+  const coreById = new Map((lexicon || []).map(l => [l.strong, l]));
+  const lex = coreById.get(item.strong);
+  const dictId = lex ? lex.id : `freq-${item.strong}`;
+  const entry = dict[dictId];
+
+  // Бейдж
+  const badge = row.querySelector('.dict-badge, .dict-badge-placeholder');
+  if (badge) {
+    if (entry) {
+      badge.className = `dict-badge badge-${entry.status || 'new'}`;
+      badge.textContent = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое';
+    } else {
+      badge.className = 'dict-badge-placeholder';
+      badge.textContent = '';
+    }
+  }
+
+  // Чекбокс
+  const checkbox = row.querySelector('input[type="checkbox"]');
+  if (checkbox) checkbox.checked = !!entry && entry.showInText !== false;
+}
+
+/**
+ * Заменяет старую карточку свежей (без перерендера списка).
+ */
+function refreshCard(card, item, dictEntry, dictId) {
+  const fresh = buildWordCard(item, coreById().get(item.strong), dictEntry, dictId);
+  card.replaceWith(fresh);
+}
+
+function coreById() {
+  return new Map((lexicon || []).map(l => [l.strong, l]));
+}
+
+/**
+ * Строит DOM карточки слова (возвращает HTMLElement).
+ */
+function buildWordCard(item, lexeme, dictEntry, dictId) {
   const card = document.createElement('div');
   card.className = 'card word-card';
 
@@ -236,7 +280,7 @@ function showWordCard(item, lexeme, dictEntry, dictId) {
     ${lexeme ? `<div class="word-card-pos">${lexeme.pos || ''}</div>` : ''}
     <div class="word-card-freq">Частота: ${item.count} (ранг ${item.rank} в НЗ)</div>
     ${lexeme && lexeme.strong ? `<div class="word-card-strong">Strong G${lexeme.strong}</div>` : ''}
-    ${!item.hasAlignment ? '<p class="word-card-warning">⚠️ Не участвует в подстановках — это слово не выровнено ни в одном стихе НЗ</p>' : ''}
+    ${!item.hasAlignment ? '<p class="word-card-warning">⚠️ Нет проверенного русско-греческого соответствия — слово пока не участвует в подстановках</p>' : ''}
     <div class="word-card-actions"></div>
   `;
 
@@ -255,8 +299,8 @@ function showWordCard(item, lexeme, dictEntry, dictId) {
         dict = setWordStatus(dictId, s, dict);
         await saveDictionary(dict);
         store.update(s2 => ({ ...s2, dictionary: dict }));
-        // Перерисовать строку
-        render();
+        updateRow(item);
+        refreshCard(card, item, dict[dictId], dictId);
       });
       statusDiv.appendChild(btn);
     });
@@ -276,7 +320,8 @@ function showWordCard(item, lexeme, dictEntry, dictId) {
       dict = setWordSetting(dictId, 'showInText', toggle.checked, dict);
       await saveDictionary(dict);
       store.update(s => ({ ...s, dictionary: dict }));
-      render();
+      updateRow(item);
+      refreshCard(card, item, dict[dictId], dictId);
     });
     toggleLabel.appendChild(toggle);
     toggleLabel.appendChild(document.createTextNode('Показывать в тексте'));
@@ -299,6 +344,7 @@ function showWordCard(item, lexeme, dictEntry, dictId) {
           dict = setWordSetting(dictId, 'intensity', opt, dict);
           await saveDictionary(dict);
           store.update(s2 => ({ ...s2, dictionary: dict }));
+          refreshCard(card, item, dict[dictId], dictId);
         });
         intensityDiv.appendChild(btn);
       });
@@ -321,6 +367,7 @@ function showWordCard(item, lexeme, dictEntry, dictId) {
           dict = setWordSetting(dictId, 'forms', opt.value, dict);
           await saveDictionary(dict);
           store.update(s2 => ({ ...s2, dictionary: dict }));
+          refreshCard(card, item, dict[dictId], dictId);
         });
         formsDiv.appendChild(btn);
       });
@@ -336,11 +383,17 @@ function showWordCard(item, lexeme, dictEntry, dictId) {
       dict = addWord(dictId, dict);
       await saveDictionary(dict);
       store.update(s => ({ ...s, dictionary: dict }));
-      render();
+      updateRow(item);
+      refreshCard(card, item, dict[dictId], dictId);
     });
     actions.appendChild(addBtn);
   }
 
+  return card;
+}
+
+function showWordCard(item, lexeme, dictEntry, dictId) {
+  const card = buildWordCard(item, lexeme, dictEntry, dictId);
   if (window.innerWidth >= 900) {
     showInInspector(card);
   } else {
