@@ -1,6 +1,7 @@
 import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting } from '../../state/dictionary.js';
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
+import { getInspectorPanel, showEmptyState, showInInspector } from '../components/inspector.js';
 
 let dict = {};
 let lexicon = [];
@@ -127,6 +128,12 @@ function render() {
   // DOM-окно: отрендерить первые PAGE_SIZE, остальные через Observer
   renderBatch(list, filtered);
 
+  // Десктоп: подключаем инспектор
+  if (window.innerWidth >= 900) {
+    getInspectorPanel(container);
+    showEmptyState();
+  }
+
   if (filtered.length > PAGE_SIZE * 2) {
     // Сентинел для подгрузки
     const sentinel = document.createElement('div');
@@ -207,7 +214,7 @@ function renderBatch(list, filtered) {
     // Тап по строке (не по чекбоксу) → карточка
     row.addEventListener('click', (e) => {
       if (e.target.tagName === 'INPUT') return;
-      showWordCard(item, lex, entry, dictId);
+      showWordCard(item, lex, dict[dictId], dictId);
     });
 
     list.appendChild(row);
@@ -334,7 +341,11 @@ function showWordCard(item, lexeme, dictEntry, dictId) {
     actions.appendChild(addBtn);
   }
 
-  openBottomSheet(card);
+  if (window.innerWidth >= 900) {
+    showInInspector(card);
+  } else {
+    openBottomSheet(card);
+  }
 }
 
 export function unmount() { container = null; }

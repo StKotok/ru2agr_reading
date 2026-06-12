@@ -478,22 +478,22 @@ npm test. npm run dev на 1280px: открой чтение, кликни гр�
 
 **Файлы:** `src/ui/screens/dictionary.js`.
 
-- [ ] Импортировать `getInspectorPanel`, `showEmptyState`, `showInInspector`.
-- [ ] В конце `render()` при `window.innerWidth >= 900` —
+- [x] Импортировать `getInspectorPanel`, `showEmptyState`, `showInInspector`.
+- [x] В конце `render()` при `window.innerWidth >= 900` —
       `getInspectorPanel(container)` + `showEmptyState()` (render() очищает
       контейнер, панель надо переподключать после каждого рендера; задача 3.1
       делает это безопасным).
-- [ ] В `showWordCard()`: desktop → `showInInspector(card)`,
+- [x] В `showWordCard()`: desktop → `showInInspector(card)`,
       mobile → `openBottomSheet(card)`.
-- [ ] Клик по строке читает свежую запись:
+- [x] Клик по строке читает свежую запись:
       `showWordCard(item, lex, dict[dictId], dictId)`.
-- [ ] CSS шторки и глобальное правило desktop-hidden не трогать.
-- [ ] `npm test` зелёный.
+- [x] CSS шторки и глобальное правило desktop-hidden не трогать.
+- [x] `npm test` зелёный.
 - [ ] Ручная проверка 1280px: клик по строке показывает карточку справа;
       375px — открывается шторка; чекбокс → клик по строке → карточка
       показывает настройки слова, а не «Добавить в словарь».
-- [ ] `npm run build` зелёный.
-- [ ] Коммит.
+- [x] `npm run build` зелёный.
+- [x] Коммит.
 
 **Промпт:**
 
