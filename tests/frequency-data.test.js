@@ -41,12 +41,24 @@ describe('frequency.json', () => {
     expect(items[2]).toMatchObject({ strong: 846, lemma: 'αὐτός' });
   });
 
-  it('hasAlignment=true ⊆ core.json (текущее ограничение alignment)', () => {
-    items.filter(i => i.hasAlignment)
-         .forEach(i => expect(coreStrongs.has(i.strong)).toBe(true));
+  // С переходом на Zefania Strong-выравнивание, alignment покрывает
+  // все топ-1000 слов. Лексемы core.json, попавшие в топ-1000,
+  // обязаны иметь hasAlignment=true.
+  it('core.json ∩ frequency → hasAlignment=true', () => {
+    const freqStrongs = new Set(items.map(i => i.strong));
+    let covered = 0;
+    for (const s of coreStrongs) {
+      if (freqStrongs.has(s)) {
+        const item = items.find(i => i.strong === s);
+        expect(item.hasAlignment).toBe(true);
+        covered++;
+      }
+    }
+    // Минимум 100 из 104 лексем core.json должны быть в топ-1000
+    expect(covered).toBeGreaterThanOrEqual(100);
   });
 
-  it('включаемых слов больше 50', () => {
-    expect(items.filter(i => i.hasAlignment).length).toBeGreaterThan(50);
+  it('все топ-1000 слов имеют alignment', () => {
+    expect(items.filter(i => i.hasAlignment).length).toBe(1000);
   });
 });
