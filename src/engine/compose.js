@@ -22,11 +22,17 @@ export function composeVerse(verseText, ctx = {}) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режим 3: словарный слой + буквенный
+  // Режим 3: словарный слой по выравниванию (леммы) + буквенный.
+  // Без выравнивания словарных замен нет: точность важнее покрытия.
   if (mode === 3) {
-    if (wordEntries.length > 0) {
-      const wordSegs = applyWordLayer(verseText, wordEntries, { seedPrefix });
-      return applyLetterToPlain(wordSegs, activeLetters, intensity, seedPrefix, showDiacritics);
+    if (grcVerse && alignment && grcVerse.tokens) {
+      const lemmaEntries = wordEntries.map(e => ({
+        ...e,
+        strong: e.strongNum || null,
+        forms: 'lemma'
+      }));
+      const segs = applyFormLayer(verseText, grcVerse.tokens, alignment, lemmaEntries, { seedPrefix });
+      return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics);
     }
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
