@@ -62,9 +62,8 @@ registerSW({ immediate: true });
 // Реакция на hash-изменения
 async function handleRoute(route) {
   // Флаг для разработки: пропустить онбординг
-  const SKIP_ONBOARDING = (() => {
-    try { return localStorage.getItem('dev_skip_onboarding') === '1'; } catch (_) { return false; }
-  })();
+  // ВРЕМЕННО: всегда пропускаем онбординг для тестирования
+  const SKIP_ONBOARDING = true; // было: const SKIP_ONBOARDING = (() => {
 
   if (!SKIP_ONBOARDING) {
     // Проверка онбординга
