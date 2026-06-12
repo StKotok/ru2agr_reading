@@ -197,6 +197,41 @@ describe('applyFormLayer', () => {
     expect(formSegs.length).toBe(0);
   });
 
+  it('intensityPct=0 со статусом new никогда не заменяет', () => {
+    const verseText = 'Начало Евангелия';
+    const grcTokens = [
+      { w: 'Ἀρχὴ', lemma: 'ἀρχή', morph: 'N-NSF', strong: 746 },
+      { w: 'εὐαγγελίου', lemma: 'εὐαγγέλιον', morph: 'N-GSN', strong: 2098 },
+    ];
+    const alignment = [{ ru: 1, gr: 1 }]; // «Евангелия» → εὐαγγελίου
+
+    const segments = applyFormLayer(verseText, grcTokens, alignment, [
+      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098,
+        intensityPct: 0, status: 'new', forms: 'all' }
+    ], { seedPrefix: 'mark' });
+
+    // intensityPct=0, status='new' → shouldReplace всегда false
+    expect(segments.every(s => s.greek === undefined)).toBe(true);
+  });
+
+  it('intensityPct=100 со статусом new заменяет', () => {
+    const verseText = 'Начало Евангелия';
+    const grcTokens = [
+      { w: 'Ἀρχὴ', lemma: 'ἀρχή', morph: 'N-NSF', strong: 746 },
+      { w: 'εὐαγγελίου', lemma: 'εὐαγγέλιον', morph: 'N-GSN', strong: 2098 },
+    ];
+    const alignment = [{ ru: 1, gr: 1 }]; // «Евангелия» → εὐαγγελίου
+
+    const segments = applyFormLayer(verseText, grcTokens, alignment, [
+      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098,
+        intensityPct: 100, status: 'new', forms: 'all' }
+    ], { seedPrefix: 'mark' });
+
+    // intensityPct=100, status='new' → hash01 * 100 < 100 всегда true
+    // form-layer сохраняет регистр: «Евангелия» → Εὐαγγελίου
+    expect(segments.some(s => s.greek && s.greek.toLowerCase() === 'εὐαγγελίου')).toBe(true);
+  });
+
   it('ruMatches-валидация: «Слово» → λόγος — замена проходит', () => {
     const verseText = 'В начале было Слово';
     const grcTokens = [

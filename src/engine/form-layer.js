@@ -78,8 +78,7 @@ export function applyFormLayer(verseText, grcTokens, alignment, dictEntries, opt
         }
 
         const seed = `${seedPrefix}:${wi}:${grToken.strong}`;
-        const intensityMap = { often: 100, sometimes: 50, rare: 25 };
-        const pct = intensityMap[dictEntry.intensity] || 100;
+        const pct = dictEntry.intensityPct ?? 100;
         const shouldReplace = dictEntry.status === 'known' || hash01(seed) * 100 < pct;
 
         if (shouldReplace) {
