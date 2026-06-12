@@ -927,16 +927,16 @@ core.json, поэтому hasAlignment=true только у core-слов (98 и
 **Файлы:** `assets/styles/app.css`; `src/ui/screens/dictionary.js` — только
 если нужны классы/обёртки.
 
-- [ ] Перевести `.dict-row` на CSS grid: мобильная раскладка в две строки
+- [x] Перевести `.dict-row` на CSS grid: мобильная раскладка в две строки
       (лемма + транслит под ней), без фиксированных ширин, `min-width: 0` у
       сжимаемых колонок.
-- [ ] Touch target чекбокса ≥ 44×44 (увеличить область `label.dict-check`).
-- [ ] Desktop (≥900px): плотная одна строка rank/lemma/translit/freq/бейдж/
+- [x] Touch target чекбокса ≥ 44×44 (увеличить область `label.dict-check`).
+- [x] Desktop (≥900px): плотная одна строка rank/lemma/translit/freq/бейдж/
       чекбокс.
 - [ ] На 375px `document.documentElement.scrollWidth <= window.innerWidth`.
 - [ ] Светлая и тёмная тема, контраст в норме.
-- [ ] `npm test` зелёный, `npm run build` зелёный.
-- [ ] Коммит.
+- [x] `npm test` зелёный, `npm run build` зелёный.
+- [x] Коммит.
 
 **Промпт:**
 

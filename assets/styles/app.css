@@ -899,13 +899,24 @@ p, h2, h3, span {
 }
 
 .dict-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "rank lemma   freq  check"
+    "rank translit badge check";
+  gap: 4px 6px;
   align-items: center;
-  gap: 6px;
   padding: 6px 10px;
   cursor: pointer;
   border-radius: 4px;
   font-size: 0.9rem;
+}
+
+@media (min-width: 900px) {
+  .dict-row {
+    grid-template-columns: 40px minmax(120px, max-content) minmax(0, 1fr) 56px auto 48px;
+    grid-template-areas: "rank lemma translit freq badge check";
+  }
 }
 
 .dict-row:hover { background: var(--selection); }
@@ -918,45 +929,47 @@ p, h2, h3, span {
 .dict-row--disabled:hover { background: transparent; }
 
 .dict-rank {
-  width: 36px;
+  grid-area: rank;
   text-align: right;
   color: var(--muted);
   font-size: 0.75rem;
-  flex-shrink: 0;
 }
 
 .dict-lemma {
+  grid-area: lemma;
   font-family: 'Gentium Plus', serif;
   color: var(--greek);
   font-size: 1rem;
-  flex-shrink: 0;
-  min-width: 100px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dict-translit {
+  grid-area: translit;
   font-size: 0.8rem;
   color: var(--muted);
-  flex-shrink: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dict-freq {
-  width: 48px;
+  grid-area: freq;
   text-align: right;
   color: var(--muted);
   font-size: 0.75rem;
-  flex-shrink: 0;
 }
 
 .dict-badge {
+  grid-area: badge;
   font-size: 0.7rem;
   padding: 1px 6px;
   border-radius: 4px;
-  flex-shrink: 0;
+  justify-self: start;
 }
 
 .dict-badge-placeholder {
+  grid-area: badge;
   min-width: 48px;
-  flex-shrink: 0;
 }
 
 .badge-new { background: var(--selection); color: var(--greek); }
@@ -964,10 +977,12 @@ p, h2, h3, span {
 .badge-known { background: var(--progress); color: #fff; }
 
 .dict-check {
-  margin-left: auto;
-  flex-shrink: 0;
+  grid-area: check;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .dict-check input[type="checkbox"] {
