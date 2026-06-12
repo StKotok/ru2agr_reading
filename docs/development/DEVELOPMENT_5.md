@@ -651,15 +651,15 @@ b) dictionary.js:208-211 — row click передаёт entry, захвачен�
 `tests/frequency-data.test.js`; перегенерировать
 `assets/data/lexicon/frequency.json`.
 
-- [ ] Написать падающие тесты helper'а (таблица кейсов из промпта).
-- [ ] Реализовать `transliterateGreek` в `scripts/lib/greek-translit.mjs`.
-- [ ] `build-frequency.mjs`: импортировать helper, удалить inline SBL_MAP.
-- [ ] В `frequency-data.test.js` добавить проверку: `translit` — чистый ASCII
+- [x] Написать падающие тесты helper'а (таблица кейсов из промпта).
+- [x] Реализовать `transliterateGreek` в `scripts/lib/greek-translit.mjs`.
+- [x] `build-frequency.mjs`: импортировать helper, удалить inline SBL_MAP.
+- [x] В `frequency-data.test.js` добавить проверку: `translit` — чистый ASCII
       (`/^[A-Za-z]+$/`).
-- [ ] `npm run build:data` перегенерирует `frequency.json`.
-- [ ] `npm test` зелёный, `npm run build` зелёный.
-- [ ] Данные/лицензии: новых источников нет; транслитерация — механика.
-- [ ] Коммит (helper + скрипт + данные + тесты вместе).
+- [x] `npm run build:data` перегенерирует `frequency.json`.
+- [x] `npm test` зелёный, `npm run build` зелёный.
+- [x] Данные/лицензии: новых источников нет; транслитерация — механика.
+- [x] Коммит (helper + скрипт + данные + тесты вместе).
 
 **Промпт:**
 

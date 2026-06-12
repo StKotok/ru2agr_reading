@@ -1,46 +1,11 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { transliterateGreek } from './lib/greek-translit.mjs';
 
 const GRC_DIR = 'assets/data/bibles/grc';
 const SYN_DIR = 'assets/data/bibles/syn';
 const OUT = 'assets/data/lexicon/frequency.json';
 const TOP_LIMIT = 1000;
-
-// ── SBL-транслитерация (справочная таблица, механика без лицензионных рисков) ──
-const SBL_MAP = [
-  ['α', 'a'], ['β', 'b'], ['γ', 'g'], ['δ', 'd'], ['ε', 'e'],
-  ['ζ', 'z'], ['η', 'ē'], ['θ', 'th'], ['ι', 'i'], ['κ', 'k'],
-  ['λ', 'l'], ['μ', 'm'], ['ν', 'n'], ['ξ', 'x'], ['ο', 'o'],
-  ['π', 'p'], ['ρ', 'r'], ['σ', 's'], ['ς', 's'], ['τ', 't'],
-  ['υ', 'y'], ['φ', 'ph'], ['χ', 'ch'], ['ψ', 'ps'], ['ω', 'ō'],
-  ['ἀ', 'a'], ['ἁ', 'ha'], ['ἂ', 'ha'], ['ἃ', 'ha'], ['ἄ', 'ha'], ['ἅ', 'ha'], ['ἆ', 'ha'], ['ἇ', 'ha'],
-  ['ἐ', 'e'], ['ἑ', 'he'], ['ἒ', 'he'], ['ἓ', 'he'], ['ἔ', 'he'], ['ἕ', 'he'],
-  ['ἠ', 'ē'], ['ἡ', 'hē'], ['ἢ', 'hē'], ['ἣ', 'hē'], ['ἤ', 'hē'], ['ἥ', 'hē'], ['ἦ', 'hē'], ['ἧ', 'hē'],
-  ['ἰ', 'i'], ['ἱ', 'hi'], ['ἲ', 'hi'], ['ἳ', 'hi'], ['ἴ', 'hi'], ['ἵ', 'hi'], ['ἶ', 'hi'], ['ἷ', 'hi'],
-  ['ὀ', 'o'], ['ὁ', 'ho'], ['ὂ', 'ho'], ['ὃ', 'ho'], ['ὄ', 'ho'], ['ὅ', 'ho'],
-  ['ὐ', 'y'], ['ὑ', 'hy'], ['ὒ', 'hy'], ['ὓ', 'hy'], ['ὔ', 'hy'], ['ὕ', 'hy'], ['ὖ', 'hy'], ['ὗ', 'hy'],
-  ['ὠ', 'ō'], ['ὡ', 'hō'], ['ὢ', 'hō'], ['ὣ', 'hō'], ['ὤ', 'hō'], ['ὥ', 'hō'], ['ὦ', 'hō'], ['ὧ', 'hō'],
-  ['ὰ', 'a'], ['ά', 'a'], ['ὲ', 'e'], ['έ', 'e'], ['ὴ', 'ē'], ['ή', 'ē'],
-  ['ὶ', 'i'], ['ί', 'i'], ['ὸ', 'o'], ['ό', 'o'], ['ὺ', 'y'], ['ύ', 'y'],
-  ['ὼ', 'ō'], ['ώ', 'ō'], ['ᾶ', 'a'], ['ῆ', 'ē'], ['ῖ', 'i'], ['ῦ', 'y'], ['ῶ', 'ō'],
-];
-
-function sblTransliterate(text) {
-  let out = '';
-  for (let i = 0; i < text.length; i++) {
-    let found = false;
-    for (const [gr, lat] of SBL_MAP) {
-      if (text.startsWith(gr, i)) {
-        out += lat;
-        i += gr.length - 1;
-        found = true;
-        break;
-      }
-    }
-    if (!found) out += text[i];
-  }
-  return out;
-}
 
 // ── Шаг 1: подсчёт частот лемм по Strong ──
 const counts = new Map(); // strong (string) → Map(lemma → count)
@@ -112,7 +77,7 @@ if (all[0].strong !== 3588 || all[0].count < 15000) {
 const items = all.slice(0, TOP_LIMIT).map((it, i) => ({
   rank: i + 1,
   ...it,
-  translit: sblTransliterate(it.lemma),
+  translit: transliterateGreek(it.lemma),
   hasAlignment: alignedStrongs.has(String(it.strong))
 }));
 

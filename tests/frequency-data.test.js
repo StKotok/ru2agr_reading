@@ -25,11 +25,8 @@ describe('frequency.json', () => {
     items.forEach(i => expect(i.lemma).toMatch(/^[Ͱ-Ͽἀ-῿]/));
   });
 
-  it('translit присутствует и непустой у всех записей', () => {
-    items.forEach(i => {
-      expect(typeof i.translit).toBe('string');
-      expect(i.translit.length).toBeGreaterThan(0);
-    });
+  it('translit — чистый ASCII, непустой', () => {
+    items.forEach(i => expect(i.translit).toMatch(/^[A-Za-z]+$/));
   });
 
   it('hasAlignment — булево поле', () => {
