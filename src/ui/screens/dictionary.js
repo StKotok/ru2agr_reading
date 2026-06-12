@@ -57,6 +57,95 @@ function getFilteredList() {
   return filtered;
 }
 
+function renderPersonalDictionaryFallback() {
+  const entries = Object.entries(dict);
+  const coreById = new Map((lexicon || []).map(l => [l.id, l]));
+
+  // Заголовок
+  const info = document.createElement('div');
+  info.className = 'card';
+  info.innerHTML = '<p>Частотный список недоступен — показан личный словарь.</p>';
+  container.appendChild(info);
+
+  if (entries.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'card';
+    empty.innerHTML = '<p>Частотный список недоступен. Личный словарь пока пуст.</p>';
+    container.appendChild(empty);
+    return;
+  }
+
+  const list = document.createElement('div');
+  list.className = 'dict-list';
+  container.appendChild(list);
+
+  for (const [dictId, entry] of entries) {
+    const core = coreById.get(dictId);
+    let lemma, translit, gloss, strongNum;
+    if (core) {
+      lemma = core.lemma;
+      translit = core.translit;
+      gloss = core.gloss;
+      strongNum = core.strong;
+    } else {
+      // freq-* запись без frequencyList — показываем id
+      const strongSuffix = dictId.startsWith('freq-') ? dictId.replace('freq-', '') : null;
+      lemma = dictId;
+      translit = '';
+      gloss = strongSuffix ? `Strong G${strongSuffix}` : '';
+      strongNum = strongSuffix ? parseInt(strongSuffix) : 0;
+    }
+
+    const pseudoItem = {
+      strong: strongNum,
+      lemma,
+      translit,
+      count: core ? (core.freqNT || 0) : 0,
+      rank: 0,
+      hasAlignment: true
+    };
+
+    const row = document.createElement('div');
+    row.className = 'dict-row';
+    row.setAttribute('data-strong', String(strongNum || 0));
+
+    row.innerHTML = `
+      <span class="dict-rank">–</span>
+      <span class="dict-lemma">${lemma}</span>
+      <span class="dict-translit">${translit}</span>
+      <span class="dict-freq">${pseudoItem.count || '–'}</span>
+      ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${{ new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое'}</span>` : '<span class="dict-badge-placeholder"></span>'}
+      <label class="dict-check" title="Показывать в тексте">
+        <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} aria-label="Показывать ${lemma} в тексте">
+      </label>
+    `;
+
+    // Чекбокс
+    const checkbox = row.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener('change', async () => {
+      let updated = { ...dict };
+      if (checkbox.checked) {
+        updated = setWordSetting(dictId, 'showInText', true, updated);
+      } else {
+        if (updated[dictId]) {
+          updated = setWordSetting(dictId, 'showInText', false, updated);
+        }
+      }
+      dict = updated;
+      await saveDictionary(dict);
+      store.update(s => ({ ...s, dictionary: dict }));
+    });
+
+    // Тап по строке
+    row.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      showWordCard(pseudoItem, core, dict[dictId], dictId);
+    });
+
+    list.appendChild(row);
+  }
+}
+
 function render() {
   if (!container) return;
   container.innerHTML = '';
@@ -68,12 +157,9 @@ function render() {
 
   const filtered = getFilteredList();
 
-  // Частотный список недоступен
+  // Частотный список недоступен — показываем личный словарь
   if (!frequencyList || frequencyList.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'card';
-    empty.innerHTML = '<p>Частотный список недоступен.</p>';
-    container.appendChild(empty);
+    renderPersonalDictionaryFallback();
     return;
   }
 
