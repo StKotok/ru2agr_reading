@@ -1031,17 +1031,17 @@ AGENTS.md).
 
 **Файлы:** `docs/development/DEVELOPMENT_1.md`.
 
-- [ ] 3.3: `ruMatches`/`ruExclude` — не fallback замен, а guard для core-слов
+- [x] 3.3: `ruMatches`/`ruExclude` — не fallback замен, а guard для core-слов
       при alignment-only заменах (runtime в form-layer + генерация alignment).
-- [ ] 3.5: пути и скрипты — текущие `assets/data/...` и `scripts/...`.
-- [ ] 3.4/4.4: frequency.json — каталог top-1000; включаемые подстановки
+- [x] 3.5: пути и скрипты — текущие `assets/data/...` и `scripts/...`.
+- [x] 3.4/4.4: frequency.json — каталог top-1000; включаемые подстановки
       только для core-слов с проверенным соответствием; non-core `freq-*`
       подстановки не обещать; упомянуть фильтр «Доступные».
-- [ ] Архивные roadmap-блоки (раздел 5+) не трогать.
-- [ ] `grep -n "fallback\|word-layer\|tools/\|данные в data/" docs/development/DEVELOPMENT_1.md`
+- [x] Архивные roadmap-блоки (раздел 5+) не трогать.
+- [x] `grep -n "fallback\|word-layer\|tools/\|данные в data/" docs/development/DEVELOPMENT_1.md`
       просмотрен, живые устаревшие места исправлены.
-- [ ] `npm run build` зелёный.
-- [ ] Коммит.
+- [x] `npm run build` зелёный.
+- [x] Коммит.
 
 **Промпт:**
 
