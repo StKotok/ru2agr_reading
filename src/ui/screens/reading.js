@@ -53,6 +53,15 @@ export async function mount(container, ctx) {
     }
   }
 
+	// ВРЕМЕННО: если онбординг пропущен и буквы не введены — вводим все буквы как known
+	if (Object.keys(progress.letters).length === 0 && alphabet && alphabet.length > 0) {
+		const today = new Date().toISOString().split('T')[0];
+		for (const l of alphabet) {
+			progress.letters[l.lower] = { status: 'known', introducedAt: today };
+		}
+		saveProgress(progress);
+	}
+
   // Публикуем в store
   store.update(s => ({ ...s, settings, progress }));
 
@@ -116,9 +125,9 @@ export async function mount(container, ctx) {
     return;
   }
 
-  // Если grc не загрузился для режима 4-5 — предупреждаем
-  if (!grcBookData && settings.mode >= 4) {
-    showToast('Греческий текст недоступен — показываем словарные формы', { timeout: 5000 });
+  // Если grc не загрузился для режимов 3–5 — предупреждаем
+  if (!grcBookData && settings.mode >= 3) {
+    showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
   }
 
   skeleton.remove();
@@ -395,9 +404,9 @@ function renderWindowed() {
           p.appendChild(frag);
         }
       } else {
-        // Добавляем grcVerse и alignment для режимов 4-5
+        // Добавляем grcVerse и alignment для режимов 3-5
         const verseCtx = { ...composeCtx };
-        if (grcBookData && settings.mode >= 4) {
+        if (grcBookData && settings.mode >= 3) {
           const chIdx = ch.n - 1;
           const vIdx = verse.n - 1;
           const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
@@ -586,7 +595,7 @@ function reRenderWindowed() {
         }
       } else {
         const verseCtx = { ...composeCtx };
-        if (grcBookData && settings.mode >= 4) {
+        if (grcBookData && settings.mode >= 3) {
           const chIdx = ch.n - 1;
           const vIdx = verse.n - 1;
           const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
