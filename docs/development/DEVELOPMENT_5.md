@@ -110,15 +110,15 @@ license review (`docs/greek-nt-frequency-sources/notes/license-review.md`).
 
 **Файлы:** `tests/bible-data.test.js`.
 
-- [ ] Убрать все проверки `existsSync` со старым путём `data/...` вместе с
+- [x] Убрать все проверки `existsSync` со старым путём `data/...` вместе с
       warning'ами — тесты падают, если файла нет.
-- [ ] Тест books.json: грузить `assets/data/books.json` напрямую.
-- [ ] Тест john.json: грузить `assets/data/bibles/syn/john.json` напрямую.
-- [ ] Цикл по всем книгам: `loadJSON` с путём `assets/data/bibles/syn/<book.id>.json`,
+- [x] Тест books.json: грузить `assets/data/books.json` напрямую.
+- [x] Тест john.json: грузить `assets/data/bibles/syn/john.json` напрямую.
+- [x] Цикл по всем книгам: `loadJSON` с путём `assets/data/bibles/syn/<book.id>.json`,
       и проверки содержимого обязательны (без `if (bookData)` — книга должна быть).
-- [ ] `npm test` зелёный, количество прогнанных assert'ов выросло.
-- [ ] `npm run build` зелёный.
-- [ ] Коммит.
+- [x] `npm test` зелёный, количество прогнанных assert'ов выросло.
+- [x] `npm run build` зелёный.
+- [x] Коммит.
 
 **Промпт:**
 
