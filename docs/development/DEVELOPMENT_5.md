@@ -272,27 +272,27 @@ runtime-переключении (этот путь идёт через `reRende
 
 **Файлы:** `src/ui/screens/reading.js`.
 
-- [ ] Добавить module-level `grcLoadPromise` (защита от параллельных загрузок).
-- [ ] Добавить `async function ensureGreekBookLoaded(showToastOnFail = true)`
+- [x] Добавить module-level `grcLoadPromise` (защита от параллельных загрузок).
+- [x] Добавить `async function ensureGreekBookLoaded(showToastOnFail = true)`
       с защитой от гонок: результат применяется только если книга не сменилась
       и экран не размонтирован (`bookData` обнуляется в `unmount()` — это и
       есть признак).
-- [ ] В подписке на settings: после `reRenderWindowed()` при
+- [x] В подписке на settings: после `reRenderWindowed()` при
       `settings.mode >= 3 && !grcBookData` вызвать догрузку и по успеху
       перерендерить ещё раз.
-- [ ] Заменить mode-5 блок (`reading.js:457-466`) на вызов
+- [x] Заменить mode-5 блок (`reading.js:457-466`) на вызов
       `ensureGreekBookLoaded(false)` для режимов 3–5 (mount уже показал тост,
       если грузил и не смог — без дубля).
-- [ ] Тост ошибки — ровно существующая строка:
+- [x] Тост ошибки — ровно существующая строка:
       `Греческий текст недоступен — словарные замены отключены`.
-- [ ] Не менять `composeVerse` и не возвращать regex fallback.
-- [ ] `npm test` зелёный.
+- [x] Не менять `composeVerse` и не возвращать regex fallback.
+- [x] `npm test` зелёный.
 - [ ] Ручная проверка: старт в режиме 1 → top-bar режим 3: замены появляются
       без reload; то же для режима 4 (формы) и 5 (греческий текст).
 - [ ] Ручная проверка: переключение 3 → 1 → 3 не делает повторной загрузки
       (Network-вкладка) и не теряет `grcBookData`.
-- [ ] `npm run build` зелёный.
-- [ ] Коммит.
+- [x] `npm run build` зелёный.
+- [x] Коммит.
 
 **Промпт:**
 

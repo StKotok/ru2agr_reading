@@ -33,6 +33,30 @@ let dictionary = {};
 let coreLexicon = [];
 let frequencyList = null;
 let wordEntries = [];
+let grcLoadPromise = null;
+
+async function ensureGreekBookLoaded(showToastOnFail = true) {
+  if (grcBookData) return true;
+  if (!bookData || settings.mode < 3) return false;
+  if (!grcLoadPromise) {
+    const bookId = bookData.id;
+    grcLoadPromise = loadBook('grc', bookId)
+      .then(grc => ({ grc, bookId }))
+      .catch(() => ({ grc: null, bookId }));
+  }
+  const { grc, bookId } = await grcLoadPromise;
+  grcLoadPromise = null;
+  // Гонки: экран размонтирован (bookData=null) или книга сменилась
+  if (!bookData || bookData.id !== bookId) return false;
+  if (grc) {
+    grcBookData = grc;
+    return true;
+  }
+  if (showToastOnFail && settings.mode >= 3) {
+    showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
+  }
+  return false;
+}
 
 export async function mount(container, ctx) {
   const { store } = ctx;
@@ -151,6 +175,9 @@ export async function mount(container, ctx) {
       settings = newSettings;
       saveSettings(settings);
       reRenderWindowed();
+      if (settings.mode >= 3 && !grcBookData) {
+        ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
+      }
     }
   });
 
@@ -446,15 +473,9 @@ function renderWindowed() {
   setupObserver(chaptersEls, textArea);
   setupChapterTracking();
 
-  // Если включён режим 5 но grc не загружен — грузим асинхронно
-  if (settings.mode === 5 && !grcBookData && bookData) {
-    showToast('Греческий текст недоступен — загружаем...', { timeout: 3000 });
-    loadBook('grc', bookData.id).then(grc => {
-      if (grc) {
-        grcBookData = grc;
-        reRenderWindowed();
-      }
-    }).catch(() => {});
+  // Режимы 3-5: если греческий не загрузился при mount — пробуем ещё раз
+  if (settings.mode >= 3 && !grcBookData && bookData) {
+    ensureGreekBookLoaded(false).then(ok => { if (ok) reRenderWindowed(); });
   }
 }
 
