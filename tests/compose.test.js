@@ -124,7 +124,7 @@ describe('composeVerse', () => {
     expect(r1).toEqual(r2);
   });
 
-  it('mode 4: word-layer fallback для невыровненных словарных слов', () => {
+  it('mode 4: невыровненные слова остаются русскими', () => {
     // Стих с alignment только для «Слово», но не для «Бог»
     const verseText = 'В начале было Слово и Бог';
     const grcTokens = [
@@ -164,8 +164,30 @@ describe('composeVerse', () => {
     expect(formSegs.length).toBeGreaterThanOrEqual(1);
     expect(formSegs.some(s => s.greek.toLowerCase() === 'λόγος')).toBe(true);
 
-    // «Бог» должно быть заменено леммой через word-layer (kind='word')
-    const wordSegs = segments.filter(s => s.kind === 'word');
-    expect(wordSegs.some(s => s.greek.toLowerCase() === 'θεός')).toBe(true);
+    // «Бог» НЕ должно быть заменено — оно не выровнено (нет в alignment)
+    const allText = segments.map(s => s.greek || s.plain || '').join('');
+    expect(allText).toContain('Бог');
+    expect(allText).not.toContain('θεός');
+  });
+
+  it('mode 4 без греческих данных не делает словарных замен', () => {
+    const verseText = 'В начале было Слово';
+    const segments = composeVerse(verseText, {
+      mode: 4,
+      intensity: 0,
+      progressLetters: {},
+      seedPrefix: 'test',
+      wordEntries: [
+        {
+          lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
+          regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
+          excludeRegexps: [],
+          intensityPct: 100, status: 'known', forms: 'all'
+        }
+      ]
+    });
+    // Без grcVerse/alignment — только буквенный слой
+    const text = segments.map(s => s.greek || s.plain || '').join('');
+    expect(text).toBe('В начале было Слово');
   });
 });
