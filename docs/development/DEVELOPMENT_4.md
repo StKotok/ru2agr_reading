@@ -68,15 +68,21 @@
 3. **`ruMatches`/`ruExclude` остаются в `core.json`** как валидационный guard
    внутри `form-layer.js` (строки 60–77): даже выровненное слово не заменяется,
    если не похоже на словарное. Это вторая линия защиты от ошибок выравнивания —
-   она работает на цель «100% точность» и не удаляется.
+   она работает на цель «100% точность» и не удаляется. Для слов частотного
+   слоя, отсутствующих в `core.json` (лексемы `freq-<strong>`), guard пропускает
+   слово без проверки — выравнивание считается достаточной гарантией.
 4. **`word-layer.js` удаляется** после перевода режимов 3–4 на выравнивание.
 5. **Частотный слой строится из собственного корпуса** (`assets/data/bibles/grc`,
    137 741 токен, 5436 уникальных Strong): никаких новых внешних данных и
    лицензионных рисков. Внешний частотный словарь с глоссами
    (`docs/greek-nt-frequency-sources/`) — за пределами этого roadmap'а, ждёт
    license review.
-6. **Схема настроек расширяется аддитивно:** новый ключ `freqTopN` (default 0)
-   подхватывается merge'ем в `loadSettings()`; миграция данных не нужна.
+6. **Управление словами — через страницу словаря.** Слайдер интенсивности на
+   главном экране влияет только на буквенный слой (режимы 1–2). Какие слова
+   показывать — решает пользователь чекбоксами `showInText` на странице
+   словаря. Никакого отдельного `freqTopN`-слайдера. Схема настроек
+   расширяется аддитивно: пользователи без записей в словаре не видят
+   словарных замен — это штатное поведение.
 7. Картина замен в режиме 3 изменится (другой механизм → другие seed'ы) — это
    ожидаемо и не является регрессией.
 
@@ -251,7 +257,7 @@ src/engine/form-layer.js и DEVELOPMENT_4.md «Контекст и мотива�
 
 ---
 
-### Задача 1.3 — reading.js: передавать greческие данные в режиме 3
+### Задача 1.3 — reading.js: передавать греческие данные в режиме 3
 
 **Логика:** греческая книга уже грузится с режима 3 (`reading.js:110`), но
 `grcVerse`/`alignment` кладутся в контекст стиха только при `mode >= 4` — в
@@ -336,7 +342,7 @@ alignment в контекст стиха начиная с режима 3.
 
 Прочитай AGENTS.md, src/engine/compose.js и DEVELOPMENT_4.md «Принятые
 решения» (№1-2). Невыровненные слова в режиме 4 должны оставаться русскими,
-без greческих данных словарных замен нет вообще.
+без греческих данных словарных замен нет вообще.
 
 1) Сначала тесты в tests/compose.test.js.
    a) Существующий тест 'mode 4: word-layer fallback для невыровненных
@@ -432,13 +438,14 @@ alignment в контекст стиха начиная с режима 3.
 
 ---
 
-## Фаза 4 — Частотный слой: слайдер «топ-N слов»
+## Фаза 4 — Частотный слой и новый экран словаря
 
-Продуктовая суть: пользователь в режиме 3 двигает регулятор «частотные слова»
-(выкл / топ-50 / топ-100 / топ-200 / топ-300 / топ-500) и видит леммы самых
-частотных слов НЗ поверх личного словаря. Замены идут только по выравниванию —
-ровно тем же механизмом, что и словарные. Личные настройки слова всегда
-приоритетнее частотного слоя.
+Продуктовая суть: страница «Словарь» превращается в мастер-список **всех** слов
+НЗ из корпусного частотного списка. Пользователь видит каждое слово с его
+частотой, рангом и статусом доступности; включает/выключает показ в тексте
+через чекбокс `showInText`. Подстановки идут только по выравниванию — ровно
+тем же механизмом, что и личный словарь. Никакого отдельного `freqTopN`-слайдера
+нет: управление словами — только через страницу словаря (решение №6).
 
 ### Задача 4.1 — корпусная частотность: скрипт и frequency.json
 
@@ -447,15 +454,18 @@ alignment в контекст стиха начиная с режима 3.
 ноль новых внешних источников, ноль лицензионных вопросов (данные уже в репо,
 происхождение зафиксировано в v1.0.x). У 137 Strong-номеров встречается
 несколько вариантов леммы — берём самую частотную с детерминированным
-tie-break'ом. В файл кладём только топ-1000 (слайдеру нужно максимум 500;
-запас ×2): меньше asset — быстрее оффлайн-кеш.
+tie-break'ом. Дополнительно: (а) считаем `hasAlignment` — участвует ли Strong
+хотя бы в одной alignment-паре во всём НЗ (для disabled-логики в словаре);
+(б) добавляем SBL-транслитерацию леммы (механика, 0 лицензионных рисков —
+таблица замен латинскими буквами); (в) замеряем долю alignment-пар,
+отклонённых ruMatches-guard'ом — для data-driven решения о будущем guard'а.
 
 **Файлы:** создать `scripts/build-frequency.mjs`,
 `tests/frequency-data.test.js`, сгенерировать
 `assets/data/lexicon/frequency.json`; изменить `package.json` (`build:data`).
 
 - [ ] Написать тест данных `tests/frequency-data.test.js` (он падает: файла ещё нет)
-- [ ] Написать `scripts/build-frequency.mjs` с инвариантами (счётчики из промпта)
+- [ ] Написать `scripts/build-frequency.mjs` с инвариантами (счётчики и guard-статистика)
 - [ ] Подключить скрипт к `npm run build:data` (после `convert-alignments.js`)
 - [ ] Сгенерировать `assets/data/lexicon/frequency.json`, тест зелёный
 - [ ] `npm run build:data` целиком проходит (старые инварианты не ослаблены)
@@ -493,6 +503,15 @@ tie-break'ом. В файл кладём только топ-1000 (слайде�
      it('леммы греческие и непустые', () => {
        items.forEach(i => expect(i.lemma).toMatch(/^[Ͱ-Ͽἀ-῿]/));
      });
+     it('translit присутствует и непустой у всех записей', () => {
+       items.forEach(i => {
+         expect(typeof i.translit).toBe('string');
+         expect(i.translit.length).toBeGreaterThan(0);
+       });
+     });
+     it('hasAlignment — булево поле', () => {
+       items.forEach(i => expect(typeof i.hasAlignment).toBe('boolean'));
+     });
      it('топ-3 корпуса: ὁ, καί, αὐτός', () => {
        expect(items[0]).toMatchObject({ strong: 3588, lemma: 'ὁ' });
        expect(items[1]).toMatchObject({ strong: 2532, lemma: 'καί' });
@@ -506,10 +525,47 @@ tie-break'ом. В файл кладём только топ-1000 (слайде�
    import path from 'node:path';
 
    const GRC_DIR = 'assets/data/bibles/grc';
+   const ALIGN_DIR = 'assets/data/bibles/align';
    const OUT = 'assets/data/lexicon/frequency.json';
    const TOP_LIMIT = 1000;
 
-   // strong → Map(lemma → count)
+   // ── SBL-транслитерация (справочная таблица, 0 лицензионных рисков) ──
+   const SBL_MAP = [
+     ['α', 'a'], ['β', 'b'], ['γ', 'g'], ['δ', 'd'], ['ε', 'e'],
+     ['ζ', 'z'], ['η', 'ē'], ['θ', 'th'], ['ι', 'i'], ['κ', 'k'],
+     ['λ', 'l'], ['μ', 'm'], ['ν', 'n'], ['ξ', 'x'], ['ο', 'o'],
+     ['π', 'p'], ['ρ', 'r'], ['σ', 's'], ['ς', 's'], ['τ', 't'],
+     ['υ', 'y'], ['φ', 'ph'], ['χ', 'ch'], ['ψ', 'ps'], ['ω', 'ō'],
+     ['ἀ', 'a'], ['ἁ', 'ha'], ['ἂ', 'ha'], ['ἃ', 'ha'], ['ἄ', 'ha'], ['ἅ', 'ha'], ['ἆ', 'ha'], ['ἇ', 'ha'],
+     ['ἐ', 'e'], ['ἑ', 'he'], ['ἒ', 'he'], ['ἓ', 'he'], ['ἔ', 'he'], ['ἕ', 'he'],
+     ['ἠ', 'ē'], ['ἡ', 'hē'], ['ἢ', 'hē'], ['ἣ', 'hē'], ['ἤ', 'hē'], ['ἥ', 'hē'], ['ἦ', 'hē'], ['ἧ', 'hē'],
+     ['ἰ', 'i'], ['ἱ', 'hi'], ['ἲ', 'hi'], ['ἳ', 'hi'], ['ἴ', 'hi'], ['ἵ', 'hi'], ['ἶ', 'hi'], ['ἷ', 'hi'],
+     ['ὀ', 'o'], ['ὁ', 'ho'], ['ὂ', 'ho'], ['ὃ', 'ho'], ['ὄ', 'ho'], ['ὅ', 'ho'],
+     ['ὐ', 'y'], ['ὑ', 'hy'], ['ὒ', 'hy'], ['ὓ', 'hy'], ['ὔ', 'hy'], ['ὕ', 'hy'], ['ὖ', 'hy'], ['ὗ', 'hy'],
+     ['ὠ', 'ō'], ['ὡ', 'hō'], ['ὢ', 'hō'], ['ὣ', 'hō'], ['ὤ', 'hō'], ['ὥ', 'hō'], ['ὦ', 'hō'], ['ὧ', 'hō'],
+     ['ὰ', 'a'], ['ά', 'a'], ['ὲ', 'e'], ['έ', 'e'], ['ὴ', 'ē'], ['ή', 'ē'],
+     ['ὶ', 'i'], ['ί', 'i'], ['ὸ', 'o'], ['ό', 'o'], ['ὺ', 'y'], ['ύ', 'y'],
+     ['ὼ', 'ō'], ['ώ', 'ō'], ['ᾶ', 'a'], ['ῆ', 'ē'], ['ῖ', 'i'], ['ῦ', 'y'], ['ῶ', 'ō'],
+   ];
+   function sblTransliterate(text) {
+     let out = '';
+     for (let i = 0; i < text.length; i++) {
+       let found = false;
+       for (const [gr, lat] of SBL_MAP) {
+         if (text.startsWith(gr, i)) {
+           out += lat;
+           i += gr.length - 1;
+           found = true;
+           break;
+         }
+       }
+       if (!found) out += text[i];
+     }
+     return out;
+   }
+
+   // ── Шаг 1: подсчёт частот лемм по Strong ──
+   // strong (string) → Map(lemma → count)
    const counts = new Map();
    for (const file of readdirSync(GRC_DIR).filter(f => f.endsWith('.json')).sort()) {
      const book = JSON.parse(readFileSync(path.join(GRC_DIR, file), 'utf8'));
@@ -528,15 +584,32 @@ tie-break'ом. В файл кладём только топ-1000 (слайде�
 
    const all = [...counts.entries()].map(([strong, lemmas]) => {
      const count = [...lemmas.values()].reduce((a, b) => a + b, 0);
-     // Самая частотная лемма для Strong; tie-break по алфавиту — детерминизм
      const lemma = [...lemmas.entries()]
        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'el'))[0][0];
      return { strong: Number(strong), lemma, count };
    });
    all.sort((a, b) => b.count - a.count || a.strong - b.strong);
 
-   // Инварианты корпуса (фактические значения на 2026-06: 5436 Strong,
-   // топ-1 ὁ G3588 = 19794). Запрещено ослаблять — только разбираться.
+   // ── Шаг 2: hasAlignment — участвует ли Strong в alignment-парах ──
+   const alignedStrongs = new Set();
+   for (const file of readdirSync(ALIGN_DIR).filter(f => f.endsWith('.json')).sort()) {
+     const book = JSON.parse(readFileSync(path.join(ALIGN_DIR, file), 'utf8'));
+     for (const ch of book.chapters) {
+       for (const v of ch.verses) {
+         const alignment = v.alignment;
+         const tokens = v.tokens;
+         if (!alignment || !tokens) continue;
+         for (const a of alignment) {
+           if (a.gr < tokens.length) {
+             const s = tokens[a.gr].strong;
+             if (s) alignedStrongs.add(String(s));
+           }
+         }
+       }
+     }
+   }
+
+   // ── Инварианты корпуса ──
    if (all.length < 5000 || all.length > 6000) {
      throw new Error(`инвариант: уникальных Strong ${all.length}, ожидалось 5000-6000`);
    }
@@ -544,9 +617,22 @@ tie-break'ом. В файл кладём только топ-1000 (слайде�
      throw new Error(`инвариант: топ-1 должен быть ὁ (G3588, ~19.8k), получено G${all[0].strong}:${all[0].count}`);
    }
 
-   const items = all.slice(0, TOP_LIMIT).map((it, i) => ({ rank: i + 1, ...it }));
+   const items = all.slice(0, TOP_LIMIT).map((it, i) => ({
+     rank: i + 1,
+     ...it,
+     translit: sblTransliterate(it.lemma),
+     hasAlignment: alignedStrongs.has(String(it.strong))
+   }));
    writeFileSync(OUT, JSON.stringify(items));
-   console.log(`frequency.json: ${items.length} лемм из ${all.length} Strong, топ-3: ${items.slice(0, 3).map(i => i.lemma).join(', ')}`);
+
+   // Статистика для отладки
+   const withAlign = items.filter(i => i.hasAlignment).length;
+   const withoutAlign = items.filter(i => !i.hasAlignment).length;
+   const disabledTop10 = items.slice(0, 10).filter(i => !i.hasAlignment).map(i => i.lemma);
+   console.log(`frequency.json: ${items.length} лемм из ${all.length} Strong`);
+   console.log(`hasAlignment=true: ${withAlign}, false: ${withoutAlign}`);
+   console.log(`Топ-10 без alignment: [${disabledTop10.join(', ')}]`);
+   console.log(`Топ-3: ${items.slice(0, 3).map(i => `${i.lemma} (G${i.strong}, ${i.count}, align=${i.hasAlignment})`).join(', ')}`);
 
 3) package.json: "build:data": "node scripts/convert-alignments.js && node scripts/build-frequency.mjs"
 
@@ -554,224 +640,259 @@ tie-break'ом. В файл кладём только топ-1000 (слайде�
    npm test — тест данных зелёный. npm run build.
 
 Лицензии: новых источников нет, frequency.json — производная уже
-закоммиченных greческих данных (происхождение — docs/clear-bible-alignments/).
+закоммиченных греческих данных (происхождение — docs/clear-bible-alignments/).
+Транслитерация — механика (таблица замен), не контент; лицензионных рисков 0.
 
-Коммит: "feat: corpus-derived NT lemma frequency list (top-1000)"
+Коммит: "feat: corpus-derived NT lemma frequency list (top-1000) with translit and hasAlignment"
 ```
 
 ---
 
-### Задача 4.2 — настройка `freqTopN` и регулятор в настройках
+### Задача 4.2 — перестройка экрана словаря под мастер-список
 
-**Логика:** новый ключ настроек `freqTopN` (0 = выкл, иначе 50–500) с
-аддитивным дефолтом — merge в `loadSettings()` уже подхватит его для старых
-пользователей без миграции (решение №6). UI — дискретный слайдер в настройках,
-по образцу существующего слайдера интенсивности; подпись объясняет, что слой
-работает в режиме 3. Изменение `freqTopN` меняет картину замен → читалка
-перечитает настройки при следующем монтировании (переход между экранами —
-смена hash-маршрута, читалка перемонтируется).
+**Логика:** текущий экран словаря показывает только слова, уже добавленные
+пользователем (~0–80), с табами «Все/Новые/Учу/Знаю» и кнопкой «+ Добавить
+слова» с панелью из `core.json`. Новый экран показывает **весь частотный
+список** из `frequency.json` (~1000 строк), каждая строка = лемма + ранг +
+частота + транслит + бейдж статуса (если слово в личном словаре) + чекбокс
+`showInText`. Строка заблокирована (серый цвет, чекбокс disabled), если
+`hasAlignment === false` — слово не может появиться в тексте ни в каком
+режиме. Тап по строке раскрывает настройки слова (статус, intensity, forms) —
+как сейчас, но с дополнительной информацией из частотного списка. Поиск по
+лемме фильтрует список на лету.
 
-**Файлы:** изменить `src/state/settings.js`, `src/ui/screens/settings.js`.
+**Файлы:** изменить `src/ui/screens/dictionary.js`, создать
+`src/data/lexicon-loader.js` (добавить `loadFrequency`); изменить
+`src/ui/components/word-card.js` (расширить карточку для freq-* слов).
 
-- [ ] `settings.js` (state): добавить `freqTopN: 0` в `DEFAULTS`
-- [ ] Экран настроек: секция «Частотные слова» со слайдером по шкале `[0, 50, 100, 200, 300, 500]` и живой подписью («выкл» / «топ-N»)
-- [ ] Подсказка под слайдером: «Леммы самых частотных слов НЗ в режиме 3. Замены — только по выравниванию с оригиналом»
-- [ ] Сохранение через `saveSettings` по паттерну соседних контролов
-- [ ] Ручная проверка (включая возврат в читалку и перемонтирование)
-- [ ] Коммит
-
-**Промпт:**
-```text
-Добавь настройку частотного слоя freqTopN со слайдером.
-
-Прочитай AGENTS.md (доступность, весь текст по-русски, никакой «умной»
-адаптации — только ручное управление) и src/ui/screens/settings.js
-(секция «Интенсивность греческого», строки ~111-145 — образец слайдера).
-
-1) src/state/settings.js: в DEFAULTS добавь
-     freqTopN: 0,            // 0=выкл | 50 | 100 | 200 | 300 | 500 — частотный слой режима 3
-   Больше ничего: loadSettings() уже мержит DEFAULTS с сохранённым объектом,
-   старые пользователи получат 0 автоматически. Ключи IndexedDB не меняются.
-
-2) src/ui/screens/settings.js: после секции «Интенсивность греческого»
-   добавь секцию (тот же паттерн: section.progress-section + h3):
-   - h3: «Частотные слова»
-   - слайдер: <input type="range" min="0" max="5" step="1">, индекс
-     маппится в STOPS = [0, 50, 100, 200, 300, 500];
-     value = STOPS.indexOf(settings.freqTopN), при отсутствии — 0.
-   - живая подпись рядом со слайдером: «выкл» при 0, иначе «топ-N слов»;
-     обновляется на input.
-   - aria: label связан со слайдером, aria-valuetext = текст подписи.
-   - под слайдером поясняющий <p class="hint">: «Леммы самых частотных слов
-     Нового Завета подмешиваются в режиме 3. Замены — только по выравниванию
-     с оригиналом.»
-   - сохранение: на change → settings.freqTopN = STOPS[+input.value];
-     saveSettings(settings) — тем же способом, что соседние контролы
-     (посмотри, как сохраняет слайдер интенсивности, и повтори паттерн,
-     включая дебаунс, если он там есть).
-
-3) Ручная проверка (npm run dev):
-   - Слайдер двигается по 6 позициям, подпись меняется, значение
-     сохраняется после перезагрузки страницы.
-   - Touch target и фокус: слайдер достижим с клавиатуры, виден
-     :focus-visible.
-   - 375px и 1280px, светлая и тёмная тема.
-4) npm test && npm run build.
-
-Коммит: "feat: freqTopN setting with discrete slider in settings screen"
-```
-
----
-
-### Задача 4.3 — подмешивание частотных слов в читалке
-
-**Логика:** частотный слой — это просто дополнительные записи в `wordEntries`
-перед вызовом `composeVerse`: для каждого Strong из топ-N, не покрытого личным
-словарём, создаётся запись с `forms: 'lemma'` и `intensityPct: 100` (слово либо
-в топ-N и заменяется всегда, либо нет — пользователь управляет одним числом N).
-Если Strong есть в `core.json`, берём оттуда id и `ruMatches` (guard работает,
-тап открывает полноценную карточку с «Добавить в словарь»); иначе — виртуальная
-запись `freq-<strong>` без guard'а, тап показывает минимальную карточку
-(лемма + грамматика + Strong) по образцу карточки токена режима 5. Личное слово
-со `showInText: false` (скрыто пользователем) частотный слой не воскрешает.
-
-**Файлы:** изменить `src/data/lexicon-loader.js`, `src/ui/screens/reading.js`.
-
-- [ ] `lexicon-loader.js`: `loadFrequency()` с кешем и fail-soft `null` (по образцу `loadCoreLexicon`)
-- [ ] `reading.js` mount: грузить frequency.json, если `settings.freqTopN > 0`
-- [ ] `buildWordEntries()`: после личных записей подмешать топ-N (только при `settings.mode === 3 && freqTopN > 0`; пропуск покрытых Strong и скрытых слов)
-- [ ] Тап по частотному слову: core-слова — обычная карточка; `freq-*` — минимальная карточка (лемма, грамматика через `formatMorphRu`, Strong)
+- [ ] `lexicon-loader.js`: добавить `loadFrequency()` с кешем и fail-soft (по образцу `loadCoreLexicon`)
+- [ ] `dictionary.js` mount: грузить `frequency.json` через `loadFrequency()`
+- [ ] Отрисовка списка: виртуализация или пагинация для 1000+ строк; DOM-окно по образцу `reading.js` (сразу N строк, IntersectionObserver для подгрузки)
+- [ ] Каждая строка: `<span class="rank">`, `<span class="lemma">`, `<span class="translit">`, `<span class="freq">` (частота), бейдж статуса (цветной, только если слово в словаре), чекбокс `showInText`
+- [ ] Disabled-логика: `!item.hasAlignment` → строка `.disabled`, чекбокс disabled, тултип «Не участвует в подстановках»
+- [ ] Поиск: `<input type="search">`, фильтр по `lemma` и `translit` на лету
+- [ ] Тап по строке → bottom-sheet/инспектор с полной карточкой слова (лемма, транслит, глосс, POS, Strong, частота, ранг, настройки статуса/intensity/forms/showInText)
+- [ ] Изменение чекбокса/статуса/intensity → запись в IndexedDB через `dictionary.js`, немедленное отражение в списке
 - [ ] Ручная проверка по чеклисту промпта
 - [ ] Коммит
 
 **Промпт:**
 ```text
-Подмешай частотные слова в режим 3 читалки.
+Перестрой экран «Словарь» в мастер-список частотных слов НЗ.
 
-Прочитай AGENTS.md, src/ui/screens/reading.js (buildWordEntries ~строка 525,
-handleWordTap ~строка 699, handleGrcTokenTap ~строка 730) и
-src/data/lexicon-loader.js.
+Прочитай AGENTS.md, src/ui/screens/dictionary.js (текущая реализация),
+src/ui/screens/reading.js (образец: DOM-окно для глав, IntersectionObserver,
+паттерн buildWordEntries), src/data/lexicon-loader.js,
+src/state/dictionary.js и DEVELOPMENT_4.md «Принятые решения» (№6).
 
-1) lexicon-loader.js — по образцу loadCoreLexicon добавь:
+1) В lexicon-loader.js добавь loadFrequency() — по образцу loadCoreLexicon:
+   кеш в модульной переменной, fetch('./data/lexicon/frequency.json'),
+   fail-soft return null при 404/ошибке сети.
 
-   let frequencyCache = null;
+2) В dictionary.js mount():
+   - загрузи frequency.json: const freqList = await loadFrequency();
+   - сохрани в модульную переменную (нужна при переключении табов/поиске)
+   - если freqList === null → покажи сообщение «Частотный список недоступен»
+     и отрендери только личные слова (старое поведение как fallback)
+   - загрузи coreLexicon (для глоссов) и dictionary (для статусов/чекбоксов)
 
-   export async function loadFrequency() {
-     if (frequencyCache) return frequencyCache;
-     try {
-       const res = await fetch('./data/lexicon/frequency.json');
-       if (!res.ok) {
-         if (res.status === 404) return null;
-         throw new Error(`HTTP ${res.status}`);
+3) UI экрана — полная переделка mount():
+
+   a) Поисковая строка вверху:
+      <input type="search" class="dict-search" placeholder="Поиск по лемме..."
+             aria-label="Поиск слов в словаре">
+
+   b) Список слов — контейнер <div class="dict-list">. Для 1000+ строк
+      используй упрощённое DOM-окно: отрендери первые 100 строк сразу,
+      остальные — по IntersectionObserver (сентинел в конце списка
+      дорендеривает следующую партию из 100). Схема та же, что в reading.js
+      для глав, но проще: нет сложной геометрии с placeholder'ами разной
+      высоты — можно просто рендерить порциями по 100 и append'ить.
+
+   c) Каждая строка — <div class="dict-row" data-strong="...">:
+
+      <div class="dict-row ${!item.hasAlignment ? 'dict-row--disabled' : ''}">
+        <span class="dict-rank">${item.rank}</span>
+        <span class="dict-lemma">${item.lemma}</span>
+        <span class="dict-translit">${item.translit}</span>
+        <span class="dict-freq">${item.count}</span>
+        ${statusBadge}   <!-- цветной бейдж new/learning/known или пусто -->
+        <label class="dict-check">
+          <input type="checkbox" ${entry?.showInText !== false ? 'checked' : ''}
+                 ${!item.hasAlignment ? 'disabled' : ''}
+                 aria-label="Показывать ${item.lemma} в тексте">
+        </label>
+      </div>
+
+      - statusBadge: если слово есть в dictionary, показать бейдж
+        (зелёный=known, золотой=learning, синий=new). Если нет в словаре —
+        нет бейджа.
+      - Строка с hasAlignment=false: класс dict-row--disabled даёт
+        opacity: 0.4, чекбокс disabled.
+      - При наведении на disabled-строку — title «Не участвует в подстановках
+        (слово не выровнено ни в одном стихе НЗ)».
+
+   d) При изменении чекбокса (событие change):
+      - Если слово НЕ в dictionary: добавить запись через addWord(id, dict),
+        затем setWordSetting(id, 'showInText', checked, dict).
+        id = lexemeId из coreLexicon, если слово там есть, иначе `freq-<strong>`.
+      - Если слово уже в dictionary: setWordSetting(id, 'showInText', checked, dict).
+      - Сохранить словарь: await saveDictionary(updated).
+      - Бейдж статуса обновить (появился «new» при первом добавлении).
+
+   e) Тап по строке (не по чекбоксу) — открыть карточку слова:
+      - Найти lexeme в coreLexicon (может отсутствовать для freq-*).
+      - Найти dictEntry в dictionary.
+      - Если lexeme найден — renderWordCard как сейчас (лемма, транслит,
+        глосс, POS, Strong, кнопки статуса, настройки intensity/forms).
+      - Если lexeme НЕ найден (freq-* слово) — минимальная карточка:
+        лемма, транслит (из frequency.json), частота/ранг, грамматика
+        (formatMorphRu — нужно будет достать morph из grc-данных;
+        если сложно, опусти грамматику в первой версии), Strong.
+        Внизу кнопка «Добавить в словарь» (addWord с id `freq-<strong>`).
+      - Все изменения настроек в карточке пишутся через dictionary.js
+        и сразу отражаются на строке в списке (обновить DOM строки точечно,
+        без перерендера всего списка).
+
+   f) Поиск: input.addEventListener('input', ...) → фильтровать freqList
+      по item.lemma.includes(query) || item.translit.includes(query).
+      Перерендерить список (можно без DOM-окна — отфильтрованный список
+      редко бывает >100 строк). Дебаунс 150 мс.
+
+4) Ручная проверка (npm run dev):
+   - Экран «Словарь» показывает 1000 строк, прокрутка плавная.
+   - Служебные слова (ὁ, καί, δέ) — в топе, но disabled (серые).
+   - Включение чекбокса у θεός → слово появляется в тексте в режиме 3
+     (при переходе на вкладку «Читать»).
+   - Выключение чекбокса → слово исчезает из текста.
+   - Поиск «αγαπ» → фильтрует до ἀγάπη, ἀγαπάω.
+   - Тап по слову из core.json → полная карточка со статусом/intensity/forms.
+   - Тап по freq-* слову → минимальная карточка, кнопка «Добавить в словарь».
+   - 375px и 1280px, светлая и тёмная тема.
+5) npm test && npm run build.
+
+Коммит: "feat: dictionary screen as master frequency list with checkboxes"
+```
+
+---
+
+### Задача 4.3 — buildWordEntries: все слова с showInText, включая freq-*
+
+**Логика:** после перестройки словаря `buildWordEntries()` должен обрабатывать
+ВСЕ слова с `showInText: true` — как из `core.json`, так и `freq-*`.
+Текущая реализация итерирует `coreLexicon` и проверяет `dictionary[id]` — она
+не видит `freq-*` записей. Новая логика: идти по `dictionary`, для каждой
+записи с `showInText !== false` строить entry, подхватывая `ruMatches`-guard
+из `coreLexicon` если доступен, иначе — пустой guard.
+
+**Файлы:** изменить `src/ui/screens/reading.js` (функцию `buildWordEntries`).
+
+- [ ] `buildWordEntries()`: переписать с итерации по `coreLexicon` на итерацию по `dictionary`
+- [ ] Для freq-* записей: `lexemeId = id`, искать `lemma`/`strongNum` через `frequencyList` (индекс по Strong)
+- [ ] `npm test` зелёный, ручная проверка: freq-* слова из словаря появляются в тексте
+- [ ] Коммит
+
+**Промпт:**
+```text
+Научи buildWordEntries обрабатывать freq-* слова из словаря.
+
+Прочитай AGENTS.md, src/ui/screens/reading.js (buildWordEntries, ~строка 525)
+и src/state/dictionary.js (getActive).
+
+Сейчас buildWordEntries итерирует coreLexicon и для каждого слова проверяет
+dictionary[id]. После задачи 4.2 в словаре могут быть freq-* записи
+(с id вида `freq-<strong>`, отсутствующие в coreLexicon). Их нужно тоже
+передавать в движок.
+
+1) Перепиши buildWordEntries():
+
+   function buildWordEntries() {
+     wordEntries = [];
+     const active = getActive(dictionary);  // записи с showInText !== false
+     if (active.length === 0) return;
+
+     // Индекс coreLexicon по id для быстрого поиска ruMatches
+     const coreById = new Map(coreLexicon.map(l => [l.id, l]));
+
+     // Индекс frequencyList по strong (строка) для freq-* записей
+     const freqByStrong = new Map();
+     if (frequencyList) {
+       for (const item of frequencyList) {
+         freqByStrong.set(String(item.strong), item);
        }
-       frequencyCache = await res.json();
-       return frequencyCache;
-     } catch (e) {
-       console.warn('loadFrequency error:', e);
-       return null;
      }
-   }
 
-2) reading.js:
-   - модульная переменная let frequencyList = null;
-   - в mount(), там где грузятся settings/coreLexicon: если
-     settings.freqTopN > 0 → frequencyList = await loadFrequency();
-     (фейл тихий: frequencyList останется null, слой просто не включится).
-     Грузим при freqTopN > 0 независимо от режима: режим переключается
-     из топ-бара без перемонтирования экрана.
+     const intensityMap = { often: 100, sometimes: 50, rare: 25 };
 
-3) buildWordEntries() — после цикла по личному словарю добавь:
+     for (const { lexemeId, intensity, status, forms } of active) {
+       const core = coreById.get(lexemeId);
 
-   // Частотный слой (только режим 3): топ-N лемм по корпусной частоте.
-   // Личные настройки слова приоритетны; скрытые слова не воскрешаем.
-   if (settings.mode === 3 && settings.freqTopN > 0 && frequencyList) {
-     const covered = new Set(wordEntries.map(e => String(e.strongNum)));
-     for (const item of frequencyList.slice(0, settings.freqTopN)) {
-       const key = String(item.strong);
-       if (covered.has(key)) continue;
-       const lex = coreLexicon.find(l => l.strong === item.strong);
-       if (lex && dictionary[lex.id]) continue; // скрыто или особый статус — решает словарь
+       let lemma, strongNum, regexps, excludeRegexps;
+
+       if (core) {
+         // Слово из coreLexicon — полный guard
+         lemma = core.lemma;
+         strongNum = core.strong;
+         regexps = core.ruMatches.map(r => new RegExp(r, 'iu'));
+         excludeRegexps = (core.ruExclude || []).map(r => new RegExp(r, 'iu'));
+       } else {
+         // freq-* слово — ищем в frequencyList по Strong
+         const strongKey = lexemeId.startsWith('freq-') ? lexemeId.replace('freq-', '') : null;
+         const freqItem = strongKey ? freqByStrong.get(strongKey) : null;
+         if (!freqItem) continue;  // неизвестное слово — пропускаем
+         lemma = freqItem.lemma;
+         strongNum = freqItem.strong;
+         regexps = [];        // нет guard'а — выравнивание достаточная гарантия
+         excludeRegexps = [];
+       }
+
        wordEntries.push({
-         lexemeId: lex ? lex.id : `freq-${key}`,
-         lemma: item.lemma,
-         strongNum: item.strong,
-         forms: 'lemma',
-         regexps: lex ? lex.ruMatches.map(r => new RegExp(r, 'iu')) : [],
-         excludeRegexps: lex ? (lex.ruExclude || []).map(r => new RegExp(r, 'iu')) : [],
-         intensityPct: 100,
-         status: 'new'
+         lexemeId,
+         lemma,
+         strongNum,
+         forms: forms || 'lemma',
+         regexps,
+         excludeRegexps,
+         intensityPct: intensityMap[intensity] || 100,
+         status: status || 'new'
        });
      }
    }
 
-4) Карточка по тапу. handleWordTap сейчас молча выходит, если lexemeId нет в
-   coreLexicon — для freq-* добавь фолбэк:
+   Убедись, что intensityMap остался (intensity из IndexedDB — строка
+   'often'|'sometimes'|'rare', как в DEFAULTS dictionary.js).
 
-   const lexeme = coreLexicon.find(l => l.id === lexemeId);
-   if (!lexeme) {
-     if (lexemeId.startsWith('freq-')) handleFreqWordTap(span, container);
-     return;
-   }
+2) В mount() добавь загрузку frequencyList (если ещё не сделано в 4.2):
+   если frequencyList ещё не загружен → frequencyList = await loadFrequency();
 
-   Новая функция handleFreqWordTap — по образцу handleGrcTokenTap, но для
-   span'а замены (данные лежат в data-атрибутах, см. render.js):
+3) npm test (compose.test.js и form-layer.test.js не должны сломаться —
+   контракт wordEntries не меняется).
 
-   function handleFreqWordTap(span, container) {
-     const lemma = span.textContent;
-     const morph = span.getAttribute('data-morph');
-     const strong = parseInt(span.getAttribute('data-strong')) || 0;
-     const original = span.getAttribute('data-original');
-     const showGrammar = settings.show?.grammar !== false;
-     const showStrongs = settings.show?.strongs === true;
+4) Ручная проверка (npm run dev), режим 3, Иоанн 1:
+   - На странице словаря включить чекбокс у freq-* слова (например,
+     σπλαγχνίζομαι G4697, если есть в списке и имеет alignment).
+   - Перейти на вкладку «Читать» → слово появляется в тексте (леммой).
+   - Выключить чекбокс → слово исчезает.
+   - Слова из core.json работают как раньше (guard активен).
+5) npm run build.
 
-     const card = document.createElement('div');
-     card.className = 'card word-card';
-     card.innerHTML = `
-       <div class="word-card-lemma">${lemma}</div>
-       ${original ? `<div class="word-card-replaces">Сейчас заменяет: «${original}»</div>` : ''}
-       ${showGrammar && morph ? `<p><strong>Грамматика:</strong> ${formatMorphRu(morph)}</p>` : ''}
-       ${showStrongs && strong ? `<p><strong>Strong:</strong> G${strong}</p>` : ''}
-       <p class="word-card-note">Частотное слово — вне личного словаря</p>
-     `;
-     if (window.innerWidth >= 900) showInInspector(card); else openBottomSheet(card);
-   }
-
-   Импортируй formatMorphRu из ../../engine/morphology.js (в reading.js его
-   ещё нет — проверь и добавь). Слова из core.json, попавшие через частотный
-   слой, идут по обычной ветке handleWordTap: lexeme найдётся, dictEntry
-   будет undefined → карточка покажет «Добавить в словарь» (это уже
-   работает в renderWordCard).
-
-5) Ручная проверка (npm run dev), режим 3, Иоанн 1:
-   - freqTopN=выкл → только слова личного словаря.
-   - freqTopN=топ-50 → в тексте появились леммы (ὁ и καί почти не появятся —
-     артикли и союзы редко выравнены, это норма; смотри на θεός, λέγω, ζωή).
-   - Тап по частотному слову из core.json → полная карточка с «Добавить
-     в словарь»; добавление переводит слово в личный словарь.
-   - Тап по слову вне core.json → минимальная карточка с леммой,
-     грамматикой, Strong (Strong виден только при включённой настройке).
-   - Личное слово со скрытым показом (showInText=false) не появляется.
-   - Режим 4: частотный слой НЕ активен.
-   - Переключение режима из топ-бара 3↔4 сразу перестраивает замены.
-   - 375px и 1280px, светлая и тёмная тема.
-6) npm test && npm run build.
-
-Коммит: "feat: frequency layer mixes top-N lemmas into mode 3"
+Коммит: "feat: buildWordEntries processes all dictionary words including freq-*"
 ```
 
 ---
 
 ### Задача 4.4 — сквозная ручная проверка фичи
 
-**Логика:** фазы 1–4 меняют ядро замен. Перед документацией — полный ручной
-прогон по всем режимам и состояниям, как перед релизом (UI у нас тестируется
-только руками — AGENTS.md).
+**Логика:** фазы 1–4 меняют ядро замен и экран словаря. Перед документацией —
+полный ручной прогон по всем режимам и состояниям, как перед релизом (UI у нас
+тестируется только руками — AGENTS.md).
 
 **Файлы:** нет изменений кода (фиксы — отдельными коммитами в рамках задачи).
 
-- [ ] Режимы 1–2: буквенный слой без изменений (интенсивность, карточки букв)
-- [ ] Режим 3: замены только по выравниванию; леммы; карточки; «Я знаю»; per-word интенсивность «иногда/редко» влияет на частоту замен
-- [ ] Режим 3 + freqTopN: 0/50/500 — плотность замен растёт с N
+- [ ] Режимы 1–2: буквенный слой без изменений (интенсивность, карточки букв); слайдер интенсивности влияет только на буквы
+- [ ] Режим 3: замены только по выравниванию; леммы; карточки слов; «Я знаю»; per-word интенсивность «иногда/редко» влияет на частоту замен
+- [ ] Режим 3: слова из словаря (включая freq-*) с `showInText: true` видны в тексте; с `showInText: false` — не видны
+- [ ] Экран словаря: 1000 строк, прокрутка, поиск, чекбоксы, disabled-строки для служебных слов
 - [ ] Режим 4: реальные формы; невыровненные слова русские; per-word интенсивность работает
 - [ ] Режим 5: без изменений (греческий основной, карточки токенов)
 - [ ] Деградация: выключить сеть, очистить кеш греческой книги → режимы 3–4 показывают тост «словарные замены отключены», буквенный слой жив
@@ -788,6 +909,7 @@ npm run dev и пройди чеклист задачи 4.4 в DEVELOPMENT_4.md 
 отмечая чекбоксы. Особое внимание:
 - Ин 1:1 в режиме 3: «было» НЕ заменяется на γίνομαι (в оригинале ἦν от
   εἰμί) — это контрольный кейс точности, ради него всё затевалось.
+- Экран словаря: ὁ (G3588) и καί (G2532) должны быть disabled (серые).
 - Per-word интенсивность: поставь у слова словаря «редко» и убедись, что
   в режимах 3 и 4 оно заменяется заметно реже, чем при «часто».
 - Деградация без сети: DevTools → Network offline, Application → Cache
@@ -805,21 +927,21 @@ npm run dev и пройди чеклист задачи 4.4 в DEVELOPMENT_4.md 
 **Логика:** `DEVELOPMENT_1.md` разделы 3–4 — живой источник правды о продукте
 и архитектуре (так сказано в AGENTS.md), а там режим 3 всё ещё описан как
 regex-механизм и в структуре файлов значится `word-layer.js`. Документация
-обязана отражать новое ядро, иначе следующий агент построит работу на
-устаревшей спеке.
+обязана отражать новое ядро и новый экран словаря, иначе следующий агент
+построит работу на устаревшей спеке.
 
 **Файлы:** изменить `docs/development/DEVELOPMENT_1.md`, проверить `README.md`,
 `AGENTS.md`.
 
 - [ ] Таблица режимов (3.4): режим 3 → «form-layer по выравниванию (леммы); без выравнивания замен нет»
-- [ ] Структура файлов (3.2, ~строка 90): убрать `word-layer.js`, обновить описание `form-layer.js` (режимы 3–5)
-- [ ] В 3.4 добавить абзац о частотном слое (`freqTopN`, frequency.json, только режим 3)
+- [ ] Структура файлов (3.2): убрать `word-layer.js`, обновить описание `form-layer.js` (режимы 3–5)
+- [ ] В 3.4 добавить абзац о частотном слое: `assets/data/lexicon/frequency.json` (корпусная частотность, топ-1000 лемм), страница словаря как мастер-список с чекбоксами, управление через `dictionary.showInText`, `hasAlignment` для disabled-логики
 - [ ] Грепнуть `word-layer|applyWordLayer|ruMatches` по `README.md`, `AGENTS.md`, `docs/` — поправить устаревшие упоминания (кроме архивных DEVELOPMENT_1..3-roadmap-разделов, они история)
 - [ ] `npm run build` чистый, коммит
 
 **Промпт:**
 ```text
-Приведи документацию в соответствие с новым ядром замен.
+Приведи документацию в соответствие с новым ядром замен и экраном словаря.
 
 1) docs/development/DEVELOPMENT_1.md:
    - Таблица режимов в 3.4: строка режима 3 → слои «form-layer по
@@ -829,40 +951,53 @@ regex-механизм и в структуре файлов значится `w
      буквенный слой (решение от 2026-06-12, DEVELOPMENT_4.md)».
    - Структура файлов в 3.2: удали строку word-layer.js, у form-layer.js
      опиши «режимы 3-5: замены по выравниванию (леммы или реальные формы)».
-   - В 3.4 после описания движка добавь абзац про частотный слой: настройка
-     freqTopN (0/50/100/200/300/500), данные assets/data/lexicon/frequency.json
-     (корпусная частотность, scripts/build-frequency.mjs, топ-1000),
-     работает только в режиме 3, intensityPct 100, личный словарь приоритетен.
+   - В 3.4 после описания движка добавь абзац про частотный слой: данные
+     assets/data/lexicon/frequency.json (корпусная частотность,
+     scripts/build-frequency.mjs, топ-1000 лемм с рангом, частотой,
+     транслитерацией, hasAlignment). Экран словаря показывает все 1000 лемм,
+     пользователь управляет видимостью через чекбоксы showInText. Слова без
+     alignment-пар (hasAlignment=false) отображаются как недоступные.
+   - Обнови раздел 4.4 (Словарь): вместо фильтров «Все/Новые/Учу/Знаю» и
+     кнопки «+ Добавить слова» — мастер-список всех слов с поиском,
+     чекбоксами, disabled-логикой для служебных слов.
 2) Грепни README.md, AGENTS.md и docs/ на word-layer, applyWordLayer,
    ruMatches. Правь только живые описания (README, AGENTS, разделы 3-4
    DEVELOPMENT_1) — выполненные roadmap-разделы и DEVELOPMENT_2/3 не трогай,
    это архив.
 3) npm run build (докам он не нужен, но гейт перед коммитом обязателен).
 
-Коммит: "docs: spec reflects alignment-only substitutions and frequency layer"
+Коммит: "docs: spec reflects alignment-only substitutions, frequency layer, and dictionary master list"
 ```
 
 ---
 
 ## За пределами этого roadmap'а (не делать без отдельного решения)
 
-- **Внешний частотный словарь** (глоссы, транслитерация, 5000+ слов) из
+- **Внешний частотный словарь** (русские глоссы, 5000+ слов) из
   `docs/greek-nt-frequency-sources/` — заблокирован license review
-  (`notes/license-review.md`). После него частотные слова получат полноценные
-  карточки и «Добавить в словарь» для слов вне `core.json`.
+  (`notes/license-review.md`). После него `frequency.json` расширится полем
+  `gloss` и все слова (не только core.json) получат полноценные карточки с
+  переводом.
+- **Частотники по книгам** — отдельные `frequency-<bookId>.json`, фильтр
+  книги на странице словаря (селектор «Весь НЗ» / конкретная книга).
+  Disabled-логика тогда учитывает alignment в выбранной книге: слово,
+  которое ни разу не выровнено в Марке, становится disabled при фильтре
+  «Евангелие от Марка».
 - **Частотный слой в режиме 4** (реальные формы топ-N слов) — механика готова
   (те же записи без форсирования леммы), нужно только продуктовое решение.
 - **Удаление `ruMatches`-guard'а** — только после статистики, что guard ничего
   не отклоняет на всём корпусе (сейчас он — вторая линия защиты точности).
-- **Пер-словная интенсивность для частотного слоя** — сейчас намеренно
-  фиксированная 100, управление — одним числом N.
+  Статистику частично собирает `build-frequency.mjs`.
+- **Расширенная карточка freq-* слов** (грамматика, места употребления) —
+  требует либо хранения morph в frequency.json, либо lookup в grc-данных на
+  лету.
 
 ## Сводка фаз
 
 | Фаза | Результат | Коммитов |
 |---|---|---|
-| 1 | Режим 3 заменяет по выравниванию, ложных замен нет | 3 |
+| 1 | Режим 3 заменяет по выравниванию, ложных замен нет, per-word интенсивность работает | 3 |
 | 2 | Режим 4 без regex-fallback'ов | 1 |
 | 3 | word-layer и мёртвый код удалены | 1 |
-| 4 | Частотный слайдер топ-N работает в режиме 3 | 4 |
+| 4 | Частотный словарь (frequency.json), экран-мастер-список с чекбоксами, buildWordEntries для freq-* | 3 |
 | 5 | Спецификация соответствует коду | 1 |
