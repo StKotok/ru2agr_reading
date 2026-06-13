@@ -27,9 +27,13 @@ export function applyFormLayer(verseText, grcTokens, alignment, dictEntries, opt
   const segments = [];
 
   // Строим карту: индекс русского слова → греческий токен
+  // Пары с q:"u" (uncertain) пропускаются — слово остаётся без подсветки
   const alignMap = new Map();
+  const qualityMap = new Map(); // ruIdx → quality level для "f" пар
   for (const a of alignment) {
+    if (a.q === 'u') continue;
     alignMap.set(a.ru, a.gr);
+    if (a.q === 'f') qualityMap.set(a.ru, 'f');
   }
 
   // Карта strong → dictEntry для быстрого поиска
@@ -89,14 +93,16 @@ export function applyFormLayer(verseText, grcTokens, alignment, dictEntries, opt
             greekText = greekText[0].toUpperCase() + greekText.slice(1);
           }
 
-          segments.push({
+          const seg = {
             greek: greekText,
             original: cleanWord || ruWord,
             kind: 'form',
             lexemeId: dictEntry.lexemeId,
             morph: grToken.morph,
             strong: grToken.strong
-          });
+          };
+          if (qualityMap.has(wi)) seg.quality = 'f';
+          segments.push(seg);
 
           // Добавляем trailing punctuation как отдельный plain-сегмент
           if (trailingPunct) {

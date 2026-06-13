@@ -275,6 +275,10 @@ input[type="checkbox"] {
   border-radius: 2px;
 }
 
+.gr-f {
+  opacity: 0.6;
+}
+
 .gr:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;

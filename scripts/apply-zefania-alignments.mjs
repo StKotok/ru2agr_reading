@@ -285,7 +285,7 @@ function buildVerseAlignment(
 
         const pos = strongUsage[s] || 0;
         if (pos < candidates.length && !candidates[pos].consumed) {
-          alignment.push({ ru: ruIdx, gr: candidates[pos].grIdx });
+          alignment.push({ ru: ruIdx, gr: candidates[pos].grIdx, src: 'z' });
           candidates[pos].consumed = true;
           strongUsage[s] = pos + 1;
         }
@@ -301,7 +301,7 @@ function buildVerseAlignment(
 
       const pos = strongUsage[lex.strong] || 0;
       if (pos < candidates.length && !candidates[pos].consumed) {
-        alignment.push({ ru: ruIdx, gr: candidates[pos].grIdx });
+        alignment.push({ ru: ruIdx, gr: candidates[pos].grIdx, src: 'l' });
         candidates[pos].consumed = true;
         strongUsage[lex.strong] = pos + 1;
       }

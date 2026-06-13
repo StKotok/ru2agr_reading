@@ -20,6 +20,21 @@ let progress = null;
 let settings = null;
 let bookData = null;
 let grcBookData = null;
+let grcVerseMap = null;
+
+function buildGrcVerseMap() {
+  if (!grcBookData) { grcVerseMap = null; return; }
+  grcVerseMap = new Map();
+  for (const ch of grcBookData.chapters) {
+    for (const v of ch.verses) {
+      grcVerseMap.set(`${ch.n}:${v.n}`, v);
+    }
+  }
+}
+
+function getGrcVerse(chapterN, verseN) {
+  return grcVerseMap?.get(`${chapterN}:${verseN}`);
+}
 let alphabet = null;
 let letterNames = null;
 let scrollTimer = null;
@@ -50,6 +65,7 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
   if (!bookData || bookData.id !== bookId) return false;
   if (grc) {
     grcBookData = grc;
+    buildGrcVerseMap();
     return true;
   }
   if (showToastOnFail && settings.mode >= 3) {
@@ -79,6 +95,14 @@ export async function mount(container, ctx) {
     }
   }
 
+  // ВРЕМЕННО: если онбординг пропущен и буквы не введены — вводим все буквы как known
+  if (Object.keys(progress.letters).length === 0 && alphabet && alphabet.length > 0) {
+    const today = new Date().toISOString().split('T')[0];
+    for (const l of alphabet) {
+      progress.letters[l.lower] = { status: 'known', introducedAt: today };
+    }
+    saveProgress(progress);
+  }
 
   // Публикуем в store
   store.update(s => ({ ...s, settings, progress }));
@@ -131,6 +155,7 @@ export async function mount(container, ctx) {
     const results = await Promise.all(loadPromises);
     bookData = results[0];
     grcBookData = results[1] || null;
+    if (grcBookData) buildGrcVerseMap();
   } catch (e) {
     skeleton.remove();
     container.appendChild(createErrorState(bookId));
@@ -412,9 +437,9 @@ function renderWindowed() {
         p.appendChild(document.createTextNode(verse.text));
       } else if (settings.mode === 5) {
         // Режим 5: греческий как основной текст
-        const chIdx = ch.n - 1;
-        const vIdx = verse.n - 1;
-        const grcVerse = grcBookData?.chapters[chIdx]?.verses[vIdx];
+        
+        
+          const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
           const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
@@ -428,9 +453,9 @@ function renderWindowed() {
         // Добавляем grcVerse и alignment для режимов 3-5
         const verseCtx = { ...composeCtx };
         if (grcBookData && settings.mode >= 3) {
-          const chIdx = ch.n - 1;
-          const vIdx = verse.n - 1;
-          const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+          
+          
+          const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
             verseCtx.grcVerse = grcVerse;
             verseCtx.alignment = verse.alignment || null;
@@ -605,9 +630,9 @@ function reRenderWindowed() {
       if (plainView) {
         p.appendChild(document.createTextNode(verse.text));
       } else if (settings.mode === 5 && grcBookData) {
-        const chIdx = ch.n - 1;
-        const vIdx = verse.n - 1;
-        const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+        
+        
+          const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
           const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
@@ -617,9 +642,9 @@ function reRenderWindowed() {
       } else {
         const verseCtx = { ...composeCtx };
         if (grcBookData && settings.mode >= 3) {
-          const chIdx = ch.n - 1;
-          const vIdx = verse.n - 1;
-          const grcVerse = grcBookData.chapters[chIdx]?.verses[vIdx];
+          
+          
+          const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
             verseCtx.grcVerse = grcVerse;
             verseCtx.alignment = verse.alignment || null;

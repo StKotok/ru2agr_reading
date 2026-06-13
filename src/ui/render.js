@@ -16,7 +16,7 @@ export function segmentsToFragment(segments, ctx = {}) {
       frag.appendChild(document.createTextNode(seg.plain));
     } else if (seg.greek !== undefined) {
       const span = document.createElement('span');
-      span.className = 'gr';
+      span.className = seg.quality === 'f' ? 'gr gr-f' : 'gr';
       span.textContent = seg.greek;
       span.setAttribute('data-original', seg.original);
       span.setAttribute('data-kind', seg.kind || 'letter');

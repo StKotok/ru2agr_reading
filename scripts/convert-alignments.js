@@ -94,6 +94,8 @@ const GRC_SHORT = {
 const TRAILING_PUNCT_RE = /[.,;:!?—\-–"'«»„"()\[\]'¿¡;]+$/g;
 const LEADING_PUNCT_RE = /^[«»"'"„(\[\]—–-]+/;
 
+import { cleanRuWord, parseG846Case } from './lib/text-utils.js';
+
 // ---------------------------------------------------------------------------
 // Парсинг SBLGNT.tsv
 // ---------------------------------------------------------------------------
@@ -117,7 +119,8 @@ function parseSblgnt(filePath) {
     const word = cols[2];             // Βίβλος
     const strongsRaw = cols[3];       // G0976
     const lemma = cols[6];            // βίβλος
-    const morph = cols[7];            // N-NSF
+    const pos = cols[7];              // det/noun/verb/pron…
+    const robinson = cols[8];         // T-NSF / P-GSM / V-PNI-3S…
 
     // verseRef: nBBCCCVVVWWW → BBCCCVVV
     const bare = tokenId.startsWith('n') ? tokenId.slice(1) : tokenId;
@@ -126,8 +129,15 @@ function parseSblgnt(filePath) {
     // Strong's: G0976 → 976
     const strongNum = parseInt(strongsRaw.replace(/^G/i, ''), 10) || 0;
 
+    const token = { w: word, lemma, morph: pos, strong: strongNum };
+    // Для G846 — пронести падеж+число+род из Robinson morph-кода (cols[8])
+    if (strongNum === 846 && robinson) {
+      const c = parseG846Case(robinson);
+      if (c) token.c = c;
+    }
+
     if (!byVerse.has(verseRef)) byVerse.set(verseRef, []);
-    byVerse.get(verseRef).push({ w: word, lemma, morph, strong: strongNum });
+    byVerse.get(verseRef).push(token);
   }
 
   return byVerse;
@@ -216,10 +226,6 @@ function precompileLexicon(lexicon) {
 }
 
 /** Снимает пунктуацию по краям русского слова. */
-function cleanRuWord(word) {
-  return word.replace(TRAILING_PUNCT_RE, '').replace(LEADING_PUNCT_RE, '');
-}
-
 /** Возвращает запись лексикона, чьим ruMatches соответствует слово, или null. */
 function matchLexeme(cleanWord, lexEntries) {
   for (const entry of lexEntries) {
@@ -282,7 +288,7 @@ function buildAlignment(verseText, grcTokens, lexEntries) {
     const used = strongUsage.get(entry.strong) || 0;
     if (used >= indices.length) continue; // русских вхождений больше, чем греческих
 
-    alignment.push({ ru: wi, gr: indices[used] });
+    alignment.push({ ru: wi, gr: indices[used], src: 'l' });
     strongUsage.set(entry.strong, used + 1);
   }
 
@@ -327,6 +333,10 @@ function updateSynWithAlignment(synDir, grcBooks, lexEntries) {
         // Если выравнивание уже есть (из Zefania), дополняем его
         // лексиконными парами, не создавая конфликтов.
         if (verse.alignment && verse.alignment.length > 0) {
+          // Добавляем src:"z" существующим Zefania-парам (если ещё нет)
+          for (const p of verse.alignment) {
+            if (!p.src) p.src = 'z';
+          }
           const usedRu = new Set(verse.alignment.map(p => p.ru));
           const usedGr = new Set(verse.alignment.map(p => p.gr));
           const lexAlignment = buildAlignment(verse.text, grcTokens, lexEntries);
@@ -423,9 +433,11 @@ function verify(synDir, grcBooks, lexicon, lexEntries) {
         for (const pair of verse.alignment) {
           pairsChecked++;
 
-          // 1. Схема: только {ru, gr}
-          const keys = Object.keys(pair).sort().join(',');
-          if (keys !== 'gr,ru') fail(`${ref}: пара содержит лишние ключи: ${keys}`);
+          // 1. Схема: {ru, gr} + опциональные {src, q, c}
+          const validKeys = new Set(['ru', 'gr', 'src', 'q', 'c']);
+          const extraKeys = Object.keys(pair).filter(k => !validKeys.has(k));
+          if (extraKeys.length > 0) fail(`${ref}: пара содержит недопустимые ключи: ${extraKeys.join(',')}`);
+          if (!('ru' in pair) || !('gr' in pair)) fail(`${ref}: пара без ru или gr`);
 
           // 2. Границы
           if (!(pair.ru >= 0 && pair.ru < words.length)) fail(`${ref}: ru=${pair.ru} вне стиха (${words.length} слов)`);
