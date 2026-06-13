@@ -137,3 +137,113 @@ function mapMood(md) {
   const m = { 'I': 'изъявит. наклонение', 'D': 'повелит. наклонение', 'S': 'сослаг. наклонение', 'O': 'желат. наклонение', 'N': 'инфинитив', 'P': 'причастие' };
   return m[md] || md;
 }
+
+// === Короткие аббревиатуры для карточки ===
+
+const POS_SHORT = {
+  'N': 'сущ.', 'V': 'глаг.', 'A': 'прил.',
+  'T': 'арт.', 'P': 'мест.', 'R': 'предл.',
+  'C': 'союз', 'D': 'нар.', 'PREP': 'предл.',
+  'CONJ': 'союз', 'PRT': 'част.', 'I': 'межд.',
+  'X': 'част.'
+};
+
+const CASE_SHORT = {
+  'N': 'им. п.', 'G': 'род. п.', 'D': 'дат. п.',
+  'A': 'вин. п.', 'V': 'зват. п.'
+};
+
+const NUMBER_SHORT = { 'S': 'ед. ч.', 'P': 'мн. ч.' };
+const GENDER_SHORT = { 'M': 'м. р.', 'F': 'ж. р.', 'N': 'ср. р.' };
+
+const TENSE_SHORT = {
+  'P': 'наст. вр.', 'I': 'имперф.', 'F': 'буд. вр.',
+  'A': 'аорист', 'R': 'перф.', 'L': 'плюскв.'
+};
+
+const VOICE_SHORT = {
+  'A': 'действ.', 'M': 'средн.', 'P': 'страд.',
+  'E': 'ср.-стр.'
+};
+
+const MOOD_SHORT = {
+  'I': 'изъяв.', 'D': 'повел.', 'M': 'повел.',
+  'S': 'сосл.', 'O': 'желат.', 'N': 'инф.', 'P': 'прич.'
+};
+
+const PERSON_SHORT = { '1': '1 л.', '2': '2 л.', '3': '3 л.' };
+
+/**
+ * Возвращает массив коротких русских меток для морфокода Робинсона.
+ * @param {string} code — например "N-NSM", "V-PAI-3S"
+ * @returns {string[]} — например ['сущ.', 'им. п.', 'ед. ч.', 'м. р.']
+ */
+export function formatMorphShort(code) {
+  if (!code || code === '---') return [];
+
+  const parts = code.split('-');
+  if (parts.length === 0) return [];
+
+  const posChar = parts[0][0];
+  const posShort = POS_SHORT[posChar] || parts[0];
+
+  // Неизменяемые части речи (многосимвольные коды: PREP, CONJ, PRT)
+  if (parts.length === 1) {
+    const fullPos = parts[0];
+    if (fullPos === 'PREP') return ['предл.', 'неизм.'];
+    if (fullPos === 'CONJ') return ['союз', 'неизм.'];
+    if (fullPos === 'PRT')  return ['част.', 'неизм.'];
+    // Односимвольные неизменяемые: R, C, D, X, I
+    return [posShort, 'неизм.'];
+  }
+
+  const result = [posShort];
+
+  // Именные: N, A, T, P — parts[1] = NSM, GSF etc.
+  if (posChar === 'N' || posChar === 'A' || posChar === 'T' || posChar === 'P') {
+    const caseCode = parts[1][0];
+    const numCode = parts[1][1];
+    const genCode = parts[1][2];
+    if (caseCode && CASE_SHORT[caseCode]) result.push(CASE_SHORT[caseCode]);
+    if (numCode && NUMBER_SHORT[numCode]) result.push(NUMBER_SHORT[numCode]);
+    if (genCode && GENDER_SHORT[genCode]) result.push(GENDER_SHORT[genCode]);
+    return result;
+  }
+
+  // Глаголы: V — parts[1] = PAI, parts[2] = 3S
+  if (posChar === 'V') {
+    const tenseCode = parts[1][0];
+    const voiceCode = parts[1][1];
+    const moodCode = parts[1][2];
+
+    if (tenseCode && TENSE_SHORT[tenseCode]) result.push(TENSE_SHORT[tenseCode]);
+    if (voiceCode && VOICE_SHORT[voiceCode]) result.push(VOICE_SHORT[voiceCode]);
+    // Для изъявительного наклонения (I) не показываем
+    if (moodCode && moodCode !== 'I' && MOOD_SHORT[moodCode]) result.push(MOOD_SHORT[moodCode]);
+
+    if (parts.length >= 3) {
+      const personCode = parts[2][0];
+      const numCode = parts[2][1];
+      if (personCode && PERSON_SHORT[personCode]) result.push(PERSON_SHORT[personCode]);
+      if (numCode && NUMBER_SHORT[numCode]) result.push(NUMBER_SHORT[numCode]);
+    }
+    return result;
+  }
+
+  // Предлоги, союзы, наречия, частицы
+  if (posChar === 'R' || posChar === 'C' || posChar === 'D' || posChar === 'X' || posChar === 'I') {
+    return result; // только часть речи, без «неизм.»
+  }
+
+  return result;
+}
+
+/**
+ * Возвращает полные названия для tooltip.
+ * @param {string} code
+ * @returns {string}
+ */
+export function formatMorphFull(code) {
+  if (!code || code === '---') return code || '—';
+  return formatMorphRu(code);
+}

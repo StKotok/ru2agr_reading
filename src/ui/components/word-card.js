@@ -1,7 +1,53 @@
 /**
  * Карточка буквы / слова.
- * Единый компонент для инспектора (десктоп) и bottom sheet (мобайл).
+ * Единый компонент для поповера (десктоп) и bottom sheet (мобайл).
  */
+
+import { formatMorphShort } from '../../engine/morphology.js';
+
+// === Вспомогательные функции ===
+
+/**
+ * Форматирует частотность для отображения.
+ * @param {object|null} freq — { rank, count } или null
+ * @returns {string|null}
+ */
+export function formatFrequency(freq) {
+  if (!freq || !freq.count) return null;
+  const formatted = new Intl.NumberFormat('ru-RU').format(freq.count);
+  if (freq.rank) {
+    const bucket = rankBucket(freq.rank);
+    return `Топ-${bucket} · ${formatted}×`;
+  }
+  return `${formatted}× в НЗ`;
+}
+
+function rankBucket(rank) {
+  if (rank <= 10) return 10;
+  if (rank <= 20) return 20;
+  if (rank <= 50) return 50;
+  if (rank <= 100) return 100;
+  if (rank <= 200) return 200;
+  if (rank <= 500) return 500;
+  return 1000;
+}
+
+/**
+ * Строит tooltip для частотности.
+ * @param {object} freq
+ * @param {string} lemma
+ * @returns {string}
+ */
+function freqTooltip(freq, lemma) {
+  if (!freq || !freq.count) return '';
+  const l = lemma || 'слово';
+  if (freq.rank) {
+    return `Лемма ${l} входит в топ-${rankBucket(freq.rank)} наиболее частотных слов Нового Завета и встречается около ${freq.count} раз.`;
+  }
+  return `Лемма ${l} встречается около ${freq.count} раз в Новом Завете.`;
+}
+
+// === Карточка буквы ===
 
 /**
  * @param {object} letter — { lower, upper, name, translit, sound, ruEquivalents }
@@ -16,7 +62,7 @@ export function renderLetterCard(letter, progressEntry, onMarkKnown) {
   const status = progressEntry?.status || null;
 
   card.innerHTML = `
-    <div class="word-card-letter">${letter.upper} ${letter.lower}</div>
+    <div class="word-card-form">${letter.upper} ${letter.lower}</div>
     <div class="word-card-name">${letter.name}</div>
     <div class="word-card-sound">${letter.sound}</div>
     <div class="word-card-equiv">Ближе всего к русской «${letter.ruEquivalents[0]}»</div>
@@ -36,7 +82,6 @@ export function renderLetterCard(letter, progressEntry, onMarkKnown) {
     btn.textContent = 'Я знаю эту букву';
     btn.addEventListener('click', () => {
       if (onMarkKnown) onMarkKnown(letter.lower);
-      // Обновляем карточку
       const badge = document.createElement('span');
       badge.className = 'word-card-badge badge-known';
       badge.textContent = 'Освоена ✓';
@@ -48,78 +93,219 @@ export function renderLetterCard(letter, progressEntry, onMarkKnown) {
   return card;
 }
 
+// === Карточка слова (режимы 3, 4, 5) ===
+
 /**
- * @param {object} lexeme — { id, lemma, translit, gloss, pos }
- * @param {object} dictEntry — запись из словаря или undefined
- * @param {object} context — { originalText }
- * @param {object} callbacks — { onMarkKnown, onAddToDict, onShowDetails }
+ * @param {object} data
+ *   — surfaceForm: string       (греческая форма из текста)
+ *   — lemma: string             (словарная форма)
+ *   — translit: string|null     (транслитерация леммы или формы)
+ *   — gloss: string|null        (контекстный перевод)
+ *   — morph: string|null        (Робинсон-код, напр. "N-NSM")
+ *   — freq: object|null         ({ rank, count } из частотного списка)
+ *   — dictEntry: object|null    ({ status } из словаря пользователя)
+ *   — lexemeId: string|null
+ *   — strong: number|null
+ *   — original: string|null     (исходное русское слово)
+ * @param {object} callbacks
+ *   — onMarkStatus: (lexemeId, newStatus) => void
+ *   — onShowDetails: (lexemeId) => void
  * @returns {HTMLElement}
  */
-export function renderWordCard(lexeme, dictEntry, context = {}, callbacks = {}, show = {}) {
+export function renderWordCard(data, callbacks = {}) {
+  const {
+    surfaceForm = '',
+    lemma = '',
+    translit = null,
+    gloss = null,
+    morph = null,
+    freq = null,
+    dictEntry = null,
+    lexemeId = null,
+    strong = null,
+    original = null
+  } = data;
+
+  const status = dictEntry?.status || null;
+  const formDiffers = !!(surfaceForm && lemma && surfaceForm !== lemma);
+  const morphLabels = formatMorphShort(morph);
+  const freqText = formatFrequency(freq);
+  const freqLabel = freqTooltip(freq, lemma);
+
   const card = document.createElement('div');
   card.className = 'card word-card';
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-label', `Карточка слова ${surfaceForm || lemma}`);
 
-  const inDict = !!dictEntry;
-  const status = dictEntry?.status;
+  // --- Верхняя строка: форма + частотность ---
+  const topRow = document.createElement('div');
+  topRow.className = 'word-card-top';
 
-  const showTranslit = show.translit !== false;
-  const showGloss = show.gloss !== false;
-  const showStrongs = show.strongs === true;
+  const formEl = document.createElement('span');
+  formEl.className = 'word-card-form';
+  formEl.textContent = surfaceForm || lemma;
+  formEl.id = 'word-card-title';
+  topRow.appendChild(formEl);
 
-  card.innerHTML = `
-    <div class="word-card-lemma">${lexeme.lemma}</div>
-    ${showTranslit ? `<div class="word-card-translit">${lexeme.translit}</div>` : ''}
-    ${showGloss ? `<div class="word-card-gloss">${lexeme.gloss}</div>` : ''}
-    ${showStrongs && lexeme.strong ? `<div class="word-card-strong">Strong G${lexeme.strong}</div>` : ''}
-    ${context.originalText ? `<div class="word-card-replaces">Сейчас заменяет: «${context.originalText}»</div>` : ''}
-    <div class="word-card-actions"></div>
-    <div class="word-card-details" hidden></div>
-  `;
-
-  const actions = card.querySelector('.word-card-actions');
-
-  // [Подробнее]
-  const detailsBtn = document.createElement('button');
-  detailsBtn.className = 'btn';
-  detailsBtn.textContent = 'Подробнее';
-  detailsBtn.addEventListener('click', () => {
-    const details = card.querySelector('.word-card-details');
-    if (details.hidden) {
-      details.hidden = false;
-      details.innerHTML = `
-        <p><strong>Часть речи:</strong> ${lexeme.pos || '—'}</p>
-        ${status ? `<p><strong>Статус:</strong> ${status}</p>` : ''}
-      `;
-      detailsBtn.textContent = 'Скрыть';
-    } else {
-      details.hidden = true;
-      detailsBtn.textContent = 'Подробнее';
+  if (freqText) {
+    const freqEl = document.createElement('span');
+    freqEl.className = 'word-card-freq';
+    freqEl.textContent = freqText;
+    if (freqLabel) {
+      freqEl.setAttribute('title', freqLabel);
+      freqEl.setAttribute('aria-label', freqLabel);
     }
-  });
-  actions.appendChild(detailsBtn);
-
-  // [Я знаю] или [Добавить в словарь]
-  if (inDict) {
-    const knowBtn = document.createElement('button');
-    knowBtn.className = 'btn';
-    knowBtn.textContent = 'Я знаю';
-    knowBtn.addEventListener('click', () => {
-      if (callbacks.onMarkKnown) callbacks.onMarkKnown(lexeme.id);
-      knowBtn.textContent = 'Освоено ✓';
-      knowBtn.disabled = true;
-    });
-    actions.appendChild(knowBtn);
-  } else {
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-primary';
-    addBtn.textContent = 'Добавить в словарь';
-    addBtn.addEventListener('click', () => {
-      if (callbacks.onAddToDict) callbacks.onAddToDict(lexeme.id);
-      addBtn.textContent = 'Добавлено ✓';
-      addBtn.disabled = true;
-    });
-    actions.appendChild(addBtn);
+    topRow.appendChild(freqEl);
   }
+
+  card.appendChild(topRow);
+
+  // --- Строка произношения: транслитерация + аудио ---
+  const pronRow = document.createElement('div');
+  pronRow.className = 'word-card-pron';
+
+  if (translit) {
+    const translitEl = document.createElement('span');
+    translitEl.className = 'word-card-translit';
+    translitEl.textContent = translit;
+    pronRow.appendChild(translitEl);
+  }
+
+  const audioBtn = document.createElement('button');
+  audioBtn.className = 'word-card-audio';
+  audioBtn.setAttribute('aria-label', `Прослушать произношение слова ${surfaceForm || lemma}`);
+  audioBtn.setAttribute('disabled', '');
+  audioBtn.textContent = '🔊';
+  audioBtn.title = 'Произношение пока недоступно';
+  pronRow.appendChild(audioBtn);
+
+  card.appendChild(pronRow);
+
+  // --- Контекстный перевод ---
+  if (gloss) {
+    const glossSection = document.createElement('div');
+    glossSection.className = 'word-card-gloss-section';
+
+    const glossEl = document.createElement('div');
+    glossEl.className = 'word-card-gloss';
+    glossEl.textContent = gloss;
+    glossSection.appendChild(glossEl);
+
+    const glossLabel = document.createElement('div');
+    glossLabel.className = 'word-card-gloss-label';
+    glossLabel.textContent = 'значение в этом стихе';
+    glossSection.appendChild(glossLabel);
+
+    card.appendChild(glossSection);
+  }
+
+  // --- Лемма ---
+  const lemmaSection = document.createElement('div');
+  lemmaSection.className = 'word-card-lemma-section';
+
+  if (formDiffers) {
+    // Формат: форма → лемма
+    const formSpan = document.createElement('span');
+    formSpan.className = 'word-card-surface';
+    formSpan.textContent = surfaceForm;
+    lemmaSection.appendChild(formSpan);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'word-card-lemma-arrow';
+    arrow.textContent = '→';
+    lemmaSection.appendChild(arrow);
+
+    const lemmaSpan = document.createElement('span');
+    lemmaSpan.className = 'word-card-lemma';
+    lemmaSpan.textContent = lemma;
+    lemmaSection.appendChild(lemmaSpan);
+
+    const labels = document.createElement('div');
+    labels.className = 'word-card-lemma-labels';
+    labels.innerHTML = '<span>в тексте</span><span>словарная форма</span>';
+    lemmaSection.appendChild(labels);
+  } else if (lemma) {
+    // Форма совпадает с леммой
+    const label = document.createElement('span');
+    label.className = 'word-card-lemma-label';
+    label.textContent = 'Словарная форма: ';
+    lemmaSection.appendChild(label);
+
+    const lemmaSpan = document.createElement('span');
+    lemmaSpan.className = 'word-card-lemma';
+    lemmaSpan.textContent = lemma;
+    lemmaSection.appendChild(lemmaSpan);
+  }
+
+  card.appendChild(lemmaSection);
+
+  // --- Морфология: чипы ---
+  if (morphLabels.length > 0) {
+    const morphRow = document.createElement('div');
+    morphRow.className = 'word-card-morph';
+
+    for (const label of morphLabels) {
+      const chip = document.createElement('span');
+      chip.className = 'morph-chip';
+      chip.textContent = label;
+      morphRow.appendChild(chip);
+    }
+
+    card.appendChild(morphRow);
+  } else if (morph && morph !== '---') {
+    // Не смогли разобрать — показываем сырой код
+    const morphRow = document.createElement('div');
+    morphRow.className = 'word-card-morph';
+    morphRow.textContent = morph;
+    card.appendChild(morphRow);
+  }
+
+  // Если морфологии нет вообще — не показываем пустой блок
+
+  // --- Учебный статус ---
+  const statusRow = document.createElement('div');
+  statusRow.className = 'word-card-status';
+
+  const statuses = [
+    { key: 'new', label: 'Не помню', cls: 'status-new' },
+    { key: 'learning', label: 'Учу', cls: 'status-learning' },
+    { key: 'known', label: 'Знаю', cls: 'status-known' }
+  ];
+
+  for (const st of statuses) {
+    const btn = document.createElement('button');
+    btn.className = 'btn status-btn';
+    btn.textContent = status === st.key ? `✓ ${st.label}` : st.label;
+    btn.classList.add(st.cls);
+    if (status === st.key) {
+      btn.classList.add('active');
+    }
+    btn.addEventListener('click', () => {
+      if (callbacks.onMarkStatus && lexemeId) {
+        callbacks.onMarkStatus(lexemeId, st.key);
+        // Визуальная реакция: обновляем все кнопки
+        const allBtns = statusRow.querySelectorAll('.status-btn');
+        allBtns.forEach(b => {
+          b.classList.remove('active');
+          b.textContent = b.textContent.replace('✓ ', '');
+        });
+        btn.classList.add('active');
+        btn.textContent = `✓ ${st.label}`;
+      }
+    });
+    statusRow.appendChild(btn);
+  }
+
+  card.appendChild(statusRow);
+
+  // --- Подробнее ---
+  const detailsBtn = document.createElement('button');
+  detailsBtn.className = 'word-card-details-btn';
+  detailsBtn.textContent = 'Подробнее →';
+  detailsBtn.addEventListener('click', () => {
+    if (callbacks.onShowDetails) callbacks.onShowDetails(lexemeId);
+  });
+  card.appendChild(detailsBtn);
 
   return card;
 }

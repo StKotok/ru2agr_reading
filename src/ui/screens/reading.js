@@ -278,15 +278,10 @@ export async function mount(container, ctx) {
       handleLetterTap(letter, span);
       return;
     }
-    const lexemeId = span.getAttribute('data-lexeme');
-    if (lexemeId) {
-      handleWordTap(lexemeId, span);
+    // Слово (режимы 3–5): лексема, форма или греческий токен
+    if (span.getAttribute('data-lexeme') || span.getAttribute('data-strong') || span.getAttribute('data-w')) {
+      handleWordTap(span);
       return;
-    }
-    // Режим 5: токен с data-strong
-    const strong = span.getAttribute('data-strong');
-    if (strong && span.classList.contains('grc-token')) {
-      handleGrcTokenTap(span);
     }
   });
 
@@ -298,6 +293,10 @@ export async function mount(container, ctx) {
       const letter = span.getAttribute('data-letter');
       if (letter) {
         handleLetterTap(letter, span);
+        return;
+      }
+      if (span.getAttribute('data-lexeme') || span.getAttribute('data-strong') || span.getAttribute('data-w')) {
+        handleWordTap(span);
       }
     }
   });
@@ -774,7 +773,7 @@ function showPopover(card, anchorEl) {
 
   // Позиционирование рядом с anchor
   const rect = anchorEl.getBoundingClientRect();
-  const pw = 320;
+  const pw = 360;
   let top = rect.bottom + 8;
   let left = rect.left;
 
@@ -805,54 +804,90 @@ function showPopover(card, anchorEl) {
   });
 }
 
-function handleWordTap(lexemeId, span) {
-  if (!coreLexicon) return;
-  const lexeme = coreLexicon.find(l => l.id === lexemeId);
-  if (!lexeme) return;
+/**
+ * Собирает все данные о слове из span'а и загруженных структур.
+ * Работает единообразно для режимов 3, 4 и 5.
+ * @param {HTMLElement} span — span.gr элемент
+ * @returns {object|null} wordData или null если данных недостаточно
+ */
+function collectWordData(span) {
+  // Поверхностная форма: в режимах 3–4 это textContent,
+  // в режиме 5 продублирована в data-w
+  const wAttr = span.getAttribute('data-w');
+  const surfaceForm = wAttr || span.textContent.trim();
+  if (!surfaceForm) return null;
 
-  const dictEntry = dictionary[lexemeId];
-  const originalText = span.getAttribute('data-original');
+  // Лемма
+  const lexemeId = span.getAttribute('data-lexeme');
+  const lemmaFromAttr = span.getAttribute('data-lemma');
+  const strongFromAttr = span.getAttribute('data-strong');
+  const strong = strongFromAttr ? parseInt(strongFromAttr) : null;
 
-  const card = renderWordCard(lexeme, dictEntry, { originalText }, {
-    onMarkKnown: async (id) => {
-      dictionary = setWordStatus(id, 'known', dictionary);
-      await saveDictionary(dictionary);
-      const spans = document.querySelectorAll(`span.gr[data-lexeme="${id}"]`);
-      spans.forEach(s => s.classList.add('known'));
-    },
-    onAddToDict: async (id) => {
-      dictionary = addWord(id, dictionary);
-      await saveDictionary(dictionary);
-      buildWordEntries();
-      reRenderWindowed();
-    }
-  }, settings.show || {});
+  // Ищем в лексиконе — по lexemeId или по strong
+  const core = lexemeId
+    ? coreLexicon.find(l => l.id === lexemeId)
+    : (strong ? coreLexicon.find(l => l.strong === strong) : null);
 
-  if (window.innerWidth >= 900) {
-    showPopover(card, span);
-  } else {
-    openBottomSheet(card);
+  const lemma = lemmaFromAttr || core?.lemma || surfaceForm;
+  const translit = core?.translit || null;
+  const gloss = core?.gloss || null;
+  const morph = span.getAttribute('data-morph') || null;
+
+  // Частотность по strong
+  const freq = strong
+    ? (frequencyList ? frequencyList.find(f => f.strong === strong) : null)
+    : null;
+
+  // Словарная запись
+  let dictEntry = null;
+  const effectiveLexemeId = lexemeId || core?.id || null;
+  if (effectiveLexemeId) {
+    dictEntry = dictionary[effectiveLexemeId] || null;
   }
+
+  const original = span.getAttribute('data-original') || null;
+
+  return {
+    surfaceForm,
+    lemma,
+    translit,
+    gloss,
+    morph,
+    freq: freq ? { rank: freq.rank, count: freq.count } : null,
+    dictEntry,
+    lexemeId: effectiveLexemeId,
+    strong,
+    original
+  };
 }
 
-function handleGrcTokenTap(span) {
-  const w = span.getAttribute('data-w');
-  const lemma = span.getAttribute('data-lemma');
-  const morph = span.getAttribute('data-morph');
-  const strong = parseInt(span.getAttribute('data-strong')) || 0;
+function handleWordTap(span) {
+  const wordData = collectWordData(span);
+  if (!wordData) return;
 
-  if (!w) return;
+  const card = renderWordCard(wordData, {
+    onMarkStatus: async (lexemeId, newStatus) => {
+      // Добавляем в словарь если ещё нет
+      if (!dictionary[lexemeId]) {
+        dictionary = addWord(lexemeId, dictionary);
+      }
+      dictionary = setWordStatus(lexemeId, newStatus, dictionary);
+      await saveDictionary(dictionary);
 
-  const card = document.createElement('div');
-  card.className = 'card word-card';
-  const showGrammar = settings.show?.grammar !== false;
-  const showStrongs = settings.show?.strongs === true;
-  card.innerHTML = `
-    <h3 class="greek-word">${w}</h3>
-    ${lemma ? `<p><strong>Лемма:</strong> ${lemma}</p>` : ''}
-    ${showGrammar && morph ? `<p><strong>Грамматика:</strong> ${morph}</p>` : ''}
-    ${showStrongs && strong ? `<p><strong>Strong:</strong> G${strong}</p>` : ''}
-  `;
+      // Визуальная подсветка в тексте
+      const spans = document.querySelectorAll(`span.gr[data-lexeme="${lexemeId}"]`);
+      spans.forEach(s => {
+        if (newStatus === 'known') s.classList.add('known');
+        else s.classList.remove('known');
+      });
+
+      buildWordEntries();
+      reRenderWindowed();
+    },
+    onShowDetails: (lexemeId) => {
+      showToast('Подробная карточка появится в следующем обновлении');
+    }
+  });
 
   if (window.innerWidth >= 900) {
     showPopover(card, span);
