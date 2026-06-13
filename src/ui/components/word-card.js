@@ -3,7 +3,8 @@
  * Единый компонент для поповера (десктоп) и bottom sheet (мобайл).
  */
 
-import { formatMorphShort } from '../../engine/morphology.js';
+import { formatMorphShort, formatMorphFull } from '../../engine/morphology.js';
+import { stripDiacritics } from '../../engine/rules.js';
 
 // === Вспомогательные функции ===
 
@@ -127,7 +128,8 @@ export function renderWordCard(data, callbacks = {}) {
   } = data;
 
   const status = dictEntry?.status || null;
-  const formDiffers = !!(surfaceForm && lemma && surfaceForm !== lemma);
+  const formDiffers = !!(surfaceForm && lemma &&
+    stripDiacritics(surfaceForm).toLowerCase() !== stripDiacritics(lemma).toLowerCase());
   const morphLabels = formatMorphShort(morph);
   const freqText = formatFrequency(freq);
   const freqLabel = freqTooltip(freq, lemma);
@@ -199,11 +201,11 @@ export function renderWordCard(data, callbacks = {}) {
     card.appendChild(glossSection);
   }
 
-  // --- Лемма ---
-  const lemmaSection = document.createElement('div');
-  lemmaSection.className = 'word-card-lemma-section';
-
+  // --- Лемма (только когда форма отличается) ---
   if (formDiffers) {
+    const lemmaSection = document.createElement('div');
+    lemmaSection.className = 'word-card-lemma-section';
+
     // Формат: форма → лемма
     const formSpan = document.createElement('span');
     formSpan.className = 'word-card-surface';
@@ -224,20 +226,9 @@ export function renderWordCard(data, callbacks = {}) {
     labels.className = 'word-card-lemma-labels';
     labels.innerHTML = '<span>в тексте</span><span>словарная форма</span>';
     lemmaSection.appendChild(labels);
-  } else if (lemma) {
-    // Форма совпадает с леммой
-    const label = document.createElement('span');
-    label.className = 'word-card-lemma-label';
-    label.textContent = 'Словарная форма: ';
-    lemmaSection.appendChild(label);
 
-    const lemmaSpan = document.createElement('span');
-    lemmaSpan.className = 'word-card-lemma';
-    lemmaSpan.textContent = lemma;
-    lemmaSection.appendChild(lemmaSpan);
+    card.appendChild(lemmaSection);
   }
-
-  card.appendChild(lemmaSection);
 
   // --- Морфология: чипы ---
   if (morphLabels.length > 0) {
@@ -253,10 +244,10 @@ export function renderWordCard(data, callbacks = {}) {
 
     card.appendChild(morphRow);
   } else if (morph && morph !== '---') {
-    // Не смогли разобрать — показываем сырой код
+    // Не смогли разобрать по частям — показываем полную русскую строку
     const morphRow = document.createElement('div');
     morphRow.className = 'word-card-morph';
-    morphRow.textContent = morph;
+    morphRow.textContent = formatMorphFull(morph);
     card.appendChild(morphRow);
   }
 

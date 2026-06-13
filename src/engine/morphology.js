@@ -185,7 +185,7 @@ export function formatMorphShort(code) {
   if (parts.length === 0) return [];
 
   const posChar = parts[0][0];
-  const posShort = POS_SHORT[posChar] || parts[0];
+  const posShort = POS_SHORT[posChar] || 'неопр.';
 
   // Неизменяемые части речи (многосимвольные коды: PREP, CONJ, PRT)
   if (parts.length === 1) {
@@ -235,6 +235,10 @@ export function formatMorphShort(code) {
     return result; // только часть речи, без «неизм.»
   }
 
+  // Неизвестный код — возвращаем всё что смогли разобрать, но по-русски
+  if (result.length === 1) {
+    result.push('неизв. форма');
+  }
   return result;
 }
 

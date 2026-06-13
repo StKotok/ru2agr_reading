@@ -758,11 +758,6 @@ p, h2, h3, span {
   font-size: 1rem;
 }
 
-.word-card-lemma-label {
-  font-size: 0.8125rem;
-  color: var(--muted);
-}
-
 .word-card-lemma-labels {
   display: flex;
   justify-content: space-between;
