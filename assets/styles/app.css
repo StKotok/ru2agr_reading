@@ -815,65 +815,23 @@ p, h2, h3, span {
   font-weight: 500;
 }
 
-/* --- Другие значения (UBS senses) --- */
-.word-card-senses {
+/* --- Информационные блоки (также означает, определение, происхождение) --- */
+.word-card-info-block {
   margin-bottom: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
 }
 
-.word-card-senses-label {
+.word-card-info-label {
   font-size: 0.75rem;          /* 12px */
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
-.word-card-senses-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.word-card-sense-item {
-  display: inline-block;
-  font-size: 0.8125rem;        /* 13px */
-  color: var(--text);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 3px 10px;
-  cursor: default;
-  transition: background 0.15s;
-}
-
-.word-card-sense-item:hover {
-  background: var(--bg-hover);
-}
-
-/* --- Ключевой стих --- */
-.word-card-ref {
-  margin-top: 14px;
-  padding: 10px 12px;
-  background: var(--bg-secondary);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.word-card-ref-label {
-  font-size: 0.6875rem;        /* 11px */
-  color: var(--accent);
-  font-weight: 500;
-}
-
-.word-card-ref-text {
+.word-card-info-text {
   font-size: 0.8125rem;        /* 13px */
   color: var(--text);
   line-height: 1.5;
-  font-style: italic;
 }
 
 /* --- Подробнее --- */
@@ -899,32 +857,13 @@ p, h2, h3, span {
 
 .word-card-detail-body {
   display: none;
-  margin-top: 8px;
-  padding: 12px;
-  background: var(--bg-secondary);
-  border-radius: 10px;
+  margin-top: 6px;
 }
 
 .word-card-detail.is-open .word-card-detail-body {
   display: block;
 }
 
-.word-card-detail-label {
-  display: block;
-  font-size: 0.6875rem;        /* 11px */
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
-}
-
-.word-card-detail-def p,
-.word-card-detail-deriv p {
-  font-size: 0.8125rem;        /* 13px */
-  color: var(--text);
-  line-height: 1.55;
-  margin: 0 0 12px 0;
-}
 
 
 /* --- Лемма --- */

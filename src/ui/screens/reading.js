@@ -858,6 +858,8 @@ function collectWordData(span) {
   const detail = core?.detail || null;
   const pos = core?.pos || null;
   const ref = core?.ref || null;
+  const allRefs = core?.allRefs || null;
+  const allRefsCount = core?.allRefsCount || null;
   const morph = span.getAttribute('data-morph') || null;
 
   // Словарная запись
@@ -878,6 +880,8 @@ function collectWordData(span) {
     detail,
     pos,
     ref,
+    allRefs,
+    allRefsCount,
     morph,
     freq: freq ? { rank: freq.rank, count: freq.count } : null,
     dictEntry,

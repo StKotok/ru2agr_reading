@@ -131,7 +131,8 @@ export function renderWordCard(data, callbacks = {}) {
     senses = null,
     detail = null,
     pos = null,
-    ref = null,
+    allRefs = null,
+    allRefsCount = null,
     morph = null,
     freq = null,
     dictEntry = null,
@@ -274,34 +275,29 @@ export function renderWordCard(data, callbacks = {}) {
     }
 
     if (candidates.length > 0) {
-      const sensesSection = document.createElement('div');
-      sensesSection.className = 'word-card-senses';
-
-      const sensesLabel = document.createElement('div');
-      sensesLabel.className = 'word-card-senses-label';
-      sensesLabel.textContent = 'также означает';
-      sensesSection.appendChild(sensesLabel);
-
-      const list = document.createElement('div');
-      list.className = 'word-card-senses-list';
-
       const seen = new Set();
-      for (const c of candidates.slice(0, 5)) {
+      const parts = [];
+      for (const c of candidates.slice(0, 6)) {
         const key = c.gloss.toLowerCase().trim();
         if (seen.has(key)) continue;
         seen.add(key);
-
-        const item = document.createElement('span');
-        item.className = 'word-card-sense-item';
-        item.textContent = c.gloss;
-        if (c.comment) {
-          item.setAttribute('title', c.comment);
-        }
-        list.appendChild(item);
+        parts.push(c.gloss);
       }
 
-      sensesSection.appendChild(list);
-      card.appendChild(sensesSection);
+      const block = document.createElement('div');
+      block.className = 'word-card-info-block';
+
+      const label = document.createElement('div');
+      label.className = 'word-card-info-label';
+      label.textContent = 'также означает';
+      block.appendChild(label);
+
+      const text = document.createElement('div');
+      text.className = 'word-card-info-text';
+      text.textContent = parts.join(', ');
+      block.appendChild(text);
+
+      card.appendChild(block);
     }
   }
 
@@ -392,24 +388,6 @@ export function renderWordCard(data, callbacks = {}) {
     statusRow.appendChild(btn);
   }
 
-  // --- Ключевой стих ---
-  if (ref && ref.ref && ref.text) {
-    const refSection = document.createElement('div');
-    refSection.className = 'word-card-ref';
-
-    const refLabel = document.createElement('span');
-    refLabel.className = 'word-card-ref-label';
-    refLabel.textContent = ref.ref;
-    refSection.appendChild(refLabel);
-
-    const refText = document.createElement('span');
-    refText.className = 'word-card-ref-text';
-    refText.textContent = ref.text;
-    refSection.appendChild(refText);
-
-    card.appendChild(refSection);
-  }
-
   card.appendChild(statusRow);
 
   // --- Подробнее (определение + происхождение) ---
@@ -430,29 +408,31 @@ export function renderWordCard(data, callbacks = {}) {
     detailBody.className = 'word-card-detail-body';
 
     if (detail.definition) {
-      const defBlock = document.createElement('div');
-      defBlock.className = 'word-card-detail-def';
-      const defLabel = document.createElement('span');
-      defLabel.className = 'word-card-detail-label';
-      defLabel.textContent = 'Определение';
-      defBlock.appendChild(defLabel);
-      const defText = document.createElement('p');
-      defText.textContent = detail.definition;
-      defBlock.appendChild(defText);
-      detailBody.appendChild(defBlock);
+      const block = document.createElement('div');
+      block.className = 'word-card-info-block';
+      const label = document.createElement('div');
+      label.className = 'word-card-info-label';
+      label.textContent = 'определение';
+      block.appendChild(label);
+      const text = document.createElement('div');
+      text.className = 'word-card-info-text';
+      text.textContent = detail.definition;
+      block.appendChild(text);
+      detailBody.appendChild(block);
     }
 
     if (detail.derivation) {
-      const derivBlock = document.createElement('div');
-      derivBlock.className = 'word-card-detail-deriv';
-      const derivLabel = document.createElement('span');
-      derivLabel.className = 'word-card-detail-label';
-      derivLabel.textContent = 'Происхождение';
-      derivBlock.appendChild(derivLabel);
-      const derivText = document.createElement('p');
-      derivText.textContent = detail.derivation;
-      derivBlock.appendChild(derivText);
-      detailBody.appendChild(derivBlock);
+      const block = document.createElement('div');
+      block.className = 'word-card-info-block';
+      const label = document.createElement('div');
+      label.className = 'word-card-info-label';
+      label.textContent = 'происхождение';
+      block.appendChild(label);
+      const text = document.createElement('div');
+      text.className = 'word-card-info-text';
+      text.textContent = detail.derivation;
+      block.appendChild(text);
+      detailBody.appendChild(block);
     }
 
     detailSection.appendChild(detailBody);
