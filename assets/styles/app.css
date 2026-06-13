@@ -712,8 +712,8 @@ p, h2, h3, span {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 2px 6px;
-  margin-bottom: 6px;
+  gap: 4px 8px;
+  margin-bottom: 14px;
 }
 
 .word-card-sep {
@@ -872,14 +872,6 @@ p, h2, h3, span {
   max-width: 280px;
 }
 
-/* --- Морфология: чипы --- */
-.word-card-morph {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
 .morph-chip {
   display: inline-block;
   font-size: 0.8125rem;        /* 13px */
@@ -980,6 +972,25 @@ p, h2, h3, span {
   cursor: pointer;
   border-radius: 6px;
   min-height: 44px;
+  transition: background 0.15s;
+}
+
+.card-gear-row.is-dragging {
+  opacity: 0.4;
+}
+
+.card-gear-handle {
+  font-size: 0.75rem;
+  color: var(--muted);
+  cursor: grab;
+  opacity: 0.5;
+  user-select: none;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.card-gear-handle:active {
+  cursor: grabbing;
 }
 
 .card-gear-row + .card-gear-row {

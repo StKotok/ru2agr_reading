@@ -151,6 +151,8 @@ export function renderWordCard(data, callbacks = {}) {
   const pronunciation = detail?.pronunciation || null;
 
   const cardSettings = loadCardSettings();
+  /** @type {Map<string, HTMLElement>} */
+  const sectionEls = new Map();
 
   const card = document.createElement('div');
   card.className = 'card word-card';
@@ -179,35 +181,53 @@ export function renderWordCard(data, callbacks = {}) {
 
   card.appendChild(formRow);
 
-  // --- Строка 2: часть речи · Стронг ---
-  const metaRow = document.createElement('div');
-  metaRow.className = 'word-card-meta';
-  metaRow.setAttribute('data-section', 'meta');
-  if (!cardSettings.meta) metaRow.style.display = 'none';
+  // --- Строка 2: грамматика (часть речи · Стронг · морфология) ---
+  const grammarRow = document.createElement('div');
+  grammarRow.className = 'word-card-meta';
+  sectionEls.set('grammar', grammarRow);
+  if (!cardSettings.grammar) grammarRow.style.display = 'none';
 
   if (pos) {
-    if (metaRow.children.length > 0) metaRow.appendChild(sepDot());
     const posEl = document.createElement('span');
     posEl.className = 'word-card-pos';
     posEl.textContent = pos;
-    metaRow.appendChild(posEl);
+    grammarRow.appendChild(posEl);
   }
 
   if (strong) {
-    if (metaRow.children.length > 0) metaRow.appendChild(sepDot());
+    if (grammarRow.children.length > 0) grammarRow.appendChild(sepDot());
     const strongEl = document.createElement('span');
     strongEl.className = 'word-card-strong';
     strongEl.textContent = `G${strong}`;
     strongEl.setAttribute('title', `Номер Стронга G${strong}`);
-    metaRow.appendChild(strongEl);
+    grammarRow.appendChild(strongEl);
   }
 
-  card.appendChild(metaRow);
+  // Морфологические чипы здесь же
+  if (morphLabels.length > 0) {
+    if (grammarRow.children.length > 0) grammarRow.appendChild(sepDot());
+    grammarRow.setAttribute('title', formatMorphFull(morph));
+    for (const label of morphLabels) {
+      const chip = document.createElement('span');
+      chip.className = 'morph-chip';
+      chip.textContent = label;
+      grammarRow.appendChild(chip);
+    }
+  } else if (morph && morph !== '---') {
+    if (grammarRow.children.length > 0) grammarRow.appendChild(sepDot());
+    grammarRow.setAttribute('title', formatMorphFull(morph));
+    const fallback = document.createElement('span');
+    fallback.className = 'morph-chip';
+    fallback.textContent = formatMorphFull(morph);
+    grammarRow.appendChild(fallback);
+  }
+
+  card.appendChild(grammarRow);
 
   // --- Строка 3: транслитерация / произношение + аудио ---
   const pronRow = document.createElement('div');
   pronRow.className = 'word-card-pron';
-  pronRow.setAttribute('data-section', 'pron');
+  sectionEls.set('pron', pronRow);
   if (!cardSettings.pron) pronRow.style.display = 'none';
 
   if (translit) {
@@ -245,7 +265,7 @@ export function renderWordCard(data, callbacks = {}) {
   if (original) {
     const inlineSection = document.createElement('div');
     inlineSection.className = 'word-card-inline';
-    inlineSection.setAttribute('data-section', 'inline');
+    sectionEls.set('inline', inlineSection);
     if (!cardSettings.inline) inlineSection.style.display = 'none';
 
     const inlineLabel = document.createElement('div');
@@ -295,7 +315,7 @@ export function renderWordCard(data, callbacks = {}) {
 
       const block = document.createElement('div');
       block.className = 'word-card-info-block';
-      block.setAttribute('data-section', 'senses');
+      sectionEls.set('senses', block);
       if (!cardSettings.senses) block.style.display = 'none';
 
       const label = document.createElement('div');
@@ -341,38 +361,11 @@ export function renderWordCard(data, callbacks = {}) {
     card.appendChild(lemmaSection);
   }
 
-  // --- Морфология: чипы ---
-  if (morphLabels.length > 0) {
-    const morphRow = document.createElement('div');
-    morphRow.className = 'word-card-morph';
-    morphRow.setAttribute('data-section', 'morph');
-    if (!cardSettings.morph) morphRow.style.display = 'none';
-    morphRow.setAttribute('title', formatMorphFull(morph));
-
-    for (const label of morphLabels) {
-      const chip = document.createElement('span');
-      chip.className = 'morph-chip';
-      chip.textContent = label;
-      morphRow.appendChild(chip);
-    }
-
-    card.appendChild(morphRow);
-  } else if (morph && morph !== '---') {
-    // Не смогли разобрать по частям — показываем полную русскую строку
-    const morphRow = document.createElement('div');
-    morphRow.className = 'word-card-morph';
-    morphRow.setAttribute('data-section', 'morph');
-    if (!cardSettings.morph) morphRow.style.display = 'none';
-    morphRow.textContent = formatMorphFull(morph);
-    card.appendChild(morphRow);
-  }
-
-  // Если морфологии нет вообще — не показываем пустой блок
 
   // --- Учебный статус ---
   const statusRow = document.createElement('div');
   statusRow.className = 'word-card-status';
-  statusRow.setAttribute('data-section', 'status');
+  sectionEls.set('status', statusRow);
   if (!cardSettings.status) statusRow.style.display = 'none';
 
   const statuses = [
@@ -411,7 +404,7 @@ export function renderWordCard(data, callbacks = {}) {
   if (detail?.definition) {
     const block = document.createElement('div');
     block.className = 'word-card-info-block';
-    block.setAttribute('data-section', 'definition');
+    sectionEls.set('definition', block);
     if (!cardSettings.definition) block.style.display = 'none';
 
     const label = document.createElement('div');
@@ -429,7 +422,7 @@ export function renderWordCard(data, callbacks = {}) {
   if (detail?.derivation) {
     const block = document.createElement('div');
     block.className = 'word-card-info-block';
-    block.setAttribute('data-section', 'derivation');
+    sectionEls.set('derivation', block);
     if (!cardSettings.derivation) block.style.display = 'none';
 
     const label = document.createElement('div');
@@ -443,6 +436,9 @@ export function renderWordCard(data, callbacks = {}) {
     card.appendChild(block);
   }
 
+  // Расставляем секции в сохранённом порядке (кроме formRow — всегда первый, gearBtn — всегда последний)
+  reorderCardSections(card, sectionEls, cardSettings.order);
+
   // --- Шестерёнка настроек ---
   const gearBtn = document.createElement('button');
   gearBtn.className = 'card-gear-btn';
@@ -455,46 +451,95 @@ export function renderWordCard(data, callbacks = {}) {
       existing.remove();
       return;
     }
-    showGearDropdown(card, gearBtn, cardSettings);
+    showGearDropdown(card, sectionEls, gearBtn, cardSettings);
   });
   card.appendChild(gearBtn);
 
   return card;
 }
 
-function showGearDropdown(card, anchor, settings) {
+function showGearDropdown(card, sectionEls, anchor, settings) {
   const dropdown = document.createElement('div');
   dropdown.className = 'card-gear-dropdown';
 
-  for (const section of CARD_SECTIONS) {
-    const id = `gear-${section.key}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+  let dragSrc = null;
 
-    const row = document.createElement('div');
-    row.className = 'card-gear-row';
+  // Строки в сохранённом порядке
+  const order = settings.order || CARD_SECTIONS.map(s => s.key);
+  const labelMap = Object.fromEntries(CARD_SECTIONS.map(s => [s.key, s.label]));
 
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.id = id;
-    cb.checked = settings[section.key];
-    cb.addEventListener('change', () => {
-      settings[section.key] = cb.checked;
-      saveCardSettings(settings);
-      const el = card.querySelector(`[data-section="${section.key}"]`);
-      if (el) {
-        el.style.display = cb.checked ? '' : 'none';
-      }
-    });
+  function buildRows() {
+    dropdown.innerHTML = '';
+    for (const key of order) {
+      const label = labelMap[key];
+      if (!label) continue;
 
-    const lbl = document.createElement('label');
-    lbl.setAttribute('for', id);
-    lbl.textContent = section.label;
+      const id = `gear-${key}-${Math.random().toString(36).slice(2,6)}`;
 
-    row.appendChild(cb);
-    row.appendChild(lbl);
-    dropdown.appendChild(row);
+      const row = document.createElement('div');
+      row.className = 'card-gear-row';
+      row.setAttribute('draggable', 'true');
+      row.setAttribute('data-gear-key', key);
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = id;
+      cb.checked = settings[key];
+      cb.addEventListener('change', () => {
+        settings[key] = cb.checked;
+        saveCardSettings(settings);
+        const el = sectionEls.get(key);
+        if (el) el.style.display = cb.checked ? '' : 'none';
+      });
+
+      const lbl = document.createElement('label');
+      lbl.setAttribute('for', id);
+      lbl.textContent = label;
+
+      row.appendChild(cb);
+      row.appendChild(lbl);
+
+      // Drag handle справа
+      const handle = document.createElement('span');
+      handle.className = 'card-gear-handle';
+      handle.textContent = '⠿';
+      row.appendChild(handle);
+
+      // Drag events
+      row.addEventListener('dragstart', (e) => {
+        dragSrc = row;
+        row.classList.add('is-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('is-dragging');
+        dragSrc = null;
+      });
+      row.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!dragSrc || dragSrc === row) return;
+        const srcKey = dragSrc.getAttribute('data-gear-key');
+        const dstKey = row.getAttribute('data-gear-key');
+        const srcIdx = order.indexOf(srcKey);
+        const dstIdx = order.indexOf(dstKey);
+        order.splice(srcIdx, 1);
+        order.splice(dstIdx, 0, srcKey);
+        settings.order = order;
+        saveCardSettings(settings);
+        reorderCardSections(card, sectionEls, order);
+        buildRows();
+      });
+
+      dropdown.appendChild(row);
+    }
   }
 
-  // Закрытие по клику снаружи
+  buildRows();
+
   function closeHandler(e) {
     if (!dropdown.contains(e.target) && e.target !== anchor) {
       dropdown.remove();
@@ -504,4 +549,22 @@ function showGearDropdown(card, anchor, settings) {
   setTimeout(() => document.addEventListener('click', closeHandler), 0);
 
   card.appendChild(dropdown);
+}
+
+function reorderCardSections(card, sectionEls, order) {
+  // formRow всегда первый, gearBtn всегда последний — их не трогаем
+  const formRow = card.querySelector('.word-card-form-row');
+  const gearBtn = card.querySelector('.card-gear-btn');
+  let anchor = formRow;
+  for (const key of order) {
+    const el = sectionEls.get(key);
+    if (el && el.parentElement === card) {
+      anchor.after(el);
+      anchor = el;
+    }
+  }
+  // gearBtn в конец
+  if (gearBtn) {
+    anchor.after(gearBtn);
+  }
 }
