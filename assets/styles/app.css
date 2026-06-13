@@ -265,14 +265,24 @@ input[type="checkbox"] {
 
 /* === Греческие вставки === */
 .gr {
-  color: var(--greek);
   text-decoration: underline;
   text-decoration-style: dotted;
   text-decoration-color: var(--hint);
   text-underline-offset: 3px;
-  user-select: none;
   cursor: pointer;
   border-radius: 2px;
+  touch-action: manipulation;
+}
+
+/* Буквы — синеватый */
+.gr[data-kind="letter"] {
+  color: var(--greek);
+}
+
+/* Слова / формы — терракотовый */
+.gr[data-kind="word"],
+.gr[data-kind="form"] {
+  color: var(--greek-word);
 }
 
 .gr-f {
@@ -524,6 +534,46 @@ p, h2, h3, span {
   .inspector-panel {
     display: block;
   }
+}
+
+/* Popover (десктопная всплывашка) */
+.popover-card {
+  position: fixed;
+  z-index: 300;
+  max-width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  padding: 8px;
+  animation: popover-in 0.2s ease;
+}
+
+.popover-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 36px;
+  min-height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popover-close:hover {
+  background: var(--selection);
+  color: var(--text);
+}
+
+@keyframes popover-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Bottom sheet — заглушка */

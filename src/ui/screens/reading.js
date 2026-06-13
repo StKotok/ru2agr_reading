@@ -9,7 +9,6 @@ import { createTopBar } from '../components/top-bar.js';
 import { createIntensitySlider } from '../components/intensity-slider.js';
 import { renderLetterCard, renderWordCard } from '../components/word-card.js';
 import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
-import { getInspectorPanel, showEmptyState, showInInspector } from '../components/inspector.js';
 import { showToast } from '../components/toast.js';
 import { navigate } from '../../router.js';
 
@@ -206,47 +205,17 @@ export async function mount(container, ctx) {
     }
   });
 
-  // Десктоп: инспектор
-  if (window.innerWidth >= 900) {
-    const inspector = getInspectorPanel(container);
-    showEmptyState();
-  }
-
-  // Обработчик кликов по греческим вставкам
-  textArea.addEventListener('click', (e) => {
-    const span = e.target.closest('span.gr');
-    if (!span) return;
-    // Если был долгий тап — не открываем карточку
-    if (span._wasLongPress) {
-      span._wasLongPress = false;
-      return;
-    }
-    const letter = span.getAttribute('data-letter');
-    if (letter) {
-      handleLetterTap(letter, span, container);
-      return;
-    }
-    const lexemeId = span.getAttribute('data-lexeme');
-    if (lexemeId) {
-      handleWordTap(lexemeId, span, container);
-      return;
-    }
-    // Режим 5: токен с data-strong
-    const strong = span.getAttribute('data-strong');
-    if (strong && span.classList.contains('grc-token')) {
-      handleGrcTokenTap(span, container);
-    }
-  });
+  // === Обработка тапов по греческим вставкам ===
 
   // Долгий тап (≥500ms) — показать оригинал
-  textArea.addEventListener('pointerdown', (e) => {
+  // Используем touchstart/mousedown для универсальности
+  const onPressStart = (e) => {
     const span = e.target.closest('span.gr');
     if (!span) return;
     longPressTarget = span;
     longPressTimer = setTimeout(() => {
       if (longPressTarget) {
         longPressTarget._wasLongPress = true;
-        // Показываем оригинал
         const original = longPressTarget.getAttribute('data-original');
         if (original) {
           longPressTarget.setAttribute('data-restore', longPressTarget.textContent);
@@ -255,11 +224,9 @@ export async function mount(container, ctx) {
         }
       }
     }, 500);
-  });
+  };
 
-  // Единый обработчик pointerup: сброс таймера + восстановление после долгого тапа
-  textArea.addEventListener('pointerup', () => {
-    // Сбрасываем таймер долгого нажатия
+  const onPressEnd = (e) => {
     if (longPressTimer) clearTimeout(longPressTimer);
     longPressTimer = null;
 
@@ -270,29 +237,57 @@ export async function mount(container, ctx) {
       setTimeout(() => {
         if (target.classList.contains('show-original')) {
           const restore = target.getAttribute('data-restore');
-          if (restore) {
-            target.textContent = restore;
-          }
+          if (restore) target.textContent = restore;
           target.classList.remove('show-original');
           target._wasLongPress = false;
         }
       }, 200);
+      return;
     }
-  });
 
-  textArea.addEventListener('pointerleave', () => {
+    longPressTarget = null;
+  };
+
+  textArea.addEventListener('touchstart', onPressStart, { passive: true });
+  textArea.addEventListener('mousedown', onPressStart);
+  textArea.addEventListener('touchend', onPressEnd);
+  textArea.addEventListener('mouseup', onPressEnd);
+  textArea.addEventListener('mouseleave', () => {
     if (longPressTimer) clearTimeout(longPressTimer);
     longPressTimer = null;
-    // Восстанавливаем если был показан оригинал
     if (longPressTarget && longPressTarget.classList.contains('show-original')) {
       const restore = longPressTarget.getAttribute('data-restore');
-      if (restore) {
-        longPressTarget.textContent = restore;
-      }
+      if (restore) longPressTarget.textContent = restore;
       longPressTarget.classList.remove('show-original');
       longPressTarget._wasLongPress = false;
     }
     longPressTarget = null;
+  });
+
+  // Обычный клик — открываем карточку
+  textArea.addEventListener('click', (e) => {
+    const span = e.target.closest('span.gr');
+    if (!span) return;
+    // Если был долгий тап — не открываем карточку
+    if (span._wasLongPress) {
+      span._wasLongPress = false;
+      return;
+    }
+    const letter = span.getAttribute('data-letter');
+    if (letter) {
+      handleLetterTap(letter, span);
+      return;
+    }
+    const lexemeId = span.getAttribute('data-lexeme');
+    if (lexemeId) {
+      handleWordTap(lexemeId, span);
+      return;
+    }
+    // Режим 5: токен с data-strong
+    const strong = span.getAttribute('data-strong');
+    if (strong && span.classList.contains('grc-token')) {
+      handleGrcTokenTap(span);
+    }
   });
 
   // Клавиатурная доступность
@@ -302,7 +297,7 @@ export async function mount(container, ctx) {
       if (!span) return;
       const letter = span.getAttribute('data-letter');
       if (letter) {
-        handleLetterTap(letter, span, container);
+        handleLetterTap(letter, span);
       }
     }
   });
@@ -437,8 +432,8 @@ function renderWindowed() {
         p.appendChild(document.createTextNode(verse.text));
       } else if (settings.mode === 5) {
         // Режим 5: греческий как основной текст
-        
-        
+
+
           const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
           const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
@@ -453,8 +448,8 @@ function renderWindowed() {
         // Добавляем grcVerse и alignment для режимов 3-5
         const verseCtx = { ...composeCtx };
         if (grcBookData && settings.mode >= 3) {
-          
-          
+
+
           const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
             verseCtx.grcVerse = grcVerse;
@@ -630,8 +625,8 @@ function reRenderWindowed() {
       if (plainView) {
         p.appendChild(document.createTextNode(verse.text));
       } else if (settings.mode === 5 && grcBookData) {
-        
-        
+
+
           const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
           const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
@@ -642,8 +637,8 @@ function reRenderWindowed() {
       } else {
         const verseCtx = { ...composeCtx };
         if (grcBookData && settings.mode >= 3) {
-          
-          
+
+
           const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
             verseCtx.grcVerse = grcVerse;
@@ -742,7 +737,75 @@ function createOfflineState(bookId) {
   return div;
 }
 
-function handleWordTap(lexemeId, span, container) {
+//
+// Popover для десктопа — всплывающая карточка рядом с элементом
+//
+let popoverEl = null;
+let popoverOutsideHandler = null;
+
+function closePopover() {
+  if (popoverOutsideHandler) {
+    document.removeEventListener('click', popoverOutsideHandler);
+    popoverOutsideHandler = null;
+  }
+  if (popoverEl) {
+    popoverEl.remove();
+    popoverEl = null;
+  }
+}
+
+function showPopover(card, anchorEl) {
+  closePopover();
+
+  popoverEl = document.createElement('div');
+  popoverEl.className = 'popover-card';
+  popoverEl.setAttribute('role', 'dialog');
+  popoverEl.setAttribute('aria-label', 'Карточка слова');
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'popover-close';
+  closeBtn.setAttribute('aria-label', 'Закрыть');
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', closePopover);
+  popoverEl.appendChild(closeBtn);
+
+  popoverEl.appendChild(card);
+  document.body.appendChild(popoverEl);
+
+  // Позиционирование рядом с anchor
+  const rect = anchorEl.getBoundingClientRect();
+  const pw = 320;
+  let top = rect.bottom + 8;
+  let left = rect.left;
+
+  if (left + pw > window.innerWidth - 16) {
+    left = window.innerWidth - pw - 16;
+  }
+  if (left < 16) left = 16;
+
+  const ph = popoverEl.offsetHeight || 200;
+  if (top + ph > window.innerHeight - 16) {
+    top = rect.top - ph - 8;
+  }
+  if (top < 16) top = 16;
+
+  popoverEl.style.position = 'fixed';
+  popoverEl.style.top = top + 'px';
+  popoverEl.style.left = left + 'px';
+
+  // Клик снаружи — закрыть
+  popoverOutsideHandler = (e) => {
+    if (!popoverEl) return;
+    if (!popoverEl.contains(e.target) && e.target !== anchorEl) {
+      closePopover();
+    }
+  };
+  requestAnimationFrame(() => {
+    document.addEventListener('click', popoverOutsideHandler);
+  });
+}
+
+function handleWordTap(lexemeId, span) {
   if (!coreLexicon) return;
   const lexeme = coreLexicon.find(l => l.id === lexemeId);
   if (!lexeme) return;
@@ -754,7 +817,6 @@ function handleWordTap(lexemeId, span, container) {
     onMarkKnown: async (id) => {
       dictionary = setWordStatus(id, 'known', dictionary);
       await saveDictionary(dictionary);
-      // Точечное обновление
       const spans = document.querySelectorAll(`span.gr[data-lexeme="${id}"]`);
       spans.forEach(s => s.classList.add('known'));
     },
@@ -767,13 +829,13 @@ function handleWordTap(lexemeId, span, container) {
   }, settings.show || {});
 
   if (window.innerWidth >= 900) {
-    showInInspector(card);
+    showPopover(card, span);
   } else {
     openBottomSheet(card);
   }
 }
 
-function handleGrcTokenTap(span, container) {
+function handleGrcTokenTap(span) {
   const w = span.getAttribute('data-w');
   const lemma = span.getAttribute('data-lemma');
   const morph = span.getAttribute('data-morph');
@@ -793,13 +855,13 @@ function handleGrcTokenTap(span, container) {
   `;
 
   if (window.innerWidth >= 900) {
-    showInInspector(card);
+    showPopover(card, span);
   } else {
     openBottomSheet(card);
   }
 }
 
-function handleLetterTap(letterChar, span, container) {
+function handleLetterTap(letterChar, span) {
   if (!alphabet) return;
 
   const letterData = alphabet.find(l => l.lower === letterChar);
@@ -810,26 +872,20 @@ function handleLetterTap(letterChar, span, container) {
   const card = renderLetterCard(letterData, progEntry, async (ch) => {
     progress = markLetterKnown(ch, progress);
     await saveProgress(progress);
-
-    // Точечное обновление классов (без перерендера)
-    const spans = document.querySelectorAll(`span.gr[data-letter="${ch}"]`);
-    // Просто обновляем карточку если она открыта
     const updatedCard = renderLetterCard(letterData, progress.letters[ch], () => {});
     if (window.innerWidth >= 900) {
-      showInInspector(updatedCard);
+      closePopover();
+      showPopover(updatedCard, span);
     } else if (isSheetOpen()) {
       openBottomSheet(updatedCard);
     }
   });
 
   if (window.innerWidth >= 900) {
-    showInInspector(card);
+    showPopover(card, span);
   } else {
     openBottomSheet(card);
   }
-
-  // Режим 2: на десктопе hover-подсказка уже через title
-  // title устанавливается в render.js через aria-label
 }
 
 export function unmount() {

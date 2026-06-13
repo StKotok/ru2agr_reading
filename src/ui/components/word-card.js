@@ -19,7 +19,7 @@ export function renderLetterCard(letter, progressEntry, onMarkKnown) {
     <div class="word-card-letter">${letter.upper} ${letter.lower}</div>
     <div class="word-card-name">${letter.name}</div>
     <div class="word-card-sound">${letter.sound}</div>
-    <div class="word-card-equiv">Соответствует русской «${letter.ruEquivalents[0]}»</div>
+    <div class="word-card-equiv">Ближе всего к русской «${letter.ruEquivalents[0]}»</div>
     <div class="word-card-actions"></div>
     <div class="word-card-disclaimer">Произношение — учебное приближение, не научная реконструкция.</div>
   `;

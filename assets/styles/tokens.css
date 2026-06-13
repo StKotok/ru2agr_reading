@@ -1,11 +1,12 @@
 /* === Токены ролей: светлая тема === */
 :root,
 [data-theme="light"] {
-  --surface: #FAF7F2;
+  --surface: #efeee9;
   --surface-card: #F2EDE4;
   --text: #2B2B2B;
   --muted: #8C8C8C;
-  --greek: #3D5A80;
+  --greek: #264e83;
+  --greek-word: #B07D4F;
   --hint: #98A8C0;
   --focus: #3D5A80;
   --selection: #D6E4F0;
@@ -23,6 +24,7 @@
   --text: #E0DCD0;
   --muted: #8C8C8C;
   --greek: #7BA3CC;
+  --greek-word: #D4A574;
   --hint: #5A6880;
   --focus: #7BA3CC;
   --selection: #2A3F5A;
@@ -40,6 +42,7 @@
     --text: #E0DCD0;
     --muted: #8C8C8C;
     --greek: #7BA3CC;
+    --greek-word: #D4A574;
     --hint: #5A6880;
     --focus: #7BA3CC;
     --selection: #2A3F5A;
