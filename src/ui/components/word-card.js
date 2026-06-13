@@ -184,18 +184,22 @@ export function renderWordCard(data, callbacks = {}) {
   card.appendChild(pronRow);
 
   // --- Контекстный перевод ---
-  if (gloss) {
+  // Приоритет: глосса из лексикона → русское слово-оригинал → ничего
+  const translationText = gloss || original || null;
+
+  if (translationText) {
     const glossSection = document.createElement('div');
     glossSection.className = 'word-card-gloss-section';
 
     const glossEl = document.createElement('div');
     glossEl.className = 'word-card-gloss';
-    glossEl.textContent = gloss;
+    glossEl.textContent = translationText;
     glossSection.appendChild(glossEl);
 
     const glossLabel = document.createElement('div');
     glossLabel.className = 'word-card-gloss-label';
-    glossLabel.textContent = 'значение в этом стихе';
+    // Для слов из лексикона — «значение», для freq-* — «заменяет»
+    glossLabel.textContent = gloss ? 'значение в этом стихе' : 'заменяет это слово';
     glossSection.appendChild(glossLabel);
 
     card.appendChild(glossSection);
