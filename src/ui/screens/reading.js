@@ -829,14 +829,15 @@ function collectWordData(span) {
     : (strong ? coreLexicon.find(l => l.strong === strong) : null);
 
   const lemma = lemmaFromAttr || core?.lemma || surfaceForm;
-  const translit = core?.translit || null;
-  const gloss = core?.gloss || null;
-  const morph = span.getAttribute('data-morph') || null;
 
-  // Частотность по strong
+  // Частотность по strong (используется и для freq, и для translit)
   const freq = strong
     ? (frequencyList ? frequencyList.find(f => f.strong === strong) : null)
     : null;
+
+  const translit = core?.translit || freq?.translit || null;
+  const gloss = core?.gloss || null;
+  const morph = span.getAttribute('data-morph') || null;
 
   // Словарная запись
   let dictEntry = null;
