@@ -238,6 +238,7 @@ export function renderWordCard(data, callbacks = {}) {
   if (morphLabels.length > 0) {
     const morphRow = document.createElement('div');
     morphRow.className = 'word-card-morph';
+    morphRow.setAttribute('title', formatMorphFull(morph));
 
     for (const label of morphLabels) {
       const chip = document.createElement('span');
