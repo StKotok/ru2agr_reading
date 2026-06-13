@@ -1,7 +1,6 @@
 import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting } from '../../state/dictionary.js';
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
-import { getInspectorPanel, showEmptyState, showInInspector } from '../components/inspector.js';
 
 let dict = {};
 let lexicon = [];
@@ -11,7 +10,73 @@ let store = null;
 let filterStatus = 'all';
 let searchQuery = '';
 let renderedCount = 0;
+let lastDividerBucket = 0;
+let bucketCoverage = {};
 const PAGE_SIZE = 100;
+
+// Поповер для десктопа
+let popoverEl = null;
+let popoverOutsideHandler = null;
+
+function closePopover() {
+  if (popoverOutsideHandler) {
+    document.removeEventListener('click', popoverOutsideHandler);
+    popoverOutsideHandler = null;
+  }
+  if (popoverEl) {
+    popoverEl.remove();
+    popoverEl = null;
+  }
+}
+
+function showPopover(card, anchorEl) {
+  closePopover();
+
+  popoverEl = document.createElement('div');
+  popoverEl.className = 'popover-card';
+  popoverEl.setAttribute('role', 'dialog');
+  popoverEl.setAttribute('aria-label', 'Карточка слова');
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'popover-close';
+  closeBtn.setAttribute('aria-label', 'Закрыть');
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', closePopover);
+  popoverEl.appendChild(closeBtn);
+
+  popoverEl.appendChild(card);
+  document.body.appendChild(popoverEl);
+
+  const rect = anchorEl.getBoundingClientRect();
+  const pw = 360;
+  let top = rect.bottom + 8;
+  let left = rect.left;
+
+  if (left + pw > window.innerWidth - 16) {
+    left = window.innerWidth - pw - 16;
+  }
+  if (left < 16) left = 16;
+
+  const ph = popoverEl.offsetHeight || 200;
+  if (top + ph > window.innerHeight - 16) {
+    top = rect.top - ph - 8;
+  }
+  if (top < 16) top = 16;
+
+  popoverEl.style.position = 'fixed';
+  popoverEl.style.top = top + 'px';
+  popoverEl.style.left = left + 'px';
+
+  popoverOutsideHandler = (e) => {
+    if (!popoverEl) return;
+    if (!popoverEl.contains(e.target) && e.target !== anchorEl) {
+      closePopover();
+    }
+  };
+  requestAnimationFrame(() => {
+    document.addEventListener('click', popoverOutsideHandler);
+  });
+}
 
 export async function mount(cnt, ctx) {
   container = cnt;
@@ -19,6 +84,7 @@ export async function mount(cnt, ctx) {
   [dict, lexicon, frequencyList] = await Promise.all([
     loadDictionary(), loadCoreLexicon(), loadFrequency()
   ]);
+  bucketCoverage = computeBucketCoverage(frequencyList);
   renderedCount = 0;
   filterStatus = 'all';
   searchQuery = '';
@@ -139,7 +205,7 @@ function renderPersonalDictionaryFallback() {
     // Тап по строке
     row.addEventListener('click', (e) => {
       if (e.target.tagName === 'INPUT') return;
-      showWordCard(pseudoItem, core, dict[dictId], dictId);
+      showWordCard(pseudoItem, core, dict[dictId], dictId, row);
     });
 
     list.appendChild(row);
@@ -148,8 +214,10 @@ function renderPersonalDictionaryFallback() {
 
 function render() {
   if (!container) return;
+  closePopover();
   container.innerHTML = '';
   renderedCount = 0;
+  lastDividerBucket = 0;
 
   const h2 = document.createElement('h2');
   h2.textContent = 'Словарь';
@@ -220,12 +288,6 @@ function render() {
   // DOM-окно: отрендерить первые PAGE_SIZE, остальные через Observer
   renderBatch(list, filtered);
 
-  // Десктоп: подключаем инспектор
-  if (window.innerWidth >= 900) {
-    getInspectorPanel(container);
-    showEmptyState();
-  }
-
   if (filtered.length > PAGE_SIZE * 2) {
     // Сентинел для подгрузки
     const sentinel = document.createElement('div');
@@ -255,6 +317,7 @@ function render() {
 function renderBatch(list, filtered) {
   const coreById = new Map((lexicon || []).map(l => [l.strong, l]));
   const end = Math.min(renderedCount + PAGE_SIZE, filtered.length);
+  const showDividers = !searchQuery.trim();
 
   for (let i = renderedCount; i < end; i++) {
     const item = filtered[i];
@@ -262,6 +325,20 @@ function renderBatch(list, filtered) {
     const dictId = lex ? lex.id : `freq-${item.strong}`;
     const entry = dict[dictId];
     const available = item.hasAlignment;
+
+    // Дивайдер при смене частотной группы (только без поиска)
+    if (showDividers) {
+      const bucket = rankBucket(item.rank);
+      if (bucket > lastDividerBucket) {
+        lastDividerBucket = bucket;
+        const pct = bucketCoverage[bucket];
+        const pctText = pct !== undefined ? ` · приблизительно ${pct}% текста НЗ` : '';
+        const divider = document.createElement('div');
+        divider.className = 'dict-divider';
+        divider.innerHTML = `<span>Топ ${bucket}${pctText}</span>`;
+        list.appendChild(divider);
+      }
+    }
 
     const row = document.createElement('div');
     row.className = `dict-row${!available ? ' dict-row--disabled' : ''}`;
@@ -306,7 +383,7 @@ function renderBatch(list, filtered) {
     // Тап по строке (не по чекбоксу) → карточка
     row.addEventListener('click', (e) => {
       if (e.target.tagName === 'INPUT') return;
-      showWordCard(item, lex, dict[dictId], dictId);
+      showWordCard(item, lex, dict[dictId], dictId, row);
     });
 
     list.appendChild(row);
@@ -353,6 +430,29 @@ function refreshCard(card, item, dictEntry, dictId) {
 
 function coreById() {
   return new Map((lexicon || []).map(l => [l.strong, l]));
+}
+
+function rankBucket(rank) {
+  if (rank <= 10) return 10;
+  if (rank <= 50) return 50;
+  if (rank <= 100) return 100;
+  return Math.ceil(rank / 100) * 100;
+}
+
+function computeBucketCoverage(list) {
+  // Реальный объём греческого НЗ (NA28) ≈ 137 741 слово
+  const TOTAL_NT_WORDS = 137741;
+  if (!list || list.length === 0) return {};
+  let cumulative = 0;
+  const cov = {};
+  for (const item of list) {
+    cumulative += item.count;
+    const bucket = rankBucket(item.rank);
+    if (!(bucket in cov)) {
+      cov[bucket] = Math.round(cumulative / TOTAL_NT_WORDS * 100);
+    }
+  }
+  return cov;
 }
 
 /**
@@ -484,13 +584,13 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
   return card;
 }
 
-function showWordCard(item, lexeme, dictEntry, dictId) {
+function showWordCard(item, lexeme, dictEntry, dictId, anchorEl) {
   const card = buildWordCard(item, lexeme, dictEntry, dictId);
   if (window.innerWidth >= 900) {
-    showInInspector(card);
+    showPopover(card, anchorEl);
   } else {
     openBottomSheet(card);
   }
 }
 
-export function unmount() { container = null; }
+export function unmount() { closePopover(); container = null; }

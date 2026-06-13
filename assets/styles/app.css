@@ -1266,6 +1266,26 @@ p, h2, h3, span {
   height: 1px;
 }
 
+.dict-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dict-divider::before,
+.dict-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 .word-card-warning {
   font-size: 0.8rem;
   color: var(--danger);
