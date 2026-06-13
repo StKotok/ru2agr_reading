@@ -7,8 +7,23 @@ const SYN_DIR = 'assets/data/bibles/syn';
 const OUT = 'assets/data/lexicon/frequency.json';
 const TOP_LIMIT = 1000;
 
-// ── Шаг 1: подсчёт частот лемм по Strong ──
-const counts = new Map(); // strong (string) → Map(lemma → count)
+// Нормализация орфографических вариантов лемм (одна лексема — одна запись).
+// Только случаи, где разное написание не меняет значения.
+const LEMMA_NORM = {
+  'οὔ': 'οὐ',         // отрицание: проклитика vs ударная
+  'Μαριάμ': 'Μαρία',  // имя: семитская vs эллинизированная форма
+  'Σιλᾶς': 'Σίλας',   // имя: вариант ударения
+  'Σολομῶν': 'Σολομών', // имя: вариант ударения
+  'ἆρα': 'ἄρα',       // итак: вариант ударения (не ἀρά «проклятие»)
+  'σύνιημι': 'συνίημι', // понимать: вариант ударения
+};
+
+function normalizeLemma(lemma) {
+  return LEMMA_NORM[lemma] || lemma;
+}
+
+// ── Шаг 1: подсчёт частот по леммам (с агрегацией Strong) ──
+const lemmaData = new Map(); // lemma → { count, strongs: Map(strong → count) }
 
 for (const file of readdirSync(GRC_DIR).filter(f => f.endsWith('.json')).sort()) {
   const book = JSON.parse(readFileSync(path.join(GRC_DIR, file), 'utf8'));
@@ -16,29 +31,47 @@ for (const file of readdirSync(GRC_DIR).filter(f => f.endsWith('.json')).sort())
     for (const v of ch.verses) {
       for (const t of (v.tokens || [])) {
         if (!t.strong || !t.lemma) continue;
-        const key = String(t.strong);
-        if (!counts.has(key)) counts.set(key, new Map());
-        const lemmas = counts.get(key);
-        lemmas.set(t.lemma, (lemmas.get(t.lemma) || 0) + 1);
+        const lemma = normalizeLemma(t.lemma);
+        const strong = String(t.strong);
+        if (!lemmaData.has(lemma)) {
+          lemmaData.set(lemma, { count: 0, strongs: new Map() });
+        }
+        const entry = lemmaData.get(lemma);
+        entry.count++;
+        entry.strongs.set(strong, (entry.strongs.get(strong) || 0) + 1);
       }
     }
   }
 }
 
-const all = [...counts.entries()].map(([strong, lemmas]) => {
-  const count = [...lemmas.values()].reduce((a, b) => a + b, 0);
-  // Самая частотная лемма для Strong; tie-break по алфавиту (детерминизм)
-  const lemma = [...lemmas.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'el'))[0][0];
-  return { strong: Number(strong), lemma, count };
+const all = [...lemmaData.entries()].map(([lemma, { count, strongs }]) => {
+  return { lemma, count, strongs };
 });
 
-all.sort((a, b) => b.count - a.count || a.strong - b.strong);
+all.sort((a, b) => b.count - a.count);
 
-// ── Шаг 2: hasAlignment — участвует ли Strong в alignment-парах ──
+// Назначаем уникальные Strong: для каждой леммы — самый частотный Strong,
+// который ещё не занят более высокоранговой леммой.
+const usedStrongs = new Set();
+for (const entry of all) {
+  const sortedStrongs = [...entry.strongs.entries()]
+    .sort((a, b) => b[1] - a[1] || Number(a[0]) - Number(b[0]));
+  let picked = null;
+  for (const [s] of sortedStrongs) {
+    if (!usedStrongs.has(s)) { picked = s; break; }
+  }
+  if (!picked) {
+    // Все Strong заняты — fallback на самый частотный
+    picked = sortedStrongs[0][0];
+  }
+  usedStrongs.add(picked);
+  entry.strong = Number(picked);
+  entry._allStrongs = new Set(sortedStrongs.map(([s]) => s));
+}
+
+// ── Шаг 2: hasAlignment — участвует ли лемма в alignment-парах ──
 const alignedStrongs = new Set();
 
-// alignment в syn/*.json, греческие токены (со Strong) в grc/*.json
 const synFiles = readdirSync(SYN_DIR).filter(f => f.endsWith('.json')).sort();
 for (const file of synFiles) {
   const synBook = JSON.parse(readFileSync(path.join(SYN_DIR, file), 'utf8'));
@@ -66,19 +99,30 @@ for (const file of synFiles) {
   }
 }
 
-// ── Инварианты корпуса ──
-if (all.length < 5000 || all.length > 6000) {
-  throw new Error(`инвариант: уникальных Strong ${all.length}, ожидалось 5000-6000`);
+// Лемма доступна, если хотя бы один её Strong участвует в alignment
+function hasAlignment(strongs) {
+  for (const s of strongs.keys()) {
+    if (alignedStrongs.has(s)) return true;
+  }
+  return false;
 }
-if (all[0].strong !== 3588 || all[0].count < 15000) {
-  throw new Error(`инвариант: топ-1 должен быть ὁ (G3588, ~19.8k), получено G${all[0].strong}:${all[0].count}`);
+
+// ── Инварианты корпуса ──
+const uniqueLemmas = all.length;
+if (uniqueLemmas < 5000 || uniqueLemmas > 6000) {
+  throw new Error(`инвариант: уникальных лемм ${uniqueLemmas}, ожидалось 5000-6000`);
+}
+if (all[0].lemma !== 'ὁ' || all[0].count < 15000) {
+  throw new Error(`инвариант: топ-1 должен быть ὁ (~19.8k), получено ${all[0].lemma}:${all[0].count}`);
 }
 
 const items = all.slice(0, TOP_LIMIT).map((it, i) => ({
   rank: i + 1,
-  ...it,
+  strong: it.strong,
+  lemma: it.lemma,
+  count: it.count,
   translit: transliterateGreek(it.lemma),
-  hasAlignment: alignedStrongs.has(String(it.strong))
+  hasAlignment: hasAlignment(it._allStrongs)
 }));
 
 writeFileSync(OUT, JSON.stringify(items));
@@ -87,7 +131,7 @@ writeFileSync(OUT, JSON.stringify(items));
 const withAlign = items.filter(i => i.hasAlignment).length;
 const withoutAlign = items.filter(i => !i.hasAlignment).length;
 const disabledTop10 = items.slice(0, 10).filter(i => !i.hasAlignment).map(i => i.lemma);
-console.log(`frequency.json: ${items.length} лемм из ${all.length} Strong`);
+console.log(`frequency.json: ${items.length} лемм из ${uniqueLemmas} уникальных лемм`);
 console.log(`hasAlignment=true: ${withAlign}, false: ${withoutAlign}`);
 console.log(`Топ-10 без alignment: [${disabledTop10.join(', ')}]`);
 console.log(`Топ-3: ${items.slice(0, 3).map(i => `${i.lemma} (G${i.strong}, ${i.count}, align=${i.hasAlignment})`).join(', ')}`);
