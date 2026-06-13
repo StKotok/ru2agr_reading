@@ -5,6 +5,7 @@
 
 import { formatMorphShort, formatMorphFull } from '../../engine/morphology.js';
 import { stripDiacritics } from '../../engine/rules.js';
+import { loadCardSettings, saveCardSettings, CARD_SECTIONS } from '../../state/card-settings.js';
 
 function sepDot() {
   const span = document.createElement('span');
@@ -149,6 +150,8 @@ export function renderWordCard(data, callbacks = {}) {
   const freqLabel = freqTooltip(freq, lemma);
   const pronunciation = detail?.pronunciation || null;
 
+  const cardSettings = loadCardSettings();
+
   const card = document.createElement('div');
   card.className = 'card word-card';
   card.setAttribute('role', 'dialog');
@@ -179,6 +182,8 @@ export function renderWordCard(data, callbacks = {}) {
   // --- Строка 2: часть речи · Стронг ---
   const metaRow = document.createElement('div');
   metaRow.className = 'word-card-meta';
+  metaRow.setAttribute('data-section', 'meta');
+  if (!cardSettings.meta) metaRow.style.display = 'none';
 
   if (pos) {
     if (metaRow.children.length > 0) metaRow.appendChild(sepDot());
@@ -202,6 +207,8 @@ export function renderWordCard(data, callbacks = {}) {
   // --- Строка 3: транслитерация / произношение + аудио ---
   const pronRow = document.createElement('div');
   pronRow.className = 'word-card-pron';
+  pronRow.setAttribute('data-section', 'pron');
+  if (!cardSettings.pron) pronRow.style.display = 'none';
 
   if (translit) {
     const translitEl = document.createElement('span');
@@ -238,6 +245,8 @@ export function renderWordCard(data, callbacks = {}) {
   if (original) {
     const inlineSection = document.createElement('div');
     inlineSection.className = 'word-card-inline';
+    inlineSection.setAttribute('data-section', 'inline');
+    if (!cardSettings.inline) inlineSection.style.display = 'none';
 
     const inlineLabel = document.createElement('div');
     inlineLabel.className = 'word-card-inline-label';
@@ -286,6 +295,8 @@ export function renderWordCard(data, callbacks = {}) {
 
       const block = document.createElement('div');
       block.className = 'word-card-info-block';
+      block.setAttribute('data-section', 'senses');
+      if (!cardSettings.senses) block.style.display = 'none';
 
       const label = document.createElement('div');
       label.className = 'word-card-info-label';
@@ -334,6 +345,8 @@ export function renderWordCard(data, callbacks = {}) {
   if (morphLabels.length > 0) {
     const morphRow = document.createElement('div');
     morphRow.className = 'word-card-morph';
+    morphRow.setAttribute('data-section', 'morph');
+    if (!cardSettings.morph) morphRow.style.display = 'none';
     morphRow.setAttribute('title', formatMorphFull(morph));
 
     for (const label of morphLabels) {
@@ -348,6 +361,8 @@ export function renderWordCard(data, callbacks = {}) {
     // Не смогли разобрать по частям — показываем полную русскую строку
     const morphRow = document.createElement('div');
     morphRow.className = 'word-card-morph';
+    morphRow.setAttribute('data-section', 'morph');
+    if (!cardSettings.morph) morphRow.style.display = 'none';
     morphRow.textContent = formatMorphFull(morph);
     card.appendChild(morphRow);
   }
@@ -357,6 +372,8 @@ export function renderWordCard(data, callbacks = {}) {
   // --- Учебный статус ---
   const statusRow = document.createElement('div');
   statusRow.className = 'word-card-status';
+  statusRow.setAttribute('data-section', 'status');
+  if (!cardSettings.status) statusRow.style.display = 'none';
 
   const statuses = [
     { key: 'new', label: 'Не помню', cls: 'status-new' },
@@ -390,54 +407,101 @@ export function renderWordCard(data, callbacks = {}) {
 
   card.appendChild(statusRow);
 
-  // --- Подробнее (определение + происхождение) ---
-  if (detail) {
-    const detailSection = document.createElement('div');
-    detailSection.className = 'word-card-detail';
+  // --- Определение ---
+  if (detail?.definition) {
+    const block = document.createElement('div');
+    block.className = 'word-card-info-block';
+    block.setAttribute('data-section', 'definition');
+    if (!cardSettings.definition) block.style.display = 'none';
 
-    const detailBtn = document.createElement('button');
-    detailBtn.className = 'word-card-details-btn';
-    detailBtn.textContent = 'Подробнее ▸';
-    detailBtn.addEventListener('click', () => {
-      const expanded = detailSection.classList.toggle('is-open');
-      detailBtn.textContent = expanded ? 'Подробнее ▾' : 'Подробнее ▸';
-    });
-    detailSection.appendChild(detailBtn);
-
-    const detailBody = document.createElement('div');
-    detailBody.className = 'word-card-detail-body';
-
-    if (detail.definition) {
-      const block = document.createElement('div');
-      block.className = 'word-card-info-block';
-      const label = document.createElement('div');
-      label.className = 'word-card-info-label';
-      label.textContent = 'определение';
-      block.appendChild(label);
-      const text = document.createElement('div');
-      text.className = 'word-card-info-text';
-      text.textContent = detail.definition;
-      block.appendChild(text);
-      detailBody.appendChild(block);
-    }
-
-    if (detail.derivation) {
-      const block = document.createElement('div');
-      block.className = 'word-card-info-block';
-      const label = document.createElement('div');
-      label.className = 'word-card-info-label';
-      label.textContent = 'происхождение';
-      block.appendChild(label);
-      const text = document.createElement('div');
-      text.className = 'word-card-info-text';
-      text.textContent = detail.derivation;
-      block.appendChild(text);
-      detailBody.appendChild(block);
-    }
-
-    detailSection.appendChild(detailBody);
-    card.appendChild(detailSection);
+    const label = document.createElement('div');
+    label.className = 'word-card-info-label';
+    label.textContent = 'определение';
+    block.appendChild(label);
+    const text = document.createElement('div');
+    text.className = 'word-card-info-text';
+    text.textContent = detail.definition;
+    block.appendChild(text);
+    card.appendChild(block);
   }
 
+  // --- Происхождение ---
+  if (detail?.derivation) {
+    const block = document.createElement('div');
+    block.className = 'word-card-info-block';
+    block.setAttribute('data-section', 'derivation');
+    if (!cardSettings.derivation) block.style.display = 'none';
+
+    const label = document.createElement('div');
+    label.className = 'word-card-info-label';
+    label.textContent = 'происхождение';
+    block.appendChild(label);
+    const text = document.createElement('div');
+    text.className = 'word-card-info-text';
+    text.textContent = detail.derivation;
+    block.appendChild(text);
+    card.appendChild(block);
+  }
+
+  // --- Шестерёнка настроек ---
+  const gearBtn = document.createElement('button');
+  gearBtn.className = 'card-gear-btn';
+  gearBtn.setAttribute('aria-label', 'Настройки карточки');
+  gearBtn.textContent = '⚙';
+  gearBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const existing = card.querySelector('.card-gear-dropdown');
+    if (existing) {
+      existing.remove();
+      return;
+    }
+    showGearDropdown(card, gearBtn, cardSettings);
+  });
+  card.appendChild(gearBtn);
+
   return card;
+}
+
+function showGearDropdown(card, anchor, settings) {
+  const dropdown = document.createElement('div');
+  dropdown.className = 'card-gear-dropdown';
+
+  for (const section of CARD_SECTIONS) {
+    const id = `gear-${section.key}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+
+    const row = document.createElement('div');
+    row.className = 'card-gear-row';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = id;
+    cb.checked = settings[section.key];
+    cb.addEventListener('change', () => {
+      settings[section.key] = cb.checked;
+      saveCardSettings(settings);
+      const el = card.querySelector(`[data-section="${section.key}"]`);
+      if (el) {
+        el.style.display = cb.checked ? '' : 'none';
+      }
+    });
+
+    const lbl = document.createElement('label');
+    lbl.setAttribute('for', id);
+    lbl.textContent = section.label;
+
+    row.appendChild(cb);
+    row.appendChild(lbl);
+    dropdown.appendChild(row);
+  }
+
+  // Закрытие по клику снаружи
+  function closeHandler(e) {
+    if (!dropdown.contains(e.target) && e.target !== anchor) {
+      dropdown.remove();
+      document.removeEventListener('click', closeHandler);
+    }
+  }
+  setTimeout(() => document.addEventListener('click', closeHandler), 0);
+
+  card.appendChild(dropdown);
 }
