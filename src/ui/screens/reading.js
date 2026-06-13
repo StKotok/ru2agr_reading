@@ -773,24 +773,41 @@ function showPopover(card, anchorEl) {
 
   // Позиционирование рядом с anchor
   const rect = anchorEl.getBoundingClientRect();
-  const pw = 360;
-  let top = rect.bottom + 8;
+  const pw = 440;
+  const margin = 16;
   let left = rect.left;
 
-  if (left + pw > window.innerWidth - 16) {
-    left = window.innerWidth - pw - 16;
+  if (left + pw > window.innerWidth - margin) {
+    left = window.innerWidth - pw - margin;
   }
-  if (left < 16) left = 16;
+  if (left < margin) left = margin;
 
-  const ph = popoverEl.offsetHeight || 200;
-  if (top + ph > window.innerHeight - 16) {
-    top = rect.top - ph - 8;
+  // Доступное место снизу и сверху от anchor
+  const spaceBelow = window.innerHeight - rect.bottom - margin;
+  const spaceAbove = rect.top - margin;
+
+  // Выбираем сторону с большим местом
+  let top;
+  let maxH;
+  if (spaceBelow >= spaceAbove) {
+    top = rect.bottom + 8;
+    maxH = spaceBelow - 8;
+  } else {
+    maxH = spaceAbove - 8;
+    top = Math.max(margin, rect.top - maxH - 8);
   }
-  if (top < 16) top = 16;
+  // Не даём карточке быть меньше 200px
+  if (maxH < 200) maxH = 200;
+  if (top < margin) top = margin;
 
   popoverEl.style.position = 'fixed';
   popoverEl.style.top = top + 'px';
   popoverEl.style.left = left + 'px';
+  popoverEl.style.maxHeight = maxH + 'px';
+
+  // Скролл внутри карточки, а не на поповере
+  card.style.maxHeight = 'none';
+  card.style.overflowY = 'auto';
 
   // Клик снаружи — закрыть
   popoverOutsideHandler = (e) => {
@@ -837,6 +854,10 @@ function collectWordData(span) {
 
   const translit = core?.translit || freq?.translit || null;
   const gloss = core?.gloss || null;
+  const senses = core?.senses || null;
+  const detail = core?.detail || null;
+  const pos = core?.pos || null;
+  const ref = core?.ref || null;
   const morph = span.getAttribute('data-morph') || null;
 
   // Словарная запись
@@ -853,6 +874,10 @@ function collectWordData(span) {
     lemma,
     translit,
     gloss,
+    senses,
+    detail,
+    pos,
+    ref,
     morph,
     freq: freq ? { rank: freq.rank, count: freq.count } : null,
     dictEntry,

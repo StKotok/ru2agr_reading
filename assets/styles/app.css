@@ -540,14 +540,43 @@ p, h2, h3, span {
 .popover-card {
   position: fixed;
   z-index: 300;
-  width: 360px;
+  width: 420px;
   max-width: calc(100vw - 32px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: 0 4px 32px rgba(0,0,0,0.12);
-  padding: 8px 8px 8px 8px;
   animation: popover-in 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.popover-card > .word-card {
+  max-height: none;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* WebKit: тонкий постоянный скроллбар */
+.popover-card > .word-card::-webkit-scrollbar {
+  width: 5px;
+}
+
+.popover-card > .word-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.popover-card > .word-card::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* Не скрывать скроллбар автоматически */
+.popover-card > .word-card::-webkit-scrollbar-thumb:vertical {
+  min-height: 20px;
 }
 
 @media (max-width: 899px) {
@@ -557,14 +586,14 @@ p, h2, h3, span {
 }
 
 .popover-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1;
+  position: sticky;
+  top: 0;
+  float: right;
+  z-index: 2;
   min-width: 40px;
   min-height: 40px;
   border: none;
-  background: transparent;
+  background: var(--surface);
   font-size: 1.25rem;
   color: var(--muted);
   cursor: pointer;
@@ -572,13 +601,13 @@ p, h2, h3, span {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 8px 8px -40px auto;
 }
 
 .popover-close:hover {
   background: var(--selection);
   color: var(--text);
 }
-
 @keyframes popover-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -645,13 +674,22 @@ p, h2, h3, span {
   min-width: 240px;
 }
 
-/* --- Верхняя строка: форма + частотность --- */
-.word-card-top {
+/* --- Строка 1: греческая форма + частотность --- */
+.word-card-form-row {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.word-card-form-row .word-card-form {
+  flex: 0 1 auto;
+}
+
+.word-card-form-row .word-card-freq {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .word-card-form {
@@ -659,7 +697,6 @@ p, h2, h3, span {
   font-size: 2.25rem;        /* 36px */
   color: var(--greek);
   line-height: 1.2;
-  min-width: 0;
   overflow-wrap: anywhere;
 }
 
@@ -669,23 +706,65 @@ p, h2, h3, span {
   }
 }
 
+/* --- Строка 2: частотность · часть речи · Стронг --- */
+.word-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  margin-bottom: 6px;
+}
+
+.word-card-sep {
+  font-size: 0.6875rem;
+  color: var(--muted);
+  opacity: 0.4;
+  margin: 0 2px;
+}
+
 .word-card-freq {
   font-size: 0.8125rem;       /* 13px */
   color: var(--muted);
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
-/* --- Строка произношения --- */
+.word-card-pos {
+  font-size: 0.8125rem;        /* 13px */
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.word-card-strong {
+  font-size: 0.8125rem;        /* 13px */
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0.6;
+}
+
+/* --- Строка 3: транслитерация / произношение --- */
 .word-card-pron {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  gap: 0;
   margin-bottom: 14px;
 }
 
 .word-card-translit {
-  font-size: 1.125rem;        /* 18px */
+  font-size: 1rem;             /* 16px */
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.word-card-pron-slash {
+  font-size: 1rem;
+  color: var(--muted);
+  opacity: 0.5;
+  margin: 0 4px;
+}
+
+.word-card-pronunciation {
+  font-size: 1rem;             /* 16px */
   color: var(--muted);
   line-height: 1.3;
 }
@@ -716,23 +795,137 @@ p, h2, h3, span {
   cursor: default;
 }
 
-/* --- Контекстный перевод --- */
-.word-card-gloss-section {
+/* --- Значение в этом стихе (Синодальный перевод) --- */
+.word-card-inline {
   margin-bottom: 14px;
 }
 
-.word-card-gloss {
-  font-size: 1.5rem;           /* 24px */
+.word-card-inline-label {
+  font-size: 0.6875rem;         /* 11px */
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.word-card-inline-word {
+  font-size: 1.5rem;            /* 24px */
   color: var(--text);
   line-height: 1.3;
   font-weight: 500;
 }
 
-.word-card-gloss-label {
-  font-size: 0.8125rem;        /* 13px */
-  color: var(--muted);
-  margin-top: 2px;
+/* --- Другие значения (UBS senses) --- */
+.word-card-senses {
+  margin-bottom: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
+
+.word-card-senses-label {
+  font-size: 0.75rem;          /* 12px */
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.word-card-senses-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.word-card-sense-item {
+  display: inline-block;
+  font-size: 0.8125rem;        /* 13px */
+  color: var(--text);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px 10px;
+  cursor: default;
+  transition: background 0.15s;
+}
+
+.word-card-sense-item:hover {
+  background: var(--bg-hover);
+}
+
+/* --- Ключевой стих --- */
+.word-card-ref {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.word-card-ref-label {
+  font-size: 0.6875rem;        /* 11px */
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.word-card-ref-text {
+  font-size: 0.8125rem;        /* 13px */
+  color: var(--text);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* --- Подробнее --- */
+.word-card-detail {
+  margin-top: 12px;
+}
+
+.word-card-details-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 8px 0;
+  font-size: 0.8125rem;       /* 13px */
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+.word-card-details-btn:hover {
+  text-decoration: underline;
+}
+
+.word-card-detail-body {
+  display: none;
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+}
+
+.word-card-detail.is-open .word-card-detail-body {
+  display: block;
+}
+
+.word-card-detail-label {
+  display: block;
+  font-size: 0.6875rem;        /* 11px */
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.word-card-detail-def p,
+.word-card-detail-deriv p {
+  font-size: 0.8125rem;        /* 13px */
+  color: var(--text);
+  line-height: 1.55;
+  margin: 0 0 12px 0;
+}
+
 
 /* --- Лемма --- */
 .word-card-lemma-section {

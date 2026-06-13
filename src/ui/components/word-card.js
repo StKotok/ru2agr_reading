@@ -6,6 +6,13 @@
 import { formatMorphShort, formatMorphFull } from '../../engine/morphology.js';
 import { stripDiacritics } from '../../engine/rules.js';
 
+function sepDot() {
+  const span = document.createElement('span');
+  span.className = 'word-card-sep';
+  span.textContent = '·';
+  return span;
+}
+
 // === Вспомогательные функции ===
 
 /**
@@ -102,6 +109,8 @@ export function renderLetterCard(letter, progressEntry, onMarkKnown) {
  *   — lemma: string             (словарная форма)
  *   — translit: string|null     (транслитерация леммы или формы)
  *   — gloss: string|null        (контекстный перевод)
+ *   — senses: Array<{gloss, comment}>|null  (другие значения из UBS)
+ *   — detail: {definition, derivation, pronunciation}|null  (подробности из Strong's)
  *   — morph: string|null        (Робинсон-код, напр. "N-NSM")
  *   — freq: object|null         ({ rank, count } из частотного списка)
  *   — dictEntry: object|null    ({ status } из словаря пользователя)
@@ -119,6 +128,10 @@ export function renderWordCard(data, callbacks = {}) {
     lemma = '',
     translit = null,
     gloss = null,
+    senses = null,
+    detail = null,
+    pos = null,
+    ref = null,
     morph = null,
     freq = null,
     dictEntry = null,
@@ -133,21 +146,21 @@ export function renderWordCard(data, callbacks = {}) {
   const morphLabels = formatMorphShort(morph);
   const freqText = formatFrequency(freq);
   const freqLabel = freqTooltip(freq, lemma);
+  const pronunciation = detail?.pronunciation || null;
 
   const card = document.createElement('div');
   card.className = 'card word-card';
   card.setAttribute('role', 'dialog');
   card.setAttribute('aria-label', `Карточка слова ${surfaceForm || lemma}`);
 
-  // --- Верхняя строка: форма + частотность ---
-  const topRow = document.createElement('div');
-  topRow.className = 'word-card-top';
-
+  // --- Строка 1: греческая форма + частотность ---
+  const formRow = document.createElement('div');
+  formRow.className = 'word-card-form-row';
   const formEl = document.createElement('span');
   formEl.className = 'word-card-form';
   formEl.textContent = surfaceForm || lemma;
   formEl.id = 'word-card-title';
-  topRow.appendChild(formEl);
+  formRow.appendChild(formEl);
 
   if (freqText) {
     const freqEl = document.createElement('span');
@@ -157,12 +170,35 @@ export function renderWordCard(data, callbacks = {}) {
       freqEl.setAttribute('title', freqLabel);
       freqEl.setAttribute('aria-label', freqLabel);
     }
-    topRow.appendChild(freqEl);
+    formRow.appendChild(freqEl);
   }
 
-  card.appendChild(topRow);
+  card.appendChild(formRow);
 
-  // --- Строка произношения: транслитерация + аудио ---
+  // --- Строка 2: часть речи · Стронг ---
+  const metaRow = document.createElement('div');
+  metaRow.className = 'word-card-meta';
+
+  if (pos) {
+    if (metaRow.children.length > 0) metaRow.appendChild(sepDot());
+    const posEl = document.createElement('span');
+    posEl.className = 'word-card-pos';
+    posEl.textContent = pos;
+    metaRow.appendChild(posEl);
+  }
+
+  if (strong) {
+    if (metaRow.children.length > 0) metaRow.appendChild(sepDot());
+    const strongEl = document.createElement('span');
+    strongEl.className = 'word-card-strong';
+    strongEl.textContent = `G${strong}`;
+    strongEl.setAttribute('title', `Номер Стронга G${strong}`);
+    metaRow.appendChild(strongEl);
+  }
+
+  card.appendChild(metaRow);
+
+  // --- Строка 3: транслитерация / произношение + аудио ---
   const pronRow = document.createElement('div');
   pronRow.className = 'word-card-pron';
 
@@ -171,6 +207,20 @@ export function renderWordCard(data, callbacks = {}) {
     translitEl.className = 'word-card-translit';
     translitEl.textContent = translit;
     pronRow.appendChild(translitEl);
+  }
+
+  if (translit && pronunciation) {
+    const slash = document.createElement('span');
+    slash.className = 'word-card-pron-slash';
+    slash.textContent = '/';
+    pronRow.appendChild(slash);
+  }
+
+  if (pronunciation) {
+    const pronEl = document.createElement('span');
+    pronEl.className = 'word-card-pronunciation';
+    pronEl.textContent = pronunciation;
+    pronRow.appendChild(pronEl);
   }
 
   const audioBtn = document.createElement('button');
@@ -183,26 +233,76 @@ export function renderWordCard(data, callbacks = {}) {
 
   card.appendChild(pronRow);
 
-  // --- Контекстный перевод ---
-  // Приоритет: глосса из лексикона → русское слово-оригинал → ничего
-  const translationText = gloss || original || null;
+  // --- Значение в этом стихе (из Синодального перевода) ---
+  if (original) {
+    const inlineSection = document.createElement('div');
+    inlineSection.className = 'word-card-inline';
 
-  if (translationText) {
-    const glossSection = document.createElement('div');
-    glossSection.className = 'word-card-gloss-section';
+    const inlineLabel = document.createElement('div');
+    inlineLabel.className = 'word-card-inline-label';
+    inlineLabel.textContent = 'в этом стихе';
+    inlineSection.appendChild(inlineLabel);
 
-    const glossEl = document.createElement('div');
-    glossEl.className = 'word-card-gloss';
-    glossEl.textContent = translationText;
-    glossSection.appendChild(glossEl);
+    const inlineWord = document.createElement('div');
+    inlineWord.className = 'word-card-inline-word';
+    inlineWord.textContent = original;
+    inlineSection.appendChild(inlineWord);
 
-    const glossLabel = document.createElement('div');
-    glossLabel.className = 'word-card-gloss-label';
-    // Для слов из лексикона — «значение», для freq-* — «заменяет»
-    glossLabel.textContent = gloss ? 'значение в этом стихе' : 'заменяет это слово';
-    glossSection.appendChild(glossLabel);
+    card.appendChild(inlineSection);
+  }
 
-    card.appendChild(glossSection);
+  // --- Другие значения (gloss из core.json + UBS senses) ---
+  {
+    const alreadyShown = original ? original.toLowerCase().trim() : '';
+
+    const candidates = [];
+    if (gloss) {
+      for (const part of gloss.split(/[,;]\s*/)) {
+        const w = part.trim();
+        if (w && w.toLowerCase() !== alreadyShown) {
+          candidates.push({ gloss: w, comment: 'словарное значение' });
+        }
+      }
+    }
+    if (senses) {
+      for (const s of senses) {
+        const senseWords = s.gloss.toLowerCase().split(/[,;]\s*/).map(w => w.trim());
+        if (!senseWords.includes(alreadyShown)) {
+          candidates.push(s);
+        }
+      }
+    }
+
+    if (candidates.length > 0) {
+      const sensesSection = document.createElement('div');
+      sensesSection.className = 'word-card-senses';
+
+      const sensesLabel = document.createElement('div');
+      sensesLabel.className = 'word-card-senses-label';
+      sensesLabel.textContent = 'также означает';
+      sensesSection.appendChild(sensesLabel);
+
+      const list = document.createElement('div');
+      list.className = 'word-card-senses-list';
+
+      const seen = new Set();
+      for (const c of candidates.slice(0, 5)) {
+        const key = c.gloss.toLowerCase().trim();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const item = document.createElement('span');
+        item.className = 'word-card-sense-item';
+        item.textContent = c.gloss;
+        if (c.comment) {
+          item.setAttribute('title', c.comment);
+        }
+        list.appendChild(item);
+      }
+
+      sensesSection.appendChild(list);
+      card.appendChild(sensesSection);
+    }
   }
 
   // --- Лемма (только когда форма отличается) ---
@@ -292,16 +392,72 @@ export function renderWordCard(data, callbacks = {}) {
     statusRow.appendChild(btn);
   }
 
+  // --- Ключевой стих ---
+  if (ref && ref.ref && ref.text) {
+    const refSection = document.createElement('div');
+    refSection.className = 'word-card-ref';
+
+    const refLabel = document.createElement('span');
+    refLabel.className = 'word-card-ref-label';
+    refLabel.textContent = ref.ref;
+    refSection.appendChild(refLabel);
+
+    const refText = document.createElement('span');
+    refText.className = 'word-card-ref-text';
+    refText.textContent = ref.text;
+    refSection.appendChild(refText);
+
+    card.appendChild(refSection);
+  }
+
   card.appendChild(statusRow);
 
-  // --- Подробнее ---
-  const detailsBtn = document.createElement('button');
-  detailsBtn.className = 'word-card-details-btn';
-  detailsBtn.textContent = 'Подробнее →';
-  detailsBtn.addEventListener('click', () => {
-    if (callbacks.onShowDetails) callbacks.onShowDetails(lexemeId);
-  });
-  card.appendChild(detailsBtn);
+  // --- Подробнее (определение + происхождение) ---
+  if (detail) {
+    const detailSection = document.createElement('div');
+    detailSection.className = 'word-card-detail';
+
+    const detailBtn = document.createElement('button');
+    detailBtn.className = 'word-card-details-btn';
+    detailBtn.textContent = 'Подробнее ▸';
+    detailBtn.addEventListener('click', () => {
+      const expanded = detailSection.classList.toggle('is-open');
+      detailBtn.textContent = expanded ? 'Подробнее ▾' : 'Подробнее ▸';
+    });
+    detailSection.appendChild(detailBtn);
+
+    const detailBody = document.createElement('div');
+    detailBody.className = 'word-card-detail-body';
+
+    if (detail.definition) {
+      const defBlock = document.createElement('div');
+      defBlock.className = 'word-card-detail-def';
+      const defLabel = document.createElement('span');
+      defLabel.className = 'word-card-detail-label';
+      defLabel.textContent = 'Определение';
+      defBlock.appendChild(defLabel);
+      const defText = document.createElement('p');
+      defText.textContent = detail.definition;
+      defBlock.appendChild(defText);
+      detailBody.appendChild(defBlock);
+    }
+
+    if (detail.derivation) {
+      const derivBlock = document.createElement('div');
+      derivBlock.className = 'word-card-detail-deriv';
+      const derivLabel = document.createElement('span');
+      derivLabel.className = 'word-card-detail-label';
+      derivLabel.textContent = 'Происхождение';
+      derivBlock.appendChild(derivLabel);
+      const derivText = document.createElement('p');
+      derivText.textContent = detail.derivation;
+      derivBlock.appendChild(derivText);
+      detailBody.appendChild(derivBlock);
+    }
+
+    detailSection.appendChild(detailBody);
+    card.appendChild(detailSection);
+  }
 
   return card;
 }
