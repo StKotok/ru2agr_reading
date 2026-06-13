@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "build:data": "node scripts/apply-zefania-alignments.mjs && node scripts/convert-alignments.js && node scripts/build-frequency.mjs"
+    "build:data": "node scripts/apply-zefania-alignments.mjs && node scripts/convert-alignments.js && node scripts/refine-alignments.mjs && node scripts/build-frequency.mjs",
+    "verify:data": "node scripts/verify-alignments.mjs"
   },
   "devDependencies": {
     "vite": "^5.4.0",
