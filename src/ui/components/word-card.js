@@ -336,6 +336,8 @@ export function renderWordCard(data, callbacks = {}) {
   if (formDiffers) {
     const lemmaSection = document.createElement('div');
     lemmaSection.className = 'word-card-lemma-section';
+    sectionEls.set('lemma', lemmaSection);
+    if (!cardSettings.lemma) lemmaSection.style.display = 'none';
 
     // Формат: форма → лемма
     const formSpan = document.createElement('span');

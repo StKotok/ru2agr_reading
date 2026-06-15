@@ -9,6 +9,7 @@ const STORAGE_KEY = 'ru2agr_card_display';
 export const CARD_SECTIONS = [
   { key: 'grammar',    label: 'грамматика и номер Стронга' },
   { key: 'pron',       label: 'произношение' },
+  { key: 'lemma',      label: 'словарная форма (текст → лемма)' },
   { key: 'inline',     label: 'перевод в этом стихе' },
   { key: 'senses',     label: 'также означает' },
   { key: 'definition', label: 'определение' },
@@ -16,9 +17,10 @@ export const CARD_SECTIONS = [
   { key: 'status',     label: 'статус (не помню / учу / знаю)' },
 ];
 
-const DEFAULT_ORDER = CARD_SECTIONS.map(s => s.key);
+const DEFAULT_ORDER = ['grammar', 'pron', 'lemma', 'inline', 'senses', 'definition', 'derivation', 'status'];
 
 const DEFAULTS = {
+  lemma: true,
   inline: true,
   senses: true,
   definition: true,
@@ -38,8 +40,11 @@ export function loadCardSettings() {
       // Миграция: старые ключи meta/morph → grammar
       if (saved.order) {
         saved.order = saved.order.map(k => k === 'meta' || k === 'morph' ? 'grammar' : k);
-        // Убрать дубликаты grammar после миграции
-        saved.order = [...new Set(saved.order)];
+        saved.order = [...new Set(saved.order)]; // убрать дубликаты
+        // Добавить ключи, которых нет в сохранённом порядке (новые разделы)
+        for (const k of DEFAULT_ORDER) {
+          if (!saved.order.includes(k)) saved.order.push(k);
+        }
       }
       if (!saved.order || saved.order.length === 0) {
         saved.order = DEFAULT_ORDER;
