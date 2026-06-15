@@ -51,7 +51,7 @@ let grcLoadPromise = null;
 
 async function ensureGreekBookLoaded(showToastOnFail = true) {
   if (grcBookData) return true;
-  if (!bookData || settings.mode < 3) return false;
+  if (!bookData || settings.mode < 2) return false;
   if (!grcLoadPromise) {
     const bookId = bookData.id;
     grcLoadPromise = loadBook('grc', bookId)
@@ -67,7 +67,7 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
     buildGrcVerseMap();
     return true;
   }
-  if (showToastOnFail && settings.mode >= 3) {
+  if (showToastOnFail && settings.mode >= 2) {
     showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
   }
   return false;
@@ -144,11 +144,11 @@ export async function mount(container, ctx) {
   textArea.id = 'scripture-text';
   container.appendChild(textArea);
 
-  // Загружаем книгу (и греческий текст для режимов 3+)
+  // Загружаем книгу (и греческий текст для режимов 2+)
   try {
     const loadPromises = [loadBook('syn', bookId)];
-    // Грузим греческий текст только для режимов 3+
-    if (settings.mode >= 3) {
+    // Грузим греческий текст только для режимов 2+
+    if (settings.mode >= 2) {
       loadPromises.push(loadBook('grc', bookId));
     }
     const results = await Promise.all(loadPromises);
@@ -167,8 +167,8 @@ export async function mount(container, ctx) {
     return;
   }
 
-  // Если grc не загрузился для режимов 3–5 — предупреждаем
-  if (!grcBookData && settings.mode >= 3) {
+  // Если grc не загрузился для режимов 2–4 — предупреждаем
+  if (!grcBookData && settings.mode >= 2) {
     showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
   }
 
@@ -199,7 +199,7 @@ export async function mount(container, ctx) {
       settings = newSettings;
       saveSettings(settings);
       reRenderWindowed();
-      if (settings.mode >= 3 && !grcBookData) {
+      if (settings.mode >= 2 && !grcBookData) {
         ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
       }
     }
@@ -278,7 +278,7 @@ export async function mount(container, ctx) {
       handleLetterTap(letter, span);
       return;
     }
-    // Слово (режимы 3–5): лексема, форма или греческий токен
+    // Слово (режимы 2–4): лексема, форма или греческий токен
     if (span.getAttribute('data-lexeme') || span.getAttribute('data-strong') || span.getAttribute('data-w')) {
       handleWordTap(span);
       return;
@@ -429,8 +429,8 @@ function renderWindowed() {
       if (plainView) {
         // Чистый русский текст
         p.appendChild(document.createTextNode(verse.text));
-      } else if (settings.mode === 5) {
-        // Режим 5: греческий как основной текст
+      } else if (settings.mode === 4) {
+        // Режим 4: греческий как основной текст
 
 
           const grcVerse = getGrcVerse(ch.n, verse.n);
@@ -439,14 +439,14 @@ function renderWindowed() {
           p.appendChild(frag);
         } else {
           // Fallback: показываем русский текст через composeVerse
-          const segments = composeVerse(verse.text, { ...composeCtx, mode: 2 });
+          const segments = composeVerse(verse.text, { ...composeCtx, mode: 1 });
           const frag = segmentsToFragment(segments, renderCtx);
           p.appendChild(frag);
         }
       } else {
-        // Добавляем grcVerse и alignment для режимов 3-4
+        // Добавляем grcVerse и alignment для режимов 2-3
         const verseCtx = { ...composeCtx };
-        if (grcBookData && settings.mode >= 3) {
+        if (grcBookData && settings.mode >= 2) {
 
 
           const grcVerse = getGrcVerse(ch.n, verse.n);
@@ -492,8 +492,8 @@ function renderWindowed() {
   setupObserver(chaptersEls, textArea);
   setupChapterTracking();
 
-  // Режимы 3-5: если греческий не загрузился при mount — пробуем ещё раз
-  if (settings.mode >= 3 && !grcBookData && bookData) {
+  // Режимы 2-4: если греческий не загрузился при mount — пробуем ещё раз
+  if (settings.mode >= 2 && !grcBookData && bookData) {
     ensureGreekBookLoaded(false).then(ok => { if (ok) reRenderWindowed(); });
   }
 }
@@ -623,7 +623,7 @@ function reRenderWindowed() {
 
       if (plainView) {
         p.appendChild(document.createTextNode(verse.text));
-      } else if (settings.mode === 5 && grcBookData) {
+      } else if (settings.mode === 4 && grcBookData) {
 
 
           const grcVerse = getGrcVerse(ch.n, verse.n);
@@ -635,7 +635,7 @@ function reRenderWindowed() {
         }
       } else {
         const verseCtx = { ...composeCtx };
-        if (grcBookData && settings.mode >= 3) {
+        if (grcBookData && settings.mode >= 2) {
 
 
           const grcVerse = getGrcVerse(ch.n, verse.n);
@@ -823,7 +823,7 @@ function showPopover(card, anchorEl) {
 
 /**
  * Собирает все данные о слове из span'а и загруженных структур.
- * Работает единообразно для режимов 3, 4 и 5.
+ * Работает единообразно для режимов 2, 3 и 4.
  * @param {HTMLElement} span — span.gr элемент
  * @returns {object|null} wordData или null если данных недостаточно
  */

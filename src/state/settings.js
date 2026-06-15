@@ -2,8 +2,17 @@ import { db } from '../storage/db.js';
 
 const KEY = 'settings';
 
+export const DEFAULT_MODE = 1;
+
+export const MODES = [
+  { id: 1, label: '1. Буквы + подсказки', group: 'Учебный мостик' },
+  { id: 2, label: '2. Слова из словаря', group: 'Учебный мостик' },
+  { id: 3, label: '3. Формы оригинала', group: 'Ближе к оригиналу' },
+  { id: 4, label: '4. Почти оригинал', group: 'Ближе к оригиналу' },
+];
+
 const DEFAULTS = {
-  mode: 2,                  // 2..5
+  mode: DEFAULT_MODE,         // 1..4
   intensity: 35,            // 0..100
   newWordsPerChapter: 3,    // 1 | 3 | 5 | 10
   pauseNewToday: false,

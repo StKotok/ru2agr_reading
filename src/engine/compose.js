@@ -4,7 +4,7 @@ import { stripDiacritics } from './rules.js';
 
 export function composeVerse(verseText, ctx = {}) {
   const {
-    mode = 2, intensity = 35, progressLetters = {}, seedPrefix = '',
+    mode = 1, intensity = 35, progressLetters = {}, seedPrefix = '',
     wordEntries = [], showDiacritics = true,
     grcVerse = null, alignment = null
   } = ctx;
@@ -16,14 +16,14 @@ export function composeVerse(verseText, ctx = {}) {
     }
   }
 
-  // Режим 2: только буквенный слой
-  if (mode === 2) {
+  // Режим 1: только буквенный слой
+  if (mode === 1) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режим 3: словарный слой по выравниванию (леммы) + буквенный.
+  // Режим 2: словарный слой по выравниванию (леммы) + буквенный.
   // Без выравнивания словарных замен нет: точность важнее покрытия.
-  if (mode === 3) {
+  if (mode === 2) {
     if (grcVerse && alignment && grcVerse.tokens) {
       const lemmaEntries = wordEntries.map(e => ({
         ...e,
@@ -36,9 +36,9 @@ export function composeVerse(verseText, ctx = {}) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режим 4: формовый слой по выравниванию + буквенный.
+  // Режим 3: формовый слой по выравниванию + буквенный.
   // Без выравнивания словарных замен нет: точность важнее покрытия.
-  if (mode === 4) {
+  if (mode === 3) {
     if (grcVerse && alignment && grcVerse.tokens) {
       const dictEntries = wordEntries.map(e => ({
         ...e,
@@ -50,7 +50,7 @@ export function composeVerse(verseText, ctx = {}) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режим 5: греческий основной — обработка на уровне reading.js
+  // Режим 4: греческий основной — обработка на уровне reading.js
   // Безопасный fallback: показываем русский текст
   return [{ plain: verseText }];
 }

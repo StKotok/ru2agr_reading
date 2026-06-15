@@ -1,5 +1,6 @@
 import { loadBooks } from '../../data/bible-loader.js';
 import { navigate } from '../../router.js';
+import { MODES, DEFAULT_MODE } from '../../state/settings.js';
 
 /**
  * Верхняя панель экрана чтения.
@@ -34,16 +35,9 @@ export function createTopBar(ctx) {
   modeList.hidden = true;
   bar.appendChild(modeList);
 
-  const MODES = [
-    { id: 2, label: '2. Буквы + подсказки', group: 'Учебный мостик', enabled: true },
-    { id: 3, label: '3. Слова из словаря', group: 'Учебный мостик', enabled: true },
-    { id: 4, label: '4. Формы оригинала', group: 'Ближе к оригиналу', enabled: true },
-    { id: 5, label: '5. Почти оригинал', group: 'Ближе к оригиналу', enabled: true },
-  ];
-
   function renderModeButton() {
     const state = store.get();
-    const m = MODES.find(m => m.id === (state.settings?.mode || 2)) || MODES[0];
+    const m = MODES.find(m => m.id === (state.settings?.mode ?? DEFAULT_MODE)) || MODES[0];
     modeBtn.textContent = 'Режим ' + m.id + ' ▾';
   }
 
@@ -62,20 +56,15 @@ export function createTopBar(ctx) {
       btn.className = 'book-dropdown-item';
       btn.textContent = m.label + (m.note ? ' (' + m.note + ')' : '');
       btn.setAttribute('role', 'option');
-      if (!m.enabled) {
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-      } else {
-        btn.addEventListener('click', () => {
-          const state = store.get();
-          if (state.settings) {
-            state.settings.mode = m.id;
-            store.update(s => ({ ...s, settings: { ...state.settings } }));
-          }
-          modeList.hidden = true;
-          renderModeButton();
-        });
-      }
+      btn.addEventListener('click', () => {
+        const state = store.get();
+        if (state.settings) {
+          state.settings.mode = m.id;
+          store.update(s => ({ ...s, settings: { ...state.settings } }));
+        }
+        modeList.hidden = true;
+        renderModeButton();
+      });
       modeList.appendChild(btn);
     }
   }
@@ -84,8 +73,7 @@ export function createTopBar(ctx) {
     renderModeList();
     modeList.hidden = !modeList.hidden;
     if (!modeList.hidden) {
-      const firstEnabled = modeList.querySelector('button:not([disabled])');
-      firstEnabled?.focus();
+      modeList.querySelector('button')?.focus();
     }
   });
 

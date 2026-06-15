@@ -1,4 +1,4 @@
-import { loadSettings, saveSettings } from '../../state/settings.js';
+import { loadSettings, saveSettings, MODES } from '../../state/settings.js';
 import { loadProgress, saveProgress } from '../../state/progress.js';
 import { db } from '../../storage/db.js';
 
@@ -58,15 +58,8 @@ function renderModeSection() {
   h3.textContent = 'Режим обучения';
   section.appendChild(h3);
 
-  const modes = [
-    { id: 2, label: '2. Буквы + подсказки', group: 'Учебный мостик', enabled: true },
-    { id: 3, label: '3. Слова из моего словаря', group: 'Учебный мостик', enabled: true },
-    { id: 4, label: '4. Реальные формы оригинала', group: 'Ближе к оригиналу', enabled: true },
-    { id: 5, label: '5. Почти оригинал', group: 'Ближе к оригиналу', enabled: true },
-  ];
-
   let currentGroup = '';
-  for (const m of modes) {
+  for (const m of MODES) {
     if (m.group !== currentGroup) {
       currentGroup = m.group;
       const groupHeader = document.createElement('p');
@@ -87,7 +80,6 @@ function renderModeSection() {
     radio.name = 'mode';
     radio.value = String(m.id);
     radio.checked = settings.mode === m.id;
-    radio.disabled = !m.enabled;
 
     radio.addEventListener('change', () => {
       if (radio.checked) {
@@ -99,7 +91,6 @@ function renderModeSection() {
 
     label.appendChild(radio);
     label.appendChild(document.createTextNode(m.label + (m.note ? ' (' + m.note + ')' : '')));
-    if (!m.enabled) label.style.opacity = '0.5';
     section.appendChild(label);
   }
 

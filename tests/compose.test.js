@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { composeVerse } from '../src/engine/compose.js';
 
 describe('composeVerse', () => {
-  it('mode 2 applies letter layer', () => {
+  it('mode 1 applies letter layer', () => {
     const segments = composeVerse('тест', {
-      mode: 2,
+      mode: 1,
       intensity: 100,
       progressLetters: {
         'τ': { status: 'known' },
@@ -19,7 +19,7 @@ describe('composeVerse', () => {
 
   it('empty letter progress leaves text untouched', () => {
     const segments = composeVerse('текст', {
-      mode: 2, intensity: 100,
+      mode: 1, intensity: 100,
       progressLetters: {},
       seedPrefix: 'test'
     });
@@ -28,7 +28,7 @@ describe('composeVerse', () => {
     expect(text).toBe('текст');
   });
 
-  // ── Mode 3 via alignment tests ──
+  // ── Mode 2 via alignment tests ──
 
   const grcTokens = [
     { w: 'Ἐν', lemma: 'ἐν', morph: 'PREP', strong: 1722 },
@@ -41,27 +41,27 @@ describe('composeVerse', () => {
     regexps: [/(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])/iu],
     excludeRegexps: [], intensityPct: 100, status: 'known', forms: 'all'
   };
-  const mode3Ctx = {
-    mode: 3, intensity: 0, progressLetters: {},
+  const mode2Ctx = {
+    mode: 2, intensity: 0, progressLetters: {},
     seedPrefix: 't', wordEntries: [wordEntryLogos]
   };
 
-  it('mode 3: замена на лемму, не на форму', () => {
+  it('mode 2: замена на лемму, не на форму', () => {
     const segs = composeVerse('В начале было Слово', {
-      ...mode3Ctx,
+      ...mode2Ctx,
       grcVerse: { tokens: grcTokens },
       alignment: [{ ru: 3, gr: 3 }]  // «Слово» → λόγος
     });
     // Есть замена с леммой λόγος (с заглавной буквы — «Слово»)
     expect(segs.some(s => s.greek && s.greek.toLowerCase() === 'λόγος')).toBe(true);
-    // НЕТ замены с формой λόγον (режим 3 всегда показывает лемму)
+    // НЕТ замены с формой λόγον (режим 2 всегда показывает лемму)
     expect(segs.some(s => s.greek && s.greek.toLowerCase() === 'λόγον')).toBe(false);
   });
 
-  it('mode 3: слово без выравнивания не заменяется, даже если регулярка матчит', () => {
+  it('mode 2: слово без выравнивания не заменяется, даже если регулярка матчит', () => {
     // «Слово» не выровнено (alignment ссылается на другое русское слово)
     const segs = composeVerse('В начале было Слово', {
-      ...mode3Ctx,
+      ...mode2Ctx,
       grcVerse: { tokens: grcTokens },
       alignment: [{ ru: 0, gr: 0 }]  // выровнено только «В» (явная ошибка выравнивания)
     });
@@ -69,20 +69,20 @@ describe('composeVerse', () => {
     expect(text).toBe('В начале было Слово');
   });
 
-  it('mode 3: нет grcVerse/alignment — словарных замен нет', () => {
-    const segs = composeVerse('Слово', mode3Ctx);
+  it('mode 2: нет grcVerse/alignment — словарных замен нет', () => {
+    const segs = composeVerse('Слово', mode2Ctx);
     const text = segs.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('Слово');
   });
 
-  it('mode 3: guard ruMatches — «свет» выровненный с λόγον не заменяется', () => {
+  it('mode 2: guard ruMatches — «свет» выровненный с λόγον не заменяется', () => {
     const verseText = 'В начале был свет';
     const tokensWithLogos = [
       { w: 'λόγον', lemma: 'λόγος', morph: 'N-ASM', strong: 3056 },
     ];
     // «свет» выровнен с λόγον — ошибка выравнивания, guard должен отклонить
     const segs = composeVerse(verseText, {
-      ...mode3Ctx,
+      ...mode2Ctx,
       grcVerse: { tokens: tokensWithLogos },
       alignment: [{ ru: 3, gr: 0 }]
     });
@@ -90,9 +90,9 @@ describe('composeVerse', () => {
     expect(text).toBe('В начале был свет');
   });
 
-  it('mode 3: детерминизм', () => {
+  it('mode 2: детерминизм', () => {
     const ctx = {
-      ...mode3Ctx,
+      ...mode2Ctx,
       grcVerse: { tokens: grcTokens },
       alignment: [{ ru: 3, gr: 3 }]
     };
@@ -102,13 +102,13 @@ describe('composeVerse', () => {
   });
 
   it('is deterministic', () => {
-    const opts = { mode: 2, intensity: 50, progressLetters: { 'α': { status: 'known' } }, seedPrefix: 'john' };
+    const opts = { mode: 1, intensity: 50, progressLetters: { 'α': { status: 'known' } }, seedPrefix: 'john' };
     const r1 = composeVerse('ааа', opts);
     const r2 = composeVerse('ааа', opts);
     expect(r1).toEqual(r2);
   });
 
-  it('mode 4: невыровненные слова остаются русскими', () => {
+  it('mode 3: невыровненные слова остаются русскими', () => {
     // Стих с alignment только для «Слово», но не для «Бог»
     const verseText = 'В начале было Слово и Бог';
     const grcTokens = [
@@ -121,7 +121,7 @@ describe('composeVerse', () => {
     const alignment = [{ ru: 3, gr: 2 }];
 
     const segments = composeVerse(verseText, {
-      mode: 4,
+      mode: 3,
       intensity: 0,
       progressLetters: {},
       seedPrefix: 'test',
@@ -154,10 +154,10 @@ describe('composeVerse', () => {
     expect(allText).not.toContain('θεός');
   });
 
-  it('mode 4 без греческих данных не делает словарных замен', () => {
+  it('mode 3 без греческих данных не делает словарных замен', () => {
     const verseText = 'В начале было Слово';
     const segments = composeVerse(verseText, {
-      mode: 4,
+      mode: 3,
       intensity: 0,
       progressLetters: {},
       seedPrefix: 'test',

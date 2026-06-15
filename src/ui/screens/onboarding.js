@@ -5,23 +5,23 @@ import { navigate } from '../../router.js';
 
 const PRESETS = [
   {
-    id: 2,
+    id: 1,
     title: 'Знаю часть букв, хочу видеть больше греческого',
-    desc: 'Режим 2 — буквы с подсказками. Вводятся первые 8 букв.',
-    mode: 2, introduce: 8, allLettersKnown: false
+    desc: 'Режим 1 — буквы с подсказками. Вводятся первые 8 букв.',
+    mode: 1, introduce: 8, allLettersKnown: false
   },
   {
-    id: 3,
+    id: 2,
     title: 'Хочу узнавать греческие слова',
-    desc: 'Режим 3 — слова из личного словаря заменяются на греческие леммы.',
-    mode: 3, introduce: 0, allLettersKnown: true,
+    desc: 'Режим 2 — слова из личного словаря заменяются на греческие леммы.',
+    mode: 2, introduce: 0, allLettersKnown: true,
     example: 'Пример: «Слово» → λόγος (лемма, всегда одна словарная форма)'
   },
   {
-    id: 4,
+    id: 3,
     title: 'Хочу читать ближе к оригиналу',
-    desc: 'Режим 4 — греческий текст с реальными формами слов (падежи, спряжения).',
-    mode: 4, introduce: 0, allLettersKnown: true,
+    desc: 'Режим 3 — греческий текст с реальными формами слов (падежи, спряжения).',
+    mode: 3, introduce: 0, allLettersKnown: true,
     example: 'Пример: «Слову» → λόγῳ (реальная форма, зависит от падежа!)'
   },
 ];
@@ -31,7 +31,6 @@ let progress = null;
 let alphabet = null;
 let container = null;
 let step = 1;
-let selectedPreset = null;
 
 export async function mount(cnt, ctx) {
   container = cnt;
@@ -70,7 +69,6 @@ function renderStep1() {
       card.innerHTML += `<small>${preset.note}</small>`;
     }
     card.addEventListener('click', () => {
-      selectedPreset = preset;
       applyPreset(preset);
       step = 2;
       renderStep2();
