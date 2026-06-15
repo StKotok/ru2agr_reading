@@ -171,6 +171,7 @@ export function createModeWidget(ctx) {
     const state = store.get();
     const s = state.settings || {};
     activeTab = s.lastActiveTab || 'mixed';
+    const grcAvail = state.grcAvailable !== false;
 
     const el = document.createElement('div');
     el.className = 'mode-widget-popup';
@@ -184,6 +185,14 @@ export function createModeWidget(ctx) {
       <div class="mode-widget-body" data-panel="mixed"></div>
       <div class="mode-widget-body" data-panel="greek" hidden></div>
     `;
+
+    // Таб «Греческий» недоступен без греческого текста
+    const greekTab = el.querySelector('[data-tab="greek"]');
+    if (!grcAvail) {
+      greekTab.disabled = true;
+      greekTab.title = 'Греческий текст недоступен — нет сети или для этой книги нет греческого оригинала';
+      if (activeTab === 'greek') activeTab = 'mixed';
+    }
 
     // Табы
     const tabs = el.querySelectorAll('.mode-widget-tab');
@@ -379,6 +388,9 @@ export function createModeWidget(ctx) {
   }
 
   // ---- Открытие / закрытие попапа ----
+  let removeResize = null;
+  let bottomSheetObserver = null;
+
   function openPopup() {
     if (isOpen) return;
     isOpen = true;
@@ -391,9 +403,20 @@ export function createModeWidget(ctx) {
     updateDictCount();
 
     if (isMobile) {
-      // bottom-sheet закрывается по свайпу/оверлею/escape самим bottom-sheet.js.
-      // Наш closePopup() вызывает closeBottomSheet() — он же сбрасывает isOpen.
       openBottomSheet(popup);
+      // Отслеживаем закрытие bottom-sheet пользователем (свайп/Escape/оверлей)
+      const sheet = document.querySelector('.bottom-sheet');
+      if (sheet && sheet.parentNode) {
+        bottomSheetObserver = new MutationObserver(() => {
+          if (!document.contains(sheet)) {
+            isOpen = false;
+            bottomSheetObserver.disconnect();
+            bottomSheetObserver = null;
+            cleanupPopup();
+          }
+        });
+        bottomSheetObserver.observe(sheet.parentNode, { childList: true });
+      }
     } else {
       // Десктоп: поповер рядом с чипом
       document.body.appendChild(popup);
@@ -415,14 +438,41 @@ export function createModeWidget(ctx) {
     // Escape
     document.addEventListener('keydown', onKeyDown);
 
+    // Resize: закрыть попап при переходе через 900px
+    let wasMobile = isMobile;
+    removeResize = () => window.removeEventListener('resize', onResize);
+    window.addEventListener('resize', onResize);
+    function onResize() {
+      const nowMobile = window.innerWidth < 900;
+      if (nowMobile !== wasMobile && isOpen) {
+        closePopup();
+      }
+    }
+
     updateChip();
+  }
+
+  function cleanupPopup() {
+    document.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('click', onOutsideClick);
+    if (bottomSheetObserver) {
+      bottomSheetObserver.disconnect();
+      bottomSheetObserver = null;
+    }
+    if (removeResize) {
+      removeResize();
+      removeResize = null;
+    }
+    if (savedActiveElement) {
+      savedActiveElement.focus();
+      savedActiveElement = null;
+    }
   }
 
   function closePopup() {
     if (!isOpen) return;
     isOpen = false;
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('click', onOutsideClick);
+    cleanupPopup();
 
     if (popup) {
       if (popup.closest('.bottom-sheet')) {
@@ -432,11 +482,6 @@ export function createModeWidget(ctx) {
         popup.remove();
       }
       popup = null;
-    }
-
-    if (savedActiveElement) {
-      savedActiveElement.focus();
-      savedActiveElement = null;
     }
   }
 
@@ -478,7 +523,6 @@ export function createModeWidget(ctx) {
     const chipRect = chip.getBoundingClientRect();
     const popupWidth = 320;
     const left = Math.max(8, Math.min(chipRect.left, window.innerWidth - popupWidth - 8));
-    popup.style.position = 'fixed';
     popup.style.top = (chipRect.bottom + 6) + 'px';
     popup.style.left = left + 'px';
   }
@@ -490,8 +534,8 @@ export function createModeWidget(ctx) {
     const readingMode = s.readingMode || 'mixed';
     const intensity = s.intensity ?? 35;
     const wordMode = s.wordMode || 'lemma';
-    const grcAvailable = state.grcAvailable !== false; // может выставляться reading.js
-    const count = Math.max(0, dictWordCount);
+    const grcAvailable = state.grcAvailable !== false; // undefined = ещё не знаем → true
+    const count = dictWordCount; // -1 = загрузка, 0+ = реальное число
 
     if (readingMode === 'greek') {
       chip.innerHTML = '<span class="mw-greek-label">Греч</span>';
@@ -499,10 +543,18 @@ export function createModeWidget(ctx) {
       return;
     }
 
-    const showLetters = intensity > 0;
-    const showWords = count > 0 && grcAvailable;
+    // Загрузка
+    if (count === -1) {
+      chip.innerHTML = '<span class="mw-loading">…</span>';
+      chip.setAttribute('aria-label', 'Загрузка данных…');
+      return;
+    }
 
-    if (!showLetters && !showWords) {
+    const showLetters = intensity > 0;
+    const wordsExist = count > 0;
+
+    // Ни букв, ни слов
+    if (!showLetters && !wordsExist) {
       chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
       chip.setAttribute('aria-label', 'Режим: чистый русский текст');
       return;
@@ -512,18 +564,26 @@ export function createModeWidget(ctx) {
     if (showLetters) {
       html += `<span class="mw-alpha">α</span><span class="mw-pct">${intensity}%</span>`;
     }
-    if (showLetters && showWords) {
+    if (showLetters && wordsExist) {
       html += '<span class="mw-sep">·</span>';
     }
-    if (showWords) {
-      const indicator = wordMode === 'lemma' ? 'λέγω' : 'λέγει';
-      html += `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`;
+    if (wordsExist) {
+      if (!grcAvailable) {
+        // Греческий текст недоступен — показываем тире вместо слова+счётчика
+        html += '<span class="mw-na">—</span>';
+      } else {
+        const indicator = wordMode === 'lemma' ? 'λέγω' : 'λέγει';
+        html += `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`;
+      }
     }
 
     chip.innerHTML = html;
     const desc = [];
     if (showLetters) desc.push(`буквы ${intensity}%`);
-    if (showWords) desc.push(`слова: ${wordMode === 'lemma' ? 'леммы' : 'формы'}, ${count} в словаре`);
+    if (wordsExist) {
+      if (!grcAvailable) desc.push('греческий текст недоступен');
+      else desc.push(`слова: ${wordMode === 'lemma' ? 'леммы' : 'формы'}, ${count} в словаре`);
+    }
     chip.setAttribute('aria-label', `Режим чтения: ${desc.join('; ') || 'русский текст'}`);
   }
 
@@ -566,8 +626,7 @@ export function createModeWidget(ctx) {
 
   // ---- Подписка на store ----
   store.subscribe(['settings'], () => {
-    updateChip();
-    updateDictCount();
+    updateChip(); // только чип — intensity/slider не влияет на счётчик слов
   });
   store.subscribe(['dictionary'], () => updateDictCount());
   store.subscribe(['coreLexicon'], () => updateDictCount());
@@ -986,6 +1045,16 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
   color: var(--text);
 }
 
+.mw-loading {
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.mw-na {
+  font-size: 16px;
+  color: var(--muted);
+}
+
 /* ---- Mode Widget Popup ---- */
 .mode-widget-popup {
   position: fixed;
@@ -1215,7 +1284,7 @@ Expected: тесты PASS, сборка без ошибок
 
 ```bash
 grep -r 'intensity-slider' src/ | grep -v 'node_modules'
-grep -r "from '../../state/settings.js'" src/ --include='*.js' -l | xargs grep "MODES\|DEFAULT_MODE"
+grep -r "from '../../state/settings.js'" src/ --include='*.js' -l | xargs -r grep "MODES\|DEFAULT_MODE"
 ```
 
 Expected: первый grep — пусто, второй — только если MODES/DEFAULT_MODE реально используется
