@@ -333,33 +333,49 @@ export function renderWordCard(data, callbacks = {}) {
   }
 
   // --- Лемма (только когда форма отличается) ---
+  // Сетка 2×3: верхний ряд — слова со стрелкой →, нижний — подписи со стрелкой →
   if (formDiffers) {
     const lemmaSection = document.createElement('div');
     lemmaSection.className = 'word-card-lemma-section';
     sectionEls.set('lemma', lemmaSection);
     if (!cardSettings.lemma) lemmaSection.style.display = 'none';
 
-    // Формат: форма → лемма
-    const formSpan = document.createElement('span');
-    formSpan.className = 'word-card-surface';
-    formSpan.textContent = surfaceForm;
-    lemmaSection.appendChild(formSpan);
+    const grid = document.createElement('div');
+    grid.className = 'word-card-lemma-grid';
 
-    const arrow = document.createElement('span');
-    arrow.className = 'word-card-lemma-arrow';
-    arrow.textContent = '→';
-    lemmaSection.appendChild(arrow);
+    // Ряд 1: surfaceForm  →  lemma
+    const surfaceEl = document.createElement('span');
+    surfaceEl.className = 'word-card-surface';
+    surfaceEl.textContent = surfaceForm;
+    grid.appendChild(surfaceEl);
 
-    const lemmaSpan = document.createElement('span');
-    lemmaSpan.className = 'word-card-lemma';
-    lemmaSpan.textContent = lemma;
-    lemmaSection.appendChild(lemmaSpan);
+    const arrow1 = document.createElement('span');
+    arrow1.className = 'word-card-lemma-arrow';
+    arrow1.textContent = '→';
+    grid.appendChild(arrow1);
 
-    const labels = document.createElement('div');
-    labels.className = 'word-card-lemma-labels';
-    labels.innerHTML = '<span>в тексте</span><span>словарная форма</span>';
-    lemmaSection.appendChild(labels);
+    const lemmaEl = document.createElement('span');
+    lemmaEl.className = 'word-card-lemma';
+    lemmaEl.textContent = lemma;
+    grid.appendChild(lemmaEl);
 
+    // Ряд 2: в тексте  →  словарная форма
+    const labelLeft = document.createElement('span');
+    labelLeft.className = 'word-card-lemma-label';
+    labelLeft.textContent = 'в тексте';
+    grid.appendChild(labelLeft);
+
+    const arrow2 = document.createElement('span');
+    arrow2.className = 'word-card-lemma-arrow';
+    arrow2.textContent = '→';
+    grid.appendChild(arrow2);
+
+    const labelRight = document.createElement('span');
+    labelRight.className = 'word-card-lemma-label';
+    labelRight.textContent = 'словарная форма';
+    grid.appendChild(labelRight);
+
+    lemmaSection.appendChild(grid);
     card.appendChild(lemmaSection);
   }
 
