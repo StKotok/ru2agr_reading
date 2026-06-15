@@ -130,8 +130,11 @@ function parseSblgnt(filePath) {
     const strongNum = parseInt(strongsRaw.replace(/^G/i, ''), 10) || 0;
 
     const token = { w: word, lemma, morph: pos, strong: strongNum };
-    // Для G846 — пронести падеж+число+род из Robinson morph-кода (cols[8])
-    if (strongNum === 846 && robinson) {
+    // Для G846, G848, G1438 — пронести падеж+число+род из Robinson morph-кода.
+    // SBLGNT размечает формы αὐτός тремя номерами: G846 (личное), G848 (αὑτοῦ),
+    // G1438 (ἑαυτοῦ). В контексте многие G848/G1438 — это личное местоимение,
+    // а не возвратное. Pass A2 использует их наравне с G846.
+    if ((strongNum === 846 || strongNum === 848 || strongNum === 1438) && robinson) {
       const c = parseG846Case(robinson);
       if (c) token.c = c;
     }

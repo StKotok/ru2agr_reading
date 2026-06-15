@@ -112,6 +112,7 @@ const stats = {
   passA_redirected: 0,
   passA_added: 0,
   passA_kept: 0,
+  passA2_added: 0,
   passB_downgraded: 0,
   passC_removedOOB: 0,
   passC_removedDup: 0,
@@ -192,11 +193,16 @@ function passA(ruWords, grTokens, alignment, ref) {
           // Проверяем: за orphan'ом идёт русский предлог из таблицы?
           const ruPrep = cleanRuWord(ruWords[orph.idx - 1] || '').toLowerCase();
           if (prepEntry.ruPrep.size > 0 && !prepEntry.ruPrep.has(ruPrep)) continue;
-          // Совместимость чисел
-          const numOk = [...orph.numbers].some(n => ep.grCase); // число не в коде, падеж из кода
           // Совместимость падежей
           const caseOk = [...orph.cases].some(rc => prepEntry.ruCases.has(rc));
           if (!caseOk) continue;
+          // Число — жёстко
+          const grTokF1 = grTokens[ep.gr];
+          const grNumF1 = grTokF1?.c ? grTokF1.c[1] : null;
+          if (grNumF1 && !orph.numbers.has(grNumF1)) continue;
+          // Род — жёстко для singular
+          const grGendF1 = grTokF1?.c ? grTokF1.c[2] : null;
+          if (grGendF1 && !orph.genders.has(grGendF1) && !orph.numbers.has('p')) continue;
           if (!best || orph.idx < best.idx) best = orph;
         }
         if (best) matchedOrphan = best;
@@ -216,12 +222,13 @@ function passA(ruWords, grTokens, alignment, ref) {
           const caseOk = [...orph.cases].some(rc => compatCases.has(rc));
           if (!caseOk) continue;
           // Совместимость чисел (жёстко)
-          // Из кода: второй символ = число (s/p)
-          const grNum = ep.grTok?.c ? ep.grTok.c[1] : null;
+          const grTokF2 = grTokens[ep.gr];
+          const grNum = grTokF2?.c ? grTokF2.c[1] : null;
           const numOk = !grNum || orph.numbers.has(grNum);
           if (!numOk) continue;
-          // Род — предпочтение, не запрет
-          const grGend = ep.grTok?.c ? ep.grTok.c[2] : null;
+          // Род — жёстко для singular
+          const grGend = grTokF2?.c ? grTokF2.c[2] : null;
+          if (grGend && !orph.genders.has(grGend) && !orph.numbers.has('p')) continue;
           const genderMatch = !grGend || orph.genders.has(grGend);
           if (!best || (genderMatch && !bestGenderMatch) || (genderMatch === bestGenderMatch && orph.idx < best.idx)) {
             best = orph;
@@ -266,12 +273,180 @@ function passA(ruWords, grTokens, alignment, ref) {
       const compatCases = CASE_COMPAT[grCase.toUpperCase()];
       const caseOk = compatCases && [...orph.cases].some(rc => compatCases.has(rc));
       const numOk = !grNum || orph.numbers.has(grNum);
-      if (caseOk && numOk) {
+      const grGend = grTok.c ? grTok.c[2] : null;
+      const genderOk = !grGend || orph.genders.has(grGend) || orph.numbers.has('p');
+      if (caseOk && numOk && genderOk) {
         result.push({ ru: orph.idx, gr: gi, src: 'a' });
         stats.passA_added++;
         logDryRun(`[${ref}] A: +added ru[${orph.idx}]="${ruWords[orph.idx]}" ↔ gr[${gi}]="${grTok.w}"`);
       }
     }
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Проход A2: добавление недостающих пар G846 ↔ личное местоимение
+//
+// Pass A добавляет пары только при жёстком условии «ровно 1 невыровненный G846
+// И ровно 1 совместимый orphan-сирота». В повествовательном греческом αὐτός
+// встречается по нескольку раз на стих — условие почти никогда не выполняется.
+//
+// Pass A2 ослабляет условие кардинальности за счёт морфологической
+// дизамбигуации: добавляет пару, только если orphan-сирота имеет ровно 1
+// совместимый G846 И этот G846 имеет ровно 1 совместимого orphan (bidirectional
+// uniqueness). Итеративный greedy: после каждого добавления пересчитывается
+// доступность, разрешая каскадное разрешение неоднозначностей.
+// ---------------------------------------------------------------------------
+
+function passA2(ruWords, grTokens, alignment, ref) {
+  if (!alignment || alignment.length === 0) return alignment;
+
+  // 1. Собрать невыровненные русские местоимения 3-го лица
+  const alignedRu = new Set(alignment.map(p => p.ru));
+  const orphans = [];
+  for (let i = 0; i < ruWords.length; i++) {
+    if (alignedRu.has(i)) continue;
+    const cw = cleanRuWord(ruWords[i]).toLowerCase();
+    const pron = RU_PRONOUNS[cw];
+    if (pron) {
+      orphans.push({ idx: i, word: ruWords[i], ...pron });
+    }
+  }
+
+  if (orphans.length === 0) return alignment;
+
+  // 2. Собрать невыровненные токены G846/G848/G1438 (с морфопризнаками).
+  //    SBLGNT размечает формы αὐτός тремя номерами; passA2 обрабатывает их
+  //    как взаимозаменяемые — морфосогласование само выберет правильный.
+  const AUTOS_STRONGS = new Set([846, 848, 1438]);
+  const alignedGr = new Set(alignment.map(p => p.gr));
+  const unalignedAutos = [];
+  for (let gi = 0; gi < grTokens.length; gi++) {
+    if (alignedGr.has(gi)) continue;
+    const tok = grTokens[gi];
+    if (AUTOS_STRONGS.has(tok.strong) && tok.c) {
+      unalignedAutos.push(gi);
+    }
+  }
+
+  if (unalignedAutos.length === 0) return alignment;
+
+  // 3. Матрица совместимости: G846/G848/G1438 → множество orphan.idx
+  const autosCompat = new Map();  // gi → Set(orphan.idx)
+  const orphanCompat = new Map(); // orphan.idx → Set(gi)
+
+  for (const gi of unalignedAutos) {
+    const tok = grTokens[gi];
+    const c = tok.c;
+    const grCase = caseFromCode(c);
+    if (!grCase) continue;
+    const grNum = c[1];   // s/p
+    const grGend = c[2];  // m/f/n
+
+    // Предложный контекст
+    const prevTok = gi > 0 ? grTokens[gi - 1] : null;
+    const prepGreek = prevTok
+      ? prevTok.w.replace(/[ʼ']/g, '').trim().toLowerCase()
+      : null;
+    const prepEntry = prepGreek
+      ? lookupPrep(prepGreek, grCase.toUpperCase())
+      : null;
+
+    const compatSet = new Set();
+    for (const orph of orphans) {
+      // Nom-guard: Nom-сирота — только от Nom-G846 (pro-drop защита)
+      if (orph.cases.has('N') && grCase.toUpperCase() !== 'N') continue;
+
+      // Совместимость падежей
+      let caseOk = false;
+      if (prepEntry) {
+        caseOk = [...orph.cases].some(rc => prepEntry.ruCases.has(rc));
+      } else {
+        const compatCases = CASE_COMPAT[grCase.toUpperCase()];
+        caseOk = compatCases && [...orph.cases].some(rc => compatCases.has(rc));
+      }
+      if (!caseOk) continue;
+
+      // Число — жёстко
+      const numOk = !grNum || orph.numbers.has(grNum);
+      if (!numOk) continue;
+
+      // Род — жёстко для singular; русские plural — безродовые
+      if (grGend && !orph.genders.has(grGend) && !orph.numbers.has('p')) {
+        continue;
+      }
+
+      // Если overlap падежей ТОЛЬКО через Locative — требовать русский
+      // предлог, управляющий Locative (без предлога Locative почти не бывает)
+      if (caseOk && !prepEntry) {
+        const compatCases = CASE_COMPAT[grCase.toUpperCase()];
+        if (compatCases) {
+          const overlaps = [...orph.cases].filter(rc => compatCases.has(rc));
+          if (overlaps.length === 1 && overlaps[0] === 'L') {
+            const prevRu = orph.idx > 0
+              ? cleanRuWord(ruWords[orph.idx - 1]).toLowerCase()
+              : '';
+            const locPreps = new Set(['в', 'во', 'на', 'о', 'об', 'при']);
+            if (!locPreps.has(prevRu)) continue;
+          }
+        }
+      }
+
+      compatSet.add(orph.idx);
+    }
+
+    if (compatSet.size > 0) {
+      autosCompat.set(gi, compatSet);
+    }
+  }
+
+  // Обратный индекс: orphan → множество G846/G848/G1438
+  for (const [gi, oSet] of autosCompat) {
+    for (const oi of oSet) {
+      if (!orphanCompat.has(oi)) orphanCompat.set(oi, new Set());
+      orphanCompat.get(oi).add(gi);
+    }
+  }
+
+  // 4. Итеративный greedy: bidirectional uniqueness
+  const result = [...alignment];
+  const usedOrphans = new Set();
+  const usedGr = new Set();
+  let addedThisVerse = 0;
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    // По возрастанию gr-индекса (детерминизм)
+    const candidates = [...autosCompat.keys()]
+      .filter(g => !usedGr.has(g))
+      .sort((a, b) => a - b);
+
+    for (const gi of candidates) {
+      const compatOrphans = autosCompat.get(gi);
+      const available = [...compatOrphans].filter(o => !usedOrphans.has(o));
+      if (available.length !== 1) continue;
+
+      const oi = available[0];
+      const compatG846 = orphanCompat.get(oi);
+      if (!compatG846) continue;
+      const availableG846 = [...compatG846].filter(g => !usedGr.has(g));
+      if (availableG846.length !== 1) continue;
+
+      // Bidirectional uniqueness — добавляем
+      result.push({ ru: oi, gr: gi, src: 'a' });
+      usedOrphans.add(oi);
+      usedGr.add(gi);
+      addedThisVerse++;
+      changed = true;
+      logDryRun(`[${ref}] A2: +added ru[${oi}]="${ruWords[oi]}" ↔ gr[${gi}]="${grTokens[gi].w}"`);
+    }
+  }
+
+  if (addedThisVerse > 0) {
+    stats.passA2_added += addedThisVerse;
   }
 
   return result;
@@ -458,6 +633,9 @@ function main() {
         // Проход A
         alignment = passA(ruWords, grcTokens, alignment, ref);
 
+        // Проход A2 — добавление недостающих пар G846↔местоимение
+        alignment = passA2(ruWords, grcTokens, alignment, ref);
+
         // Проход B
         alignment = passB(ruWords, grcTokens, alignment, ref);
 
@@ -486,7 +664,8 @@ function main() {
   console.log(`\n📊 Refine statistics:`);
   console.log(`   Стихов: ${stats.totalVerses}`);
   console.log(`   Пар всего (вход): ${stats.totalPairs}`);
-  console.log(`   Pass A: перенаправлено ${stats.passA_redirected}, добавлено ${stats.passA_added}, оставлено q:f ${stats.passA_kept}`);
+  console.log(`   Pass A:  перенаправлено ${stats.passA_redirected}, добавлено ${stats.passA_added}, оставлено q:f ${stats.passA_kept}`);
+  console.log(`   Pass A2: добавлено ${stats.passA2_added}`);
   console.log(`   Pass B: понижено до u ${stats.passB_downgraded}`);
   console.log(`   Pass C: удалено OOB ${stats.passC_removedOOB}, дублей ${stats.passC_removedDup}`);
   console.log(`   q-распределение: e=${stats.qE}, f=${stats.qF}, u=${stats.qU}`);
