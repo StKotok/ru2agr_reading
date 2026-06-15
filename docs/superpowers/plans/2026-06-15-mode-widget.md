@@ -2,46 +2,60 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace dropdown mode selector + intensity slider with a single compact chip+popup widget managing all reading-mode state.
+**Goal:** Replace numeric mode selector + intensity slider with a single compact chip+popup widget managing the mixed Greek layer and the Greek-original view.
 
-**Architecture:** New `mode-widget.js` component encapsulates chip and popup. `settings.js` adds `deriveMode()` — `wordMode`/`readingMode` fields are the source of truth, `mode` (1-4) is derived for `composeVerse`. No IndexedDB migration needed (zero users). `top-bar.js` and `reading.js` shed mode/slider code; `settings.js` screen drops mode/slider/show sections leaving theme, diacritics, Strong numbers, reset. `onboarding.js` presets updated to new fields.
+**Architecture:** New `mode-widget.js` component encapsulates chip and popup. `settings.js` stores independent UI state: `intensity`, `wordLayer` (`off|lemma|form`), `readingMode` (`mixed|greek`), and `lastActiveTab`. There is no product sequence `1 → 2 → 3 → 4` and no persisted `settings.mode`. `reading.js` derives a numeric `composeMode` only at the boundary with the current `composeVerse` API. When `wordLayer=lemma|form` has zero active words, the chip still shows `λέγω0` / `λέγει0`, but `composeMode` is `LETTERS_ONLY` and Greek data is not loaded. No IndexedDB migration needed (zero users). `top-bar.js` and `reading.js` shed mode/slider code; `settings.js` screen drops mode/slider/show sections leaving theme, diacritics, Strong numbers, reset. `onboarding.js` presets updated to layer fields.
 
 **Tech Stack:** Vanilla JS (ESM), CSS custom properties, existing `store.subscribe` pattern, existing `bottom-sheet.js`
 
 ---
 
-### Task 1: settings.js — новые поля и deriveMode
+### Task 1: settings.js — новые поля и compose adapter
 
 **Files:**
 - Modify: `src/state/settings.js`
 
-- [ ] **Step 1: Обновить DEFAULTS и добавить `deriveMode`**
+- [ ] **Step 1: Обновить DEFAULTS и добавить compose adapter**
 
-Замени `DEFAULTS` и добавь `deriveMode` после `MODES`:
+Замени `DEFAULTS` и добавь helper-функции после `KEY`. `MODES` и
+`DEFAULT_MODE` больше не нужны как продуктовая модель; если временно оставляешь
+их до удаления старых импортов в `top-bar.js` / `settings.js`, финальная проверка
+в конце плана должна показать, что они больше нигде не используются.
 
 ```js
-export const MODES = [
-  { id: 1, label: '1. Буквы + подсказки', group: 'Учебный мостик' },
-  { id: 2, label: '2. Слова из словаря', group: 'Учебный мостик' },
-  { id: 3, label: '3. Формы оригинала', group: 'Ближе к оригиналу' },
-  { id: 4, label: '4. Почти оригинал', group: 'Ближе к оригиналу' },
-];
+export const COMPOSE_MODES = {
+  LETTERS_ONLY: 1,
+  WORD_LEMMA: 2,
+  WORD_FORM: 3,
+  GREEK_ORIGINAL: 4
+};
 
 /**
- * Вычисляет числовой mode из новых полей для composeVerse.
- * @param {object} s — settings с полями readingMode, wordMode
- * @returns {number} 1–4
+ * Adapter к текущему composeVerse(ctx.mode).
+ * Не является пользовательским режимом и не сохраняется в settings.
+ * @param {object} s — settings с полями readingMode, wordLayer
+ * @param {number} activeWordCount — количество активных слов для word layer
+ * @returns {number} один из COMPOSE_MODES
  */
-export function deriveMode(s) {
-  if (s.readingMode === 'greek') return 4;
-  if (s.wordMode === 'form') return 3;
-  return 2; // 'lemma' — дефолт для 'mixed'
+export function deriveComposeMode(s, activeWordCount = 0) {
+  if (s.readingMode === 'greek') return COMPOSE_MODES.GREEK_ORIGINAL;
+  if (s.wordLayer === 'off') return COMPOSE_MODES.LETTERS_ONLY;
+  if (activeWordCount === 0) return COMPOSE_MODES.LETTERS_ONLY;
+  return s.wordLayer === 'form'
+    ? COMPOSE_MODES.WORD_FORM
+    : COMPOSE_MODES.WORD_LEMMA;
+}
+
+/**
+ * Нужно ли загружать греческую книгу для текущего UI state.
+ */
+export function shouldLoadGreek(s, activeWordCount = 0) {
+  return s.readingMode === 'greek' || (s.wordLayer !== 'off' && activeWordCount > 0);
 }
 
 const DEFAULTS = {
-  mode: DEFAULT_MODE,           // derived, пересчитывается deriveMode
   intensity: 35,                // 0..100
-  wordMode: 'lemma',            // 'lemma' | 'form'
+  wordLayer: 'off',             // 'off' | 'lemma' | 'form'
   readingMode: 'mixed',         // 'mixed' | 'greek'
   lastActiveTab: 'mixed',       // 'mixed' | 'greek'
   newWordsPerChapter: 3,        // 1 | 3 | 5 | 10
@@ -71,7 +85,7 @@ Expected: PASS
 
 ```bash
 git add src/state/settings.js
-git commit -m "feat: add deriveMode, wordMode/readingMode to DEFAULTS"
+git commit -m "feat: add wordLayer and compose mode helpers"
 ```
 
 ---
@@ -84,14 +98,14 @@ git commit -m "feat: add deriveMode, wordMode/readingMode to DEFAULTS"
 - [ ] **Step 1: Создать файл с полной реализацией**
 
 ```js
-import { saveSettings, deriveMode } from '../../state/settings.js';
+import { saveSettings } from '../../state/settings.js';
 import { openBottomSheet, closeBottomSheet } from './bottom-sheet.js';
 import { navigate } from '../../router.js';
 
 const DB_SLIDER = 300;
 
 /**
- * Создаёт виджет-чип + попап управления режимом чтения.
+ * Создаёт виджет-чип + попап управления греческим слоем.
  * @param {object} ctx — { store }
  * @returns {{ chip: HTMLElement, destroy: Function }}
  */
@@ -120,7 +134,8 @@ export function createModeWidget(ctx) {
     const state = store.get();
     const s = state.settings || {};
     activeTab = s.lastActiveTab || 'mixed';
-    const grcAvail = state.grcAvailable !== false;
+    const grcStatus = state.grcStatus || 'idle';
+    const greekDisabled = grcStatus === 'unavailable';
 
     const isMobile = window.innerWidth < 900;
     const el = document.createElement('div');
@@ -141,7 +156,7 @@ export function createModeWidget(ctx) {
 
     // Таб «Греческий» недоступен без греческого текста
     const greekTab = el.querySelector('[data-tab="greek"]');
-    if (!grcAvail) {
+    if (greekDisabled) {
       greekTab.disabled = true;
       greekTab.title = 'Греческий текст недоступен — нет сети или для этой книги нет греческого оригинала';
       if (activeTab === 'greek') activeTab = 'mixed';
@@ -166,7 +181,7 @@ export function createModeWidget(ctx) {
   // ---- Панель «Смешанный» ----
   function buildMixedPanel(panel, s) {
     const intensity = s.intensity ?? 35;
-    const wordMode = s.wordMode ?? 'lemma';
+    const wordLayer = s.wordLayer ?? 'off';
 
     // Заголовок слайдера + мини-чип
     const sliderHeader = document.createElement('div');
@@ -195,7 +210,6 @@ export function createModeWidget(ctx) {
       sliderDebounce = setTimeout(() => {
         const st = store.get();
         const ns = { ...st.settings, intensity: val };
-        ns.mode = deriveMode(ns);
         saveSettings(ns);
         store.update(s2 => ({ ...s2, settings: ns }));
         updateChip();
@@ -225,14 +239,18 @@ export function createModeWidget(ctx) {
     toggle.setAttribute('role', 'radiogroup');
     toggle.setAttribute('aria-label', 'Форма греческих слов');
 
-    ['lemma', 'form'].forEach(mode => {
+    [
+      { value: 'off', label: 'Выкл' },
+      { value: 'lemma', label: 'Леммы' },
+      { value: 'form', label: 'Формы' }
+    ].forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'mode-widget-toggle-btn';
       btn.setAttribute('role', 'radio');
-      btn.setAttribute('aria-checked', String(mode === wordMode));
-      btn.textContent = mode === 'lemma' ? 'Леммы' : 'Формы';
-      btn.dataset.mode = mode;
-      if (mode === wordMode) btn.classList.add('active');
+      btn.setAttribute('aria-checked', String(opt.value === wordLayer));
+      btn.textContent = opt.label;
+      btn.dataset.wordLayer = opt.value;
+      if (opt.value === wordLayer) btn.classList.add('active');
 
       btn.addEventListener('click', () => {
         toggle.querySelectorAll('.mode-widget-toggle-btn').forEach(b => {
@@ -243,12 +261,11 @@ export function createModeWidget(ctx) {
         btn.setAttribute('aria-checked', 'true');
 
         const st = store.get();
-        const ns = { ...st.settings, wordMode: mode };
-        ns.mode = deriveMode(ns);
+        const ns = { ...st.settings, wordLayer: opt.value };
         saveSettings(ns);
         store.update(s2 => ({ ...s2, settings: ns }));
         updateChip();
-        updateToggleHint(mode);
+        updateToggleHint(opt.value);
       });
 
       toggle.appendChild(btn);
@@ -260,10 +277,11 @@ export function createModeWidget(ctx) {
     hint.className = 'mode-widget-hint';
     hint.id = 'mode-widget-word-hint';
     hint.innerHTML =
+      '<span class="mw-hint-off">Выкл — только буквы, без загрузки греческих слов</span><br>' +
       '<span class="mw-hint-lemma">Леммы — как в словаре: λέγω &nbsp;исходная форма, «говорить»</span><br>' +
       '<span class="mw-hint-form">Формы — как в тексте: λέγει &nbsp;с окончанием, «говорит»</span>';
     panel.appendChild(hint);
-    updateToggleHint(wordMode);
+    updateToggleHint(wordLayer);
 
     // Кнопка словаря
     const dictBtn = document.createElement('button');
@@ -276,19 +294,16 @@ export function createModeWidget(ctx) {
     panel.appendChild(dictBtn);
   }
 
-  function updateToggleHint(mode) {
+  function updateToggleHint(layer) {
     const hint = document.getElementById('mode-widget-word-hint');
     if (!hint) return;
+    const offLine = hint.querySelector('.mw-hint-off');
     const lemmaLine = hint.querySelector('.mw-hint-lemma');
     const formLine = hint.querySelector('.mw-hint-form');
-    if (!lemmaLine || !formLine) return;
-    if (mode === 'lemma') {
-      lemmaLine.className = 'mw-hint-lemma mw-hint-active';
-      formLine.className = 'mw-hint-form mw-hint-dim';
-    } else {
-      lemmaLine.className = 'mw-hint-lemma mw-hint-dim';
-      formLine.className = 'mw-hint-form mw-hint-active';
-    }
+    if (!offLine || !lemmaLine || !formLine) return;
+    offLine.className = 'mw-hint-off ' + (layer === 'off' ? 'mw-hint-active' : 'mw-hint-dim');
+    lemmaLine.className = 'mw-hint-lemma ' + (layer === 'lemma' ? 'mw-hint-active' : 'mw-hint-dim');
+    formLine.className = 'mw-hint-form ' + (layer === 'form' ? 'mw-hint-active' : 'mw-hint-dim');
   }
 
   // ---- Панель «Греческий» ----
@@ -343,7 +358,6 @@ export function createModeWidget(ctx) {
         lastActiveTab: tab,
         readingMode: tab === 'greek' ? 'greek' : 'mixed'
       };
-      ns.mode = deriveMode(ns);
       saveSettings(ns);
       store.update(s2 => ({ ...s2, settings: ns }));
     }
@@ -496,13 +510,14 @@ export function createModeWidget(ctx) {
     const s = state.settings || {};
     const readingMode = s.readingMode || 'mixed';
     const intensity = s.intensity ?? 35;
-    const wordMode = s.wordMode || 'lemma';
-    const grcAvailable = state.grcAvailable !== false; // undefined = ещё не знаем → true
+    const wordLayer = s.wordLayer || 'off';
+    const grcStatus = state.grcStatus || 'idle';
+    const grcUnavailable = grcStatus === 'unavailable';
     const count = dictWordCount; // -1 = загрузка, 0+ = реальное число
 
     if (readingMode === 'greek') {
       chip.innerHTML = '<span class="mw-greek-label">Греч</span>';
-      chip.setAttribute('aria-label', 'Режим: греческий оригинал');
+      chip.setAttribute('aria-label', 'Вид чтения: греческий оригинал');
       return;
     }
 
@@ -514,19 +529,13 @@ export function createModeWidget(ctx) {
     }
 
     const showLetters = intensity > 0;
-    const wordsExist = count > 0;
+    const showWordLayer = wordLayer !== 'off';
+    const activeWordsExist = count > 0;
 
-    // Без греческого текста и без букв — всегда «Рус»
-    if (!showLetters && !grcAvailable) {
+    // Ни букв, ни словарного слоя
+    if (!showLetters && !showWordLayer) {
       chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
-      chip.setAttribute('aria-label', 'Режим: чистый русский текст (греческий текст недоступен)');
-      return;
-    }
-
-    // Ни букв, ни слов (но греческий доступен)
-    if (!showLetters && !wordsExist) {
-      chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
-      chip.setAttribute('aria-label', 'Режим: чистый русский текст');
+      chip.setAttribute('aria-label', 'Греческий слой: выключен');
       return;
     }
 
@@ -534,16 +543,15 @@ export function createModeWidget(ctx) {
     if (showLetters) {
       html += `<span class="mw-alpha">α</span><span class="mw-pct">${intensity}%</span>`;
     }
-    if (showLetters && wordsExist) {
+    if (showLetters && showWordLayer) {
       html += '<span class="mw-sep">·</span>';
     }
-    if (wordsExist) {
-      if (!grcAvailable) {
+    if (showWordLayer) {
+      if (grcUnavailable && activeWordsExist) {
         // Греческий текст недоступен — показываем тире вместо слова+счётчика
-        // (сюда попадаем только если showLetters=true, иначе уже вернули «Рус» выше)
         html += '<span class="mw-na">—</span>';
       } else {
-        const indicator = wordMode === 'lemma' ? 'λέγω' : 'λέγει';
+        const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
         html += `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`;
       }
     }
@@ -551,11 +559,11 @@ export function createModeWidget(ctx) {
     chip.innerHTML = html;
     const desc = [];
     if (showLetters) desc.push(`буквы ${intensity}%`);
-    if (wordsExist) {
-      if (!grcAvailable) desc.push('греческий текст недоступен');
-      else desc.push(`слова: ${wordMode === 'lemma' ? 'леммы' : 'формы'}, ${count} в словаре`);
+    if (showWordLayer) {
+      if (grcUnavailable && activeWordsExist) desc.push('греческий текст недоступен');
+      else desc.push(`слова: ${wordLayer === 'lemma' ? 'леммы' : 'формы'}, ${count} в словаре`);
     }
-    chip.setAttribute('aria-label', `Режим чтения: ${desc.join('; ') || 'русский текст'}`);
+    chip.setAttribute('aria-label', `Греческий слой: ${desc.join('; ') || 'выключен'}`);
   }
 
   function updateDictCount() {
@@ -602,7 +610,7 @@ export function createModeWidget(ctx) {
     }),
     store.subscribe(['dictionary'], () => updateDictCount()),
     store.subscribe(['coreLexicon'], () => updateDictCount()),
-    store.subscribe(['grcAvailable'], () => updateChip())
+    store.subscribe(['grcStatus'], () => updateChip())
   ];
 
   function destroy() {
@@ -639,12 +647,12 @@ git commit -m "feat: add mode-widget component (chip + popup)"
 
 ---
 
-### Task 3: top-bar.js — чистка
+### Task 3: top-bar.js — убрать numeric selector
 
 **Files:**
 - Modify: `src/ui/components/top-bar.js`
 
-- [ ] **Step 1: Убрать mode-селектор и импорт MODES**
+- [ ] **Step 1: Убрать numeric selector и импорт MODES**
 
 Удали импорт `MODES` (строка 3). Убери создание `modeBtn`, `modeList`, `renderModeButton`, `renderModeList` и всех связанных обработчиков. Убери `store.subscribe(['settings'], () => renderModeButton())` и вызов `renderModeButton()`.
 
@@ -698,17 +706,19 @@ git commit -m "refactor: remove mode selector from top-bar"
 
 ---
 
-### Task 4: reading.js — интеграция mode-widget
+### Task 4: reading.js — интеграция mode-widget и compose adapter
 
 **Files:**
 - Modify: `src/ui/screens/reading.js`
 
 - [ ] **Step 1: Заменить импорт**
 
-Убери импорт `createIntensitySlider` (строка 9). Добавь импорт `createModeWidget`:
+Убери импорт `createIntensitySlider` (строка 9). Добавь импорт `createModeWidget`
+и helper-ы compose adapter в существующий импорт настроек:
 
 ```js
 import { createModeWidget } from '../components/mode-widget.js';
+import { loadSettings, saveSettings, COMPOSE_MODES, deriveComposeMode, shouldLoadGreek } from '../../state/settings.js';
 ```
 
 Строки 8–9 должно стать:
@@ -750,10 +760,77 @@ let destroyModeWidgetFn = null;
 
 Замени на:
 ```js
-      forms: entry.forms || settings.wordMode || 'lemma',
+      forms: entry.forms || (settings.wordLayer === 'form' ? 'form' : 'lemma'),
 ```
 
-- [ ] **Step 4: Публиковать dictionary, coreLexicon, frequencyList, grcAvailable в store; добавить store.ref**
+Смысл: если слово имеет per-word override `forms`, он побеждает. Если override
+нет, используется глобальный `wordLayer`.
+
+- [ ] **Step 4: Использовать compose adapter и условную загрузку Greek**
+
+После `buildWordEntries()` в `renderWindowed()` и `reRenderWindowed()` вычисляй:
+
+```js
+const activeWordCount = wordEntries.length;
+const composeMode = deriveComposeMode(settings, activeWordCount);
+```
+
+В `composeCtx` передавай:
+
+```js
+mode: composeMode,
+```
+
+Все render-ветки тоже должны использовать `composeMode`, а не persisted
+`settings.mode`:
+
+```js
+if (composeMode === COMPOSE_MODES.GREEK_ORIGINAL) { ... }
+if (grcBookData && composeMode !== COMPOSE_MODES.LETTERS_ONLY) { ... }
+```
+
+Условия загрузки греческой книги замени с `settings.mode >= 2` на:
+
+```js
+shouldLoadGreek(settings, wordEntries.length)
+```
+
+Это относится ко всем местам в `reading.js`, включая:
+
+- начальный `loadPromises` в `mount()`
+- fallback-toast после загрузки книги
+- подписку на `settings`
+- retry в конце `renderWindowed()`
+- guard внутри `ensureGreekBookLoaded()`
+
+Это важно: `wordLayer='lemma'|'form'` при `activeWordCount === 0` выглядит в
+чипе как `λέγω0` / `λέγει0`, но фактически передаёт в `composeVerse`
+`COMPOSE_MODES.LETTERS_ONLY` и не грузит греческую книгу.
+
+Перед начальным `loadPromises` в `mount()` один раз вызови `buildWordEntries()`,
+чтобы получить `wordEntries.length` без греческой книги:
+
+```js
+buildWordEntries();
+const needsGreek = shouldLoadGreek(settings, wordEntries.length);
+```
+
+Дальше грузить `grc` только при `needsGreek === true`.
+
+- [ ] **Step 5: Убрать hardcoded lemma из legacy-ветки словарных лемм**
+
+В `src/engine/compose.js` в ветке `mode === 2` (текущий numeric adapter для
+`COMPOSE_MODES.WORD_LEMMA`) убрать принудительное:
+
+```js
+forms: 'lemma'
+```
+
+Эта ветка должна передавать `forms` из `wordEntries` как есть. Леммы
+обеспечиваются `buildWordEntries()` через `settings.wordLayer === 'lemma'`, а
+не жёсткой перезаписью внутри движка.
+
+- [ ] **Step 6: Публиковать dictionary, coreLexicon, frequencyList, grcStatus в store; добавить store.ref**
 
 `ensureGreekBookLoaded` — модульная функция, у неё нет доступа к `store` (локальная переменная `mount()`).
 Решение: сохранить `store` в объект-ссылку `storeRef` в `mount()`, доступный модульным функциям:
@@ -766,6 +843,15 @@ let storeRef = null;
 В `mount()`, после `const { store } = ctx`:
 ```js
 storeRef = { current: store };
+```
+
+В начале загрузки новой книги сбрасывай прошлые греческие данные и статус:
+
+```js
+grcBookData = null;
+grcVerseMap = null;
+grcLoadPromise = null;
+if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcStatus: 'idle' }));
 ```
 
 В `unmount()`:
@@ -781,20 +867,36 @@ if (destroyModeWidgetFn) { destroyModeWidgetFn(); destroyModeWidgetFn = null; }
 
 Замени на:
 ```js
-  store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList, grcAvailable: false }));
+  store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList, grcStatus: 'idle' }));
+```
+
+Перед реальной попыткой загрузки греческого текста ставь:
+```js
+    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcStatus: 'loading' }));
 ```
 
 После успешной загрузки греческого текста (около строк 156–157, после `buildGrcVerseMap()`) добавь:
 ```js
-    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcAvailable: true }));
+    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcStatus: 'available' }));
 ```
 
 В `ensureGreekBookLoaded` (около строки 66) после `buildGrcVerseMap()`:
 ```js
-    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcAvailable: true }));
+    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcStatus: 'available' }));
 ```
 
-- [ ] **Step 5: Перепубликовать dictionary в store после изменения статуса слова**
+Если загрузка греческой книги завершилась без данных, выставь:
+
+```js
+    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcStatus: 'unavailable' }));
+```
+
+Не выставляй `unavailable`, если греческая книга не грузилась потому, что
+`shouldLoadGreek(settings, wordEntries.length) === false`. Для
+`wordLayer='off'` и для `λέγω0` / `λέγει0` это штатное состояние `idle`, а не
+ошибка.
+
+- [ ] **Step 7: Перепубликовать dictionary в store после изменения статуса слова**
 
 Найди места в `reading.js`, где вызывается `saveDictionary(dictionary)` после изменения статуса слова (функции-обработчики `onMarkStatus` / `setWordStatus`). После каждого `saveDictionary(dictionary)` добавь:
 
@@ -816,6 +918,75 @@ Expected: сборка без ошибок
 git add src/ui/screens/reading.js src/engine/compose.js
 git commit -m "refactor: integrate mode-widget, update buildWordEntries, remove composeVerse hardcoded lemma"
 ```
+
+---
+
+### Task 4.5: dictionary forms — optional per-word override
+
+**Files:**
+- Modify: `src/state/dictionary.js`
+- Modify: `src/ui/screens/dictionary.js`
+- Modify: `tests/form-layer.test.js`, `tests/compose.test.js`
+
+- [ ] **Step 1: Не задавать `forms` по умолчанию при добавлении слова**
+
+В `src/state/dictionary.js` в `addWord()` убрать:
+
+```js
+forms: 'lemma',
+```
+
+Новые слова должны наследовать глобальный `settings.wordLayer`.
+
+- [ ] **Step 2: Добавить возможность очистить per-word override**
+
+Обнови `setWordSetting` так, чтобы `value === undefined` удалял поле:
+
+```js
+export function setWordSetting(id, key, value, dict) {
+  const updated = { ...dict };
+  if (updated[id]) {
+    const entry = { ...updated[id] };
+    if (value === undefined) delete entry[key];
+    else entry[key] = value;
+    updated[id] = entry;
+  }
+  return updated;
+}
+```
+
+- [ ] **Step 3: Обновить UI формы слова в словаре**
+
+В `src/ui/screens/dictionary.js` заменить варианты `Лемма / Все формы` на:
+
+```js
+[
+  { value: undefined, label: 'По виджету' },
+  { value: 'lemma', label: 'Лемма' },
+  { value: 'form', label: 'Формы' }
+]
+```
+
+Активным считать `dictEntry.forms === opt.value`; для `undefined` — отсутствие
+поля `forms`.
+
+- [ ] **Step 4: Обновить тесты forms-контракта**
+
+В тестах заменить явные `forms: 'all'` на `forms: 'form'`. Добавить кейс:
+
+```js
+it('использует global wordLayer как default, если per-word forms не задан', () => {
+  // buildWordEntries должен передать forms: 'form' при settings.wordLayer='form'
+});
+```
+
+- [ ] **Step 5: Запустить тесты**
+
+```bash
+npm test
+```
+
+Expected: PASS
 
 ---
 
@@ -980,32 +1151,33 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
 **Files:**
 - Modify: `src/ui/screens/onboarding.js`
 
-- [ ] **Step 1: Заменить `mode: N` на `wordMode`/`readingMode` в пресетах**
+- [ ] **Step 1: Убрать старое поле `mode` из пресетов**
 
-Найди массив пресетов (около строк 9–30). Замени `mode: 1|2|3`:
+Найди массив пресетов (около строк 9–30). Удали старое `mode: 1|2|3` и задай
+слои явно:
 
 ```js
 const PRESETS = [
   {
     id: 'letters',
-    title: 'Буквы + подсказки',
+    title: 'Только буквы',
     desc: 'Греческие буквы постепенно заменяют русские. При нажатии — подсказка.',
-    wordMode: 'lemma', readingMode: 'mixed', intensity: 35,
+    wordLayer: 'off', readingMode: 'mixed', intensity: 35,
     introduce: 8, allLettersKnown: false
   },
   {
     id: 'dictionary',
-    title: 'Слова из словаря',
+    title: 'Буквы + леммы',
     desc: 'Знакомые греческие слова заменяют русские. Буквы тоже заменяются.',
-    wordMode: 'lemma', readingMode: 'mixed', intensity: 35,
+    wordLayer: 'lemma', readingMode: 'mixed', intensity: 35,
     introduce: 0, allLettersKnown: true,
     note: 'Вы будете добавлять слова в словарь по мере чтения.'
   },
   {
     id: 'forms',
-    title: 'Формы оригинала',
+    title: 'Буквы + формы',
     desc: 'Греческие слова в реальных грамматических формах. Буквы тоже заменяются.',
-    wordMode: 'form', readingMode: 'mixed', intensity: 35,
+    wordLayer: 'form', readingMode: 'mixed', intensity: 35,
     introduce: 0, allLettersKnown: true,
     note: 'Вы будете добавлять слова в словарь по мере чтения.'
   }
@@ -1014,19 +1186,16 @@ const PRESETS = [
 
 - [ ] **Step 2: Обновить применение пресета**
 
-Найди строку `settings.mode = preset.mode` (около строки 83). Замени:
+Найди строку `settings.mode = preset.mode` (около строки 83). Удали её и
+сохраняй только поля слоёв:
 
 ```js
-  settings.wordMode = preset.wordMode || 'lemma';
+  settings.wordLayer = preset.wordLayer || 'off';
   settings.readingMode = preset.readingMode || 'mixed';
   settings.intensity = preset.intensity ?? 35;
-  settings.mode = deriveMode(settings);
 ```
 
-Добавь импорт `deriveMode` в начало onboarding.js:
-```js
-import { loadSettings, saveSettings, deriveMode } from '../../state/settings.js';
-```
+Импорт `loadSettings` / `saveSettings` остаётся без дополнительных mode-helper.
 
 - [ ] **Step 3: Собрать**
 
@@ -1040,7 +1209,7 @@ Expected: сборка без ошибок
 
 ```bash
 git add src/ui/screens/onboarding.js
-git commit -m "refactor: update onboarding presets to wordMode/readingMode"
+git commit -m "refactor: update onboarding presets to wordLayer/readingMode"
 ```
 
 ---
@@ -1382,10 +1551,10 @@ Expected: тесты PASS, сборка без ошибок
 
 ```bash
 grep -r 'intensity-slider' src/ | grep -v 'node_modules'
-grep -r "from '../../state/settings.js'" src/ --include='*.js' -l | xargs -r grep "MODES\|DEFAULT_MODE"
+rg "MODES|DEFAULT_MODE|deriveConfiguredMode|deriveRenderMode|settings\\.mode" src
 ```
 
-Expected: первый grep — пусто, второй — только если MODES/DEFAULT_MODE реально используется
+Expected: обе команды не находят runtime-использований старой numeric-mode модели.
 
 - [ ] **Step 3: Commit**
 
