@@ -194,13 +194,12 @@ function migrateSettings(loaded) {
 
 function deriveMode(s) {
   if (s.readingMode === 'greek') return 4;
-  if (s.intensity > 0 && s.wordMode === 'lemma') return 2;
   if (s.wordMode === 'form') return 3;
-  return 1;
+  return 2; // 'lemma' — дефолт для 'mixed'
 }
 ```
 
-`deriveMode` вызывается при каждом изменении `intensity`, `wordMode` или
+`deriveMode` вызывается при каждом изменении `wordMode` или
 `readingMode` — результат записывается в `settings.mode` для обратной
 совместимости со всем кодом (`composeVerse`, `ensureGreekBookLoaded`,
 условия `mode >= 2`, экран настроек).
@@ -241,6 +240,7 @@ function deriveMode(s) {
 ### Токены (существующие, без изменений)
 
 ```
+--font-greek:    'Gentium Plus', serif  ← шрифт для греческих символов (светлая/тёмная — одинаково)
 --surface:       #efeee9 / #1E1E1E  ← фон страницы (light / dark)
 --surface-card:  #F2EDE4 / #2A2A2A  ← фон чипа, кнопок
 --text:          #2B2B2B / #E0DCD0  ← основной текст

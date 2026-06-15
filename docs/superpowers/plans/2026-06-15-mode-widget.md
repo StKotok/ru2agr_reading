@@ -34,9 +34,8 @@ export const MODES = [
  */
 export function deriveMode(s) {
   if (s.readingMode === 'greek') return 4;
-  if (s.intensity > 0 && s.wordMode === 'lemma') return 2;
   if (s.wordMode === 'form') return 3;
-  return 1;
+  return 2; // 'lemma' — дефолт для 'mixed'
 }
 
 const DEFAULTS = {
@@ -315,10 +314,15 @@ export function createModeWidget(ctx) {
   function updateToggleHint(mode) {
     const hint = document.getElementById('mode-widget-word-hint');
     if (!hint) return;
-    if (mode === 'lemma') {
-      hint.innerHTML = '<b>Леммы</b> — как в словаре: λέγω &nbsp;исходная форма, «говорить»<br><b>Формы</b> — как в тексте: λέγει &nbsp;с окончанием, «говорит»';
-    } else {
-      hint.innerHTML = '<b>Леммы</b> — как в словаре: λέγω &nbsp;исходная форма, «говорить»<br><b>Формы</b> — как в тексте: λέγει &nbsp;с окончанием, «говорит»';
+    const lemmaActive = mode === 'lemma';
+    hint.innerHTML =
+      '<span class="mw-hint-active">Леммы — как в словаре: λέγω  исходная форма, «говорить»</span><br>' +
+      '<span class="mw-hint-dim">Формы — как в тексте: λέγει  с окончанием, «говорит»</span>';
+    // Меняем классы: активная строка получает mw-hint-active, неактивная — mw-hint-dim
+    if (!lemmaActive) {
+      hint.innerHTML =
+        '<span class="mw-hint-dim">Леммы — как в словаре: λέγω  исходная форма, «говорить»</span><br>' +
+        '<span class="mw-hint-active">Формы — как в тексте: λέγει  с окончанием, «говорит»</span>';
     }
   }
 
@@ -387,20 +391,9 @@ export function createModeWidget(ctx) {
     updateDictCount();
 
     if (isMobile) {
+      // bottom-sheet закрывается по свайпу/оверлею/escape самим bottom-sheet.js.
+      // Наш closePopup() вызывает closeBottomSheet() — он же сбрасывает isOpen.
       openBottomSheet(popup);
-      // Подписываемся на закрытие bottom sheet
-      const origClose = closeBottomSheet;
-      // bottom-sheet закрывается по свайпу/оверлею/escape — ловим через MutationObserver
-      // упрощённо: ставим обработчик на overlay click который уже есть в bottom-sheet
-      setTimeout(() => {
-        const overlay = document.querySelector('.bottom-sheet-overlay');
-        if (overlay) {
-          overlay.addEventListener('click', () => {
-            isOpen = false;
-            if (savedActiveElement) savedActiveElement.focus();
-          }, { once: true });
-        }
-      }, 50);
     } else {
       // Десктоп: поповер рядом с чипом
       document.body.appendChild(popup);
@@ -715,7 +708,7 @@ import { createModeWidget } from '../components/mode-widget.js';
 
 Замени на (публикуем dictionary, coreLexicon, frequencyList чтобы mode-widget мог вычислить счётчик слов):
 ```js
-  store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList, grcAvailable: false }));
+  store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList }));
 ```
 
 После успешной загрузки греческого текста (около строк 156–157, после `buildGrcVerseMap()`) добавь:
@@ -904,7 +897,7 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
 ### Task 7: CSS — стили чипа и попапа
 
 **Files:**
-- Modify: `assets/styles/app.css`
+- Modify: `assets/styles/app.css`, `assets/styles/tokens.css`
 
 - [ ] **Step 1: Удалить старые стили top-bar-slider и intensity-slider**
 
@@ -914,7 +907,17 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
 - `.intensity-slider input[type="range"]` (строки 1176–1178)
 - `.intensity-value` (строки 1180–1183)
 
-- [ ] **Step 2: Добавить стили для mode-widget**
+- [ ] **Step 2: Добавить `--font-greek` в tokens.css**
+
+В `assets/styles/tokens.css`, в блок `:root, [data-theme="light"]` добавить после `--hint`:
+
+```css
+  --font-greek: 'Gentium Plus', serif;
+```
+
+Значение одинаковое для светлой и тёмной тем — шрифт один.
+
+- [ ] **Step 3: Добавить стили для mode-widget**
 
 Добавь в конец `assets/styles/app.css`:
 
@@ -1137,9 +1140,13 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
   line-height: 1.5;
 }
 
-.mode-widget-hint b {
+.mw-hint-active {
   font-weight: 600;
   color: var(--text);
+}
+
+.mw-hint-dim {
+  color: var(--muted);
 }
 
 /* ---- Dictionary button ---- */
@@ -1175,7 +1182,7 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
 }
 ```
 
-- [ ] **Step 3: Проверить что старые стили не сломали сборку**
+- [ ] **Step 4: Проверить что старые стили не сломали сборку**
 
 ```bash
 npm run build
@@ -1183,11 +1190,11 @@ npm run build
 
 Expected: сборка без ошибок
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add assets/styles/app.css
-git commit -m "style: add mode-widget chip and popup styles, remove old slider styles"
+git add assets/styles/app.css assets/styles/tokens.css
+git commit -m "style: add mode-widget chip and popup styles, --font-greek token, remove old slider styles"
 ```
 
 ---
