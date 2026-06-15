@@ -302,10 +302,13 @@ export function createModeWidget(ctx) {
     });
     panel.appendChild(toggle);
 
-    // Подсказка под тумблером
+    // Подсказка под тумблером (одна структура, классы переключаются в updateToggleHint)
     const hint = document.createElement('p');
     hint.className = 'mode-widget-hint';
     hint.id = 'mode-widget-word-hint';
+    hint.innerHTML =
+      '<span class="mw-hint-lemma">Леммы — как в словаре: λέγω &nbsp;исходная форма, «говорить»</span><br>' +
+      '<span class="mw-hint-form">Формы — как в тексте: λέγει &nbsp;с окончанием, «говорит»</span>';
     panel.appendChild(hint);
     updateToggleHint(wordMode);
 
@@ -323,15 +326,15 @@ export function createModeWidget(ctx) {
   function updateToggleHint(mode) {
     const hint = document.getElementById('mode-widget-word-hint');
     if (!hint) return;
-    const lemmaActive = mode === 'lemma';
-    hint.innerHTML =
-      '<span class="mw-hint-active">Леммы — как в словаре: λέγω  исходная форма, «говорить»</span><br>' +
-      '<span class="mw-hint-dim">Формы — как в тексте: λέγει  с окончанием, «говорит»</span>';
-    // Меняем классы: активная строка получает mw-hint-active, неактивная — mw-hint-dim
-    if (!lemmaActive) {
-      hint.innerHTML =
-        '<span class="mw-hint-dim">Леммы — как в словаре: λέγω  исходная форма, «говорить»</span><br>' +
-        '<span class="mw-hint-active">Формы — как в тексте: λέγει  с окончанием, «говорит»</span>';
+    const lemmaLine = hint.querySelector('.mw-hint-lemma');
+    const formLine = hint.querySelector('.mw-hint-form');
+    if (!lemmaLine || !formLine) return;
+    if (mode === 'lemma') {
+      lemmaLine.className = 'mw-hint-lemma mw-hint-active';
+      formLine.className = 'mw-hint-form mw-hint-dim';
+    } else {
+      lemmaLine.className = 'mw-hint-lemma mw-hint-dim';
+      formLine.className = 'mw-hint-form mw-hint-active';
     }
   }
 
@@ -467,6 +470,7 @@ export function createModeWidget(ctx) {
       savedActiveElement.focus();
       savedActiveElement = null;
     }
+    popup = null;
   }
 
   function closePopup() {
@@ -553,7 +557,14 @@ export function createModeWidget(ctx) {
     const showLetters = intensity > 0;
     const wordsExist = count > 0;
 
-    // Ни букв, ни слов
+    // Без греческого текста и без букв — всегда «Рус»
+    if (!showLetters && !grcAvailable) {
+      chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
+      chip.setAttribute('aria-label', 'Режим: чистый русский текст (греческий текст недоступен)');
+      return;
+    }
+
+    // Ни букв, ни слов (но греческий доступен)
     if (!showLetters && !wordsExist) {
       chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
       chip.setAttribute('aria-label', 'Режим: чистый русский текст');
@@ -570,6 +581,7 @@ export function createModeWidget(ctx) {
     if (wordsExist) {
       if (!grcAvailable) {
         // Греческий текст недоступен — показываем тире вместо слова+счётчика
+        // (сюда попадаем только если showLetters=true, иначе уже вернули «Рус» выше)
         html += '<span class="mw-na">—</span>';
       } else {
         const indicator = wordMode === 'lemma' ? 'λέγω' : 'λέγει';
@@ -630,6 +642,7 @@ export function createModeWidget(ctx) {
   });
   store.subscribe(['dictionary'], () => updateDictCount());
   store.subscribe(['coreLexicon'], () => updateDictCount());
+  store.subscribe(['grcAvailable'], () => updateChip());
 
   // Инициализация
   updateChip();
@@ -767,7 +780,7 @@ import { createModeWidget } from '../components/mode-widget.js';
 
 Замени на (публикуем dictionary, coreLexicon, frequencyList чтобы mode-widget мог вычислить счётчик слов):
 ```js
-  store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList }));
+  store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList, grcAvailable: false }));
 ```
 
 После успешной загрузки греческого текста (около строк 156–157, после `buildGrcVerseMap()`) добавь:
