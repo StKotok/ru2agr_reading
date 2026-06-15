@@ -4,18 +4,18 @@
 
 **Goal:** Replace dropdown mode selector + intensity slider with a single compact chip+popup widget managing all reading-mode state.
 
-**Architecture:** New `mode-widget.js` component encapsulates chip and popup. `settings.js` gains migration (`migrateSettings`, `deriveMode`) converting old `mode:1-4` to new `wordMode`/`readingMode` fields while keeping `mode` as a derived integer for backward compatibility with `composeVerse`. `top-bar.js` and `reading.js` shed mode/slider code; `settings.js` screen drops mode/slider/show sections leaving only theme, diacritics, Strong numbers, and reset.
+**Architecture:** New `mode-widget.js` component encapsulates chip and popup. `settings.js` adds `deriveMode()` — `wordMode`/`readingMode` fields are the source of truth, `mode` (1-4) is derived for `composeVerse`. No IndexedDB migration needed (zero users). `top-bar.js` and `reading.js` shed mode/slider code; `settings.js` screen drops mode/slider/show sections leaving theme, diacritics, Strong numbers, reset. `onboarding.js` presets updated to new fields.
 
 **Tech Stack:** Vanilla JS (ESM), CSS custom properties, existing `store.subscribe` pattern, existing `bottom-sheet.js`
 
 ---
 
-### Task 1: settings.js — миграция и новые поля
+### Task 1: settings.js — новые поля и deriveMode
 
 **Files:**
 - Modify: `src/state/settings.js`
 
-- [ ] **Step 1: Обновить DEFAULTS и MODES**
+- [ ] **Step 1: Обновить DEFAULTS и добавить `deriveMode`**
 
 Замени `DEFAULTS` и добавь `deriveMode` после `MODES`:
 
@@ -28,8 +28,8 @@ export const MODES = [
 ];
 
 /**
- * Вычисляет числовой mode из новых полей для обратной совместимости.
- * @param {object} s — settings с полями readingMode, wordMode, intensity
+ * Вычисляет числовой mode из новых полей для composeVerse.
+ * @param {object} s — settings с полями readingMode, wordMode
  * @returns {number} 1–4
  */
 export function deriveMode(s) {
@@ -56,60 +56,10 @@ const DEFAULTS = {
 };
 ```
 
-- [ ] **Step 2: Добавить `migrateSettings` и обновить `loadSettings`**
+Пользователей нет → миграция IndexedDB не нужна. `loadSettings()` не меняется —
+при первом запуске вернёт DEFAULTS с новыми полями.
 
-Замени `loadSettings`:
-
-```js
-/**
- * Мигрирует старые настройки на новую схему (v1).
- * Старый формат: { mode: 1|2|3|4, intensity, show: { translit, gloss, grammar, ... } }
- * Новый формат: +wordMode, +readingMode, +lastActiveTab, mode=derived
- */
-function migrateSettings(loaded) {
-  if (loaded._schemaVersion === 1) return loaded;
-
-  const migrated = { ...loaded, _schemaVersion: 1 };
-
-  if (!migrated.wordMode) {
-    migrated.wordMode = (loaded.mode === 3) ? 'form' : 'lemma';
-  }
-  if (!migrated.readingMode) {
-    migrated.readingMode = (loaded.mode === 4) ? 'greek' : 'mixed';
-  }
-  if (!migrated.lastActiveTab) {
-    migrated.lastActiveTab = 'mixed';
-  }
-
-  // Убираем старые поля show, которых больше нет в DEFAULTS
-  if (migrated.show) {
-    delete migrated.show.translit;
-    delete migrated.show.gloss;
-    delete migrated.show.grammar;
-  }
-
-  migrated.mode = deriveMode(migrated);
-  return migrated;
-}
-
-export async function loadSettings() {
-  try {
-    const data = await db.get(KEY);
-    if (!data) return migrateSettings({ ...DEFAULTS, show: { ...DEFAULTS.show } });
-    const merged = {
-      ...DEFAULTS,
-      ...data,
-      show: { ...DEFAULTS.show, ...(data.show || {}) }
-    };
-    return migrateSettings(merged);
-  } catch (e) {
-    console.warn('loadSettings error:', e);
-    return migrateSettings({ ...DEFAULTS, show: { ...DEFAULTS.show } });
-  }
-}
-```
-
-- [ ] **Step 3: Запустить тесты, проверить сборку**
+- [ ] **Step 2: Запустить тесты**
 
 ```bash
 npm test
@@ -117,11 +67,11 @@ npm test
 
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add src/state/settings.js
-git commit -m "feat: add migration, deriveMode, new DEFAULTS to settings"
+git commit -m "feat: add deriveMode, wordMode/readingMode to DEFAULTS"
 ```
 
 ---
@@ -143,7 +93,7 @@ const DB_SLIDER = 300;
 /**
  * Создаёт виджет-чип + попап управления режимом чтения.
  * @param {object} ctx — { store }
- * @returns {{ chip: HTMLElement }}
+ * @returns {{ chip: HTMLElement, destroy: Function }}
  */
 export function createModeWidget(ctx) {
   const { store } = ctx;
@@ -159,8 +109,7 @@ export function createModeWidget(ctx) {
   // ---- Чип ----
   const chip = document.createElement('button');
   chip.className = 'mode-widget-chip';
-  chip.setAttribute('role', 'button');
-  chip.setAttribute('tabindex', '0');
+  // <button> уже имеет role="button" и входит в tab order — не дублируем
   chip.addEventListener('click', () => {
     if (isOpen) closePopup();
     else openPopup();
@@ -173,10 +122,14 @@ export function createModeWidget(ctx) {
     activeTab = s.lastActiveTab || 'mixed';
     const grcAvail = state.grcAvailable !== false;
 
+    const isMobile = window.innerWidth < 900;
     const el = document.createElement('div');
     el.className = 'mode-widget-popup';
-    el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-label', 'Настройки чтения');
+    // На десктопе — dialog; на мобильном bottom-sheet уже dialog, не дублируем
+    if (!isMobile) {
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', 'Настройки чтения');
+    }
     el.innerHTML = `
       <div class="mode-widget-tabs">
         <button class="mode-widget-tab" data-tab="mixed">Смешанный</button>
@@ -205,7 +158,7 @@ export function createModeWidget(ctx) {
     // Панель «Греческий»
     buildGreekPanel(el.querySelector('[data-panel="greek"]'), s);
 
-    switchTab(activeTab, /* silent */ true);
+    switchTab(activeTab, /* silent */ true, el);
 
     return el;
   }
@@ -373,18 +326,24 @@ export function createModeWidget(ctx) {
   }
 
   // ---- Переключение вкладок ----
-  function switchTab(tab, silent) {
+  function switchTab(tab, silent, root) {
     activeTab = tab;
-    const tabs = popup.querySelectorAll('.mode-widget-tab');
+    const el = root || popup;
+    const tabs = el.querySelectorAll('.mode-widget-tab');
     tabs.forEach(t => {
       t.classList.toggle('active', t.dataset.tab === tab);
     });
-    popup.querySelector('[data-panel="mixed"]').hidden = (tab !== 'mixed');
-    popup.querySelector('[data-panel="greek"]').hidden = (tab !== 'greek');
+    el.querySelector('[data-panel="mixed"]').hidden = (tab !== 'mixed');
+    el.querySelector('[data-panel="greek"]').hidden = (tab !== 'greek');
 
     if (!silent) {
       const st = store.get();
-      const ns = { ...st.settings, lastActiveTab: tab };
+      const ns = {
+        ...st.settings,
+        lastActiveTab: tab,
+        readingMode: tab === 'greek' ? 'greek' : 'mixed'
+      };
+      ns.mode = deriveMode(ns);
       saveSettings(ns);
       store.update(s2 => ({ ...s2, settings: ns }));
     }
@@ -476,16 +435,16 @@ export function createModeWidget(ctx) {
   function closePopup() {
     if (!isOpen) return;
     isOpen = false;
+    const currentPopup = popup;
     cleanupPopup();
 
-    if (popup) {
-      if (popup.closest('.bottom-sheet')) {
+    if (currentPopup) {
+      if (currentPopup.closest('.bottom-sheet')) {
         closeBottomSheet();
       } else {
-        popup.classList.remove('mode-widget-popup-visible');
-        popup.remove();
+        currentPopup.classList.remove('mode-widget-popup-visible');
+        currentPopup.remove();
       }
-      popup = null;
     }
   }
 
@@ -637,18 +596,29 @@ export function createModeWidget(ctx) {
   }
 
   // ---- Подписка на store ----
-  store.subscribe(['settings'], () => {
-    updateChip(); // только чип — intensity/slider не влияет на счётчик слов
-  });
-  store.subscribe(['dictionary'], () => updateDictCount());
-  store.subscribe(['coreLexicon'], () => updateDictCount());
-  store.subscribe(['grcAvailable'], () => updateChip());
+  const unsubs = [
+    store.subscribe(['settings'], () => {
+      updateChip(); // только чип — intensity/slider не влияет на счётчик слов
+    }),
+    store.subscribe(['dictionary'], () => updateDictCount()),
+    store.subscribe(['coreLexicon'], () => updateDictCount()),
+    store.subscribe(['grcAvailable'], () => updateChip())
+  ];
+
+  function destroy() {
+    closePopup();
+    unsubs.forEach(fn => fn());
+    document.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('click', onOutsideClick);
+    if (removeResize) { removeResize(); removeResize = null; }
+    if (bottomSheetObserver) { bottomSheetObserver.disconnect(); bottomSheetObserver = null; }
+  }
 
   // Инициализация
   updateChip();
   updateDictCount();
 
-  return { chip };
+  return { chip, destroy };
 }
 ```
 
@@ -753,8 +723,20 @@ import { createModeWidget } from '../components/mode-widget.js';
 
 ```js
   // Mode widget (чип + попап)
-  const { chip: modeChip } = createModeWidget({ store });
+  const { chip: modeChip, destroy: destroyModeWidget } = createModeWidget({ store });
   bar.appendChild(modeChip);
+```
+
+Сохрани `destroyModeWidget` в переменной модуля (рядом с `let reRenderFn = null`):
+
+```js
+let destroyModeWidgetFn = null;
+```
+
+И в `mount()`, после `bar.appendChild(modeChip)`:
+
+```js
+  destroyModeWidgetFn = destroyModeWidget;
 ```
 
 - [ ] **Step 3: Обновить `buildWordEntries`**
@@ -771,29 +753,56 @@ import { createModeWidget } from '../components/mode-widget.js';
       forms: entry.forms || settings.wordMode || 'lemma',
 ```
 
-- [ ] **Step 4: Публиковать dictionary, coreLexicon, frequencyList, grcAvailable в store**
+- [ ] **Step 4: Публиковать dictionary, coreLexicon, frequencyList, grcAvailable в store; добавить store.ref**
+
+`ensureGreekBookLoaded` — модульная функция, у неё нет доступа к `store` (локальная переменная `mount()`).
+Решение: сохранить `store` в объект-ссылку `storeRef` в `mount()`, доступный модульным функциям:
+
+В начале модуля, рядом с `let grcLoadPromise = null`:
+```js
+let storeRef = null;
+```
+
+В `mount()`, после `const { store } = ctx`:
+```js
+storeRef = { current: store };
+```
+
+В `unmount()`:
+```js
+storeRef = null;
+if (destroyModeWidgetFn) { destroyModeWidgetFn(); destroyModeWidgetFn = null; }
+```
 
 Найди в `mount()` строку около 107:
 ```js
   store.update(s => ({ ...s, settings, progress }));
 ```
 
-Замени на (публикуем dictionary, coreLexicon, frequencyList чтобы mode-widget мог вычислить счётчик слов):
+Замени на:
 ```js
   store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList, grcAvailable: false }));
 ```
 
 После успешной загрузки греческого текста (около строк 156–157, после `buildGrcVerseMap()`) добавь:
 ```js
-    store.update(s => ({ ...s, grcAvailable: true }));
+    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcAvailable: true }));
 ```
 
 В `ensureGreekBookLoaded` (около строки 66) после `buildGrcVerseMap()`:
 ```js
-    store.update(s => ({ ...s, grcAvailable: true }));
+    if (storeRef?.current) storeRef.current.update(s => ({ ...s, grcAvailable: true }));
 ```
 
-- [ ] **Step 5: Собрать и проверить**
+- [ ] **Step 5: Перепубликовать dictionary в store после изменения статуса слова**
+
+Найди места в `reading.js`, где вызывается `saveDictionary(dictionary)` после изменения статуса слова (функции-обработчики `onMarkStatus` / `setWordStatus`). После каждого `saveDictionary(dictionary)` добавь:
+
+```js
+    if (storeRef?.current) storeRef.current.update(s => ({ ...s, dictionary }));
+```
+
+- [ ] **Step 8: Собрать и проверить**
 
 ```bash
 npm run build
@@ -801,11 +810,11 @@ npm run build
 
 Expected: сборка без ошибок
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add src/ui/screens/reading.js
-git commit -m "refactor: integrate mode-widget, update buildWordEntries"
+git add src/ui/screens/reading.js src/engine/compose.js
+git commit -m "refactor: integrate mode-widget, update buildWordEntries, remove composeVerse hardcoded lemma"
 ```
 
 ---
@@ -966,7 +975,77 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
 
 ---
 
-### Task 7: CSS — стили чипа и попапа
+### Task 7: onboarding.js — обновить пресеты
+
+**Files:**
+- Modify: `src/ui/screens/onboarding.js`
+
+- [ ] **Step 1: Заменить `mode: N` на `wordMode`/`readingMode` в пресетах**
+
+Найди массив пресетов (около строк 9–30). Замени `mode: 1|2|3`:
+
+```js
+const PRESETS = [
+  {
+    id: 'letters',
+    title: 'Буквы + подсказки',
+    desc: 'Греческие буквы постепенно заменяют русские. При нажатии — подсказка.',
+    wordMode: 'lemma', readingMode: 'mixed', intensity: 35,
+    introduce: 8, allLettersKnown: false
+  },
+  {
+    id: 'dictionary',
+    title: 'Слова из словаря',
+    desc: 'Знакомые греческие слова заменяют русские. Буквы тоже заменяются.',
+    wordMode: 'lemma', readingMode: 'mixed', intensity: 35,
+    introduce: 0, allLettersKnown: true,
+    note: 'Вы будете добавлять слова в словарь по мере чтения.'
+  },
+  {
+    id: 'forms',
+    title: 'Формы оригинала',
+    desc: 'Греческие слова в реальных грамматических формах. Буквы тоже заменяются.',
+    wordMode: 'form', readingMode: 'mixed', intensity: 35,
+    introduce: 0, allLettersKnown: true,
+    note: 'Вы будете добавлять слова в словарь по мере чтения.'
+  }
+];
+```
+
+- [ ] **Step 2: Обновить применение пресета**
+
+Найди строку `settings.mode = preset.mode` (около строки 83). Замени:
+
+```js
+  settings.wordMode = preset.wordMode || 'lemma';
+  settings.readingMode = preset.readingMode || 'mixed';
+  settings.intensity = preset.intensity ?? 35;
+  settings.mode = deriveMode(settings);
+```
+
+Добавь импорт `deriveMode` в начало onboarding.js:
+```js
+import { loadSettings, saveSettings, deriveMode } from '../../state/settings.js';
+```
+
+- [ ] **Step 3: Собрать**
+
+```bash
+npm run build
+```
+
+Expected: сборка без ошибок
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/ui/screens/onboarding.js
+git commit -m "refactor: update onboarding presets to wordMode/readingMode"
+```
+
+---
+
+### Task 8: CSS — стили чипа и попапа
 
 **Files:**
 - Modify: `assets/styles/app.css`, `assets/styles/tokens.css`
@@ -1008,7 +1087,13 @@ git commit -m "refactor: remove intensity-slider.js (logic moved to mode-widget)
   font-size: 0.8125rem;
   line-height: 1.4;
   user-select: none;
-  min-height: 32px;
+  min-height: 44px;
+}
+
+@media (min-width: 900px) {
+  .mode-widget-chip {
+    min-height: 32px;
+  }
 }
 
 .mode-widget-chip:hover {
@@ -1281,7 +1366,7 @@ git commit -m "style: add mode-widget chip and popup styles, --font-greek token,
 
 ---
 
-### Task 8: Финальная сборка и тесты
+### Task 9: Финальная сборка и тесты
 
 **Files:** все изменённые
 

@@ -19,7 +19,7 @@
 
 1. **Замена букв** — ползунок 0–100%. Регулирует, какая доля возможных
    буквенных замен (ru→gr) реально происходит. **Не влияет на словарные замены** —
-   те управляются отдельно через словарь и тумблер.
+   те упроцениавляются отдельно через словарь и тумблер.
 2. **Замена слов** — тумблер «Леммы» / «Формы». Определяет, в каком виде
    подставляются греческие слова: словарная форма (лемма) или реальная
    грамматическая форма из оригинала.
@@ -165,36 +165,14 @@
 а не внутри `createTopBar`. `createTopBar` теряет modeBtn/modeList,
 но сохраняет bookSelector и eyeBtn.
 
-### Миграция состояния (критично)
+### Новая модель состояния
 
-Старые пользователи имеют в IndexedDB: `{ mode: 1|2|3|4, intensity: 35, ... }`.
-Новая модель: `wordMode`, `readingMode`, плюс сохранение `mode` как
-derived-поля для совместимости с `composeVerse()`.
+Нет пользователей → миграция IndexedDB не нужна. Просто расширяем DEFAULTS.
 
-**Функция миграции** `migrateSettings(old)` в `src/state/settings.js`:
+Новая модель: `wordMode`, `readingMode` управляют поведением;
+`mode` — derived-поле для `composeVerse` (он продолжает принимать `mode: number`).
 
 ```js
-function migrateSettings(loaded) {
-  if (loaded._schemaVersion === 1) return loaded; // уже мигрировано
-
-  const migrated = { ...loaded, _schemaVersion: 1 };
-
-  // Вычисляем новые поля из старого mode
-  if (!migrated.wordMode) {
-    migrated.wordMode = (loaded.mode === 3) ? 'form' : 'lemma';
-  }
-  if (!migrated.readingMode) {
-    migrated.readingMode = (loaded.mode === 4) ? 'greek' : 'mixed';
-  }
-  if (!migrated.lastActiveTab) {
-    migrated.lastActiveTab = 'mixed';
-  }
-
-  // mode остаётся как derived (вычисляется ниже)
-  migrated.mode = deriveMode(migrated);
-  return migrated;
-}
-
 function deriveMode(s) {
   if (s.readingMode === 'greek') return 4;
   if (s.wordMode === 'form') return 3;
@@ -203,7 +181,7 @@ function deriveMode(s) {
 ```
 
 `deriveMode` вызывается при каждом изменении `wordMode` или
-`readingMode` — результат записывается в `settings.mode` для обратной
+`readingMode` — результат записывается в `settings.mode` для
 совместимости со всем кодом (`composeVerse`, `ensureGreekBookLoaded`,
 условия `mode >= 2`, экран настроек).
 
@@ -216,8 +194,10 @@ function deriveMode(s) {
 | `src/ui/screens/reading.js` | Убрать создание `IntensitySlider` и `sliderContainer`. Вставлять `createModeWidget({ store })` в top-bar после его создания. `buildWordEntries()` использует `entry.forms || settings.wordMode` |
 | `src/ui/screens/settings.js` | Убрать секцию «Режим обучения» (radio-кнопки), слайдер интенсивности, чекбоксы «Транслитерация», «Глосса / перевод», «Грамматика». Оставить: тему, диакритику, номера Стронга, сброс |
 | `src/ui/components/intensity-slider.js` | **Удалить.** Логика слайдера переезжает в `mode-widget.js` |
-| `src/state/settings.js` | Добавить `migrateSettings()`, `deriveMode()`. Поля по умолчанию: `wordMode: 'lemma'`, `readingMode: 'mixed'`, `lastActiveTab: 'mixed'`. Убрать из `show` поля `translit`, `gloss`, `grammar` (если не используются в рендеринге). Экспортировать `deriveMode` |
-| `src/engine/compose.js` | Без изменений. `composeVerse()` продолжает принимать `mode: number` (он теперь derived) |
+| `src/state/settings.js` | Добавить `deriveMode()`. Поля по умолчанию: `wordMode: 'lemma'`, `readingMode: 'mixed'`, `lastActiveTab: 'mixed'`. Убрать из `show` поля `translit`, `gloss`, `grammar`. Экспортировать `deriveMode` |
+| `src/engine/compose.js` | Mode 2: убрать принудительный `forms: 'lemma'` — теперь `forms` берётся из wordEntries как есть |
+| `src/ui/screens/dictionary.js` | `forms`-значения: `'all'` → `'form'`, label «Все формы» → «Формы» |
+| `src/ui/screens/onboarding.js` | В пресетах заменить `mode: N` на `wordMode`/`readingMode`; mode вычисляется через `deriveMode` |
 
 ### Focus trap для попапа
 
