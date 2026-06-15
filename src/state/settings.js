@@ -3,7 +3,7 @@ import { db } from '../storage/db.js';
 const KEY = 'settings';
 
 const DEFAULTS = {
-  mode: 1,                  // 1..5
+  mode: 2,                  // 2..5
   intensity: 35,            // 0..100
   newWordsPerChapter: 3,    // 1 | 3 | 5 | 10
   pauseNewToday: false,

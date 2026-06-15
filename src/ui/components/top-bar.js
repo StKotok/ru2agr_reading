@@ -35,7 +35,6 @@ export function createTopBar(ctx) {
   bar.appendChild(modeList);
 
   const MODES = [
-    { id: 1, label: '1. Только буквы', group: 'Учебный мостик', enabled: true },
     { id: 2, label: '2. Буквы + подсказки', group: 'Учебный мостик', enabled: true },
     { id: 3, label: '3. Слова из словаря', group: 'Учебный мостик', enabled: true },
     { id: 4, label: '4. Формы оригинала', group: 'Ближе к оригиналу', enabled: true },
@@ -44,7 +43,7 @@ export function createTopBar(ctx) {
 
   function renderModeButton() {
     const state = store.get();
-    const m = MODES.find(m => m.id === (state.settings?.mode || 1)) || MODES[0];
+    const m = MODES.find(m => m.id === (state.settings?.mode || 2)) || MODES[0];
     modeBtn.textContent = 'Режим ' + m.id + ' ▾';
   }
 

@@ -439,12 +439,12 @@ function renderWindowed() {
           p.appendChild(frag);
         } else {
           // Fallback: показываем русский текст через composeVerse
-          const segments = composeVerse(verse.text, { ...composeCtx, mode: 1 });
+          const segments = composeVerse(verse.text, { ...composeCtx, mode: 2 });
           const frag = segmentsToFragment(segments, renderCtx);
           p.appendChild(frag);
         }
       } else {
-        // Добавляем grcVerse и alignment для режимов 3-5
+        // Добавляем grcVerse и alignment для режимов 3-4
         const verseCtx = { ...composeCtx };
         if (grcBookData && settings.mode >= 3) {
 

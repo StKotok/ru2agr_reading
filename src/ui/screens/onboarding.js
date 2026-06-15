@@ -1,16 +1,9 @@
 import { loadSettings, saveSettings } from '../../state/settings.js';
 import { loadProgress, saveProgress, introduceLetters } from '../../state/progress.js';
 import { loadAlphabet } from '../../data/lexicon-loader.js';
-import { showToast } from '../components/toast.js';
 import { navigate } from '../../router.js';
 
 const PRESETS = [
-  {
-    id: 1,
-    title: 'Хочу читать почти по-русски и привыкать к буквам',
-    desc: 'Режим 1 — только греческие буквы. Вводятся первые 3 буквы (α, ο, κ).',
-    mode: 1, introduce: 3, allLettersKnown: false
-  },
   {
     id: 2,
     title: 'Знаю часть букв, хочу видеть больше греческого',
@@ -146,17 +139,6 @@ function renderStep2() {
 }
 
 function finish(bookId) {
-  if (selectedPreset) {
-    const introduced = alphabet
-      .filter(l => progress.letters[l.lower]?.status === 'learning')
-      .slice(0, 3);
-
-    if (introduced.length > 0 && selectedPreset.id === 1) {
-      const names = introduced.map(l => `${l.lower} = ${l.ruEquivalents[0]}`).join(', ');
-      showToast(`Сегодня добавим 3 буквы: ${names}. Читай как обычно. При нажатии увидишь подсказку.`, { timeout: 8000 });
-    }
-  }
-
   navigate(`#/read/${bookId}`);
 }
 

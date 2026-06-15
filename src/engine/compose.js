@@ -4,7 +4,7 @@ import { stripDiacritics } from './rules.js';
 
 export function composeVerse(verseText, ctx = {}) {
   const {
-    mode = 1, intensity = 35, progressLetters = {}, seedPrefix = '',
+    mode = 2, intensity = 35, progressLetters = {}, seedPrefix = '',
     wordEntries = [], showDiacritics = true,
     grcVerse = null, alignment = null
   } = ctx;
@@ -16,8 +16,8 @@ export function composeVerse(verseText, ctx = {}) {
     }
   }
 
-  // Режимы 1–2: только буквенный слой
-  if (mode === 1 || mode === 2) {
+  // Режим 2: только буквенный слой
+  if (mode === 2) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
