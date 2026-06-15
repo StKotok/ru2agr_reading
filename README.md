@@ -47,6 +47,17 @@ npm run build   # production-сборка в dist/
 npm run preview # предпросмотр production-сборки
 ```
 
+## Деплой
+
+Проект задеплоен на Netlify (автоматический деплой из директории `dist/`).
+Команда для ручного деплоя:
+
+```bash
+npm run build && netlify deploy --prod --dir=dist
+```
+
+**Production URL:** <https://ru2gr.netlify.app>
+
 ## Тесты
 
 ```bash
