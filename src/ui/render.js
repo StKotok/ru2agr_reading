@@ -33,6 +33,9 @@ export function segmentsToFragment(segments, ctx = {}) {
       if (seg.strong) {
         span.setAttribute('data-strong', String(seg.strong));
       }
+      if (seg.lemma) {
+        span.setAttribute('data-lemma', seg.lemma);
+      }
 
       // Доступность
       span.setAttribute('tabindex', '0');

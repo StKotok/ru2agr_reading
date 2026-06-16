@@ -99,7 +99,8 @@ export function applyFormLayer(verseText, grcTokens, alignment, dictEntries, opt
             kind: 'form',
             lexemeId: dictEntry.lexemeId,
             morph: grToken.morph,
-            strong: grToken.strong
+            strong: grToken.strong,
+            lemma: grToken.lemma
           };
           if (qualityMap.has(wi)) seg.quality = 'f';
           segments.push(seg);
