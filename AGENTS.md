@@ -135,6 +135,20 @@ Prettier или другие тест-фреймворки по собствен
 - Данные менялись → перегенерированы пайплайном (`npm run build:data`),
   инварианты прошли, лицензия источника проверена.
 
+## Деплой
+
+Проект задеплоен на Netlify (ручной деплой из директории `dist/`).
+
+- **Production URL:** <https://ru2gr.netlify.app>
+- **Netlify site name:** `ru2gr`
+
+```bash
+npm run build && netlify deploy --prod --dir=dist
+```
+
+Перед деплоем обязателен полный гейт: `npm test` + `npm run build` (и
+`npm run build:data`, если менялись данные/пайплайн).
+
 ## Финальный отчёт
 
 Всегда сообщай:
