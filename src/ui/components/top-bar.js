@@ -32,7 +32,6 @@ export function createTopBar(ctx) {
     const pressed = eyeBtn.getAttribute('aria-pressed') === 'true';
     const newPressed = !pressed;
     eyeBtn.setAttribute('aria-pressed', String(newPressed));
-    eyeBtn.style.background = newPressed ? 'var(--selection)' : '';
     eyeBtn.title = newPressed ? 'Вернуть греческий слой' : 'Показать обычный русский текст';
     if (onEyeToggle) onEyeToggle(newPressed);
   });
