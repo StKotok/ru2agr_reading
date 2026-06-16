@@ -39,7 +39,7 @@ describe('composeVerse', () => {
   const wordEntryLogos = {
     lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
     regexps: [/(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])/iu],
-    excludeRegexps: [], intensityPct: 100, status: 'known', forms: 'all'
+    excludeRegexps: [], intensityPct: 100, status: 'known', forms: 'lemma'
   };
   const mode2Ctx = {
     mode: 2, intensity: 0, progressLetters: {},
@@ -54,7 +54,7 @@ describe('composeVerse', () => {
     });
     // Есть замена с леммой λόγος (с заглавной буквы — «Слово»)
     expect(segs.some(s => s.greek && s.greek.toLowerCase() === 'λόγος')).toBe(true);
-    // НЕТ замены с формой λόγον (режим 2 всегда показывает лемму)
+    // НЕТ замены с формой λόγον (forms: 'lemma' — показываем лемму)
     expect(segs.some(s => s.greek && s.greek.toLowerCase() === 'λόγον')).toBe(false);
   });
 

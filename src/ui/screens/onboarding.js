@@ -7,21 +7,24 @@ const PRESETS = [
   {
     id: 1,
     title: 'Знаю часть букв, хочу видеть больше греческого',
-    desc: 'Режим 1 — буквы с подсказками. Вводятся первые 8 букв.',
-    mode: 1, introduce: 8, allLettersKnown: false
+    desc: 'Смешанный текст — буквы с подсказками. Вводятся первые 8 букв.',
+    readingMode: 'mixed', wordLayer: 'off', intensity: 35,
+    introduce: 8, allLettersKnown: false
   },
   {
     id: 2,
     title: 'Хочу узнавать греческие слова',
-    desc: 'Режим 2 — слова из личного словаря заменяются на греческие леммы.',
-    mode: 2, introduce: 0, allLettersKnown: true,
+    desc: 'Смешанный текст — слова из личного словаря заменяются на греческие леммы.',
+    readingMode: 'mixed', wordLayer: 'lemma', intensity: 35,
+    introduce: 0, allLettersKnown: true,
     example: 'Пример: «Слово» → λόγος (лемма, всегда одна словарная форма)'
   },
   {
     id: 3,
     title: 'Хочу читать ближе к оригиналу',
-    desc: 'Режим 3 — греческий текст с реальными формами слов (падежи, спряжения).',
-    mode: 3, introduce: 0, allLettersKnown: true,
+    desc: 'Смешанный текст — реальные формы слов (падежи, спряжения).',
+    readingMode: 'mixed', wordLayer: 'form', intensity: 35,
+    introduce: 0, allLettersKnown: true,
     example: 'Пример: «Слову» → λόγῳ (реальная форма, зависит от падежа!)'
   },
 ];
@@ -80,7 +83,9 @@ function renderStep1() {
 }
 
 function applyPreset(preset) {
-  settings.mode = preset.mode;
+  if (preset.readingMode !== undefined) settings.readingMode = preset.readingMode;
+  if (preset.wordLayer !== undefined) settings.wordLayer = preset.wordLayer;
+  if (preset.intensity !== undefined) settings.intensity = preset.intensity;
   settings.onboarded = true;
 
   if (preset.allLettersKnown) {

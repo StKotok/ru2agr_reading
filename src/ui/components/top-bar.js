@@ -1,10 +1,9 @@
 import { loadBooks } from '../../data/bible-loader.js';
 import { navigate } from '../../router.js';
-import { MODES, DEFAULT_MODE } from '../../state/settings.js';
 
 /**
  * Верхняя панель экрана чтения.
- * Книга ▾ | Режим ▾ | Греческий: N% | глаз
+ * Книга ▾ | виджет режима (снаружи) | глаз
  */
 export function createTopBar(ctx) {
   const { store, onEyeToggle } = ctx;
@@ -22,60 +21,6 @@ export function createTopBar(ctx) {
   bookList.setAttribute('role', 'listbox');
   bookList.hidden = true;
   bar.appendChild(bookList);
-
-  // Селектор режима
-  const modeBtn = document.createElement('button');
-  modeBtn.className = 'btn top-bar-btn mode-selector';
-  modeBtn.setAttribute('aria-haspopup', 'listbox');
-  bar.appendChild(modeBtn);
-
-  const modeList = document.createElement('div');
-  modeList.className = 'book-dropdown mode-dropdown';
-  modeList.setAttribute('role', 'listbox');
-  modeList.hidden = true;
-  bar.appendChild(modeList);
-
-  function renderModeButton() {
-    const state = store.get();
-    const m = MODES.find(m => m.id === (state.settings?.mode ?? DEFAULT_MODE)) || MODES[0];
-    modeBtn.textContent = 'Режим ' + m.id + ' ▾';
-  }
-
-  function renderModeList() {
-    modeList.innerHTML = '';
-    let currentGroup = '';
-    for (const m of MODES) {
-      if (m.group !== currentGroup) {
-        currentGroup = m.group;
-        const header = document.createElement('div');
-        header.className = 'book-dropdown-group';
-        header.textContent = currentGroup;
-        modeList.appendChild(header);
-      }
-      const btn = document.createElement('button');
-      btn.className = 'book-dropdown-item';
-      btn.textContent = m.label + (m.note ? ' (' + m.note + ')' : '');
-      btn.setAttribute('role', 'option');
-      btn.addEventListener('click', () => {
-        const state = store.get();
-        if (state.settings) {
-          state.settings.mode = m.id;
-          store.update(s => ({ ...s, settings: { ...state.settings } }));
-        }
-        modeList.hidden = true;
-        renderModeButton();
-      });
-      modeList.appendChild(btn);
-    }
-  }
-
-  modeBtn.addEventListener('click', () => {
-    renderModeList();
-    modeList.hidden = !modeList.hidden;
-    if (!modeList.hidden) {
-      modeList.querySelector('button')?.focus();
-    }
-  });
 
   // Кнопка «глаз» — plain view
   const eyeBtn = document.createElement('button');
@@ -154,10 +99,9 @@ export function createTopBar(ctx) {
   });
 
   store.subscribe(['book'], () => renderBookButton());
-  store.subscribe(['settings'], () => renderModeButton());
 
   // Изначальная отрисовка
-  renderModeButton();
+  renderBookButton();
 
   return { bar, eyeBtn };
 }

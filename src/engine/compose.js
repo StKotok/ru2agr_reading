@@ -25,12 +25,12 @@ export function composeVerse(verseText, ctx = {}) {
   // Без выравнивания словарных замен нет: точность важнее покрытия.
   if (mode === 2) {
     if (grcVerse && alignment && grcVerse.tokens) {
-      const lemmaEntries = wordEntries.map(e => ({
+      const entriesForForm = wordEntries.map(e => ({
         ...e,
-        strong: e.strongNum || null,
-        forms: 'lemma'
+        strong: e.strongNum || null
+        // forms берётся из entry.forms как есть (может быть 'form' если per-word override)
       }));
-      const segs = applyFormLayer(verseText, grcVerse.tokens, alignment, lemmaEntries, { seedPrefix });
+      const segs = applyFormLayer(verseText, grcVerse.tokens, alignment, entriesForForm, { seedPrefix });
       return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics);
     }
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });

@@ -1,6 +1,6 @@
 # Редизайн виджета греческого слоя чтения
 
-> Дизайн-спек · 2026-06-15 · статус: утверждён (v3)
+> Дизайн-спек · 2026-06-15 · статус: утверждён (v4)
 
 ## 1. Контекст
 
@@ -113,7 +113,10 @@ forms: entry.forms || globalForms
 | Буквы + формы, слов 0 | `α35% · λέγει0` | Слайдер >0%, `wordLayer='form'`, активных слов 0 |
 | Буквы, слова недоступны | `α35% —` | Слайдер >0%, `wordLayer!='off'`, активных слов >0, `grcStatus='unavailable'` |
 | Только леммы | `λέγω12` | Слайдер 0%, `wordLayer='lemma'`, N активных слов |
+| Только леммы, слов 0 | `λέγω0` | Слайдер 0%, `wordLayer='lemma'`, активных слов 0 |
 | Только формы | `λέγει12` | Слайдер 0%, `wordLayer='form'`, N активных слов |
+| Только формы, слов 0 | `λέγει0` | Слайдер 0%, `wordLayer='form'`, активных слов 0 |
+| Слова недоступны, букв нет | `—` | Слайдер 0%, `wordLayer!='off'`, активных слов >0, `grcStatus='unavailable'` |
 | Без греческого слоя | `Рус` | Слайдер 0%, `wordLayer='off'` |
 | Греческий оригинал | `Греч` | Активна вкладка «Греческий» |
 
@@ -135,7 +138,8 @@ forms: entry.forms || globalForms
   `dictionaryWordCount === 0` (`λέγω0` / `λέγει0`)
 - Если оба скрыты — показывается нейтральный индикатор «Рус»
 - Если `grcStatus === 'unavailable'` и `dictionaryWordCount > 0` — словарная
-  часть заменяется на `—`; при `dictionaryWordCount === 0` показывается
+  часть заменяется на `—`; если `intensity > 0`, чип показывает `αN% —`, если
+  `intensity === 0` — только `—`. При `dictionaryWordCount === 0` показывается
   намерение (`λέγω0` / `λέγει0`), потому что греческие данные для рендера ещё
   не нужны
 - **Счётчик слов** = количество записей в словаре, прошедших фильтр
@@ -255,7 +259,7 @@ function shouldLoadGreek(s, activeWordCount) {
 | `src/state/settings.js` | Добавить `COMPOSE_MODES`, `deriveComposeMode()`, `shouldLoadGreek()`. Поля по умолчанию: `wordLayer: 'off'`, `readingMode: 'mixed'`, `lastActiveTab: 'mixed'`. Не хранить `mode`. Убрать из `show` поля `translit`, `gloss`, `grammar`. |
 | `src/engine/compose.js` | В legacy-ветке `mode === 2` убрать принудительный `forms: 'lemma'` — теперь `forms` берётся из wordEntries как есть |
 | `src/ui/screens/dictionary.js` / `src/state/dictionary.js` | `forms` становится опциональным per-word override; новые слова по умолчанию не получают `forms`, чтобы глобальный `wordLayer` мог быть значением по умолчанию |
-| `src/ui/screens/onboarding.js` | В пресетах убрать старое поле `mode`; сохранять `wordLayer`/`readingMode`, `settings.mode` не записывать |
+| `src/ui/screens/onboarding.js` | В пресетах убрать старое поле `mode`; сохранять `wordLayer`/`readingMode`/`intensity`, `settings.mode` не записывать |
 
 ### Focus trap для попапа
 
@@ -312,6 +316,9 @@ function shouldLoadGreek(s, activeWordCount) {
 - **Слайдер на 0 + `wordLayer='off'`**: чип показывает нейтральный индикатор «Рус»
 - **Слайдер на 0 + `wordLayer='lemma'|'form'` + слов 0**: чип показывает
   `λέγω0` / `λέγει0`
+- **Слайдер на 0 + `wordLayer='lemma'|'form'` + активных слов >0 +
+  `grcStatus='unavailable'`**: чип показывает `—`, потому что выбран только
+  словарный слой, но он недоступен
 - **Греческий текст не загружен** (офлайн / ошибка / нет выравнивания):
   если активных слов >0, словарная часть чипа скрывается принудительно
   (слово-индикатор → `—`), вкладка «Греческий» недоступна (disabled +

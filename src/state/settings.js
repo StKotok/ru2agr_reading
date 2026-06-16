@@ -2,28 +2,49 @@ import { db } from '../storage/db.js';
 
 const KEY = 'settings';
 
-export const DEFAULT_MODE = 1;
+export const COMPOSE_MODES = {
+  LETTERS_ONLY: 1,
+  WORD_LEMMA: 2,
+  WORD_FORM: 3,
+  GREEK_ORIGINAL: 4
+};
 
-export const MODES = [
-  { id: 1, label: '1. Буквы + подсказки', group: 'Учебный мостик' },
-  { id: 2, label: '2. Слова из словаря', group: 'Учебный мостик' },
-  { id: 3, label: '3. Формы оригинала', group: 'Ближе к оригиналу' },
-  { id: 4, label: '4. Почти оригинал', group: 'Ближе к оригиналу' },
-];
+/**
+ * Adapter к текущему composeVerse(ctx.mode).
+ * Не является пользовательским режимом и не сохраняется в settings.
+ * @param {object} s — settings с полями readingMode, wordLayer
+ * @param {number} activeWordCount — количество активных слов для word layer
+ * @returns {number} один из COMPOSE_MODES
+ */
+export function deriveComposeMode(s, activeWordCount = 0) {
+  if (s.readingMode === 'greek') return COMPOSE_MODES.GREEK_ORIGINAL;
+  if (s.wordLayer === 'off') return COMPOSE_MODES.LETTERS_ONLY;
+  if (activeWordCount === 0) return COMPOSE_MODES.LETTERS_ONLY;
+  return s.wordLayer === 'form'
+    ? COMPOSE_MODES.WORD_FORM
+    : COMPOSE_MODES.WORD_LEMMA;
+}
+
+/**
+ * Нужно ли загружать греческую книгу для текущего UI state.
+ */
+export function shouldLoadGreek(s, activeWordCount = 0) {
+  return s.readingMode === 'greek' || (s.wordLayer !== 'off' && activeWordCount > 0);
+}
 
 const DEFAULTS = {
-  mode: DEFAULT_MODE,         // 1..4
-  intensity: 35,            // 0..100
-  newWordsPerChapter: 3,    // 1 | 3 | 5 | 10
+  intensity: 35,                // 0..100
+  wordLayer: 'off',             // 'off' | 'lemma' | 'form'
+  readingMode: 'mixed',         // 'mixed' | 'greek'
+  lastActiveTab: 'mixed',       // 'mixed' | 'greek'
+  newWordsPerChapter: 3,        // 1 | 3 | 5 | 10
   pauseNewToday: false,
   show: {
-    translit: true,
-    gloss: true,
-    grammar: true,
     diacritics: false,
-    strongs: false
+    strongs: false,
+    ruHint: true
   },
-  theme: 'auto',            // 'light' | 'dark' | 'auto'
+  theme: 'auto',
   onboarded: false
 };
 

@@ -119,6 +119,7 @@ export function createModeWidget(ctx) {
   let dictWordCount = -1;       // -1 = ещё не загружен
   let sliderDebounce = null;
   let savedActiveElement = null;
+  let outsideClickTimer = null;
 
   // ---- Чип ----
   const chip = document.createElement('button');
@@ -406,8 +407,9 @@ export function createModeWidget(ctx) {
       });
 
       // Клик снаружи
-      setTimeout(() => {
-        document.addEventListener('click', onOutsideClick);
+      outsideClickTimer = setTimeout(() => {
+        outsideClickTimer = null;
+        if (isOpen) document.addEventListener('click', onOutsideClick);
       }, 0);
     }
 
@@ -429,6 +431,10 @@ export function createModeWidget(ctx) {
   }
 
   function cleanupPopup() {
+    if (outsideClickTimer) {
+      clearTimeout(outsideClickTimer);
+      outsideClickTimer = null;
+    }
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('click', onOutsideClick);
     if (bottomSheetObserver) {
@@ -926,7 +932,7 @@ git commit -m "refactor: integrate mode-widget, update buildWordEntries, remove 
 **Files:**
 - Modify: `src/state/dictionary.js`
 - Modify: `src/ui/screens/dictionary.js`
-- Modify: `tests/form-layer.test.js`, `tests/compose.test.js`
+- Modify: `tests/form-layer.test.js`, `tests/compose.test.js`, `tests/dictionary.test.js`
 
 - [ ] **Step 1: Не задавать `forms` по умолчанию при добавлении слова**
 
@@ -972,13 +978,20 @@ export function setWordSetting(id, key, value, dict) {
 
 - [ ] **Step 4: Обновить тесты forms-контракта**
 
-В тестах заменить явные `forms: 'all'` на `forms: 'form'`. Добавить кейс:
+В `tests/form-layer.test.js` и `tests/compose.test.js` заменить явные
+`forms: 'all'` на `forms: 'form'`. Добавить кейс:
 
 ```js
 it('использует global wordLayer как default, если per-word forms не задан', () => {
   // buildWordEntries должен передать forms: 'form' при settings.wordLayer='form'
 });
 ```
+
+В `tests/dictionary.test.js` проверить:
+
+- `addWord()` больше не создаёт `forms: 'lemma'` по умолчанию
+- `setWordSetting(id, 'forms', undefined, dict)` удаляет поле `forms`
+- существующие `status`, `showInText`, `intensity` при этом сохраняются
 
 - [ ] **Step 5: Запустить тесты**
 
@@ -1550,8 +1563,8 @@ Expected: тесты PASS, сборка без ошибок
 - [ ] **Step 2: Проверить что нет битых импортов**
 
 ```bash
-grep -r 'intensity-slider' src/ | grep -v 'node_modules'
-rg "MODES|DEFAULT_MODE|deriveConfiguredMode|deriveRenderMode|settings\\.mode" src
+! rg 'intensity-slider' src
+! rg 'MODES|DEFAULT_MODE|deriveConfiguredMode|deriveRenderMode|settings\\.mode' src
 ```
 
 Expected: обе команды не находят runtime-использований старой numeric-mode модели.

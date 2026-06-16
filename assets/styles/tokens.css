@@ -1,6 +1,7 @@
 /* === Токены ролей: светлая тема === */
 :root,
 [data-theme="light"] {
+  --font-greek: 'Gentium Plus', serif;
   --surface: #efeee9;
   --surface-card: #F2EDE4;
   --text: #2B2B2B;

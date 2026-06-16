@@ -1,4 +1,4 @@
-import { loadSettings, saveSettings, MODES } from '../../state/settings.js';
+import { loadSettings, saveSettings } from '../../state/settings.js';
 import { loadProgress, saveProgress } from '../../state/progress.js';
 import { db } from '../../storage/db.js';
 
@@ -28,112 +28,16 @@ function render() {
   h2.textContent = 'Настройки';
   container.appendChild(h2);
 
-  // Режим
-  renderModeSection();
-
-  // Интенсивность
-  renderIntensitySection();
-
   // Тема
   renderThemeSection();
 
-  // Новые слова за главу
-  renderWordsSection();
-
-  // Чекбоксы показа
-  renderShowSection();
-
-  // Дополнительно
-  renderAdvancedSection();
+  // Диакритика и Стронг
+  renderDisplaySection();
 
   // Сброс
   renderResetSection();
 }
 
-function renderModeSection() {
-  const section = document.createElement('section');
-  section.className = 'progress-section';
-
-  const h3 = document.createElement('h3');
-  h3.textContent = 'Режим обучения';
-  section.appendChild(h3);
-
-  let currentGroup = '';
-  for (const m of MODES) {
-    if (m.group !== currentGroup) {
-      currentGroup = m.group;
-      const groupHeader = document.createElement('p');
-      groupHeader.className = 'settings-group-header';
-      groupHeader.textContent = currentGroup;
-      section.appendChild(groupHeader);
-    }
-
-    const label = document.createElement('label');
-    label.className = 'settings-radio';
-    label.style.display = 'flex';
-    label.style.alignItems = 'center';
-    label.style.gap = '8px';
-    label.style.padding = '4px 0';
-
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'mode';
-    radio.value = String(m.id);
-    radio.checked = settings.mode === m.id;
-
-    radio.addEventListener('change', () => {
-      if (radio.checked) {
-        settings.mode = m.id;
-        saveSettings(settings);
-        store.update(s => ({ ...s, settings: { ...settings } }));
-      }
-    });
-
-    label.appendChild(radio);
-    label.appendChild(document.createTextNode(m.label + (m.note ? ' (' + m.note + ')' : '')));
-    section.appendChild(label);
-  }
-
-  container.appendChild(section);
-}
-
-function renderIntensitySection() {
-  const section = document.createElement('section');
-  section.className = 'progress-section';
-
-  const h3 = document.createElement('h3');
-  h3.textContent = 'Интенсивность греческого';
-  section.appendChild(h3);
-
-  const container2 = document.createElement('div');
-  container2.style.display = 'flex';
-  container2.style.alignItems = 'center';
-  container2.style.gap = '8px';
-
-  const slider = document.createElement('input');
-  slider.type = 'range';
-  slider.min = '0';
-  slider.max = '100';
-  slider.step = '5';
-  slider.value = String(settings.intensity);
-
-  const valSpan = document.createElement('span');
-  valSpan.textContent = settings.intensity + '%';
-
-  slider.addEventListener('input', () => {
-    const val = parseInt(slider.value);
-    valSpan.textContent = val + '%';
-    settings.intensity = val;
-    saveSettings(settings);
-    store.update(s => ({ ...s, settings: { ...settings } }));
-  });
-
-  container2.appendChild(slider);
-  container2.appendChild(valSpan);
-  section.appendChild(container2);
-
-  container.appendChild(section);
-}
 
 function renderThemeSection() {
   const section = document.createElement('section');
@@ -174,96 +78,13 @@ function renderThemeSection() {
   container.appendChild(section);
 }
 
-function renderWordsSection() {
+function renderDisplaySection() {
   const section = document.createElement('section');
   section.className = 'progress-section';
-  const h3 = document.createElement('h3');
-  h3.textContent = 'Новые слова за главу';
-  section.appendChild(h3);
 
-  [1, 3, 5, 10].forEach(n => {
-    const label = document.createElement('label');
-    label.className = 'settings-radio';
-    label.style.display = 'flex';
-    label.style.alignItems = 'center';
-    label.style.gap = '8px';
-    label.style.padding = '4px 0';
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'newWordsPerChapter';
-    radio.value = String(n);
-    radio.checked = settings.newWordsPerChapter === n;
-    radio.addEventListener('change', () => {
-      if (radio.checked) {
-        settings.newWordsPerChapter = n;
-        saveSettings(settings);
-        store.update(s => ({ ...s, settings: { ...settings } }));
-      }
-    });
-    label.appendChild(radio);
-    label.appendChild(document.createTextNode(String(n)));
-    section.appendChild(label);
-  });
-
-  const pauseLabel = document.createElement('label');
-  pauseLabel.style.display = 'flex';
-  pauseLabel.style.alignItems = 'center';
-  pauseLabel.style.gap = '8px';
-  pauseLabel.style.padding = '8px 0';
-  const pauseToggle = document.createElement('input');
-  pauseToggle.type = 'checkbox';
-  pauseToggle.checked = settings.pauseNewToday || false;
-  pauseToggle.addEventListener('change', () => {
-    settings.pauseNewToday = pauseToggle.checked;
-    saveSettings(settings);
-    store.update(s => ({ ...s, settings: { ...settings } }));
-  });
-  pauseLabel.appendChild(pauseToggle);
-  pauseLabel.appendChild(document.createTextNode('Сегодня не добавлять новое'));
-  section.appendChild(pauseLabel);
-
-  container.appendChild(section);
-}
-
-function renderShowSection() {
-  const section = document.createElement('section');
-  section.className = 'progress-section';
   const h3 = document.createElement('h3');
   h3.textContent = 'Показывать';
   section.appendChild(h3);
-
-  [{ key: 'translit', label: 'Транслитерация' },
-   { key: 'gloss', label: 'Краткое значение' },
-   { key: 'grammar', label: 'Грамматика' }].forEach(({ key, label }) => {
-    const lbl = document.createElement('label');
-    lbl.style.display = 'flex';
-    lbl.style.alignItems = 'center';
-    lbl.style.gap = '8px';
-    lbl.style.padding = '4px 0';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = settings.show[key] !== false;
-    cb.addEventListener('change', () => {
-      settings.show[key] = cb.checked;
-      saveSettings(settings);
-      store.update(s => ({ ...s, settings: { ...settings } }));
-    });
-    lbl.appendChild(cb);
-    lbl.appendChild(document.createTextNode(label));
-    section.appendChild(lbl);
-  });
-
-  container.appendChild(section);
-}
-
-function renderAdvancedSection() {
-  const section = document.createElement('section');
-  section.className = 'progress-section';
-
-  const details = document.createElement('details');
-  const summary = document.createElement('summary');
-  summary.textContent = 'Дополнительно';
-  details.appendChild(summary);
 
   // show.diacritics
   const diacriticsLabel = document.createElement('label');
@@ -282,7 +103,7 @@ function renderAdvancedSection() {
   });
   diacriticsLabel.appendChild(diacriticsCb);
   diacriticsLabel.appendChild(document.createTextNode('Показывать диакритику (ударения, придыхания)'));
-  details.appendChild(diacriticsLabel);
+  section.appendChild(diacriticsLabel);
 
   // show.strongs
   const strongsLabel = document.createElement('label');
@@ -301,28 +122,8 @@ function renderAdvancedSection() {
   });
   strongsLabel.appendChild(strongsCb);
   strongsLabel.appendChild(document.createTextNode('Показывать номера Стронга (G3056)'));
-  details.appendChild(strongsLabel);
+  section.appendChild(strongsLabel);
 
-  // show.ruHint
-  const ruHintLabel = document.createElement('label');
-  ruHintLabel.style.display = 'flex';
-  ruHintLabel.style.alignItems = 'center';
-  ruHintLabel.style.gap = '8px';
-  ruHintLabel.style.padding = '4px 0';
-  const ruHintCb = document.createElement('input');
-  ruHintCb.type = 'checkbox';
-  ruHintCb.checked = settings.show?.ruHint !== false;
-  ruHintCb.addEventListener('change', () => {
-    if (!settings.show) settings.show = {};
-    settings.show.ruHint = ruHintCb.checked;
-    saveSettings(settings);
-    store.update(s => ({ ...s, settings: { ...settings } }));
-  });
-  ruHintLabel.appendChild(ruHintCb);
-  ruHintLabel.appendChild(document.createTextNode('Русская подсказка под стихом (режим 5)'));
-  details.appendChild(ruHintLabel);
-
-  section.appendChild(details);
   container.appendChild(section);
 }
 

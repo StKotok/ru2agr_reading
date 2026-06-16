@@ -9,7 +9,17 @@ const KEY = 'dictionary';
 export async function loadDictionary() {
   try {
     const data = await db.get(KEY);
-    return data || {};
+    if (!data) return {};
+    // Миграция: удаляем старый дефолтный forms (lemma), чтобы глобальный wordLayer работал
+    let changed = false;
+    for (const [id, entry] of Object.entries(data)) {
+      if (entry && entry.forms === 'lemma') {
+        delete entry.forms;
+        changed = true;
+      }
+    }
+    if (changed) saveDictionary(data);
+    return data;
   } catch (e) {
     console.warn('loadDictionary error:', e);
     return {};
@@ -40,8 +50,8 @@ export function addWord(id, dict) {
     status: 'new',
     showInText: true,
     intensity: 'often',
-    forms: 'lemma',
     addedAt: new Date().toISOString().split('T')[0]
+    // forms не задаётся — глобальный wordLayer действует как значение по умолчанию
   };
   return updated;
 }
