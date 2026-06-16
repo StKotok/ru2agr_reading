@@ -41,6 +41,8 @@
   --greek: var(--blue-600);               /* #264e83 — только греческий текст */
   --primary: var(--blue-600);             /* #264e83 — UI-элементы (кнопки, табы, слайдеры) */
   --greek-word: var(--terracotta-500);    /* #8B5E3C — греческие слова/формы (затемнён с #B07D4F для WCAG AA) */
+  --greek-bar-track: rgba(38, 78, 131, 0.15);
+  --greek-word-bar-track: rgba(139, 94, 60, 0.15);
 
   /* Декоративные */
   --hint: #98A8C0;                        /* dotted underline — decorative, contrast exempt */
@@ -100,6 +102,8 @@
   --greek: var(--blue-300);               /* #7BA3CC */
   --primary: var(--blue-300);             /* #7BA3CC */
   --greek-word: var(--terracotta-300);    /* #C8966A (затемнён с #D4A574 для WCAG AA) */
+  --greek-bar-track: rgba(123, 163, 204, 0.15);
+  --greek-word-bar-track: rgba(200, 150, 106, 0.15);
 
   --hint: #5A6880;
   --focus: #8EC8E8;                       /* отделён от --greek (был #7BA3CC — идентичен) */

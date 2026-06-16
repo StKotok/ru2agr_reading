@@ -430,6 +430,20 @@ export function createModeWidget(ctx) {
   }
 
   // ---- Обновление чипа ----
+  // Сигнатура структуры: при совпадении — surgical update (анимация полосок),
+  // иначе — полный innerHTML.
+  let _chipSig = null;
+
+  function chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, activeWordsExist, count) {
+    const desc = [];
+    if (showLetters) desc.push(`буквы ${intensity}%`);
+    if (showWordLayer) {
+      if (grcUnavailable && activeWordsExist) desc.push('греческий текст недоступен');
+      else desc.push(`слова: ${wordLayer === 'lemma' ? 'леммы' : 'формы'}, ${count} в словаре`);
+    }
+    return `Греческий слой: ${desc.join('; ') || 'выключен'}`;
+  }
+
   function updateChip() {
     const state = store.get();
     const s = state.settings || {};
@@ -441,12 +455,14 @@ export function createModeWidget(ctx) {
     const count = dictWordCount;
 
     if (readingMode === 'greek') {
+      _chipSig = 'greek';
       chip.innerHTML = '<span class="mw-greek-label">Греч</span>';
       chip.setAttribute('aria-label', 'Вид чтения: греческий оригинал');
       return;
     }
 
     if (count === -1) {
+      _chipSig = 'loading';
       chip.innerHTML = '<span class="mw-loading">…</span>';
       chip.setAttribute('aria-label', 'Загрузка данных…');
       return;
@@ -457,35 +473,80 @@ export function createModeWidget(ctx) {
     const activeWordsExist = count > 0;
 
     if (!showLetters && !showWordLayer) {
+      _chipSig = 'rus';
       chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
       chip.setAttribute('aria-label', 'Греческий слой: выключен');
       return;
     }
 
-    let html = '';
-    if (showLetters) {
-      html += `<span class="mw-alpha">α</span><span class="mw-pct">${intensity}%</span>`;
-    }
-    if (showLetters && showWordLayer) {
-      html += '<span class="mw-sep">·</span>';
-    }
-    if (showWordLayer) {
-      if (grcUnavailable && activeWordsExist) {
-        html += '<span class="mw-na">—</span>';
-      } else {
-        const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
-        html += `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`;
+    const wordsAvailable = !(grcUnavailable && activeWordsExist);
+    const sig = `${showLetters}|${showWordLayer}|${wordsAvailable}`;
+
+    // Surgical update — структура та же, только значения
+    if (_chipSig === sig) {
+      if (showLetters) {
+        const pct = chip.querySelector('.mw-pct');
+        if (pct) pct.textContent = `${intensity}%`;
+        const fill = chip.querySelector('.mw-bar-fill');
+        if (fill) fill.style.width = `${intensity}%`;
       }
+      if (showWordLayer && wordsAvailable) {
+        const word = chip.querySelector('.mw-word');
+        if (word) word.textContent = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
+        const cnt = chip.querySelector('.mw-count');
+        if (cnt) cnt.textContent = String(count);
+        const wfill = chip.querySelector('.mw-word-bar-fill');
+        if (wfill) wfill.style.width = `${Math.min(100, count / 10)}%`;
+      }
+      chip.setAttribute('aria-label', chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, activeWordsExist, count));
+      return;
     }
 
-    chip.innerHTML = html;
-    const desc = [];
-    if (showLetters) desc.push(`буквы ${intensity}%`);
-    if (showWordLayer) {
-      if (grcUnavailable && activeWordsExist) desc.push('греческий текст недоступен');
-      else desc.push(`слова: ${wordLayer === 'lemma' ? 'леммы' : 'формы'}, ${count} в словаре`);
+    _chipSig = sig;
+
+    if (showLetters && showWordLayer) {
+      // Two-sided — CSS grid (3 columns × 2 rows)
+      const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
+      const rightText = wordsAvailable
+        ? `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`
+        : '<span class="mw-na">—</span>';
+      const rightBar = wordsAvailable
+        ? `<div class="mw-word-bar"><div class="mw-word-bar-fill" style="width:${Math.min(100, count / 10)}%"></div></div>`
+        : '<div></div>';
+
+      chip.innerHTML =
+        `<div class="mw-row--both">`
+        + `<span class="mw-left-text"><span class="mw-alpha">α</span><span class="mw-pct">${intensity}%</span></span>`
+        + `<div class="mw-divider"></div>`
+        + `<span class="mw-right-text">${rightText}</span>`
+        + `<div class="mw-bar"><div class="mw-bar-fill" style="width:${intensity}%"></div></div>`
+        + rightBar
+        + `</div>`;
+    } else if (showLetters) {
+      // Left only — flex column
+      chip.innerHTML =
+        `<div class="mw-row--single">`
+        + `<span class="mw-left-text"><span class="mw-alpha">α</span><span class="mw-pct">${intensity}%</span></span>`
+        + `<div class="mw-bar"><div class="mw-bar-fill" style="width:${intensity}%"></div></div>`
+        + `</div>`;
+    } else {
+      // Right only — flex column
+      const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
+      const rightText = wordsAvailable
+        ? `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`
+        : '<span class="mw-na">—</span>';
+      const rightBar = wordsAvailable
+        ? `<div class="mw-word-bar"><div class="mw-word-bar-fill" style="width:${Math.min(100, count / 10)}%"></div></div>`
+        : '';
+
+      chip.innerHTML =
+        `<div class="mw-row--single">`
+        + `<span class="mw-left-text">${rightText}</span>`
+        + rightBar
+        + `</div>`;
     }
-    chip.setAttribute('aria-label', `Греческий слой: ${desc.join('; ') || 'выключен'}`);
+
+    chip.setAttribute('aria-label', chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, activeWordsExist, count));
   }
 
   function updateDictCount() {
