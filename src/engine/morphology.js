@@ -142,10 +142,25 @@ function mapMood(md) {
 
 const POS_SHORT = {
   'N': 'сущ.', 'V': 'глаг.', 'A': 'прил.',
-  'T': 'арт.', 'P': 'мест.', 'R': 'предл.',
-  'C': 'союз', 'D': 'нар.', 'PREP': 'предл.',
-  'CONJ': 'союз', 'PRT': 'част.', 'I': 'межд.',
-  'X': 'част.'
+  'T': 'арт.',
+  'P': 'личн. мест.',
+  'R': 'относ. мест.',
+  'D': 'указ. мест.',
+  'F': 'возвр. мест.',
+  'I': 'вопр. мест.',
+  'K': 'соотн. мест.',
+  'Q': 'вопр.-соотн. мест.',
+  'S': 'притяж. мест.',
+  'X': 'неопр. мест.',
+  'C': 'союз',
+  'PREP': 'предл.',
+  'CONJ': 'союз',
+  'PRT': 'част.',
+  'ADV': 'нар.',
+  'COND': 'усл. част.',
+  'INJ': 'межд.',
+  'ARAM': 'арам.',
+  'HEB': 'евр.'
 };
 
 const CASE_SHORT = {
@@ -184,37 +199,37 @@ export function formatMorphShort(code) {
   const parts = code.split('-');
   if (parts.length === 0) return [];
 
-  const posChar = parts[0][0];
-  const posShort = POS_SHORT[posChar] || 'неопр.';
-
-  // Неизменяемые части речи (многосимвольные коды: PREP, CONJ, PRT)
+  // Многосимвольные одночастные коды (неизменяемые)
   if (parts.length === 1) {
     const fullPos = parts[0];
-    if (fullPos === 'PREP') return ['предл.', 'неизм.'];
-    if (fullPos === 'CONJ') return ['союз', 'неизм.'];
-    if (fullPos === 'PRT')  return ['част.', 'неизм.'];
-    // Односимвольные неизменяемые: R, C, D, X, I
-    return [posShort, 'неизм.'];
+    if (POS_SHORT[fullPos]) {
+      return [POS_SHORT[fullPos], 'неизм.'];
+    }
+    return [fullPos.toLowerCase(), 'неизм.'];
   }
+
+  const posChar = parts[0][0];
+  const posShort = POS_SHORT[posChar] || parts[0].toLowerCase();
 
   const result = [posShort];
 
-  // Именные: N, A, T, P — parts[1] = NSM, GSF etc.
-  if (posChar === 'N' || posChar === 'A' || posChar === 'T' || posChar === 'P') {
-    const caseCode = parts[1][0];
-    const numCode = parts[1][1];
-    const genCode = parts[1][2];
-    if (caseCode && CASE_SHORT[caseCode]) result.push(CASE_SHORT[caseCode]);
-    if (numCode && NUMBER_SHORT[numCode]) result.push(NUMBER_SHORT[numCode]);
-    if (genCode && GENDER_SHORT[genCode]) result.push(GENDER_SHORT[genCode]);
+  // Именные: N, A, T + все местоимения (P, R, D, F, I, K, Q, S, X, C)
+  // Формат: {POS}-{...case...number...gender...}[-суффикс]
+  if (/^[NATPRDFIKQSXC]$/.test(posChar)) {
+    const nom = extractNominal(parts[1]);
+    if (nom.case && CASE_SHORT[nom.case]) result.push(CASE_SHORT[nom.case]);
+    if (nom.number && NUMBER_SHORT[nom.number]) result.push(NUMBER_SHORT[nom.number]);
+    if (nom.gender && GENDER_SHORT[nom.gender]) result.push(GENDER_SHORT[nom.gender]);
     return result;
   }
 
   // Глаголы: V — parts[1] = PAI, parts[2] = 3S
   if (posChar === 'V') {
-    const tenseCode = parts[1][0];
-    const voiceCode = parts[1][1];
-    const moodCode = parts[1][2];
+    // Отрезаем ведущую цифру (2-й аорист: 2AAI → AAI, 2-й перфект: 2RAI → RAI)
+    const tvm = parts[1].replace(/^\d/, '');
+    const tenseCode = tvm[0];
+    const voiceCode = tvm[1];
+    const moodCode = tvm[2];
 
     if (tenseCode && TENSE_SHORT[tenseCode]) result.push(TENSE_SHORT[tenseCode]);
     if (voiceCode && VOICE_SHORT[voiceCode]) result.push(VOICE_SHORT[voiceCode]);
@@ -230,16 +245,28 @@ export function formatMorphShort(code) {
     return result;
   }
 
-  // Предлоги, союзы, наречия, частицы
-  if (posChar === 'R' || posChar === 'C' || posChar === 'D' || posChar === 'X' || posChar === 'I') {
-    return result; // только часть речи, без «неизм.»
-  }
-
-  // Неизвестный код — возвращаем всё что смогли разобрать, но по-русски
+  // Неизвестный код — возвращаем всё что смогли разобрать
   if (result.length === 1) {
     result.push('неизв. форма');
   }
   return result;
+}
+
+/**
+ * Извлекает падеж/число/род из именной части Robinson-кода.
+ * Ищет первый символ падежа (N/G/D/A/V), затем берёт два следующих как число и род.
+ * Работает для: NSM, 3GSM (возвр. мест.), 1SNSM (притяж. мест.) и т.д.
+ * @param {string} nominalPart — часть после дефиса, например "NSM", "3GSM", "1SNSM"
+ * @returns {{case?: string, number?: string, gender?: string}}
+ */
+function extractNominal(nominalPart) {
+  const caseIdx = nominalPart.search(/[NGDAV]/);
+  if (caseIdx === -1) return {};
+  return {
+    case: nominalPart[caseIdx] || undefined,
+    number: nominalPart[caseIdx + 1] || undefined,
+    gender: nominalPart[caseIdx + 2] || undefined
+  };
 }
 
 /**

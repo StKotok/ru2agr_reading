@@ -13,103 +13,103 @@
             {
               "w": "Ἰούδας",
               "lemma": "Ἰούδας",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 2455
             },
             {
               "w": "Ἰησοῦ",
               "lemma": "Ἰησοῦς",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2424
             },
             {
               "w": "Χριστοῦ",
               "lemma": "Χριστός",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 5547
             },
             {
               "w": "δοῦλος",
               "lemma": "δοῦλος",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 1401
             },
             {
               "w": "ἀδελφὸς",
               "lemma": "ἀδελφός",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 80
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "Ἰακώβου",
               "lemma": "Ἰάκωβος",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2385
             },
             {
               "w": "τοῖς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DPM\r",
               "strong": 3588
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "θεῷ",
               "lemma": "θεός",
-              "morph": "noun",
+              "morph": "N-DSM\r",
               "strong": 2316
             },
             {
               "w": "πατρὶ",
               "lemma": "πατήρ",
-              "morph": "noun",
+              "morph": "N-DSM\r",
               "strong": 3962
             },
             {
               "w": "ἠγαπημένοις",
               "lemma": "ἀγαπάω",
-              "morph": "verb",
+              "morph": "V-RPP-DPM\r",
               "strong": 25
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "Ἰησοῦ",
               "lemma": "Ἰησοῦς",
-              "morph": "noun",
+              "morph": "N-DSM\r",
               "strong": 2424
             },
             {
               "w": "Χριστῷ",
               "lemma": "Χριστός",
-              "morph": "noun",
+              "morph": "N-DSM\r",
               "strong": 5547
             },
             {
               "w": "τετηρημένοις",
               "lemma": "τηρέω",
-              "morph": "verb",
+              "morph": "V-RPP-DPM\r",
               "strong": 5083
             },
             {
               "w": "κλητοῖς",
               "lemma": "κλητός",
-              "morph": "adj",
+              "morph": "A-DPM\r",
               "strong": 2822
             }
           ]
@@ -121,43 +121,43 @@
             {
               "w": "ἔλεος",
               "lemma": "ἔλεος",
-              "morph": "noun",
+              "morph": "N-NSN\r",
               "strong": 1656
             },
             {
               "w": "ὑμῖν",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2DP\r",
               "strong": 5213
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "εἰρήνη",
               "lemma": "εἰρήνη",
-              "morph": "noun",
+              "morph": "N-NSF\r",
               "strong": 1515
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "ἀγάπη",
               "lemma": "ἀγάπη",
-              "morph": "noun",
+              "morph": "N-NSF\r",
               "strong": 26
             },
             {
               "w": "πληθυνθείη",
               "lemma": "πληθύνω",
-              "morph": "verb",
+              "morph": "V-APO-3S\r",
               "strong": 4129
             }
           ]
@@ -169,139 +169,139 @@
             {
               "w": "Ἀγαπητοί",
               "lemma": "ἀγαπητός",
-              "morph": "adj",
+              "morph": "A-VPM\r",
               "strong": 27
             },
             {
               "w": "πᾶσαν",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-ASF\r",
               "strong": 3956
             },
             {
               "w": "σπουδὴν",
               "lemma": "σπουδή",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 4710
             },
             {
               "w": "ποιούμενος",
               "lemma": "ποιέω",
-              "morph": "verb",
+              "morph": "V-PMP-NSM\r",
               "strong": 4160
             },
             {
               "w": "γράφειν",
               "lemma": "γράφω",
-              "morph": "verb",
+              "morph": "V-PAN\r",
               "strong": 1125
             },
             {
               "w": "ὑμῖν",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2DP\r",
               "strong": 5213
             },
             {
               "w": "περὶ",
               "lemma": "περί",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 4012
             },
             {
               "w": "τῆς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSF\r",
               "strong": 3588
             },
             {
               "w": "κοινῆς",
               "lemma": "κοινός",
-              "morph": "adj",
+              "morph": "A-GSF\r",
               "strong": 2839
             },
             {
               "w": "ἡμῶν",
               "lemma": "ἐγώ",
-              "morph": "pron",
+              "morph": "P-1GP\r",
               "strong": 2257
             },
             {
               "w": "σωτηρίας",
               "lemma": "σωτηρία",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 4991
             },
             {
               "w": "ἀνάγκην",
               "lemma": "ἀνάγκη",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 318
             },
             {
               "w": "ἔσχον",
               "lemma": "ἔχω",
-              "morph": "verb",
+              "morph": "V-2AAI-1S\r",
               "strong": 2192
             },
             {
               "w": "γράψαι",
               "lemma": "γράφω",
-              "morph": "verb",
+              "morph": "V-AAN\r",
               "strong": 1125
             },
             {
               "w": "ὑμῖν",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2DP\r",
               "strong": 5213
             },
             {
               "w": "παρακαλῶν",
               "lemma": "παρακαλέω",
-              "morph": "verb",
+              "morph": "V-PAP-NSM\r",
               "strong": 3870
             },
             {
               "w": "ἐπαγωνίζεσθαι",
               "lemma": "ἐπαγωνίζομαι",
-              "morph": "verb",
+              "morph": "V-PNN\r",
               "strong": 1864
             },
             {
               "w": "τῇ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DSF\r",
               "strong": 3588
             },
             {
               "w": "ἅπαξ",
               "lemma": "ἅπαξ",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 530
             },
             {
               "w": "παραδοθείσῃ",
               "lemma": "παραδίδωμι",
-              "morph": "verb",
+              "morph": "V-APP-DSF\r",
               "strong": 3860
             },
             {
               "w": "τοῖς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DPM\r",
               "strong": 3588
             },
             {
               "w": "ἁγίοις",
               "lemma": "ἅγιος",
-              "morph": "adj",
+              "morph": "A-DPM\r",
               "strong": 40
             },
             {
               "w": "πίστει",
               "lemma": "πίστις",
-              "morph": "noun",
+              "morph": "N-DSF\r",
               "strong": 4102
             }
           ]
@@ -313,181 +313,181 @@
             {
               "w": "παρεισέδυσαν",
               "lemma": "παρεισδύω",
-              "morph": "verb",
+              "morph": "V-2API-3P\r",
               "strong": 3921
             },
             {
               "w": "γάρ",
               "lemma": "γάρ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1063
             },
             {
               "w": "τινες",
               "lemma": "τις",
-              "morph": "pron",
+              "morph": "X-NPM\r",
               "strong": 5100
             },
             {
               "w": "ἄνθρωποι",
               "lemma": "ἄνθρωπος",
-              "morph": "noun",
+              "morph": "N-NPM\r",
               "strong": 444
             },
             {
               "w": "οἱ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NPM\r",
               "strong": 3588
             },
             {
               "w": "πάλαι",
               "lemma": "πάλαι",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 3819
             },
             {
               "w": "προγεγραμμένοι",
               "lemma": "προγράφω",
-              "morph": "verb",
+              "morph": "V-RPP-NPM\r",
               "strong": 4270
             },
             {
               "w": "εἰς",
               "lemma": "εἰς",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1519
             },
             {
               "w": "τοῦτο",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-ASN\r",
               "strong": 5124
             },
             {
               "w": "τὸ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASN\r",
               "strong": 3588
             },
             {
               "w": "κρίμα",
               "lemma": "κρίμα",
-              "morph": "noun",
+              "morph": "N-ASN\r",
               "strong": 2917
             },
             {
               "w": "ἀσεβεῖς",
               "lemma": "ἀσεβής",
-              "morph": "adj",
+              "morph": "A-NPM\r",
               "strong": 765
             },
             {
               "w": "τὴν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASF\r",
               "strong": 3588
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "θεοῦ",
               "lemma": "θεός",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2316
             },
             {
               "w": "ἡμῶν",
               "lemma": "ἐγώ",
-              "morph": "pron",
+              "morph": "P-1GP\r",
               "strong": 2257
             },
             {
               "w": "χάριτα",
               "lemma": "χάρις",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 5485
             },
             {
               "w": "μετατιθέντες",
               "lemma": "μετατίθημι",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 3346
             },
             {
               "w": "εἰς",
               "lemma": "εἰς",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1519
             },
             {
               "w": "ἀσέλγειαν",
               "lemma": "ἀσέλγεια",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 766
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "τὸν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASM\r",
               "strong": 3588
             },
             {
               "w": "μόνον",
               "lemma": "μόνος",
-              "morph": "adj",
+              "morph": "A-ASM\r",
               "strong": 3441
             },
             {
               "w": "δεσπότην",
               "lemma": "δεσπότης",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 1203
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "κύριον",
               "lemma": "κύριος",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 2962
             },
             {
               "w": "ἡμῶν",
               "lemma": "ἐγώ",
-              "morph": "pron",
+              "morph": "P-1GP\r",
               "strong": 2257
             },
             {
               "w": "Ἰησοῦν",
               "lemma": "Ἰησοῦς",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 2424
             },
             {
               "w": "Χριστὸν",
               "lemma": "Χριστός",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 5547
             },
             {
               "w": "ἀρνούμενοι",
               "lemma": "ἀρνέομαι",
-              "morph": "verb",
+              "morph": "V-PNP-NPM\r",
               "strong": 720
             }
           ]
@@ -499,127 +499,127 @@
             {
               "w": "Ὑπομνῆσαι",
               "lemma": "ὑπομιμνῄσκω",
-              "morph": "verb",
+              "morph": "V-AAN\r",
               "strong": 5279
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "ὑμᾶς",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2AP\r",
               "strong": 5209
             },
             {
               "w": "βούλομαι",
               "lemma": "βούλομαι",
-              "morph": "verb",
+              "morph": "V-PNI-1S\r",
               "strong": 1014
             },
             {
               "w": "εἰδότας",
               "lemma": "ὁράω",
-              "morph": "verb",
+              "morph": "V-RAP-APM\r",
               "strong": 3708
             },
             {
               "w": "ὑμᾶς",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-AP-\r",
               "strong": 5209
             },
             {
               "w": "ἅπαξ",
               "lemma": "ἅπαξ",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 530
             },
             {
               "w": "πάντα",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-APN\r",
               "strong": 3956
             },
             {
               "w": "ὅτι",
               "lemma": "ὅτι",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 3754
             },
             {
               "w": "Ἰησοῦς",
               "lemma": "Ἰησοῦς",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 2424
             },
             {
               "w": "λαὸν",
               "lemma": "λαός",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 2992
             },
             {
               "w": "ἐκ",
               "lemma": "ἐκ",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1537
             },
             {
               "w": "γῆς",
               "lemma": "γῆ",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 1093
             },
             {
               "w": "Αἰγύπτου",
               "lemma": "Αἴγυπτος",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 125
             },
             {
               "w": "σώσας",
               "lemma": "σῴζω",
-              "morph": "verb",
+              "morph": "V-AAP-NSM\r",
               "strong": 4982
             },
             {
               "w": "τὸ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASN\r",
               "strong": 3588
             },
             {
               "w": "δεύτερον",
               "lemma": "δεύτερος",
-              "morph": "adj",
+              "morph": "A-ASN\r",
               "strong": 1208
             },
             {
               "w": "τοὺς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-APM\r",
               "strong": 3588
             },
             {
               "w": "μὴ",
               "lemma": "μή",
-              "morph": "adv",
+              "morph": "PRT-N\r",
               "strong": 3361
             },
             {
               "w": "πιστεύσαντας",
               "lemma": "πιστεύω",
-              "morph": "verb",
+              "morph": "V-AAP-APM\r",
               "strong": 4100
             },
             {
               "w": "ἀπώλεσεν",
               "lemma": "ἀπόλλυμι",
-              "morph": "verb",
+              "morph": "V-AAI-3S\r",
               "strong": 622
             }
           ]
@@ -631,134 +631,134 @@
             {
               "w": "ἀγγέλους",
               "lemma": "ἄγγελος",
-              "morph": "noun",
+              "morph": "N-APM\r",
               "strong": 32
             },
             {
               "w": "τε",
               "lemma": "τέ",
-              "morph": "conj",
+              "morph": "PRT\r",
               "strong": 5037
             },
             {
               "w": "τοὺς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-APM\r",
               "strong": 3588
             },
             {
               "w": "μὴ",
               "lemma": "μή",
-              "morph": "adv",
+              "morph": "PRT-N\r",
               "strong": 3361
             },
             {
               "w": "τηρήσαντας",
               "lemma": "τηρέω",
-              "morph": "verb",
+              "morph": "V-AAP-APM\r",
               "strong": 5083
             },
             {
               "w": "τὴν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASF\r",
               "strong": 3588
             },
             {
               "w": "ἑαυτῶν",
               "lemma": "ἑαυτοῦ",
-              "morph": "pron",
+              "morph": "F-3GPM\r",
               "strong": 1438,
               "c": "gpm"
             },
             {
               "w": "ἀρχὴν",
               "lemma": "ἀρχή",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 746
             },
             {
               "w": "ἀλλὰ",
               "lemma": "ἀλλά",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 235
             },
             {
               "w": "ἀπολιπόντας",
               "lemma": "ἀπολείπω",
-              "morph": "verb",
+              "morph": "V-2AAP-APM\r",
               "strong": 620
             },
             {
               "w": "τὸ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASN\r",
               "strong": 3588
             },
             {
               "w": "ἴδιον",
               "lemma": "ἴδιος",
-              "morph": "adj",
+              "morph": "A-ASN\r",
               "strong": 2398
             },
             {
               "w": "οἰκητήριον",
               "lemma": "οἰκητήριον",
-              "morph": "noun",
+              "morph": "N-ASN\r",
               "strong": 3613
             },
             {
               "w": "εἰς",
               "lemma": "εἰς",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1519
             },
             {
               "w": "κρίσιν",
               "lemma": "κρίσις",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 2920
             },
             {
               "w": "μεγάλης",
               "lemma": "μέγας",
-              "morph": "adj",
+              "morph": "A-GSF\r",
               "strong": 3173
             },
             {
               "w": "ἡμέρας",
               "lemma": "ἡμέρα",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 2250
             },
             {
               "w": "δεσμοῖς",
               "lemma": "δεσμός",
-              "morph": "noun",
+              "morph": "N-DPM\r",
               "strong": 1199
             },
             {
               "w": "ἀϊδίοις",
               "lemma": "ἀΐδιος",
-              "morph": "adj",
+              "morph": "A-DPM\r",
               "strong": 126
             },
             {
               "w": "ὑπὸ",
               "lemma": "ὑπό",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 5259
             },
             {
               "w": "ζόφον",
               "lemma": "ζόφος",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 2217
             },
             {
               "w": "τετήρηκεν",
               "lemma": "τηρέω",
-              "morph": "verb",
+              "morph": "V-RAI-3S\r",
               "strong": 5083
             }
           ]
@@ -770,152 +770,152 @@
             {
               "w": "ὡς",
               "lemma": "ὡς",
-              "morph": "conj",
+              "morph": "ADV\r",
               "strong": 5613
             },
             {
               "w": "Σόδομα",
               "lemma": "Σόδομα",
-              "morph": "noun",
+              "morph": "N-NSF\r",
               "strong": 4670
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "Γόμορρα",
               "lemma": "Γόμορρα",
-              "morph": "noun",
+              "morph": "N-NSF\r",
               "strong": 1116
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "αἱ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NPF\r",
               "strong": 3588
             },
             {
               "w": "περὶ",
               "lemma": "περί",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 4012
             },
             {
               "w": "αὐτὰς",
               "lemma": "ἑαυτοῦ",
-              "morph": "pron",
+              "morph": "P-APF\r",
               "strong": 848,
               "c": "apf"
             },
             {
               "w": "πόλεις",
               "lemma": "πόλις",
-              "morph": "noun",
+              "morph": "N-NPF\r",
               "strong": 4172
             },
             {
               "w": "τὸν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASM\r",
               "strong": 3588
             },
             {
               "w": "ὅμοιον",
               "lemma": "ὅμοιος",
-              "morph": "adj",
+              "morph": "A-ASM\r",
               "strong": 3664
             },
             {
               "w": "τρόπον",
               "lemma": "τρόπος",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 5158
             },
             {
               "w": "τούτοις",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-DPM\r",
               "strong": 5125
             },
             {
               "w": "ἐκπορνεύσασαι",
               "lemma": "ἐκπορνεύω",
-              "morph": "verb",
+              "morph": "V-AAP-NPF\r",
               "strong": 1608
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "ἀπελθοῦσαι",
               "lemma": "ἀπέρχομαι",
-              "morph": "verb",
+              "morph": "V-2AAP-NPF\r",
               "strong": 565
             },
             {
               "w": "ὀπίσω",
               "lemma": "ὀπίσω",
-              "morph": "prep",
+              "morph": "ADV\r",
               "strong": 3694
             },
             {
               "w": "σαρκὸς",
               "lemma": "σάρξ",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 4561
             },
             {
               "w": "ἑτέρας",
               "lemma": "ἕτερος",
-              "morph": "adj",
+              "morph": "A-GSF\r",
               "strong": 2087
             },
             {
               "w": "πρόκεινται",
               "lemma": "πρόκειμαι",
-              "morph": "verb",
+              "morph": "V-PNI-3P\r",
               "strong": 4295
             },
             {
               "w": "δεῖγμα",
               "lemma": "δεῖγμα",
-              "morph": "noun",
+              "morph": "N-ASN\r",
               "strong": 1164
             },
             {
               "w": "πυρὸς",
               "lemma": "πῦρ",
-              "morph": "noun",
+              "morph": "N-GSN\r",
               "strong": 4442
             },
             {
               "w": "αἰωνίου",
               "lemma": "αἰώνιος",
-              "morph": "adj",
+              "morph": "A-GSN\r",
               "strong": 166
             },
             {
               "w": "δίκην",
               "lemma": "δίκη",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 1349
             },
             {
               "w": "ὑπέχουσαι",
               "lemma": "ὑπέχω",
-              "morph": "verb",
+              "morph": "V-PAP-NPF\r",
               "strong": 5254
             }
           ]
@@ -927,85 +927,85 @@
             {
               "w": "Ὁμοίως",
               "lemma": "ὁμοίως",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 3668
             },
             {
               "w": "μέντοι",
               "lemma": "μέντοι",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 3305
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "adv",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "οὗτοι",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-NPM\r",
               "strong": 3778
             },
             {
               "w": "ἐνυπνιαζόμενοι",
               "lemma": "ἐνυπνιάζομαι",
-              "morph": "verb",
+              "morph": "V-PNP-NPM\r",
               "strong": 1797
             },
             {
               "w": "σάρκα",
               "lemma": "σάρξ",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 4561
             },
             {
               "w": "μὲν",
               "lemma": "μέν",
-              "morph": "conj",
+              "morph": "PRT\r",
               "strong": 3303
             },
             {
               "w": "μιαίνουσιν",
               "lemma": "μιαίνω",
-              "morph": "verb",
+              "morph": "V-PAI-3P\r",
               "strong": 3392
             },
             {
               "w": "κυριότητα",
               "lemma": "κυριότης",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 2963
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "ἀθετοῦσιν",
               "lemma": "ἀθετέω",
-              "morph": "verb",
+              "morph": "V-PAI-3P\r",
               "strong": 114
             },
             {
               "w": "δόξας",
               "lemma": "δόξα",
-              "morph": "noun",
+              "morph": "N-APF\r",
               "strong": 1391
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "βλασφημοῦσιν",
               "lemma": "βλασφημέω",
-              "morph": "verb",
+              "morph": "V-PAI-3P\r",
               "strong": 987
             }
           ]
@@ -1017,145 +1017,145 @@
             {
               "w": "ὁ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NSM\r",
               "strong": 3588
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "Μιχαὴλ",
               "lemma": "Μιχαήλ",
-              "morph": "noun",
+              "morph": "N-PRI\r",
               "strong": 3413
             },
             {
               "w": "ὁ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NSM\r",
               "strong": 3588
             },
             {
               "w": "ἀρχάγγελος",
               "lemma": "ἀρχάγγελος",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 743
             },
             {
               "w": "ὅτε",
               "lemma": "ὅτε",
-              "morph": "conj",
+              "morph": "ADV\r",
               "strong": 3753
             },
             {
               "w": "τῷ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DSM\r",
               "strong": 3588
             },
             {
               "w": "διαβόλῳ",
               "lemma": "διάβολος",
-              "morph": "adj",
+              "morph": "A-DSM\r",
               "strong": 1228
             },
             {
               "w": "διακρινόμενος",
               "lemma": "διακρίνω",
-              "morph": "verb",
+              "morph": "V-PMP-NSM\r",
               "strong": 1252
             },
             {
               "w": "διελέγετο",
               "lemma": "διαλέγομαι",
-              "morph": "verb",
+              "morph": "V-INI-3S\r",
               "strong": 1256
             },
             {
               "w": "περὶ",
               "lemma": "περί",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 4012
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "Μωϋσέως",
               "lemma": "Μωϋσῆς",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 3475
             },
             {
               "w": "σώματος",
               "lemma": "σῶμα",
-              "morph": "noun",
+              "morph": "N-GSN\r",
               "strong": 4983
             },
             {
               "w": "οὐ",
               "lemma": "οὐ",
-              "morph": "adv",
+              "morph": "PRT-N\r",
               "strong": 3756
             },
             {
               "w": "ἐτόλμησεν",
               "lemma": "τολμάω",
-              "morph": "verb",
+              "morph": "V-AAI-3S\r",
               "strong": 5111
             },
             {
               "w": "κρίσιν",
               "lemma": "κρίσις",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 2920
             },
             {
               "w": "ἐπενεγκεῖν",
               "lemma": "ἐπιφέρω",
-              "morph": "verb",
+              "morph": "V-2AAN\r",
               "strong": 2018
             },
             {
               "w": "βλασφημίας",
               "lemma": "βλασφημία",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 988
             },
             {
               "w": "ἀλλὰ",
               "lemma": "ἀλλά",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 235
             },
             {
               "w": "εἶπεν",
               "lemma": "λέγω",
-              "morph": "verb",
+              "morph": "V-2AAI-3S\r",
               "strong": 2036
             },
             {
               "w": "Ἐπιτιμήσαι",
               "lemma": "ἐπιτιμάω",
-              "morph": "verb",
+              "morph": "V-AAO-3S\r",
               "strong": 2008
             },
             {
               "w": "σοι",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2DS\r",
               "strong": 4671
             },
             {
               "w": "κύριος",
               "lemma": "κύριος",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 2962
             }
           ]
@@ -1167,109 +1167,109 @@
             {
               "w": "οὗτοι",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-NPM\r",
               "strong": 3778
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "ὅσα",
               "lemma": "ὅσος",
-              "morph": "pron",
+              "morph": "K-APN\r",
               "strong": 3745
             },
             {
               "w": "μὲν",
               "lemma": "μέν",
-              "morph": "conj",
+              "morph": "PRT\r",
               "strong": 3303
             },
             {
               "w": "οὐ",
               "lemma": "οὐ",
-              "morph": "adv",
+              "morph": "PRT-N\r",
               "strong": 3756
             },
             {
               "w": "οἴδασιν",
               "lemma": "οἶδα",
-              "morph": "verb",
+              "morph": "V-RAI-3P\r",
               "strong": 1492
             },
             {
               "w": "βλασφημοῦσιν",
               "lemma": "βλασφημέω",
-              "morph": "verb",
+              "morph": "V-PAI-3P\r",
               "strong": 987
             },
             {
               "w": "ὅσα",
               "lemma": "ὅσος",
-              "morph": "pron",
+              "morph": "K-APN\r",
               "strong": 3745
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "φυσικῶς",
               "lemma": "φυσικῶς",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 5447
             },
             {
               "w": "ὡς",
               "lemma": "ὡς",
-              "morph": "conj",
+              "morph": "ADV\r",
               "strong": 5613
             },
             {
               "w": "τὰ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NPN\r",
               "strong": 3588
             },
             {
               "w": "ἄλογα",
               "lemma": "ἄλογος",
-              "morph": "adj",
+              "morph": "A-NPN\r",
               "strong": 249
             },
             {
               "w": "ζῷα",
               "lemma": "ζῷον",
-              "morph": "noun",
+              "morph": "N-NPN\r",
               "strong": 2226
             },
             {
               "w": "ἐπίστανται",
               "lemma": "ἐπίσταμαι",
-              "morph": "verb",
+              "morph": "V-PNI-3P\r",
               "strong": 1987
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "τούτοις",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-DPN\r",
               "strong": 5125
             },
             {
               "w": "φθείρονται",
               "lemma": "φθείρω",
-              "morph": "verb",
+              "morph": "V-PPI-3P\r",
               "strong": 5351
             }
           ]
@@ -1281,128 +1281,128 @@
             {
               "w": "οὐαὶ",
               "lemma": "οὐαί",
-              "morph": "ptcl",
+              "morph": "INJ\r",
               "strong": 3759
             },
             {
               "w": "αὐτοῖς",
               "lemma": "αὐτός",
-              "morph": "pron",
+              "morph": "P-DPM\r",
               "strong": 846,
               "c": "dpm"
             },
             {
               "w": "ὅτι",
               "lemma": "ὅτι",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 3754
             },
             {
               "w": "τῇ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DSF\r",
               "strong": 3588
             },
             {
               "w": "ὁδῷ",
               "lemma": "ὁδός",
-              "morph": "noun",
+              "morph": "N-DSF\r",
               "strong": 3598
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "Κάϊν",
               "lemma": "Κάϊν",
-              "morph": "noun",
+              "morph": "N-PRI\r",
               "strong": 2535
             },
             {
               "w": "ἐπορεύθησαν",
               "lemma": "πορεύομαι",
-              "morph": "verb",
+              "morph": "V-AOI-3P\r",
               "strong": 4198
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "τῇ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DSF\r",
               "strong": 3588
             },
             {
               "w": "πλάνῃ",
               "lemma": "πλάνη",
-              "morph": "noun",
+              "morph": "N-DSF\r",
               "strong": 4106
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "Βαλαὰμ",
               "lemma": "Βαλαάμ",
-              "morph": "noun",
+              "morph": "N-PRI\r",
               "strong": 903
             },
             {
               "w": "μισθοῦ",
               "lemma": "μισθός",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 3408
             },
             {
               "w": "ἐξεχύθησαν",
               "lemma": "ἐκχέω",
-              "morph": "verb",
+              "morph": "V-API-3P\r",
               "strong": 1632
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "τῇ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DSF\r",
               "strong": 3588
             },
             {
               "w": "ἀντιλογίᾳ",
               "lemma": "ἀντιλογία",
-              "morph": "noun",
+              "morph": "N-DSF\r",
               "strong": 485
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "Κόρε",
               "lemma": "Κόρε",
-              "morph": "noun",
+              "morph": "N-PRI\r",
               "strong": 2879
             },
             {
               "w": "ἀπώλοντο",
               "lemma": "ἀπόλλυμι",
-              "morph": "verb",
+              "morph": "V-2AMI-3P\r",
               "strong": 622
             }
           ]
@@ -1414,140 +1414,140 @@
             {
               "w": "οὗτοί",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-NPM\r",
               "strong": 3778
             },
             {
               "w": "εἰσιν",
               "lemma": "εἰμί",
-              "morph": "verb",
+              "morph": "V-PAI-3P\r",
               "strong": 1526
             },
             {
               "w": "οἱ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NPM\r",
               "strong": 3588
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "ταῖς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DPF\r",
               "strong": 3588
             },
             {
               "w": "ἀγάπαις",
               "lemma": "ἀγάπη",
-              "morph": "noun",
+              "morph": "N-DPF\r",
               "strong": 26
             },
             {
               "w": "ὑμῶν",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2GP\r",
               "strong": 5216
             },
             {
               "w": "σπιλάδες",
               "lemma": "σπιλάς",
-              "morph": "noun",
+              "morph": "N-NPF\r",
               "strong": 4694
             },
             {
               "w": "συνευωχούμενοι",
               "lemma": "συνευωχέομαι",
-              "morph": "verb",
+              "morph": "V-PNP-NPM\r",
               "strong": 4910
             },
             {
               "w": "ἀφόβως",
               "lemma": "ἀφόβως",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 870
             },
             {
               "w": "ἑαυτοὺς",
               "lemma": "ἑαυτοῦ",
-              "morph": "pron",
+              "morph": "F-3APM\r",
               "strong": 1438,
               "c": "apm"
             },
             {
               "w": "ποιμαίνοντες",
               "lemma": "ποιμαίνω",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 4165
             },
             {
               "w": "νεφέλαι",
               "lemma": "νεφέλη",
-              "morph": "noun",
+              "morph": "N-NPF\r",
               "strong": 3507
             },
             {
               "w": "ἄνυδροι",
               "lemma": "ἄνυδρος",
-              "morph": "adj",
+              "morph": "A-NPF\r",
               "strong": 504
             },
             {
               "w": "ὑπὸ",
               "lemma": "ὑπό",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 5259
             },
             {
               "w": "ἀνέμων",
               "lemma": "ἄνεμος",
-              "morph": "noun",
+              "morph": "N-GPM\r",
               "strong": 417
             },
             {
               "w": "παραφερόμεναι",
               "lemma": "παραφέρω",
-              "morph": "verb",
+              "morph": "V-PPP-NPF\r",
               "strong": 3911
             },
             {
               "w": "δένδρα",
               "lemma": "δένδρον",
-              "morph": "noun",
+              "morph": "N-NPN\r",
               "strong": 1186
             },
             {
               "w": "φθινοπωρινὰ",
               "lemma": "φθινοπωρινός",
-              "morph": "adj",
+              "morph": "A-NPN\r",
               "strong": 5352
             },
             {
               "w": "ἄκαρπα",
               "lemma": "ἄκαρπος",
-              "morph": "adj",
+              "morph": "A-NPN\r",
               "strong": 175
             },
             {
               "w": "δὶς",
               "lemma": "δίς",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 1364
             },
             {
               "w": "ἀποθανόντα",
               "lemma": "ἀποθνῄσκω",
-              "morph": "verb",
+              "morph": "V-2AAP-NPN\r",
               "strong": 599
             },
             {
               "w": "ἐκριζωθέντα",
               "lemma": "ἐκριζόω",
-              "morph": "verb",
+              "morph": "V-APP-NPN\r",
               "strong": 1610
             }
           ]
@@ -1559,104 +1559,104 @@
             {
               "w": "κύματα",
               "lemma": "κῦμα",
-              "morph": "noun",
+              "morph": "N-NPN\r",
               "strong": 2949
             },
             {
               "w": "ἄγρια",
               "lemma": "ἄγριος",
-              "morph": "adj",
+              "morph": "A-NPN\r",
               "strong": 66
             },
             {
               "w": "θαλάσσης",
               "lemma": "θάλασσα",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 2281
             },
             {
               "w": "ἐπαφρίζοντα",
               "lemma": "ἐπαφρίζω",
-              "morph": "verb",
+              "morph": "V-PAP-NPN\r",
               "strong": 1890
             },
             {
               "w": "τὰς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-APF\r",
               "strong": 3588
             },
             {
               "w": "ἑαυτῶν",
               "lemma": "ἑαυτοῦ",
-              "morph": "pron",
+              "morph": "F-3GPN\r",
               "strong": 1438,
               "c": "gpn"
             },
             {
               "w": "αἰσχύνας",
               "lemma": "αἰσχύνη",
-              "morph": "noun",
+              "morph": "N-APF\r",
               "strong": 152
             },
             {
               "w": "ἀστέρες",
               "lemma": "ἀστήρ",
-              "morph": "noun",
+              "morph": "N-NPM\r",
               "strong": 792
             },
             {
               "w": "πλανῆται",
               "lemma": "πλανήτης",
-              "morph": "adj",
+              "morph": "N-NPM\r",
               "strong": 4107
             },
             {
               "w": "οἷς",
               "lemma": "ὅς",
-              "morph": "pron",
+              "morph": "R-DPM\r",
               "strong": 3739
             },
             {
               "w": "ὁ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NSM\r",
               "strong": 3588
             },
             {
               "w": "ζόφος",
               "lemma": "ζόφος",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 2217
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSN\r",
               "strong": 3588
             },
             {
               "w": "σκότους",
               "lemma": "σκότος",
-              "morph": "noun",
+              "morph": "N-GSN\r",
               "strong": 4655
             },
             {
               "w": "εἰς",
               "lemma": "εἰς",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1519
             },
             {
               "w": "αἰῶνα",
               "lemma": "αἰών",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 165
             },
             {
               "w": "τετήρηται",
               "lemma": "τηρέω",
-              "morph": "verb",
+              "morph": "V-RPI-3S\r",
               "strong": 5083
             }
           ]
@@ -1668,97 +1668,97 @@
             {
               "w": "Προεφήτευσεν",
               "lemma": "προφητεύω",
-              "morph": "verb",
+              "morph": "V-AAI-3S\r",
               "strong": 4395
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "adv",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "τούτοις",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-DPM\r",
               "strong": 5125
             },
             {
               "w": "ἕβδομος",
               "lemma": "ἕβδομος",
-              "morph": "adj",
+              "morph": "A-NSM\r",
               "strong": 1442
             },
             {
               "w": "ἀπὸ",
               "lemma": "ἀπό",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 575
             },
             {
               "w": "Ἀδὰμ",
               "lemma": "Ἀδάμ",
-              "morph": "noun",
+              "morph": "N-PRI\r",
               "strong": 76
             },
             {
               "w": "Ἑνὼχ",
               "lemma": "Ἑνώχ",
-              "morph": "noun",
+              "morph": "N-PRI\r",
               "strong": 1802
             },
             {
               "w": "λέγων",
               "lemma": "λέγω",
-              "morph": "verb",
+              "morph": "V-PAP-NSM\r",
               "strong": 3004
             },
             {
               "w": "Ἰδοὺ",
               "lemma": "ἰδού",
-              "morph": "ptcl",
+              "morph": "V-2AMM-2S\r",
               "strong": 2400
             },
             {
               "w": "ἦλθεν",
               "lemma": "ἔρχομαι",
-              "morph": "verb",
+              "morph": "V-2AAI-3S\r",
               "strong": 2064
             },
             {
               "w": "κύριος",
               "lemma": "κύριος",
-              "morph": "noun",
+              "morph": "N-NSM\r",
               "strong": 2962
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "ἁγίαις",
               "lemma": "ἅγιος",
-              "morph": "adj",
+              "morph": "A-DPF\r",
               "strong": 40
             },
             {
               "w": "μυριάσιν",
               "lemma": "μυριάς",
-              "morph": "noun",
+              "morph": "N-DPF\r",
               "strong": 3461
             },
             {
               "w": "αὐτοῦ",
               "lemma": "αὐτός",
-              "morph": "pron",
+              "morph": "P-GSM\r",
               "strong": 846,
               "c": "gsm"
             }
@@ -1771,171 +1771,171 @@
             {
               "w": "ποιῆσαι",
               "lemma": "ποιέω",
-              "morph": "verb",
+              "morph": "V-AAN\r",
               "strong": 4160
             },
             {
               "w": "κρίσιν",
               "lemma": "κρίσις",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 2920
             },
             {
               "w": "κατὰ",
               "lemma": "κατά",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 2596
             },
             {
               "w": "πάντων",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-GPM\r",
               "strong": 3956
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "ἐλέγξαι",
               "lemma": "ἐλέγχω",
-              "morph": "verb",
+              "morph": "V-AAN\r",
               "strong": 1651
             },
             {
               "w": "πάντας",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-APM\r",
               "strong": 3956
             },
             {
               "w": "τοὺς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-APM\r",
               "strong": 3588
             },
             {
               "w": "ἀσεβεῖς",
               "lemma": "ἀσεβής",
-              "morph": "adj",
+              "morph": "A-APM\r",
               "strong": 765
             },
             {
               "w": "περὶ",
               "lemma": "περί",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 4012
             },
             {
               "w": "πάντων",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-GPN\r",
               "strong": 3956
             },
             {
               "w": "τῶν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GPN\r",
               "strong": 3588
             },
             {
               "w": "ἔργων",
               "lemma": "ἔργον",
-              "morph": "noun",
+              "morph": "N-GPN\r",
               "strong": 2041
             },
             {
               "w": "ἀσεβείας",
               "lemma": "ἀσέβεια",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 763
             },
             {
               "w": "αὐτῶν",
               "lemma": "αὐτός",
-              "morph": "pron",
+              "morph": "P-GPM\r",
               "strong": 846,
               "c": "gpm"
             },
             {
               "w": "ὧν",
               "lemma": "ὅς",
-              "morph": "pron",
+              "morph": "R-GPN\r",
               "strong": 3739
             },
             {
               "w": "ἠσέβησαν",
               "lemma": "ἀσεβέω",
-              "morph": "verb",
+              "morph": "V-AAI-3P\r",
               "strong": 764
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "περὶ",
               "lemma": "περί",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 4012
             },
             {
               "w": "πάντων",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-GPN\r",
               "strong": 3956
             },
             {
               "w": "τῶν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GPN\r",
               "strong": 3588
             },
             {
               "w": "σκληρῶν",
               "lemma": "σκληρός",
-              "morph": "adj",
+              "morph": "A-GPN\r",
               "strong": 4642
             },
             {
               "w": "ὧν",
               "lemma": "ὅς",
-              "morph": "pron",
+              "morph": "R-GPN\r",
               "strong": 3739
             },
             {
               "w": "ἐλάλησαν",
               "lemma": "λαλέω",
-              "morph": "verb",
+              "morph": "V-AAI-3P\r",
               "strong": 2980
             },
             {
               "w": "κατ",
               "lemma": "κατά",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 2596
             },
             {
               "w": "αὐτοῦ",
               "lemma": "αὐτός",
-              "morph": "pron",
+              "morph": "P-GSM\r",
               "strong": 846,
               "c": "gsm"
             },
             {
               "w": "ἁμαρτωλοὶ",
               "lemma": "ἁμαρτωλός",
-              "morph": "adj",
+              "morph": "A-NPM\r",
               "strong": 268
             },
             {
               "w": "ἀσεβεῖς",
               "lemma": "ἀσεβής",
-              "morph": "adj",
+              "morph": "A-NPM\r",
               "strong": 765
             }
           ]
@@ -1947,117 +1947,117 @@
             {
               "w": "οὗτοί",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-NPM\r",
               "strong": 3778
             },
             {
               "w": "εἰσιν",
               "lemma": "εἰμί",
-              "morph": "verb",
+              "morph": "V-PAI-3P\r",
               "strong": 1526
             },
             {
               "w": "γογγυσταί",
               "lemma": "γογγυστής",
-              "morph": "noun",
+              "morph": "N-NPM\r",
               "strong": 1113
             },
             {
               "w": "μεμψίμοιροι",
               "lemma": "μεμψίμοιρος",
-              "morph": "adj",
+              "morph": "A-NPM\r",
               "strong": 3202
             },
             {
               "w": "κατὰ",
               "lemma": "κατά",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 2596
             },
             {
               "w": "τὰς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-APF\r",
               "strong": 3588
             },
             {
               "w": "ἐπιθυμίας",
               "lemma": "ἐπιθυμία",
-              "morph": "noun",
+              "morph": "N-APF\r",
               "strong": 1939
             },
             {
               "w": "αὐτῶν",
               "lemma": "αὐτός",
-              "morph": "pron",
+              "morph": "P-GPM\r",
               "strong": 846,
               "c": "gpm"
             },
             {
               "w": "πορευόμενοι",
               "lemma": "πορεύομαι",
-              "morph": "verb",
+              "morph": "V-PNP-NPM\r",
               "strong": 4198
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "τὸ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NSN\r",
               "strong": 3588
             },
             {
               "w": "στόμα",
               "lemma": "στόμα",
-              "morph": "noun",
+              "morph": "N-NSN\r",
               "strong": 4750
             },
             {
               "w": "αὐτῶν",
               "lemma": "αὐτός",
-              "morph": "pron",
+              "morph": "P-GPM\r",
               "strong": 846,
               "c": "gpm"
             },
             {
               "w": "λαλεῖ",
               "lemma": "λαλέω",
-              "morph": "verb",
+              "morph": "V-PAI-3S\r",
               "strong": 2980
             },
             {
               "w": "ὑπέρογκα",
               "lemma": "ὑπέρογκος",
-              "morph": "adj",
+              "morph": "A-APN\r",
               "strong": 5246
             },
             {
               "w": "θαυμάζοντες",
               "lemma": "θαυμάζω",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 2296
             },
             {
               "w": "πρόσωπα",
               "lemma": "πρόσωπον",
-              "morph": "noun",
+              "morph": "N-APN\r",
               "strong": 4383
             },
             {
               "w": "ὠφελείας",
               "lemma": "ὠφέλεια",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 5622
             },
             {
               "w": "χάριν",
               "lemma": "χάριν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 5484
             }
           ]
@@ -2069,97 +2069,97 @@
             {
               "w": "Ὑμεῖς",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2NP\r",
               "strong": 5210
             },
             {
               "w": "δέ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "ἀγαπητοί",
               "lemma": "ἀγαπητός",
-              "morph": "adj",
+              "morph": "A-VPM\r",
               "strong": 27
             },
             {
               "w": "μνήσθητε",
               "lemma": "μιμνῄσκομαι",
-              "morph": "verb",
+              "morph": "V-APM-2P\r",
               "strong": 3415
             },
             {
               "w": "τῶν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GPN\r",
               "strong": 3588
             },
             {
               "w": "ῥημάτων",
               "lemma": "ῥῆμα",
-              "morph": "noun",
+              "morph": "N-GPN\r",
               "strong": 4487
             },
             {
               "w": "τῶν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GPN\r",
               "strong": 3588
             },
             {
               "w": "προειρημένων",
               "lemma": "προλέγω",
-              "morph": "verb",
+              "morph": "V-RPP-GPN\r",
               "strong": 4302
             },
             {
               "w": "ὑπὸ",
               "lemma": "ὑπό",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 5259
             },
             {
               "w": "τῶν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GPM\r",
               "strong": 3588
             },
             {
               "w": "ἀποστόλων",
               "lemma": "ἀπόστολος",
-              "morph": "noun",
+              "morph": "N-GPM\r",
               "strong": 652
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "κυρίου",
               "lemma": "κύριος",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2962
             },
             {
               "w": "ἡμῶν",
               "lemma": "ἐγώ",
-              "morph": "pron",
+              "morph": "P-1GP\r",
               "strong": 2257
             },
             {
               "w": "Ἰησοῦ",
               "lemma": "Ἰησοῦς",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2424
             },
             {
               "w": "Χριστοῦ",
               "lemma": "Χριστός",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 5547
             }
           ]
@@ -2171,92 +2171,92 @@
             {
               "w": "ὅτι",
               "lemma": "ὅτι",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 3754
             },
             {
               "w": "ἔλεγον",
               "lemma": "λέγω",
-              "morph": "verb",
+              "morph": "V-IAI-3P\r",
               "strong": 3004
             },
             {
               "w": "ὑμῖν",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2DP\r",
               "strong": 5213
             },
             {
               "w": "Ἐπ",
               "lemma": "ἐπί",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1909
             },
             {
               "w": "ἐσχάτου",
               "lemma": "ἔσχατος",
-              "morph": "adj",
+              "morph": "A-GSM-S\r",
               "strong": 2078
             },
             {
               "w": "χρόνου",
               "lemma": "χρόνος",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 5550
             },
             {
               "w": "ἔσονται",
               "lemma": "εἰμί",
-              "morph": "verb",
+              "morph": "V-FDI-3P\r",
               "strong": 2071
             },
             {
               "w": "ἐμπαῖκται",
               "lemma": "ἐμπαίκτης",
-              "morph": "noun",
+              "morph": "N-NPM\r",
               "strong": 1703
             },
             {
               "w": "κατὰ",
               "lemma": "κατά",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 2596
             },
             {
               "w": "τὰς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-APF\r",
               "strong": 3588
             },
             {
               "w": "ἑαυτῶν",
               "lemma": "ἑαυτοῦ",
-              "morph": "pron",
+              "morph": "F-3GPM\r",
               "strong": 1438,
               "c": "gpm"
             },
             {
               "w": "ἐπιθυμίας",
               "lemma": "ἐπιθυμία",
-              "morph": "noun",
+              "morph": "N-APF\r",
               "strong": 1939
             },
             {
               "w": "πορευόμενοι",
               "lemma": "πορεύομαι",
-              "morph": "verb",
+              "morph": "V-PNP-NPM\r",
               "strong": 4198
             },
             {
               "w": "τῶν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GPF\r",
               "strong": 3588
             },
             {
               "w": "ἀσεβειῶν",
               "lemma": "ἀσέβεια",
-              "morph": "noun",
+              "morph": "N-GPF\r",
               "strong": 763
             }
           ]
@@ -2268,49 +2268,49 @@
             {
               "w": "οὗτοί",
               "lemma": "οὗτος",
-              "morph": "pron",
+              "morph": "D-NPM\r",
               "strong": 3778
             },
             {
               "w": "εἰσιν",
               "lemma": "εἰμί",
-              "morph": "verb",
+              "morph": "V-PAI-3P\r",
               "strong": 1526
             },
             {
               "w": "οἱ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-NPM\r",
               "strong": 3588
             },
             {
               "w": "ἀποδιορίζοντες",
               "lemma": "ἀποδιορίζω",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 592
             },
             {
               "w": "ψυχικοί",
               "lemma": "ψυχικός",
-              "morph": "adj",
+              "morph": "A-NPM\r",
               "strong": 5591
             },
             {
               "w": "πνεῦμα",
               "lemma": "πνεῦμα",
-              "morph": "noun",
+              "morph": "N-ASN\r",
               "strong": 4151
             },
             {
               "w": "μὴ",
               "lemma": "μή",
-              "morph": "adv",
+              "morph": "PRT-N\r",
               "strong": 3361
             },
             {
               "w": "ἔχοντες",
               "lemma": "ἔχω",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 2192
             }
           ]
@@ -2322,80 +2322,80 @@
             {
               "w": "ὑμεῖς",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2NP\r",
               "strong": 5210
             },
             {
               "w": "δέ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "ἀγαπητοί",
               "lemma": "ἀγαπητός",
-              "morph": "adj",
+              "morph": "A-VPM\r",
               "strong": 27
             },
             {
               "w": "ἐποικοδομοῦντες",
               "lemma": "ἐποικοδομέω",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 2026
             },
             {
               "w": "ἑαυτοὺς",
               "lemma": "ἑαυτοῦ",
-              "morph": "pron",
+              "morph": "F-2APM\r",
               "strong": 1438,
               "c": "apm"
             },
             {
               "w": "τῇ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DSF\r",
               "strong": 3588
             },
             {
               "w": "ἁγιωτάτῃ",
               "lemma": "ἅγιος",
-              "morph": "adj",
+              "morph": "A-DSF-S\r",
               "strong": 40
             },
             {
               "w": "ὑμῶν",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2GP\r",
               "strong": 5216
             },
             {
               "w": "πίστει",
               "lemma": "πίστις",
-              "morph": "noun",
+              "morph": "N-DSF\r",
               "strong": 4102
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "πνεύματι",
               "lemma": "πνεῦμα",
-              "morph": "noun",
+              "morph": "N-DSN\r",
               "strong": 4151
             },
             {
               "w": "ἁγίῳ",
               "lemma": "ἅγιος",
-              "morph": "adj",
+              "morph": "A-DSN\r",
               "strong": 40
             },
             {
               "w": "προσευχόμενοι",
               "lemma": "προσεύχομαι",
-              "morph": "verb",
+              "morph": "V-PNP-NPM\r",
               "strong": 4336
             }
           ]
@@ -2407,98 +2407,98 @@
             {
               "w": "ἑαυτοὺς",
               "lemma": "ἑαυτοῦ",
-              "morph": "pron",
+              "morph": "F-2APM\r",
               "strong": 1438,
               "c": "apm"
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "ἀγάπῃ",
               "lemma": "ἀγάπη",
-              "morph": "noun",
+              "morph": "N-DSF\r",
               "strong": 26
             },
             {
               "w": "θεοῦ",
               "lemma": "θεός",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2316
             },
             {
               "w": "τηρήσατε",
               "lemma": "τηρέω",
-              "morph": "verb",
+              "morph": "V-AAM-2P\r",
               "strong": 5083
             },
             {
               "w": "προσδεχόμενοι",
               "lemma": "προσδέχομαι",
-              "morph": "verb",
+              "morph": "V-PNP-NPM\r",
               "strong": 4327
             },
             {
               "w": "τὸ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASN\r",
               "strong": 3588
             },
             {
               "w": "ἔλεος",
               "lemma": "ἔλεος",
-              "morph": "noun",
+              "morph": "N-ASN\r",
               "strong": 1656
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "κυρίου",
               "lemma": "κύριος",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2962
             },
             {
               "w": "ἡμῶν",
               "lemma": "ἐγώ",
-              "morph": "pron",
+              "morph": "P-1GP\r",
               "strong": 2257
             },
             {
               "w": "Ἰησοῦ",
               "lemma": "Ἰησοῦς",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2424
             },
             {
               "w": "Χριστοῦ",
               "lemma": "Χριστός",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 5547
             },
             {
               "w": "εἰς",
               "lemma": "εἰς",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1519
             },
             {
               "w": "ζωὴν",
               "lemma": "ζωή",
-              "morph": "noun",
+              "morph": "N-ASF\r",
               "strong": 2222
             },
             {
               "w": "αἰώνιον",
               "lemma": "αἰώνιος",
-              "morph": "adj",
+              "morph": "A-ASF\r",
               "strong": 166
             }
           ]
@@ -2510,31 +2510,31 @@
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "οὓς",
               "lemma": "ὅς",
-              "morph": "pron",
+              "morph": "R-APM\r",
               "strong": 3739
             },
             {
               "w": "μὲν",
               "lemma": "μέν",
-              "morph": "conj",
+              "morph": "PRT\r",
               "strong": 3303
             },
             {
               "w": "ἐλεᾶτε",
               "lemma": "ἐλεάω",
-              "morph": "verb",
+              "morph": "V-PAM-2P\r",
               "strong": 1653
             },
             {
               "w": "διακρινομένους",
               "lemma": "διακρίνω",
-              "morph": "verb",
+              "morph": "V-PMP-APM\r",
               "strong": 1252
             }
           ]
@@ -2546,115 +2546,115 @@
             {
               "w": "οὓς",
               "lemma": "ὅς",
-              "morph": "pron",
+              "morph": "R-APM\r",
               "strong": 3739
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "σῴζετε",
               "lemma": "σῴζω",
-              "morph": "verb",
+              "morph": "V-PAM-2P\r",
               "strong": 4982
             },
             {
               "w": "ἐκ",
               "lemma": "ἐκ",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1537
             },
             {
               "w": "πυρὸς",
               "lemma": "πῦρ",
-              "morph": "noun",
+              "morph": "N-GSN\r",
               "strong": 4442
             },
             {
               "w": "ἁρπάζοντες",
               "lemma": "ἁρπάζω",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 726
             },
             {
               "w": "οὓς",
               "lemma": "ὅς",
-              "morph": "pron",
+              "morph": "R-APM\r",
               "strong": 3739
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "ἐλεᾶτε",
               "lemma": "ἐλεάω",
-              "morph": "verb",
+              "morph": "V-PAM-2P\r",
               "strong": 1653
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "φόβῳ",
               "lemma": "φόβος",
-              "morph": "noun",
+              "morph": "N-DSM\r",
               "strong": 5401
             },
             {
               "w": "μισοῦντες",
               "lemma": "μισέω",
-              "morph": "verb",
+              "morph": "V-PAP-NPM\r",
               "strong": 3404
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "adv",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "τὸν",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-ASM\r",
               "strong": 3588
             },
             {
               "w": "ἀπὸ",
               "lemma": "ἀπό",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 575
             },
             {
               "w": "τῆς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSF\r",
               "strong": 3588
             },
             {
               "w": "σαρκὸς",
               "lemma": "σάρξ",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 4561
             },
             {
               "w": "ἐσπιλωμένον",
               "lemma": "σπιλόω",
-              "morph": "verb",
+              "morph": "V-RPP-ASM\r",
               "strong": 4695
             },
             {
               "w": "χιτῶνα",
               "lemma": "χιτών",
-              "morph": "noun",
+              "morph": "N-ASM\r",
               "strong": 5509
             }
           ]
@@ -2666,92 +2666,92 @@
             {
               "w": "Τῷ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-DSM\r",
               "strong": 3588
             },
             {
               "w": "δὲ",
               "lemma": "δέ",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 1161
             },
             {
               "w": "δυναμένῳ",
               "lemma": "δύναμαι",
-              "morph": "verb",
+              "morph": "V-PNP-DSM\r",
               "strong": 1410
             },
             {
               "w": "φυλάξαι",
               "lemma": "φυλάσσω",
-              "morph": "verb",
+              "morph": "V-AAN\r",
               "strong": 5442
             },
             {
               "w": "ὑμᾶς",
               "lemma": "σύ",
-              "morph": "pron",
+              "morph": "P-2AP\r",
               "strong": 5209
             },
             {
               "w": "ἀπταίστους",
               "lemma": "ἄπταιστος",
-              "morph": "adj",
+              "morph": "A-APM\r",
               "strong": 679
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "στῆσαι",
               "lemma": "ἵστημι",
-              "morph": "verb",
+              "morph": "V-AAN\r",
               "strong": 2476
             },
             {
               "w": "κατενώπιον",
               "lemma": "κατενώπιον",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 2714
             },
             {
               "w": "τῆς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSF\r",
               "strong": 3588
             },
             {
               "w": "δόξης",
               "lemma": "δόξα",
-              "morph": "noun",
+              "morph": "N-GSF\r",
               "strong": 1391
             },
             {
               "w": "αὐτοῦ",
               "lemma": "αὐτός",
-              "morph": "pron",
+              "morph": "P-GSM\r",
               "strong": 846,
               "c": "gsm"
             },
             {
               "w": "ἀμώμους",
               "lemma": "ἄμωμος",
-              "morph": "adj",
+              "morph": "A-APM\r",
               "strong": 299
             },
             {
               "w": "ἐν",
               "lemma": "ἐν",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1722
             },
             {
               "w": "ἀγαλλιάσει",
               "lemma": "ἀγαλλίασις",
-              "morph": "noun",
+              "morph": "N-DSF\r",
               "strong": 20
             }
           ]
@@ -2763,163 +2763,163 @@
             {
               "w": "μόνῳ",
               "lemma": "μόνος",
-              "morph": "adj",
+              "morph": "A-DSM\r",
               "strong": 3441
             },
             {
               "w": "θεῷ",
               "lemma": "θεός",
-              "morph": "noun",
+              "morph": "N-DSM\r",
               "strong": 2316
             },
             {
               "w": "σωτῆρι",
               "lemma": "σωτήρ",
-              "morph": "noun",
+              "morph": "N-DSM\r",
               "strong": 4990
             },
             {
               "w": "ἡμῶν",
               "lemma": "ἐγώ",
-              "morph": "pron",
+              "morph": "P-1GP\r",
               "strong": 2257
             },
             {
               "w": "διὰ",
               "lemma": "διά",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1223
             },
             {
               "w": "Ἰησοῦ",
               "lemma": "Ἰησοῦς",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2424
             },
             {
               "w": "Χριστοῦ",
               "lemma": "Χριστός",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 5547
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "κυρίου",
               "lemma": "κύριος",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 2962
             },
             {
               "w": "ἡμῶν",
               "lemma": "ἐγώ",
-              "morph": "pron",
+              "morph": "P-1GP\r",
               "strong": 2257
             },
             {
               "w": "δόξα",
               "lemma": "δόξα",
-              "morph": "noun",
+              "morph": "N-NSF\r",
               "strong": 1391
             },
             {
               "w": "μεγαλωσύνη",
               "lemma": "μεγαλωσύνη",
-              "morph": "noun",
+              "morph": "N-NSF\r",
               "strong": 3172
             },
             {
               "w": "κράτος",
               "lemma": "κράτος",
-              "morph": "noun",
+              "morph": "N-NSN\r",
               "strong": 2904
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "ἐξουσία",
               "lemma": "ἐξουσία",
-              "morph": "noun",
+              "morph": "N-NSF\r",
               "strong": 1849
             },
             {
               "w": "πρὸ",
               "lemma": "πρό",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 4253
             },
             {
               "w": "παντὸς",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-GSM\r",
               "strong": 3956
             },
             {
               "w": "τοῦ",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-GSM\r",
               "strong": 3588
             },
             {
               "w": "αἰῶνος",
               "lemma": "αἰών",
-              "morph": "noun",
+              "morph": "N-GSM\r",
               "strong": 165
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "νῦν",
               "lemma": "νῦν",
-              "morph": "adv",
+              "morph": "ADV\r",
               "strong": 3568
             },
             {
               "w": "καὶ",
               "lemma": "καί",
-              "morph": "conj",
+              "morph": "CONJ\r",
               "strong": 2532
             },
             {
               "w": "εἰς",
               "lemma": "εἰς",
-              "morph": "prep",
+              "morph": "PREP\r",
               "strong": 1519
             },
             {
               "w": "πάντας",
               "lemma": "πᾶς",
-              "morph": "adj",
+              "morph": "A-APM\r",
               "strong": 3956
             },
             {
               "w": "τοὺς",
               "lemma": "ὁ",
-              "morph": "det",
+              "morph": "T-APM\r",
               "strong": 3588
             },
             {
               "w": "αἰῶνας",
               "lemma": "αἰών",
-              "morph": "noun",
+              "morph": "N-APM\r",
               "strong": 165
             },
             {
               "w": "ἀμήν",
               "lemma": "ἀμήν",
-              "morph": "ptcl",
+              "morph": "HEB\r",
               "strong": 281
             }
           ]
