@@ -1,6 +1,7 @@
 import { db } from '../storage/db.js';
 
 const KEY = 'dictionary';
+const SCHEMA_VERSION = 1;
 
 /**
  * Загружает словарь пользователя.
@@ -10,15 +11,17 @@ export async function loadDictionary() {
   try {
     const data = await db.get(KEY);
     if (!data) return {};
-    // Миграция: удаляем старый дефолтный forms (lemma), чтобы глобальный wordLayer работал
-    let changed = false;
-    for (const [id, entry] of Object.entries(data)) {
-      if (entry && entry.forms === 'lemma') {
-        delete entry.forms;
-        changed = true;
+    // Миграции: применяются только при смене версии схемы
+    if (data.__schema !== SCHEMA_VERSION) {
+      // v0→v1: удаляем старый дефолтный forms (lemma), чтобы глобальный wordLayer работал
+      for (const [id, entry] of Object.entries(data)) {
+        if (entry && entry.forms === 'lemma') {
+          delete entry.forms;
+        }
       }
+      data.__schema = SCHEMA_VERSION;
+      saveDictionary(data);
     }
-    if (changed) saveDictionary(data);
     return data;
   } catch (e) {
     console.warn('loadDictionary error:', e);
@@ -87,4 +90,31 @@ export function getActive(dict) {
   return Object.entries(dict)
     .filter(([_, e]) => e.showInText !== false)
     .map(([id, e]) => ({ lexemeId: id, ...e }));
+}
+
+/**
+ * Считает активные слова, проходящие фильтр для замены в тексте.
+ * Единая реализация для reading.js и mode-widget.
+ * @param {object} dict — словарь
+ * @param {Array} coreLexicon — массив записей лексикона
+ * @param {Array|null} frequencyList — частотный список
+ * @returns {number}
+ */
+export function countActiveWords(dict, coreLexicon, frequencyList) {
+  if (!dict || !coreLexicon) return 0;
+  const coreById = new Map(coreLexicon.map(l => [l.id, l]));
+  const freqByStrong = new Map();
+  if (frequencyList) {
+    for (const item of frequencyList) freqByStrong.set(String(item.strong), item);
+  }
+  let c = 0;
+  for (const [id, entry] of Object.entries(dict)) {
+    if (!entry || entry.showInText === false) continue;
+    if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
+    const coreEntry = coreById.get(id);
+    if (coreEntry) { c++; continue; }
+    const strongKey = id.startsWith('freq-') ? id.replace('freq-', '') : null;
+    if (strongKey && freqByStrong.get(strongKey)) { c++; }
+  }
+  return c;
 }

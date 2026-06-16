@@ -1,7 +1,9 @@
 import { saveSettings } from '../../state/settings.js';
+import { countActiveWords } from '../../state/dictionary.js';
 import { openBottomSheet, closeBottomSheet } from './bottom-sheet.js';
 import { navigate } from '../../router.js';
 
+// 300ms debounce перед сохранением слайдера в IndexedDB
 const DB_SLIDER = 300;
 
 /**
@@ -29,11 +31,20 @@ export function createModeWidget(ctx) {
     else openPopup();
   });
 
+  // ---- Хелпер: сохранить патч настроек ----
+  function persistSetting(patch) {
+    const st = store.get();
+    const ns = { ...st.settings, ...patch };
+    saveSettings(ns);
+    store.update(s2 => ({ ...s2, settings: ns }));
+    return ns;
+  }
+
   // ---- Попап (создаётся лениво при первом открытии) ----
   function buildPopup() {
     const state = store.get();
     const s = state.settings || {};
-    activeTab = s.lastActiveTab || 'mixed';
+    activeTab = s.readingMode === 'greek' ? 'greek' : 'mixed';
     const grcStatus = state.grcStatus || 'idle';
     const greekDisabled = grcStatus === 'unavailable';
 
@@ -160,10 +171,7 @@ export function createModeWidget(ctx) {
         btn.classList.add('active');
         btn.setAttribute('aria-checked', 'true');
 
-        const st = store.get();
-        const ns = { ...st.settings, wordLayer: opt.value };
-        saveSettings(ns);
-        store.update(s2 => ({ ...s2, settings: ns }));
+        const ns = persistSetting({ wordLayer: opt.value });
         updateChip();
         updateToggleHint(opt.value);
         if (onChange) onChange(ns);
@@ -224,12 +232,7 @@ export function createModeWidget(ctx) {
     cb.checked = s.show?.ruHint !== false;
     cb.addEventListener('change', () => {
       const st = store.get();
-      const ns = {
-        ...st.settings,
-        show: { ...st.settings.show, ruHint: cb.checked }
-      };
-      saveSettings(ns);
-      store.update(s2 => ({ ...s2, settings: ns }));
+      persistSetting({ show: { ...st.settings.show, ruHint: cb.checked } });
     });
     label.appendChild(cb);
     label.appendChild(document.createTextNode('Показывать русский перевод под стихом'));
@@ -253,14 +256,7 @@ export function createModeWidget(ctx) {
     el.querySelector('[data-panel="greek"]').hidden = (tab !== 'greek');
 
     if (!silent) {
-      const st = store.get();
-      const ns = {
-        ...st.settings,
-        lastActiveTab: tab,
-        readingMode: tab === 'greek' ? 'greek' : 'mixed'
-      };
-      saveSettings(ns);
-      store.update(s2 => ({ ...s2, settings: ns }));
+      const ns = persistSetting({ readingMode: tab === 'greek' ? 'greek' : 'mixed' });
       if (onChange) onChange(ns);
     }
   }
@@ -268,18 +264,26 @@ export function createModeWidget(ctx) {
   // ---- Открытие / закрытие попапа ----
   let removeResize = null;
   let bottomSheetObserver = null;
+  let wasMobileOnOpen = false;
+
+  function onResize() {
+    const nowMobile = window.innerWidth < 900;
+    if (nowMobile !== wasMobileOnOpen && isOpen) {
+      closePopup();
+    }
+  }
 
   function openPopup() {
     if (isOpen) return;
     isOpen = true;
     savedActiveElement = document.activeElement;
 
-    const isMobile = window.innerWidth < 900;
+    wasMobileOnOpen = window.innerWidth < 900;
     popup = buildPopup();
 
     updateDictCount();
 
-    if (isMobile) {
+    if (wasMobileOnOpen) {
       openBottomSheet(popup);
       const sheet = document.querySelector('.bottom-sheet');
       if (sheet && sheet.parentNode) {
@@ -311,15 +315,8 @@ export function createModeWidget(ctx) {
 
     document.addEventListener('keydown', onKeyDown);
 
-    let wasMobile = isMobile;
     removeResize = () => window.removeEventListener('resize', onResize);
     window.addEventListener('resize', onResize);
-    function onResize() {
-      const nowMobile = window.innerWidth < 900;
-      if (nowMobile !== wasMobile && isOpen) {
-        closePopup();
-      }
-    }
 
     updateChip();
   }
@@ -465,28 +462,10 @@ export function createModeWidget(ctx) {
 
   function updateDictCount() {
     const state = store.get();
-    const dict = state.dictionary || {};
-    const core = state.coreLexicon || [];
-    const freq = state.frequencyList || null;
-
     if (!state.dictionary || !state.coreLexicon) {
       dictWordCount = -1;
     } else {
-      const coreById = new Map(core.map(l => [l.id, l]));
-      const freqByStrong = new Map();
-      if (freq) {
-        for (const item of freq) freqByStrong.set(String(item.strong), item);
-      }
-      let c = 0;
-      for (const [id, entry] of Object.entries(dict)) {
-        if (!entry || entry.showInText === false) continue;
-        if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
-        const coreEntry = coreById.get(id);
-        if (coreEntry) { c++; continue; }
-        const strongKey = id.startsWith('freq-') ? id.replace('freq-', '') : null;
-        if (strongKey && freqByStrong.get(strongKey)) { c++; }
-      }
-      dictWordCount = c;
+      dictWordCount = countActiveWords(state.dictionary, state.coreLexicon, state.frequencyList);
     }
     updateChip();
     updateDictButton();

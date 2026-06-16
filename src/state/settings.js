@@ -36,7 +36,6 @@ const DEFAULTS = {
   intensity: 35,                // 0..100
   wordLayer: 'off',             // 'off' | 'lemma' | 'form'
   readingMode: 'mixed',         // 'mixed' | 'greek'
-  lastActiveTab: 'mixed',       // 'mixed' | 'greek'
   newWordsPerChapter: 3,        // 1 | 3 | 5 | 10
   pauseNewToday: false,
   show: {

@@ -2,7 +2,7 @@ import { loadBook } from '../../data/bible-loader.js';
 import { loadProgress, saveProgress, markLetterKnown } from '../../state/progress.js';
 import { loadSettings, saveSettings, deriveComposeMode, shouldLoadGreek } from '../../state/settings.js';
 import { loadAlphabet, loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
-import { loadDictionary, setWordStatus, saveDictionary, addWord } from '../../state/dictionary.js';
+import { loadDictionary, setWordStatus, saveDictionary, addWord, countActiveWords } from '../../state/dictionary.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
 import { createTopBar } from '../components/top-bar.js';
@@ -49,10 +49,14 @@ let coreLexicon = [];
 let frequencyList = null;
 let wordEntries = [];
 let grcLoadPromise = null;
+// Кэш индексных карт (coreLexicon и frequencyList не меняются во время сессии)
+let coreByIdCache = null;
+let freqByStrongCache = null;
+let strongKnownSet = null; // Set<number> — какие Strong-номера есть в словаре
 
 async function ensureGreekBookLoaded(showToastOnFail = true) {
   if (grcBookData) return true;
-  if (!bookData || !shouldLoadGreek(settings, countActiveWords())) return false;
+  if (!bookData || !shouldLoadGreek(settings, getActiveWordCount())) return false;
   if (!grcLoadPromise) {
     const bookId = bookData.id;
     grcLoadPromise = loadBook('grc', bookId)
@@ -69,7 +73,8 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
     store.update(s => ({ ...s, grcStatus: 'available' }));
     return true;
   }
-  if (showToastOnFail && shouldLoadGreek(settings, countActiveWords())) {
+  store.update(s => ({ ...s, grcStatus: 'unavailable' }));
+  if (showToastOnFail && shouldLoadGreek(settings, getActiveWordCount())) {
     showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
   }
   return false;
@@ -130,9 +135,8 @@ export async function mount(container, ctx) {
   const modeWidget = createModeWidget({
     store,
     onChange: (newSettings) => {
-      // Обновляем модульный settings до buildWordEntries/reRender
+      // Обновляем модульный settings до reRender
       if (newSettings) settings = newSettings;
-      buildWordEntries();
       store.update(s => ({ ...s, grcStatus: grcBookData ? 'available' : 'unavailable' }));
       reRenderWindowed();
       // Если нужен греческий текст — загружаем
@@ -150,11 +154,11 @@ export async function mount(container, ctx) {
   textArea.id = 'scripture-text';
   container.appendChild(textArea);
 
-  // Загружаем книгу (и греческий текст для режимов 2+)
+  // Загружаем книгу (и греческий текст если нужен для словарного слоя)
   try {
     const loadPromises = [loadBook('syn', bookId)];
     // Грузим греческий текст только если нужно для текущего слоя
-    if (shouldLoadGreek(settings, countActiveWords())) {
+    if (shouldLoadGreek(settings, getActiveWordCount())) {
       loadPromises.push(loadBook('grc', bookId));
     }
     const results = await Promise.all(loadPromises);
@@ -175,7 +179,7 @@ export async function mount(container, ctx) {
   }
 
   // Если grc не загрузился для словарного слоя — предупреждаем
-  if (!grcBookData && shouldLoadGreek(settings, countActiveWords())) {
+  if (!grcBookData && shouldLoadGreek(settings, getActiveWordCount())) {
     showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
   }
 
@@ -206,7 +210,7 @@ export async function mount(container, ctx) {
       settings = newSettings;
       saveSettings(settings);
       reRenderWindowed();
-      if (shouldLoadGreek(settings, countActiveWords()) && !grcBookData) {
+      if (shouldLoadGreek(settings, getActiveWordCount()) && !grcBookData) {
         ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
       }
     }
@@ -285,7 +289,7 @@ export async function mount(container, ctx) {
       handleLetterTap(letter, span);
       return;
     }
-    // Слово (режимы 2–4): лексема, форма или греческий токен
+    // Слово: лексема, форма или греческий токен
     if (span.getAttribute('data-lexeme') || span.getAttribute('data-strong') || span.getAttribute('data-w')) {
       handleWordTap(span);
       return;
@@ -332,10 +336,10 @@ function restoreScroll(bookId) {
 }
 
 /**
- * Строит DocumentFragment для режима 5: греческие токены как основной текст,
+ * Строит DocumentFragment для греческого оригинала: греческие токены как основной текст,
  * русский стих снизу как подсказка.
  */
-function buildMode5Fragment(grcTokens, ruText, settings) {
+function buildGreekTextFragment(grcTokens, ruText, settings) {
   const frag = document.createDocumentFragment();
 
   // Греческие токены
@@ -353,10 +357,7 @@ function buildMode5Fragment(grcTokens, ruText, settings) {
       span.setAttribute('aria-label', `греческое слово ${token.w}`);
 
       // Если слово есть в словаре пользователя — подсветка
-      if (token.strong && dictionary[Object.keys(dictionary).find(id => {
-        const lex = coreLexicon.find(l => l.id === id);
-        return lex && lex.strong === token.strong;
-      })]) {
+      if (token.strong && strongKnownSet && strongKnownSet.has(token.strong)) {
         span.classList.add('known');
       }
 
@@ -437,12 +438,12 @@ function renderWindowed() {
         // Чистый русский текст
         p.appendChild(document.createTextNode(verse.text));
       } else if (settings.readingMode === 'greek') {
-        // Режим 4: греческий как основной текст
+        // Греческий оригинал как основной текст
 
 
           const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
-          const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
+          const frag = buildGreekTextFragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
         } else {
           // Fallback: показываем русский текст через composeVerse
@@ -451,7 +452,7 @@ function renderWindowed() {
           p.appendChild(frag);
         }
       } else {
-        // Добавляем grcVerse и alignment для режимов 2-3
+        // Добавляем grcVerse и alignment для словарного слоя
         const verseCtx = { ...composeCtx };
         if (grcBookData) {
 
@@ -499,8 +500,8 @@ function renderWindowed() {
   setupObserver(chaptersEls, textArea);
   setupChapterTracking();
 
-  // Режимы 2-4: если греческий не загрузился при mount — пробуем ещё раз
-  if (!grcBookData && bookData && shouldLoadGreek(settings, countActiveWords())) {
+  // Если греческий не загрузился при mount — пробуем ещё раз
+  if (!grcBookData && bookData && shouldLoadGreek(settings, getActiveWordCount())) {
     ensureGreekBookLoaded(false).then(ok => { if (ok) reRenderWindowed(); });
   }
 }
@@ -538,45 +539,34 @@ function setupChapterTracking() {
   }
 }
 
-function countActiveWords() {
-  let c = 0;
-  const coreById = new Map((coreLexicon || []).map(l => [l.id, l]));
-  const freqByStrong = new Map();
-  if (frequencyList) {
-    for (const item of frequencyList) freqByStrong.set(String(item.strong), item);
-  }
-  for (const [id, entry] of Object.entries(dictionary)) {
-    if (!entry || entry.showInText === false) continue;
-    if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
-    const coreEntry = coreById.get(id);
-    if (coreEntry) { c++; continue; }
-    const strongKey = id.startsWith('freq-') ? id.replace('freq-', '') : null;
-    if (strongKey && freqByStrong.get(strongKey)) { c++; }
-  }
-  return c;
+function getActiveWordCount() {
+  return countActiveWords(dictionary, coreLexicon, frequencyList);
 }
 
 function buildWordEntries() {
   wordEntries = [];
   const intensityMap = { often: 100, sometimes: 50, rare: 25 };
 
-  // Индекс coreLexicon по id для быстрого поиска ruMatches
-  const coreById = new Map((coreLexicon || []).map(l => [l.id, l]));
+  // Индекс coreLexicon по id для быстрого поиска ruMatches (кешируем)
+  coreByIdCache = new Map((coreLexicon || []).map(l => [l.id, l]));
 
-  // Индекс frequencyList по strong (строка) для freq-* записей
-  const freqByStrong = new Map();
+  // Индекс frequencyList по strong (строка) для freq-* записей (кешируем)
+  freqByStrongCache = new Map();
   if (frequencyList) {
     for (const item of frequencyList) {
-      freqByStrong.set(String(item.strong), item);
+      freqByStrongCache.set(String(item.strong), item);
     }
   }
+
+  // Индекс Strong-номеров, присутствующих в словаре (для buildGreekTextFragment)
+  strongKnownSet = new Set();
 
   // Итерируем ВСЕ записи словаря (включая freq-*)
   for (const [lexemeId, entry] of Object.entries(dictionary)) {
     if (!entry || entry.showInText === false) continue;
     if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
 
-    const core = coreById.get(lexemeId);
+    const core = coreByIdCache.get(lexemeId);
 
     let lemma, strongNum, regexps, excludeRegexps;
 
@@ -589,13 +579,15 @@ function buildWordEntries() {
     } else {
       // freq-* запись — ищем в frequencyList по Strong
       const strongKey = lexemeId.startsWith('freq-') ? lexemeId.replace('freq-', '') : null;
-      const freqItem = strongKey ? freqByStrong.get(strongKey) : null;
+      const freqItem = strongKey ? freqByStrongCache.get(strongKey) : null;
       if (!freqItem) continue;
       lemma = freqItem.lemma;
       strongNum = freqItem.strong;
       regexps = [];         // нет guard'а — выравнивание достаточная гарантия
       excludeRegexps = [];
     }
+
+    if (strongNum) strongKnownSet.add(strongNum);
 
     wordEntries.push({
       lexemeId,
@@ -653,7 +645,7 @@ function reRenderWindowed() {
 
           const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
-          const frag = buildMode5Fragment(grcVerse.tokens, verse.text, settings);
+          const frag = buildGreekTextFragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
         } else {
           p.appendChild(document.createTextNode(verse.text));
@@ -848,13 +840,13 @@ function showPopover(card, anchorEl) {
 
 /**
  * Собирает все данные о слове из span'а и загруженных структур.
- * Работает единообразно для режимов 2, 3 и 4.
+ * Работает единообразно для всех видов греческого слоя.
  * @param {HTMLElement} span — span.gr элемент
  * @returns {object|null} wordData или null если данных недостаточно
  */
 function collectWordData(span) {
-  // Поверхностная форма: в режимах 3–4 это textContent,
-  // в режиме 5 продублирована в data-w
+  // Поверхностная форма: в словарном слое — textContent,
+  // в греческом оригинале — data-w
   const wAttr = span.getAttribute('data-w');
   const surfaceForm = wAttr || span.textContent.trim();
   if (!surfaceForm) return null;

@@ -21,37 +21,22 @@ export function composeVerse(verseText, ctx = {}) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режим 2: словарный слой по выравниванию (леммы) + буквенный.
+  // Режимы 2–3: словарный слой по выравниванию + буквенный.
   // Без выравнивания словарных замен нет: точность важнее покрытия.
-  if (mode === 2) {
+  // forms (lemma/form) определяется в buildWordEntries() из per-word override или глобального wordLayer.
+  if (mode === 2 || mode === 3) {
     if (grcVerse && alignment && grcVerse.tokens) {
-      const entriesForForm = wordEntries.map(e => ({
+      const entriesWithStrong = wordEntries.map(e => ({
         ...e,
         strong: e.strongNum || null
-        // forms берётся из entry.forms как есть (может быть 'form' если per-word override)
       }));
-      const segs = applyFormLayer(verseText, grcVerse.tokens, alignment, entriesForForm, { seedPrefix });
+      const segs = applyFormLayer(verseText, grcVerse.tokens, alignment, entriesWithStrong, { seedPrefix });
       return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics);
     }
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режим 3: формовый слой по выравниванию + буквенный.
-  // Без выравнивания словарных замен нет: точность важнее покрытия.
-  if (mode === 3) {
-    if (grcVerse && alignment && grcVerse.tokens) {
-      const dictEntries = wordEntries.map(e => ({
-        ...e,
-        strong: e.strongNum || null
-      }));
-      const segs = applyFormLayer(verseText, grcVerse.tokens, alignment, dictEntries, { seedPrefix });
-      return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics);
-    }
-    return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
-  }
-
-  // Режим 4: греческий основной — обработка на уровне reading.js
-  // Безопасный fallback: показываем русский текст
+  // Неизвестный режим — безопасный fallback: показываем русский текст
   return [{ plain: verseText }];
 }
 
