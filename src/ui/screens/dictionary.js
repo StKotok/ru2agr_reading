@@ -8,11 +8,28 @@ let frequencyList = [];
 let container = null;
 let store = null;
 let filterStatus = 'all';
+let filterPOS = 'all';
 let searchQuery = '';
 let renderedCount = 0;
 let lastDividerBucket = 0;
 let bucketCoverage = {};
 const PAGE_SIZE = 100;
+
+// Группировка частей речи для фильтра
+const POS_GROUPS = {
+  verb: new Set(['глаг.', 'глагол']),
+  noun: new Set(['сущ., муж. род', 'сущ., жен. род', 'сущ., ср. род', 'сущ., муж. род (имя)', 'сущ., муж. род / прил.']),
+  adj: new Set(['прил.', 'прич.', 'нар.']),
+  func: new Set(['мест.', 'предлог', 'союз', 'част.', 'числ.', 'артикль, мест.', 'предлог/союз', 'нар./союз'])
+};
+
+function classifyPOS(rawPos) {
+  if (!rawPos) return null;
+  for (const [group, values] of Object.entries(POS_GROUPS)) {
+    if (values.has(rawPos)) return group;
+  }
+  return 'func';
+}
 
 // Поповер для десктопа
 let popoverEl = null;
@@ -84,9 +101,16 @@ export async function mount(cnt, ctx) {
   [dict, lexicon, frequencyList] = await Promise.all([
     loadDictionary(), loadCoreLexicon(), loadFrequency()
   ]);
+  // Обогащаем частотный список POS-категориями из core-словаря
+  const coreByStrong = new Map((lexicon || []).map(l => [l.strong, l]));
+  for (const item of frequencyList) {
+    const core = coreByStrong.get(item.strong);
+    item.posGroup = core ? classifyPOS(core.pos) : null;
+  }
   bucketCoverage = computeBucketCoverage(frequencyList);
   renderedCount = 0;
   filterStatus = 'all';
+  filterPOS = 'all';
   searchQuery = '';
   render();
 }
@@ -106,9 +130,18 @@ function getFilteredList() {
     );
   }
 
-  // Фильтр «Доступные»: только слова с hasAlignment
-  if (filterStatus === 'available') {
-    return filtered.filter(item => item.hasAlignment);
+  // Фильтр по части речи
+  if (filterPOS !== 'all') {
+    filtered = filtered.filter(item => item.posGroup === filterPOS);
+  }
+
+  // Фильтр «Отмеченные»: слова, включённые для показа в тексте
+  if (filterStatus === 'checked') {
+    return filtered.filter(item => {
+      const lex = coreById.get(item.strong);
+      const entry = lex ? dict[lex.id] : dict[`freq-${item.strong}`];
+      return entry && entry.showInText !== false;
+    });
   }
 
   // Фильтр по статусу
@@ -257,7 +290,7 @@ function render() {
   tabs.className = 'dict-tabs';
   [
     { value: 'all', label: 'Все' },
-    { value: 'available', label: 'Доступные' },
+    { value: 'checked', label: 'Отмеченные' },
     { value: 'new', label: 'Новые' },
     { value: 'learning', label: 'Учу' },
     { value: 'known', label: 'Знаю' }
@@ -273,6 +306,28 @@ function render() {
     tabs.appendChild(btn);
   });
   container.appendChild(tabs);
+
+  // Табы-фильтры по части речи
+  const posTabs = document.createElement('div');
+  posTabs.className = 'dict-tabs';
+  [
+    { value: 'all', label: 'Все' },
+    { value: 'verb', label: 'Глаголы' },
+    { value: 'noun', label: 'Существ.' },
+    { value: 'adj', label: 'Прил.' },
+    { value: 'func', label: 'Служебн.' }
+  ].forEach(({ value, label }) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn' + (value === filterPOS ? ' btn-primary' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      filterPOS = value;
+      renderedCount = 0;
+      render();
+    });
+    posTabs.appendChild(btn);
+  });
+  container.appendChild(posTabs);
 
   // Счётчик
   const counter = document.createElement('div');
