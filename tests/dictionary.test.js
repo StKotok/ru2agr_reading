@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addWord, setWordSetting, setWordStatus, getActive, countActiveWords } from '../src/state/dictionary.js';
+import { addWord, setWordSetting, setWordStatus, getActive, countActiveWords, isDictionaryEntry, sanitizeDictionary } from '../src/state/dictionary.js';
 
 describe('dictionary', () => {
   describe('addWord', () => {
@@ -142,6 +142,115 @@ describe('dictionary', () => {
       };
       // theos не в coreLexicon и не freq-* → не считается
       expect(countActiveWords(dict, coreLexicon, frequencyList)).toBe(0);
+    });
+
+    it('не падает и не считает __schema: 1 как слово', () => {
+      const dict = {
+        logos: { status: 'known', showInText: true },
+        __schema: 1
+      };
+      expect(countActiveWords(dict, coreLexicon, frequencyList)).toBe(1);
+    });
+
+    it('не падает на строковые metadata-значения', () => {
+      const dict = {
+        logos: { status: 'known', showInText: true },
+        __version: '2.0'
+      };
+      expect(countActiveWords(dict, coreLexicon, frequencyList)).toBe(1);
+    });
+
+    it('сохраняет freq-* записи', () => {
+      const dict = {
+        'freq-2316': { status: 'learning', showInText: true },
+        __schema: 1
+      };
+      expect(countActiveWords(dict, coreLexicon, frequencyList)).toBe(1);
+    });
+  });
+
+  describe('isDictionaryEntry', () => {
+    it('возвращает true для объектов', () => {
+      expect(isDictionaryEntry({ status: 'new' })).toBe(true);
+    });
+
+    it('возвращает false для null', () => {
+      expect(isDictionaryEntry(null)).toBe(false);
+    });
+
+    it('возвращает false для чисел', () => {
+      expect(isDictionaryEntry(1)).toBe(false);
+    });
+
+    it('возвращает false для строк', () => {
+      expect(isDictionaryEntry('x')).toBe(false);
+    });
+
+    it('возвращает false для массивов', () => {
+      expect(isDictionaryEntry([])).toBe(false);
+      expect(isDictionaryEntry([1, 2])).toBe(false);
+    });
+
+    it('возвращает false для функций', () => {
+      expect(isDictionaryEntry(() => {})).toBe(false);
+    });
+  });
+
+  describe('sanitizeDictionary', () => {
+    it('возвращает пустой объект для null/undefined', () => {
+      expect(sanitizeDictionary(null)).toEqual({});
+      expect(sanitizeDictionary(undefined)).toEqual({});
+    });
+
+    it('возвращает пустой объект для массивов', () => {
+      expect(sanitizeDictionary([])).toEqual({});
+      expect(sanitizeDictionary([1, 2])).toEqual({});
+    });
+
+    it('возвращает пустой объект для примитивов', () => {
+      expect(sanitizeDictionary(42)).toEqual({});
+      expect(sanitizeDictionary('hello')).toEqual({});
+    });
+
+    it('удаляет __schema: 1 и __version: "x"', () => {
+      const result = sanitizeDictionary({
+        logos: { status: 'new', showInText: true },
+        __schema: 1,
+        __version: 'x'
+      });
+      expect(result).toEqual({
+        logos: { status: 'new', showInText: true }
+      });
+      expect(result.__schema).toBeUndefined();
+      expect(result.__version).toBeUndefined();
+    });
+
+    it('сохраняет freq-* записи', () => {
+      const result = sanitizeDictionary({
+        'freq-2316': { status: 'learning', showInText: true },
+        __schema: 1
+      });
+      expect(result).toEqual({
+        'freq-2316': { status: 'learning', showInText: true }
+      });
+    });
+
+    it('не мутирует исходный объект', () => {
+      const input = { logos: { status: 'new' }, __schema: 1 };
+      const result = sanitizeDictionary(input);
+      expect(input.__schema).toBe(1);
+      expect(result.__schema).toBeUndefined();
+    });
+  });
+
+  describe('setWordSetting удаление поля', () => {
+    it('value === undefined удаляет forms и сохраняет остальные поля', () => {
+      const dict = { logos: { status: 'new', showInText: true, forms: 'lemma', addedAt: '2026-01-01' } };
+      const updated = setWordSetting('logos', 'forms', undefined, dict);
+      expect(updated.logos.forms).toBeUndefined();
+      expect(updated.logos.status).toBe('new');
+      expect(updated.logos.showInText).toBe(true);
+      expect(updated.logos.addedAt).toBe('2026-01-01');
     });
   });
 });

@@ -1,6 +1,7 @@
 import { loadProgress, saveProgress, introduceLetters, markLetterKnown } from '../../state/progress.js';
 import { loadAlphabet } from '../../data/lexicon-loader.js';
 import { loadBooks } from '../../data/bible-loader.js';
+import { isDictionaryEntry } from '../../state/dictionary.js';
 import { renderLetterCard } from '../components/word-card.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 import { showInInspector, getInspectorPanel, showEmptyState } from '../components/inspector.js';
@@ -46,7 +47,7 @@ function render() {
 
 function renderWordsSection() {
   const dict = store.get().dictionary || {};
-  const entries = Object.entries(dict).filter(([_, e]) => e && typeof e === 'object');
+  const entries = Object.entries(dict).filter(([_, e]) => isDictionaryEntry(e));
   if (entries.length === 0) return;
 
   const section = document.createElement('section');
@@ -81,7 +82,7 @@ function renderLettersSection() {
     return e && (e.status === 'known' || e.status === 'learning');
   });
   const dict = store.get().dictionary || {};
-  const knownWords = Object.entries(dict).filter(([_, e]) => e && typeof e === 'object' && (e.status === 'known' || e.status === 'learning'));
+  const knownWords = Object.entries(dict).filter(([_, e]) => isDictionaryEntry(e) && (e.status === 'known' || e.status === 'learning'));
 
   if (knownLetters.length > 0 || knownWords.length > 0) {
     const p = document.createElement('p');

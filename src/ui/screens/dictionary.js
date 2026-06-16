@@ -1,4 +1,4 @@
-import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting } from '../../state/dictionary.js';
+import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting, isDictionaryEntry } from '../../state/dictionary.js';
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 
@@ -124,7 +124,7 @@ function getFilteredList() {
 }
 
 function renderPersonalDictionaryFallback() {
-  const entries = Object.entries(dict);
+  const entries = Object.entries(dict).filter(([_, e]) => isDictionaryEntry(e));
   const coreById = new Map((lexicon || []).map(l => [l.id, l]));
 
   // Заголовок

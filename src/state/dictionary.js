@@ -4,17 +4,45 @@ const KEY = 'dictionary';
 
 /**
  * Загружает словарь пользователя (без миграций — пользователей нет).
+ * Санирует данные: удаляет metadata-подобные ключи.
  * @returns {Promise<object>}
  */
 export async function loadDictionary() {
   try {
     const data = await db.get(KEY);
     if (!data) return {};
-    return data;
+    return sanitizeDictionary(data);
   } catch (e) {
     console.warn('loadDictionary error:', e);
     return {};
   }
+}
+
+/**
+ * Чистый предикат: является ли значение настоящей словарной записью.
+ * Возвращает true только для не-null, не-массив объектов.
+ * @param {*} entry
+ * @returns {boolean}
+ */
+export function isDictionaryEntry(entry) {
+  return entry !== null && typeof entry === 'object' && !Array.isArray(entry);
+}
+
+/**
+ * Санирует загруженный словарь: копирует только записи, проходящие isDictionaryEntry.
+ * Не пишет обратно в IndexedDB и не добавляет метаданные схемы.
+ * @param {*} data
+ * @returns {object}
+ */
+export function sanitizeDictionary(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return {};
+  const clean = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (isDictionaryEntry(value)) {
+      clean[key] = value;
+    }
+  }
+  return clean;
 }
 
 /**
@@ -79,7 +107,7 @@ export function setWordSetting(id, key, value, dict) {
  */
 export function getActive(dict) {
   return Object.entries(dict)
-    .filter(([_, e]) => e && typeof e === 'object' && e.showInText !== false)
+    .filter(([_, e]) => isDictionaryEntry(e) && e.showInText !== false)
     .map(([id, e]) => ({ lexemeId: id, ...e }));
 }
 
@@ -100,7 +128,8 @@ export function countActiveWords(dict, coreLexicon, frequencyList) {
   }
   let c = 0;
   for (const [id, entry] of Object.entries(dict)) {
-    if (!entry || entry.showInText === false) continue;
+    if (!isDictionaryEntry(entry)) continue;
+    if (entry.showInText === false) continue;
     if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
     const coreEntry = coreById.get(id);
     if (coreEntry) { c++; continue; }

@@ -49,8 +49,17 @@ let coreLexicon = [];
 let frequencyList = null;
 let wordEntries = [];
 let grcLoadPromise = null;
+let grcLoadToken = 0; // монотонно возрастающий токен для отбрасывания устаревших результатов
 // Безопасная ссылка на store для модульных функций (ensureGreekBookLoaded и др.)
 let storeRef = null;
+
+/** Сбрасывает всё модульное состояние греческой книги. */
+function resetGreekBookState() {
+  grcBookData = null;
+  grcVerseMap = null;
+  grcLoadPromise = null;
+  grcLoadToken++;
+}
 function setGrcStatus(status) {
   if (storeRef) storeRef.update(s => ({ ...s, grcStatus: status }));
 }
@@ -63,7 +72,15 @@ let freqByStrongCache = null;
 let strongKnownSet = null; // Set<number> — какие Strong-номера есть в словаре
 
 async function ensureGreekBookLoaded(showToastOnFail = true) {
-  if (grcBookData) return true;
+  // Греческие данные есть и принадлежат текущей книге — быстрый успех
+  if (grcBookData && bookData && grcBookData.id === bookData.id) return true;
+  // Греческие данные есть, но от другой книги — сбросить и продолжить загрузку
+  if (grcBookData && bookData && grcBookData.id !== bookData.id) {
+    resetGreekBookState();
+  }
+  // Греческие данные есть, но bookData нет (экран размонтирован) — ничего не делаем
+  if (grcBookData && !bookData) return false;
+
   if (!bookData || !shouldLoadGreek(settings, getActiveWordCount())) return false;
   if (!grcLoadPromise) {
     const bookId = bookData.id;
@@ -82,6 +99,7 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
     setGrcStatus('available');
     return true;
   }
+  // Греческий текст не загрузился для текущей книги
   setGrcStatus('unavailable');
   if (showToastOnFail && shouldLoadGreek(settings, getActiveWordCount())) {
     showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
@@ -92,6 +110,9 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
 export async function mount(container, ctx) {
   const { store } = ctx;
   storeRef = store;
+
+  // Сбрасываем греческое состояние от предыдущего монтирования
+  resetGreekBookState();
 
   // Загружаем всё
   [progress, settings, alphabet, dictionary, coreLexicon, frequencyList] = await Promise.all([
@@ -988,4 +1009,5 @@ export function unmount() {
   if (unsubProgress) { unsubProgress(); unsubProgress = null; }
   if (unsubSettings) { unsubSettings(); unsubSettings = null; }
   if (destroyModeWidget) { destroyModeWidget(); destroyModeWidget = null; }
+  resetGreekBookState();
 }
