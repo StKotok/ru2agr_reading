@@ -188,6 +188,13 @@ const MOOD_SHORT = {
 
 const PERSON_SHORT = { '1': '1 л.', '2': '2 л.', '3': '3 л.' };
 
+// Множество POS-символов, несущих падеж/число/род (именные + местоимения)
+const NOMINAL_POS = new Set(['N', 'A', 'T', 'P', 'R', 'D', 'F', 'I', 'K', 'Q', 'S', 'X', 'C']);
+
+// Вынесенные regex для formatMorphShort (горячий путь — рендер карточек)
+const RE_NOMINAL_CASE = /[NGDAV]/;
+const RE_LEADING_DIGIT = /^\d/;
+
 /**
  * Возвращает массив коротких русских меток для морфокода Робинсона.
  * @param {string} code — например "N-NSM", "V-PAI-3S"
@@ -209,13 +216,13 @@ export function formatMorphShort(code) {
   }
 
   const posChar = parts[0][0];
-  const posShort = POS_SHORT[posChar] || parts[0].toLowerCase();
+  const posShort = POS_SHORT[posChar] || posChar.toLowerCase();
 
   const result = [posShort];
 
   // Именные: N, A, T + все местоимения (P, R, D, F, I, K, Q, S, X, C)
   // Формат: {POS}-{...case...number...gender...}[-суффикс]
-  if (/^[NATPRDFIKQSXC]$/.test(posChar)) {
+  if (NOMINAL_POS.has(posChar)) {
     const nom = extractNominal(parts[1]);
     if (nom.case && CASE_SHORT[nom.case]) result.push(CASE_SHORT[nom.case]);
     if (nom.number && NUMBER_SHORT[nom.number]) result.push(NUMBER_SHORT[nom.number]);
@@ -226,7 +233,7 @@ export function formatMorphShort(code) {
   // Глаголы: V — parts[1] = PAI, parts[2] = 3S
   if (posChar === 'V') {
     // Отрезаем ведущую цифру (2-й аорист: 2AAI → AAI, 2-й перфект: 2RAI → RAI)
-    const tvm = parts[1].replace(/^\d/, '');
+    const tvm = parts[1].replace(RE_LEADING_DIGIT, '');
     const tenseCode = tvm[0];
     const voiceCode = tvm[1];
     const moodCode = tvm[2];
@@ -260,12 +267,12 @@ export function formatMorphShort(code) {
  * @returns {{case?: string, number?: string, gender?: string}}
  */
 function extractNominal(nominalPart) {
-  const caseIdx = nominalPart.search(/[NGDAV]/);
+  const caseIdx = nominalPart.search(RE_NOMINAL_CASE);
   if (caseIdx === -1) return {};
   return {
-    case: nominalPart[caseIdx] || undefined,
-    number: nominalPart[caseIdx + 1] || undefined,
-    gender: nominalPart[caseIdx + 2] || undefined
+    case: nominalPart[caseIdx],
+    number: nominalPart[caseIdx + 1],
+    gender: nominalPart[caseIdx + 2]
   };
 }
 
