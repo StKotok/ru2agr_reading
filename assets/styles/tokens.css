@@ -68,8 +68,10 @@
   --warning-bg: #fff3cd;
   --warning-text: #856404;
 
-  /* Elevation */
+  /* Elevation (3-уровневая шкала) */
+  --shadow-raised: 0 1px 3px rgba(0,0,0,0.1);
   --shadow-elevated: 0 4px 16px rgba(0,0,0,0.1);
+  --shadow-overlay: 0 4px 32px rgba(0,0,0,0.12);
   --overlay-bg: rgba(0,0,0,0.3);
 
   /* Не-цветовые токены (для будущего рефакторинга) */
@@ -120,36 +122,10 @@
   --warning-bg: #3D2E00;
   --warning-text: #FFD54F;
 
+  --shadow-raised: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-elevated: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-overlay: 0 4px 32px rgba(0,0,0,0.6);
   --overlay-bg: rgba(0,0,0,0.6);
-}
-
-@media (prefers-color-scheme: dark) {
-  [data-theme="auto"] {
-    --surface: var(--gray-900);
-    --surface-card: var(--gray-800);
-    --text: var(--gray-100);
-    --muted: var(--gray-500);
-    --greek: var(--blue-300);
-    --primary: var(--blue-300);
-    --greek-word: var(--terracotta-300);
-    --hint: #5A6880;
-    --focus: #8EC8E8;
-    --selection: #2A3F5A;
-    --progress: var(--green-500);
-    --status-known: var(--progress);
-    --danger: var(--red-400);
-    --border: var(--gray-700);
-    --toast-bg: var(--gray-100);
-    --toast-text: var(--gray-900);
-    --on-primary: #1E1E1E;
-    --badge-learning-bg: #4A3F1A;
-    --badge-learning-text: #D4B84A;
-    --warning-bg: #3D2E00;
-    --warning-text: #FFD54F;
-    --shadow-elevated: 0 4px 16px rgba(0,0,0,0.4);
-    --overlay-bg: rgba(0,0,0,0.6);
-  }
 }
 
 /* Фоновый цвет для всей страницы */

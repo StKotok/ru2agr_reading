@@ -63,8 +63,8 @@ function renderThemeSection() {
     radio.addEventListener('change', () => {
       if (radio.checked) {
         settings.theme = theme;
-        saveSettings(settings);
-        applyTheme(theme);
+        applyTheme(theme);   // синхронно — DOM + localStorage (FOUC-защита)
+        saveSettings(settings);  // асинхронно — IndexedDB
         store.update(s => ({ ...s, settings: { ...settings } }));
       }
     });
@@ -152,18 +152,31 @@ function renderResetSection() {
   container.appendChild(section);
 }
 
+// Статическая карта surface-цветов — не требует getComputedStyle (FSL-фри)
+const SURFACE_COLORS = { light: '#efeee9', dark: '#1E1E1E' };
+const IS_DARK_OS = window.matchMedia('(prefers-color-scheme: dark)');
+
+function resolveEffectiveTheme(theme) {
+  return theme === 'auto' && IS_DARK_OS.matches ? 'dark' : theme === 'auto' ? 'light' : theme;
+}
+
 function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
+  const resolved = resolveEffectiveTheme(theme);
+  document.documentElement.setAttribute('data-theme', resolved);
   // Кэш для мгновенного применения при следующей загрузке (FOUC-защита)
   localStorage.setItem('theme', theme);
   // Динамический theme-color для мобильного браузерного chrome
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) {
-    const surface = getComputedStyle(document.documentElement)
-      .getPropertyValue('--surface').trim();
-    meta.setAttribute('content', surface);
+    meta.setAttribute('content', SURFACE_COLORS[resolved]);
   }
 }
+
+// Реакция на изменение системной темы в режиме auto
+IS_DARK_OS.addEventListener('change', () => {
+  const current = localStorage.getItem('theme');
+  if (current === 'auto') applyTheme('auto');
+});
 
 export function unmount() {
   container = null;
