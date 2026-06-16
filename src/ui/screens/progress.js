@@ -46,7 +46,7 @@ function render() {
 
 function renderWordsSection() {
   const dict = store.get().dictionary || {};
-  const entries = Object.entries(dict);
+  const entries = Object.entries(dict).filter(([_, e]) => e && typeof e === 'object');
   if (entries.length === 0) return;
 
   const section = document.createElement('section');
@@ -81,7 +81,7 @@ function renderLettersSection() {
     return e && (e.status === 'known' || e.status === 'learning');
   });
   const dict = store.get().dictionary || {};
-  const knownWords = Object.entries(dict).filter(([_, e]) => e.status === 'known' || e.status === 'learning');
+  const knownWords = Object.entries(dict).filter(([_, e]) => e && typeof e === 'object' && (e.status === 'known' || e.status === 'learning'));
 
   if (knownLetters.length > 0 || knownWords.length > 0) {
     const p = document.createElement('p');

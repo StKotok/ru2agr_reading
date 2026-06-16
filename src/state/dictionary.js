@@ -1,27 +1,15 @@
 import { db } from '../storage/db.js';
 
 const KEY = 'dictionary';
-const SCHEMA_VERSION = 1;
 
 /**
- * Загружает словарь пользователя.
+ * Загружает словарь пользователя (без миграций — пользователей нет).
  * @returns {Promise<object>}
  */
 export async function loadDictionary() {
   try {
     const data = await db.get(KEY);
     if (!data) return {};
-    // Миграции: применяются только при смене версии схемы
-    if (data.__schema !== SCHEMA_VERSION) {
-      // v0→v1: удаляем старый дефолтный forms (lemma), чтобы глобальный wordLayer работал
-      for (const [id, entry] of Object.entries(data)) {
-        if (entry && entry.forms === 'lemma') {
-          delete entry.forms;
-        }
-      }
-      data.__schema = SCHEMA_VERSION;
-      saveDictionary(data);
-    }
     return data;
   } catch (e) {
     console.warn('loadDictionary error:', e);
@@ -76,7 +64,10 @@ export function setWordStatus(id, status, dict) {
 export function setWordSetting(id, key, value, dict) {
   const updated = { ...dict };
   if (updated[id]) {
-    updated[id] = { ...updated[id], [key]: value };
+    const entry = { ...updated[id] };
+    if (value === undefined) delete entry[key];
+    else entry[key] = value;
+    updated[id] = entry;
   }
   return updated;
 }
@@ -88,7 +79,7 @@ export function setWordSetting(id, key, value, dict) {
  */
 export function getActive(dict) {
   return Object.entries(dict)
-    .filter(([_, e]) => e.showInText !== false)
+    .filter(([_, e]) => e && typeof e === 'object' && e.showInText !== false)
     .map(([id, e]) => ({ lexemeId: id, ...e }));
 }
 

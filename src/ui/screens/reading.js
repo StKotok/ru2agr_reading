@@ -49,6 +49,14 @@ let coreLexicon = [];
 let frequencyList = null;
 let wordEntries = [];
 let grcLoadPromise = null;
+// Безопасная ссылка на store для модульных функций (ensureGreekBookLoaded и др.)
+let storeRef = null;
+function setGrcStatus(status) {
+  if (storeRef) storeRef.update(s => ({ ...s, grcStatus: status }));
+}
+// Подписки на store для очистки в unmount
+let unsubProgress = null;
+let unsubSettings = null;
 // Кэш индексных карт (coreLexicon и frequencyList не меняются во время сессии)
 let coreByIdCache = null;
 let freqByStrongCache = null;
@@ -59,6 +67,7 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
   if (!bookData || !shouldLoadGreek(settings, getActiveWordCount())) return false;
   if (!grcLoadPromise) {
     const bookId = bookData.id;
+    setGrcStatus('loading');
     grcLoadPromise = loadBook('grc', bookId)
       .then(grc => ({ grc, bookId }))
       .catch(() => ({ grc: null, bookId }));
@@ -70,10 +79,10 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
   if (grc) {
     grcBookData = grc;
     buildGrcVerseMap();
-    store.update(s => ({ ...s, grcStatus: 'available' }));
+    setGrcStatus('available');
     return true;
   }
-  store.update(s => ({ ...s, grcStatus: 'unavailable' }));
+  setGrcStatus('unavailable');
   if (showToastOnFail && shouldLoadGreek(settings, getActiveWordCount())) {
     showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
   }
@@ -82,6 +91,7 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
 
 export async function mount(container, ctx) {
   const { store } = ctx;
+  storeRef = store;
 
   // Загружаем всё
   [progress, settings, alphabet, dictionary, coreLexicon, frequencyList] = await Promise.all([
@@ -110,7 +120,7 @@ export async function mount(container, ctx) {
     saveProgress(progress);
   }
 
-  // Публикуем в store
+  // Публикуем в store (начальное состояние — idle, Greek не нужен до проверки)
   store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList, grcStatus: 'idle' }));
 
   const bookId = ctx.params?.book || progress.reading.lastBook || 'john';
@@ -131,20 +141,8 @@ export async function mount(container, ctx) {
   });
   container.appendChild(bar);
 
-  // Mode widget (чип + попап) — onChange для мгновенного перерендера
-  const modeWidget = createModeWidget({
-    store,
-    onChange: (newSettings) => {
-      // Обновляем модульный settings до reRender
-      if (newSettings) settings = newSettings;
-      store.update(s => ({ ...s, grcStatus: grcBookData ? 'available' : 'unavailable' }));
-      reRenderWindowed();
-      // Если нужен греческий текст — загружаем
-      if (shouldLoadGreek(settings, wordEntries.length) && !grcBookData) {
-        ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
-      }
-    }
-  });
+  // Mode widget (чип + попап)
+  const modeWidget = createModeWidget({ store });
   destroyModeWidget = modeWidget.destroy;
   bar.appendChild(modeWidget.chip);
 
@@ -156,16 +154,24 @@ export async function mount(container, ctx) {
 
   // Загружаем книгу (и греческий текст если нужен для словарного слоя)
   try {
+    const needsGreek = shouldLoadGreek(settings, getActiveWordCount());
     const loadPromises = [loadBook('syn', bookId)];
-    // Грузим греческий текст только если нужно для текущего слоя
-    if (shouldLoadGreek(settings, getActiveWordCount())) {
+    if (needsGreek) {
+      setGrcStatus('loading');
       loadPromises.push(loadBook('grc', bookId));
     }
     const results = await Promise.all(loadPromises);
     bookData = results[0];
-    grcBookData = results[1] || null;
-    if (grcBookData) buildGrcVerseMap();
-    store.update(s => ({ ...s, grcStatus: grcBookData ? 'available' : 'unavailable' }));
+    if (needsGreek) {
+      grcBookData = results[1] || null;
+      if (grcBookData) {
+        buildGrcVerseMap();
+        setGrcStatus('available');
+      } else {
+        setGrcStatus('unavailable');
+      }
+    }
+    // Если Greek не нужен — grcStatus остаётся 'idle'
   } catch (e) {
     skeleton.remove();
     container.appendChild(createErrorState(bookId));
@@ -194,7 +200,7 @@ export async function mount(container, ctx) {
   restoreScroll(bookId);
 
   // Подписка на изменения прогресса (буквы)
-  store.subscribe(['progress'], () => {
+  unsubProgress = store.subscribe(['progress'], () => {
     const newProgress = store.get().progress;
     if (newProgress && newProgress !== progress) {
       progress = newProgress;
@@ -202,13 +208,12 @@ export async function mount(container, ctx) {
     }
   });
 
-  // Подписка на изменения настроек
-  store.subscribe(['settings'], () => {
+  // Подписка на изменения настроек (сохранение делает mode-widget)
+  unsubSettings = store.subscribe(['settings'], () => {
     progress = store.get().progress || progress;
     const newSettings = store.get().settings;
     if (newSettings && newSettings !== settings) {
       settings = newSettings;
-      saveSettings(settings);
       reRenderWindowed();
       if (shouldLoadGreek(settings, getActiveWordCount()) && !grcBookData) {
         ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
@@ -920,6 +925,7 @@ function handleWordTap(span) {
       }
       dictionary = setWordStatus(lexemeId, newStatus, dictionary);
       await saveDictionary(dictionary);
+      if (storeRef) storeRef.update(s => ({ ...s, dictionary }));
 
       // Визуальная подсветка в тексте
       const spans = document.querySelectorAll(`span.gr[data-lexeme="${lexemeId}"]`);
@@ -978,5 +984,8 @@ export function unmount() {
   scrollTimer = null;
   bookData = null;
   reRenderFn = null;
+  storeRef = null;
+  if (unsubProgress) { unsubProgress(); unsubProgress = null; }
+  if (unsubSettings) { unsubSettings(); unsubSettings = null; }
   if (destroyModeWidget) { destroyModeWidget(); destroyModeWidget = null; }
 }

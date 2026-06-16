@@ -20,6 +20,7 @@ export function createModeWidget(ctx) {
   let activeTab = 'mixed';
   let dictWordCount = -1;
   let sliderDebounce = null;
+  let pendingSliderValue = null; // для flush при закрытии
   let savedActiveElement = null;
   let outsideClickTimer = null;
 
@@ -66,7 +67,9 @@ export function createModeWidget(ctx) {
 
     // Таб «Греческий» недоступен без греческого текста
     const greekTab = el.querySelector('[data-tab="greek"]');
-    if (greekDisabled) {
+    if (grcStatus === 'loading') {
+      greekTab.title = 'Греческий текст загружается';
+    } else if (greekDisabled) {
       greekTab.disabled = true;
       greekTab.title = 'Греческий текст недоступен — нет сети или для этой книги нет греческого оригинала';
       if (activeTab === 'greek') activeTab = 'mixed';
@@ -116,8 +119,10 @@ export function createModeWidget(ctx) {
     slider.addEventListener('input', () => {
       const val = parseInt(slider.value);
       miniChip.textContent = `α${val}%`;
+      pendingSliderValue = val;
       if (sliderDebounce) clearTimeout(sliderDebounce);
       sliderDebounce = setTimeout(() => {
+        pendingSliderValue = null;
         const st = store.get();
         const ns = { ...st.settings, intensity: val };
         saveSettings(ns);
@@ -302,8 +307,10 @@ export function createModeWidget(ctx) {
       positionPopup();
       popup.classList.add('mode-widget-popup-visible');
 
+      const targetPopup = popup;
       requestAnimationFrame(() => {
-        const first = popup.querySelector('input, button');
+        if (!targetPopup || !document.contains(targetPopup)) return;
+        const first = targetPopup.querySelector('input, button');
         if (first) first.focus();
       });
 
@@ -346,6 +353,20 @@ export function createModeWidget(ctx) {
   function closePopup() {
     if (!isOpen) return;
     isOpen = false;
+    // Flush pending slider value перед закрытием
+    if (sliderDebounce && pendingSliderValue !== null) {
+      clearTimeout(sliderDebounce);
+      sliderDebounce = null;
+      const st = store.get();
+      const ns = { ...st.settings, intensity: pendingSliderValue };
+      saveSettings(ns);
+      store.update(s2 => ({ ...s2, settings: ns }));
+      pendingSliderValue = null;
+    } else if (sliderDebounce) {
+      clearTimeout(sliderDebounce);
+      sliderDebounce = null;
+      pendingSliderValue = null;
+    }
     const currentPopup = popup;
     cleanupPopup();
 
@@ -486,11 +507,36 @@ export function createModeWidget(ctx) {
     }),
     store.subscribe(['dictionary'], () => updateDictCount()),
     store.subscribe(['coreLexicon'], () => updateDictCount()),
-    store.subscribe(['grcStatus'], () => updateChip())
+    store.subscribe(['grcStatus'], () => {
+      updateChip();
+      updateGreekTabState();
+    })
   ];
+
+  // Обновляет доступность греческой вкладки без пересоздания попапа
+  function updateGreekTabState() {
+    if (!isOpen || !popup) return;
+    const state = store.get();
+    const grcStatus = state.grcStatus || 'idle';
+    const greekDisabled = grcStatus === 'unavailable';
+    const greekTab = popup.querySelector('[data-tab="greek"]');
+    if (!greekTab) return;
+    if (greekDisabled) {
+      greekTab.disabled = true;
+      greekTab.title = 'Греческий текст недоступен — нет сети или для этой книги нет греческого оригинала';
+    } else {
+      greekTab.disabled = false;
+      greekTab.title = grcStatus === 'loading' ? 'Греческий текст загружается' : '';
+    }
+  }
 
   function destroy() {
     closePopup();
+    if (sliderDebounce) {
+      clearTimeout(sliderDebounce);
+      sliderDebounce = null;
+      pendingSliderValue = null;
+    }
     unsubs.forEach(fn => fn());
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('click', onOutsideClick);

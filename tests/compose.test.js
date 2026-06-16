@@ -130,7 +130,7 @@ describe('composeVerse', () => {
           lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
           regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
           excludeRegexps: [],
-          intensityPct: 100, status: 'known', forms: 'all'
+          intensityPct: 100, status: 'known', forms: 'form'
         },
         {
           lexemeId: 'theos', lemma: 'θεός', strongNum: 2316,
@@ -166,12 +166,39 @@ describe('composeVerse', () => {
           lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
           regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
           excludeRegexps: [],
-          intensityPct: 100, status: 'known', forms: 'all'
+          intensityPct: 100, status: 'known', forms: 'form'
         }
       ]
     });
     // Без grcVerse/alignment — только буквенный слой
     const text = segments.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('В начале было Слово');
+  });
+
+  it('explicit forms:lemma переопределяет глобальный wordLayer=form', () => {
+    // Симулируем: глобальный wordLayer='form', но per-word forms='lemma' явно задан
+    const verseText = 'В начале было Слово';
+    const grcTokens = [
+      { w: 'λόγον', lemma: 'λόγος', morph: 'N-ASM', strong: 3056 },
+    ];
+    const segments = composeVerse(verseText, {
+      mode: 3,
+      intensity: 0,
+      progressLetters: {},
+      seedPrefix: 'test',
+      wordEntries: [
+        {
+          lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
+          regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
+          excludeRegexps: [],
+          intensityPct: 100, status: 'known', forms: 'lemma'
+        }
+      ],
+      grcVerse: { tokens: grcTokens },
+      alignment: [{ ru: 3, gr: 0 }]
+    });
+    // При forms='lemma' должна быть лемма λόγος, не форма λόγον
+    expect(segments.some(s => s.greek && s.greek.toLowerCase() === 'λόγος')).toBe(true);
+    expect(segments.some(s => s.greek && s.greek.toLowerCase() === 'λόγον')).toBe(false);
   });
 });

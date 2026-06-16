@@ -32,13 +32,13 @@ function getVerse(chN, vN) {
 }
 
 describe('applyFormLayer', () => {
-  it('Мк 1:1 — forms=all: «Евангелия» → εὐαγγελίου (род. падеж, не лемма)', () => {
+  it('Мк 1:1 — forms=form: «Евангелия» → εὐαγγελίου (род. падеж, не лемма)', () => {
     const { verseText, alignment, grcTokens } = getVerse(1, 1);
     expect(alignment).toBeTruthy();
     expect(grcTokens).toBeTruthy();
 
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
-      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'known', forms: 'all' }
+      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'known', forms: 'form' }
     ], { seedPrefix: 'mark' });
 
     // Ищем сегмент с kind='form' и проверяем что это родительный падеж
@@ -70,7 +70,7 @@ describe('applyFormLayer', () => {
     const { verseText, alignment, grcTokens } = getVerse(1, 1);
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
       // Только Христос в словаре, без Евангелие
-      { lexemeId: 'christos', lemma: 'Χριστός', strong: 5547, intensityPct: 100, status: 'known', forms: 'all' }
+      { lexemeId: 'christos', lemma: 'Χριστός', strong: 5547, intensityPct: 100, status: 'known', forms: 'form' }
     ], { seedPrefix: 'mark' });
 
     // Проверяем что есть plain-сегменты для слов не из словаря
@@ -82,9 +82,9 @@ describe('applyFormLayer', () => {
   it('Мк 1:1 — несколько слов выровнено', () => {
     const { verseText, alignment, grcTokens } = getVerse(1, 1);
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
-      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'known', forms: 'all' },
-      { lexemeId: 'iesous', lemma: 'Ἰησοῦς', strong: 2424, intensityPct: 100, status: 'known', forms: 'all' },
-      { lexemeId: 'theos', lemma: 'θεός', strong: 2316, intensityPct: 100, status: 'known', forms: 'all' }
+      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'known', forms: 'form' },
+      { lexemeId: 'iesous', lemma: 'Ἰησοῦς', strong: 2424, intensityPct: 100, status: 'known', forms: 'form' },
+      { lexemeId: 'theos', lemma: 'θεός', strong: 2316, intensityPct: 100, status: 'known', forms: 'form' }
     ], { seedPrefix: 'mark' });
 
     const formSegs = segments.filter(s => s.kind === 'form');
@@ -101,7 +101,7 @@ describe('applyFormLayer', () => {
 
   it('невыровненный стих (без alignment) → возвращает plain', () => {
     const segments = applyFormLayer('Тестовый стих', [], null, [
-      { lexemeId: 'test', lemma: 'test', strong: 1, intensityPct: 100, status: 'known', forms: 'all' }
+      { lexemeId: 'test', lemma: 'test', strong: 1, intensityPct: 100, status: 'known', forms: 'form' }
     ], { seedPrefix: 'test' });
 
     expect(segments.length).toBe(1);
@@ -110,7 +110,7 @@ describe('applyFormLayer', () => {
 
   it('пустой alignment → возвращает plain', () => {
     const segments = applyFormLayer('Тестовый стих', [], [], [
-      { lexemeId: 'test', lemma: 'test', strong: 1, intensityPct: 100, status: 'known', forms: 'all' }
+      { lexemeId: 'test', lemma: 'test', strong: 1, intensityPct: 100, status: 'known', forms: 'form' }
     ], { seedPrefix: 'test' });
 
     expect(segments.length).toBe(1);
@@ -120,7 +120,7 @@ describe('applyFormLayer', () => {
   it('учитывает intensity: status=known всегда заменяет', () => {
     const { verseText, alignment, grcTokens } = getVerse(1, 1);
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
-      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'known', forms: 'all' }
+      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'known', forms: 'form' }
     ], { seedPrefix: 'mark' });
 
     const formSegs = segments.filter(s => s.kind === 'form');
@@ -130,11 +130,11 @@ describe('applyFormLayer', () => {
   it('status=new с high intensity заменяет часто, но не всегда (детерминизм)', () => {
     const { verseText, alignment, grcTokens } = getVerse(1, 1);
     const run1 = applyFormLayer(verseText, grcTokens, alignment, [
-      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'new', forms: 'all' }
+      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'new', forms: 'form' }
     ], { seedPrefix: 'mark:test' });
 
     const run2 = applyFormLayer(verseText, grcTokens, alignment, [
-      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'new', forms: 'all' }
+      { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098, intensityPct: 100, status: 'new', forms: 'form' }
     ], { seedPrefix: 'mark:test' });
 
     // Детерминизм: одинаковый seed → одинаковый результат
@@ -146,7 +146,7 @@ describe('applyFormLayer', () => {
   it('пунктуация: trailing punctuation отделяется как plain-сегмент', () => {
     const { verseText, alignment, grcTokens } = getVerse(1, 1);
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
-      { lexemeId: 'iesous', lemma: 'Ἰησοῦς', strong: 2424, intensityPct: 100, status: 'known', forms: 'all' }
+      { lexemeId: 'iesous', lemma: 'Ἰησοῦς', strong: 2424, intensityPct: 100, status: 'known', forms: 'form' }
     ], { seedPrefix: 'mark' });
 
     // Находим form-сегмент для Иисуса (у него нет trailing punct)
@@ -186,7 +186,7 @@ describe('applyFormLayer', () => {
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
       {
         lexemeId: 'logos', lemma: 'λόγος', strong: 3056,
-        intensityPct: 100, status: 'known', forms: 'all',
+        intensityPct: 100, status: 'known', forms: 'form',
         regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
         excludeRegexps: [new RegExp('словно', 'iu'), new RegExp('условие', 'iu'), new RegExp('словарь', 'iu')],
       }
@@ -207,7 +207,7 @@ describe('applyFormLayer', () => {
 
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
       { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098,
-        intensityPct: 0, status: 'new', forms: 'all' }
+        intensityPct: 0, status: 'new', forms: 'form' }
     ], { seedPrefix: 'mark' });
 
     // intensityPct=0, status='new' → shouldReplace всегда false
@@ -224,7 +224,7 @@ describe('applyFormLayer', () => {
 
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
       { lexemeId: 'euangelion', lemma: 'εὐαγγέλιον', strong: 2098,
-        intensityPct: 100, status: 'new', forms: 'all' }
+        intensityPct: 100, status: 'new', forms: 'form' }
     ], { seedPrefix: 'mark' });
 
     // intensityPct=100, status='new' → hash01 * 100 < 100 всегда true
@@ -242,7 +242,7 @@ describe('applyFormLayer', () => {
     const segments = applyFormLayer(verseText, grcTokens, alignment, [
       {
         lexemeId: 'logos', lemma: 'λόγος', strong: 3056,
-        intensityPct: 100, status: 'known', forms: 'all',
+        intensityPct: 100, status: 'known', forms: 'form',
         regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
         excludeRegexps: [new RegExp('словно', 'iu'), new RegExp('условие', 'iu'), new RegExp('словарь', 'iu')],
       }

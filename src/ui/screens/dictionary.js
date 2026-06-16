@@ -542,17 +542,20 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
       });
       actions.appendChild(intensityDiv);
 
-      // Формы: лемма / все формы
+      // Формы: по виджету / лемма / форма оригинала
       const formsDiv = document.createElement('div');
       formsDiv.style.margin = '4px 0';
       const formsLabel = document.createElement('span');
-      formsLabel.textContent = 'Формы: ';
+      formsLabel.textContent = 'В тексте: ';
       formsLabel.style.fontSize = '0.85rem';
       formsDiv.appendChild(formsLabel);
-      [{ value: 'lemma', label: 'Лемма' },
-       { value: 'all', label: 'Все формы' }].forEach(opt => {
+      const currentForms = dictEntry.forms; // undefined = По виджету
+      [{ value: undefined, label: 'По виджету' },
+       { value: 'lemma', label: 'Лемма' },
+       { value: 'form', label: 'Форма оригинала' }].forEach(opt => {
         const btn = document.createElement('button');
-        btn.className = 'btn' + ((dictEntry.forms || 'lemma') === opt.value ? ' btn-primary' : '');
+        const isActive = currentForms === opt.value; // undefined === undefined → true
+        btn.className = 'btn' + (isActive ? ' btn-primary' : '');
         btn.textContent = opt.label;
         btn.style.fontSize = '0.75rem';
         btn.addEventListener('click', async () => {

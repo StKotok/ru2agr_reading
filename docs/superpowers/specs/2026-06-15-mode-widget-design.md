@@ -256,7 +256,7 @@ function shouldLoadGreek(s, activeWordCount) {
 | `src/ui/screens/reading.js` | Убрать создание `IntensitySlider` и `sliderContainer`. Вставлять `createModeWidget({ store })` в top-bar после его создания. `buildWordEntries()` использует `entry.forms || globalForms`; загрузка греческой книги зависит от `shouldLoadGreek(settings, activeWordCount)` |
 | `src/ui/screens/settings.js` | Убрать секцию «Режим обучения» (radio-кнопки), слайдер интенсивности, чекбоксы «Транслитерация», «Глосса / перевод», «Грамматика». Оставить: тему, диакритику, номера Стронга, сброс |
 | `src/ui/components/intensity-slider.js` | **Удалить.** Логика слайдера переезжает в `mode-widget.js` |
-| `src/state/settings.js` | Добавить `COMPOSE_MODES`, `deriveComposeMode()`, `shouldLoadGreek()`. Поля по умолчанию: `wordLayer: 'off'`, `readingMode: 'mixed'`, `lastActiveTab: 'mixed'`. Не хранить `mode`. Убрать из `show` поля `translit`, `gloss`, `grammar`. |
+| `src/state/settings.js` | Добавить `COMPOSE_MODES`, `deriveComposeMode()`, `shouldLoadGreek()`. Поля по умолчанию: `wordLayer: 'off'`, `readingMode: 'mixed'`. Не хранить `mode`. Убрать из `show` поля `translit`, `gloss`, `grammar`. |
 | `src/engine/compose.js` | В legacy-ветке `mode === 2` убрать принудительный `forms: 'lemma'` — теперь `forms` берётся из wordEntries как есть |
 | `src/ui/screens/dictionary.js` / `src/state/dictionary.js` | `forms` становится опциональным per-word override; новые слова по умолчанию не получают `forms`, чтобы глобальный `wordLayer` мог быть значением по умолчанию |
 | `src/ui/screens/onboarding.js` | В пресетах убрать старое поле `mode`; сохранять `wordLayer`/`readingMode`/`intensity`, `settings.mode` не записывать |
@@ -367,7 +367,24 @@ function shouldLoadGreek(s, activeWordCount) {
 «Новые слова за главу» вместе с «Сегодня не добавлять новое».
 Количество новых слов за главу фиксируется на дефолте (3).
 
-## 7. Открытые вопросы
+## 7. Финальные уточнения модели (июнь 2026)
+
+После review зафиксированы следующие решения:
+
+1. **Словарь всегда показывает леммы.** Экран словаря (`dictionary.js`) не
+   использует per-word `forms` для отображения — строки/карточки всегда
+   показывают лемму.
+2. **Per-word `forms` управляет только заменами в тексте чтения.** Настройка
+   «В тексте» в карточке слова меняет только поведение `buildWordEntries()`.
+3. **Утверждённые значения `forms`:** отсутствие поля (по виджету), `'lemma'`,
+   `'form'`. Значение `'all'` удалено из кода и тестов.
+4. **`settings.mode` не хранится и не используется.** Внутренний
+   `composeMode` — adapter, не пользовательская модель.
+5. **`lastActiveTab` не сохраняется.** Активная вкладка попапа определяется
+   из `readingMode`.
+6. **Миграция IndexedDB не нужна** — пользователей нет.
+
+## 8. Открытые вопросы
 
 - Нужен ли анимированный переход между вкладками?
   **Решение:** нет для v1. CSS-класс `tab-transition` зарезервирован для
@@ -375,5 +392,6 @@ function shouldLoadGreek(s, activeWordCount) {
 - Показывать ли процент для «Греч» в чипе? (сейчас: просто `Греч`)
   **Решение:** нет. Чип показывает только `Греч` без цифр.
 - Нужно ли запоминать последнюю активную вкладку между сессиями?
-  **Решение:** да, сохранять в `settings.lastActiveTab: 'mixed' | 'greek'`
-  (по умолчанию `'mixed'`).
+  **Решение (финальное):** нет. Активная вкладка попапа определяется из
+  `readingMode` (`'greek'` → вкладка «Греческий», иначе «Смешанный»).
+  `lastActiveTab` не сохраняется в настройках.
