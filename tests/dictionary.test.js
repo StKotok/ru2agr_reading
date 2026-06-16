@@ -241,6 +241,17 @@ describe('dictionary', () => {
       expect(input.__schema).toBe(1);
       expect(result.__schema).toBeUndefined();
     });
+
+    it('отфильтровывает metadata-массивы (__meta: [])', () => {
+      const result = sanitizeDictionary({
+        logos: { status: 'new', showInText: true },
+        __meta: []
+      });
+      expect(result).toEqual({
+        logos: { status: 'new', showInText: true }
+      });
+      expect(result.__meta).toBeUndefined();
+    });
   });
 
   describe('setWordSetting удаление поля', () => {

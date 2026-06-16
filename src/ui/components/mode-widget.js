@@ -371,9 +371,9 @@ export function createModeWidget(ctx) {
   }
 
   function closePopup() {
+    flushPendingSlider(); // всегда сбрасываем pending, даже если попап уже закрыт
     if (!isOpen) return;
     isOpen = false;
-    flushPendingSlider();
     const currentPopup = popup;
     cleanupPopup();
 
@@ -532,7 +532,6 @@ export function createModeWidget(ctx) {
 
   function destroy() {
     closePopup();
-    flushPendingSlider();
     unsubs.forEach(fn => fn());
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('click', onOutsideClick);

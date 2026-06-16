@@ -2,7 +2,7 @@ import { loadBook } from '../../data/bible-loader.js';
 import { loadProgress, saveProgress, markLetterKnown } from '../../state/progress.js';
 import { loadSettings, saveSettings, deriveComposeMode, shouldLoadGreek } from '../../state/settings.js';
 import { loadAlphabet, loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
-import { loadDictionary, setWordStatus, saveDictionary, addWord, countActiveWords } from '../../state/dictionary.js';
+import { loadDictionary, setWordStatus, saveDictionary, addWord, countActiveWords, isDictionaryEntry } from '../../state/dictionary.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
 import { createTopBar } from '../components/top-bar.js';
@@ -49,16 +49,16 @@ let coreLexicon = [];
 let frequencyList = null;
 let wordEntries = [];
 let grcLoadPromise = null;
-let grcLoadToken = 0; // монотонно возрастающий токен для отбрасывания устаревших результатов
 // Безопасная ссылка на store для модульных функций (ensureGreekBookLoaded и др.)
 let storeRef = null;
 
-/** Сбрасывает всё модульное состояние греческой книги. */
+/** Сбрасывает всё модульное состояние греческой книги.
+ *  Защита от устаревших результатов — capture bookId перед загрузкой
+ *  и проверка bookData.id !== bookId после await (см. ensureGreekBookLoaded). */
 function resetGreekBookState() {
   grcBookData = null;
   grcVerseMap = null;
   grcLoadPromise = null;
-  grcLoadToken++;
 }
 function setGrcStatus(status) {
   if (storeRef) storeRef.update(s => ({ ...s, grcStatus: status }));
@@ -144,6 +144,23 @@ export async function mount(container, ctx) {
   // Публикуем в store (начальное состояние — idle, Greek не нужен до проверки)
   store.update(s => ({ ...s, settings, progress, dictionary, coreLexicon, frequencyList, grcStatus: 'idle' }));
 
+  // Ранняя подписка на settings — до создания mode-widget, чтобы изменения
+  // во время загрузки книги не терялись. bookData ещё null, поэтому
+  // перерендер и дозагрузка греческого откладываются до появления bookData.
+  unsubSettings = store.subscribe(['settings'], () => {
+    progress = store.get().progress || progress;
+    const newSettings = store.get().settings;
+    if (newSettings && newSettings !== settings) {
+      settings = newSettings;
+      if (bookData) {
+        reRenderWindowed();
+        if (shouldLoadGreek(settings, getActiveWordCount()) && !grcBookData) {
+          ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
+        }
+      }
+    }
+  });
+
   const bookId = ctx.params?.book || progress.reading.lastBook || 'john';
 
   container.innerHTML = '';
@@ -205,13 +222,20 @@ export async function mount(container, ctx) {
     return;
   }
 
-  // Если grc не загрузился для словарного слоя — предупреждаем
-  if (!grcBookData && shouldLoadGreek(settings, getActiveWordCount())) {
-    showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
-  }
-
   skeleton.remove();
   store.update(s => ({ ...s, book: bookId }));
+
+  // Обновляем settings из store — пользователь мог изменить их во время загрузки
+  settings = store.get().settings || settings;
+
+  // Сверка: если настройки теперь требуют греческий, а он не загружен (или упал),
+  // пробуем загрузить до первого рендера, чтобы избежать видимой смены режима.
+  if (shouldLoadGreek(settings, getActiveWordCount()) && !grcBookData) {
+    const ok = await ensureGreekBookLoaded(false);
+    if (!ok) {
+      showToast('Греческий текст недоступен — словарные замены отключены', { timeout: 5000 });
+    }
+  }
 
   // Функция рендера/перерендера видимых глав
   reRenderFn = () => renderWindowed();
@@ -226,19 +250,6 @@ export async function mount(container, ctx) {
     if (newProgress && newProgress !== progress) {
       progress = newProgress;
       reRenderWindowed();
-    }
-  });
-
-  // Подписка на изменения настроек (сохранение делает mode-widget)
-  unsubSettings = store.subscribe(['settings'], () => {
-    progress = store.get().progress || progress;
-    const newSettings = store.get().settings;
-    if (newSettings && newSettings !== settings) {
-      settings = newSettings;
-      reRenderWindowed();
-      if (shouldLoadGreek(settings, getActiveWordCount()) && !grcBookData) {
-        ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
-      }
     }
   });
 
@@ -465,9 +476,7 @@ function renderWindowed() {
         p.appendChild(document.createTextNode(verse.text));
       } else if (settings.readingMode === 'greek') {
         // Греческий оригинал как основной текст
-
-
-          const grcVerse = getGrcVerse(ch.n, verse.n);
+        const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
           const frag = buildGreekTextFragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
@@ -481,8 +490,6 @@ function renderWindowed() {
         // Добавляем grcVerse и alignment для словарного слоя
         const verseCtx = { ...composeCtx };
         if (grcBookData) {
-
-
           const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
             verseCtx.grcVerse = grcVerse;
@@ -589,7 +596,8 @@ function buildWordEntries() {
 
   // Итерируем ВСЕ записи словаря (включая freq-*)
   for (const [lexemeId, entry] of Object.entries(dictionary)) {
-    if (!entry || entry.showInText === false) continue;
+    if (!isDictionaryEntry(entry)) continue;
+    if (entry.showInText === false) continue;
     if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
 
     const core = coreByIdCache.get(lexemeId);
@@ -667,9 +675,7 @@ function reRenderWindowed() {
       if (plainView) {
         p.appendChild(document.createTextNode(verse.text));
       } else if (settings.readingMode === 'greek' && grcBookData) {
-
-
-          const grcVerse = getGrcVerse(ch.n, verse.n);
+        const grcVerse = getGrcVerse(ch.n, verse.n);
         if (grcVerse && grcVerse.tokens) {
           const frag = buildGreekTextFragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
@@ -679,8 +685,6 @@ function reRenderWindowed() {
       } else {
         const verseCtx = { ...composeCtx };
         if (grcBookData) {
-
-
           const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
             verseCtx.grcVerse = grcVerse;

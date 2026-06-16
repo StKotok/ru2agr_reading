@@ -51,7 +51,7 @@ export function sanitizeDictionary(data) {
  */
 export async function saveDictionary(dict) {
   try {
-    await db.set(KEY, dict);
+    await db.set(KEY, sanitizeDictionary(dict));
   } catch (e) {
     console.warn('saveDictionary error:', e);
   }
