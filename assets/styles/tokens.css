@@ -1,57 +1,154 @@
+/* ============================================================
+   Design Tokens — единственный источник цветов для app.css
+   Governance: никаких #xxx, rgb(), rgba(), hsl() в app.css.
+   Все цвета — только через var(--*) из этого файла.
+   ============================================================ */
+
+/* === Primitives (raw palette — never used directly in components) === */
+:root {
+  --blue-600: #264e83;
+  --blue-300: #7BA3CC;
+  --terracotta-500: #8B5E3C;
+  --terracotta-300: #C8966A;
+  --red-500: #C44D4D;
+  --red-400: #CC6B6B;
+  --green-600: #6B8E5A;
+  --green-500: #7BA36A;
+  --beige-100: #efeee9;
+  --beige-200: #E8E4DA;
+  --gray-900: #1E1E1E;
+  --gray-800: #2A2A2A;
+  --gray-700: #3A3A3A;
+  --gray-100: #E0DCD0;
+  --gray-500: #8C8C8C;
+}
+
 /* === Токены ролей: светлая тема === */
 :root,
 [data-theme="light"] {
+  /* Типографика */
   --font-greek: 'Gentium Plus', serif;
-  --surface: #efeee9;
-  --surface-card: #F2EDE4;
+
+  /* Поверхности */
+  --surface: var(--beige-100);            /* #efeee9 — фон страницы */
+  --surface-card: var(--beige-200);       /* #E8E4DA — фон карточек (отделен от --surface) */
+
+  /* Текст */
   --text: #2B2B2B;
-  --muted: #8C8C8C;
-  --greek: #264e83;
-  --greek-word: #B07D4F;
-  --hint: #98A8C0;
-  --focus: #3D5A80;
-  --selection: #D6E4F0;
-  --progress: #6B8E5A;
-  --danger: #C44D4D;
+  --muted: #707070;                       /* затемнён с #8C8C8C для WCAG AA (≥4.5:1) */
+
+  /* Акценты */
+  --greek: var(--blue-600);               /* #264e83 — только греческий текст */
+  --primary: var(--blue-600);             /* #264e83 — UI-элементы (кнопки, табы, слайдеры) */
+  --greek-word: var(--terracotta-500);    /* #8B5E3C — греческие слова/формы (затемнён с #B07D4F для WCAG AA) */
+
+  /* Декоративные */
+  --hint: #98A8C0;                        /* dotted underline — decorative, contrast exempt */
+  --focus: #4A7FB5;                       /* outline (отделён от --greek для визуальной различимости) */
+  --selection: #D6E4F0;                   /* фон выделения / hover */
+
+  /* Семантика состояний */
+  --progress: var(--green-600);           /* #6B8E5A */
+  --status-known: var(--progress);        /* alias — «известно» */
+  --danger: var(--red-500);               /* #C44D4D */
   --border: #D9D3C7;
+
+  /* inverse of surface/text — intentional (классический паттерн «on-inverse» для toast) */
   --toast-bg: #2B2B2B;
   --toast-text: #FAF7F2;
+
+  /* Текст на цветных фонах */
+  --on-primary: #FFFFFF;
+
+  /* Бейджи */
+  --badge-learning-bg: #f0e6c0;
+  --badge-learning-text: #8a7a30;
+
+  /* Предупреждения */
+  --warning-bg: #fff3cd;
+  --warning-text: #856404;
+
+  /* Elevation */
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.1);
+  --overlay-bg: rgba(0,0,0,0.3);
+
+  /* Не-цветовые токены (для будущего рефакторинга) */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 18px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --duration-fast: 0.15s;
+  --duration-normal: 0.3s;
 }
 
 /* === Тёмная тема === */
 [data-theme="dark"] {
-  --surface: #1E1E1E;
-  --surface-card: #2A2A2A;
-  --text: #E0DCD0;
-  --muted: #8C8C8C;
-  --greek: #7BA3CC;
-  --greek-word: #D4A574;
+  --surface: var(--gray-900);             /* #1E1E1E */
+  --surface-card: var(--gray-800);        /* #2A2A2A */
+
+  --text: var(--gray-100);                /* #E0DCD0 */
+  --muted: var(--gray-500);               /* #8C8C8C */
+
+  --greek: var(--blue-300);               /* #7BA3CC */
+  --primary: var(--blue-300);             /* #7BA3CC */
+  --greek-word: var(--terracotta-300);    /* #C8966A (затемнён с #D4A574 для WCAG AA) */
+
   --hint: #5A6880;
-  --focus: #7BA3CC;
+  --focus: #8EC8E8;                       /* отделён от --greek (был #7BA3CC — идентичен) */
   --selection: #2A3F5A;
-  --progress: #7BA36A;
-  --danger: #CC6B6B;
-  --border: #3A3A3A;
-  --toast-bg: #E0DCD0;
-  --toast-text: #1E1E1E;
+
+  --progress: var(--green-500);           /* #7BA36A */
+  --status-known: var(--progress);
+  --danger: var(--red-400);               /* #CC6B6B */
+  --border: var(--gray-700);              /* #3A3A3A */
+
+  /* inverse of surface/text — intentional */
+  --toast-bg: var(--gray-100);            /* #E0DCD0 */
+  --toast-text: var(--gray-900);          /* #1E1E1E */
+
+  --on-primary: #1E1E1E;
+
+  --badge-learning-bg: #4A3F1A;
+  --badge-learning-text: #D4B84A;
+
+  --warning-bg: #3D2E00;
+  --warning-text: #FFD54F;
+
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.4);
+  --overlay-bg: rgba(0,0,0,0.6);
 }
 
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] {
-    --surface: #1E1E1E;
-    --surface-card: #2A2A2A;
-    --text: #E0DCD0;
-    --muted: #8C8C8C;
-    --greek: #7BA3CC;
-    --greek-word: #D4A574;
+    --surface: var(--gray-900);
+    --surface-card: var(--gray-800);
+    --text: var(--gray-100);
+    --muted: var(--gray-500);
+    --greek: var(--blue-300);
+    --primary: var(--blue-300);
+    --greek-word: var(--terracotta-300);
     --hint: #5A6880;
-    --focus: #7BA3CC;
+    --focus: #8EC8E8;
     --selection: #2A3F5A;
-    --progress: #7BA36A;
-    --danger: #CC6B6B;
-    --border: #3A3A3A;
-    --toast-bg: #E0DCD0;
-    --toast-text: #1E1E1E;
+    --progress: var(--green-500);
+    --status-known: var(--progress);
+    --danger: var(--red-400);
+    --border: var(--gray-700);
+    --toast-bg: var(--gray-100);
+    --toast-text: var(--gray-900);
+    --on-primary: #1E1E1E;
+    --badge-learning-bg: #4A3F1A;
+    --badge-learning-text: #D4B84A;
+    --warning-bg: #3D2E00;
+    --warning-text: #FFD54F;
+    --shadow-elevated: 0 4px 16px rgba(0,0,0,0.4);
+    --overlay-bg: rgba(0,0,0,0.6);
   }
 }
 

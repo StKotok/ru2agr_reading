@@ -129,7 +129,7 @@ body {
 .nav-tab.active,
 .nav-tab[aria-current="page"] {
   background-color: var(--selection);
-  color: var(--greek);
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -174,9 +174,9 @@ body {
 }
 
 .btn-primary {
-  background: var(--greek);
-  color: #fff;
-  border-color: var(--greek);
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
 }
 
 .btn-primary:hover {
@@ -190,7 +190,7 @@ body {
 
 .btn-danger:hover {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 /* === Карточка === */
@@ -241,7 +241,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--greek);
+  background: var(--primary);
   border: none;
   cursor: pointer;
 }
@@ -250,7 +250,7 @@ input[type="range"]::-moz-range-thumb {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--greek);
+  background: var(--primary);
   border: none;
   cursor: pointer;
 }
@@ -260,7 +260,7 @@ input[type="radio"],
 input[type="checkbox"] {
   min-width: 44px;
   min-height: 44px;
-  accent-color: var(--greek);
+  accent-color: var(--primary);
 }
 
 /* === Греческие вставки === */
@@ -444,7 +444,7 @@ p, h2, h3, span {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-elevated);
   max-height: 400px;
   overflow-y: auto;
   z-index: 100;
@@ -617,7 +617,7 @@ p, h2, h3, span {
 .bottom-sheet-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.3);
+  background: var(--overlay-bg);
   z-index: 200;
   display: flex;
   align-items: flex-end;
@@ -977,7 +977,7 @@ p, h2, h3, span {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 8px 4px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-elevated);
   min-width: 220px;
 }
 
@@ -1023,7 +1023,7 @@ p, h2, h3, span {
 .card-gear-row input[type="checkbox"] {
   min-width: 20px;
   min-height: 20px;
-  accent-color: var(--greek);
+  accent-color: var(--primary);
   flex-shrink: 0;
 }
   color: var(--muted);
@@ -1032,23 +1032,23 @@ p, h2, h3, span {
 
 .status-btn.status-learning {
   background: var(--selection);
-  color: var(--greek);
+  color: var(--primary);
   border: 1px solid transparent;
 }
 
 .status-btn.status-learning:hover {
-  border-color: var(--greek);
+  border-color: var(--primary);
 }
 
 .status-btn.status-learning.active {
-  background: #D6E4F0;
-  color: var(--greek);
-  border-color: var(--greek);
+  background: var(--selection);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .status-btn.status-known {
   background: var(--progress);
-  color: #fff;
+  color: var(--on-primary);
   border: 1px solid var(--progress);
 }
 
@@ -1058,7 +1058,7 @@ p, h2, h3, span {
 
 .status-btn.status-known.active {
   background: var(--progress);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 /* --- Подробнее --- */
@@ -1080,7 +1080,7 @@ p, h2, h3, span {
 }
 
 .word-card-details-btn:hover {
-  color: var(--greek);
+  color: var(--primary);
 }
 
 /* --- Карточка буквы --- */
@@ -1120,7 +1120,7 @@ p, h2, h3, span {
   padding: 6px 12px;
   border-radius: 8px;
   background: var(--progress);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 .word-card-disclaimer {
@@ -1283,7 +1283,7 @@ p, h2, h3, span {
 
 .mode-widget-tab.active {
   color: var(--text);
-  border-bottom-color: var(--greek);
+  border-bottom-color: var(--primary);
 }
 
 .mode-widget-tab:hover {
@@ -1318,7 +1318,7 @@ p, h2, h3, span {
 
 .mode-widget-body input[type="range"] {
   width: 100%;
-  accent-color: var(--greek);
+  accent-color: var(--primary);
   margin: 0 0 4px 0;
 }
 
@@ -1468,14 +1468,14 @@ p, h2, h3, span {
 
 .letter-cell.letter-known {
   background: var(--progress);
-  color: #fff;
+  color: var(--on-primary);
   border-color: var(--progress);
 }
 
 .letter-cell.letter-learning {
   background: var(--selection);
-  color: var(--greek);
-  border-color: var(--greek);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .letter-cell.letter-locked {
@@ -1515,7 +1515,7 @@ p, h2, h3, span {
 }
 
 .progress-book-status.status-started {
-  color: var(--greek);
+  color: var(--primary);
 }
 
 /* Onboarding */
@@ -1534,7 +1534,7 @@ p, h2, h3, span {
 }
 
 .onboarding-card:hover {
-  border-color: var(--greek);
+  border-color: var(--primary);
   background: var(--selection);
 }
 
@@ -1559,9 +1559,9 @@ p, h2, h3, span {
 }
 
 .onboarding-example {
-  color: var(--accent) !important;
+  color: var(--greek) !important;
   font-style: normal !important;
-  background: var(--surface2);
+  background: var(--selection);
   padding: 6px 8px;
   border-radius: 4px;
   font-family: 'Gentium Plus', serif;
@@ -1681,9 +1681,9 @@ p, h2, h3, span {
   min-width: 48px;
 }
 
-.badge-new { background: var(--selection); color: var(--greek); }
-.badge-learning { background: #f0e6c0; color: #8a7a30; }
-.badge-known { background: var(--progress); color: #fff; }
+.badge-new { background: var(--selection); color: var(--primary); }
+.badge-learning { background: var(--badge-learning-bg); color: var(--badge-learning-text); }
+.badge-known { background: var(--progress); color: var(--on-primary); }
 
 .dict-check {
   grid-area: check;
@@ -1729,6 +1729,6 @@ p, h2, h3, span {
   color: var(--danger);
   margin-top: 4px;
   padding: 4px 8px;
-  background: #fff3cd;
+  background: var(--warning-bg);
   border-radius: 4px;
 }

@@ -154,6 +154,15 @@ function renderResetSection() {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
+  // Кэш для мгновенного применения при следующей загрузке (FOUC-защита)
+  localStorage.setItem('theme', theme);
+  // Динамический theme-color для мобильного браузерного chrome
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    const surface = getComputedStyle(document.documentElement)
+      .getPropertyValue('--surface').trim();
+    meta.setAttribute('content', surface);
+  }
 }
 
 export function unmount() {
