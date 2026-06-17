@@ -74,8 +74,16 @@ for (const v of variants.synOnlyVerses) {
 
 // Build grcOnly verse set
 const grcOnlySet = new Set();
-for (const v of variants.grcOnlyVerses) {
+for (const v of (variants.grcOnlyVerses || [])) {
   grcOnlySet.add(`${v.book} ${v.ch}:${v.v}`);
+}
+
+// Build merged verse set (from textual-variants.json)
+const mergedFromRegistry = new Set();
+if (variants.mergedVerses) {
+  for (const v of variants.mergedVerses) {
+    mergedFromRegistry.add(`${v.book} ${v.ch}:${v.v}`);
+  }
 }
 
 // Build phrase variants by ref
@@ -85,10 +93,22 @@ for (const pv of variants.synOnlyPhrases) {
   phraseVariantsByRef[pv.ref].push(pv);
 }
 
-// Merged verse: 2Cor 11:33 → syn: "11:32b", grc: "11:33"
+// Merged verses: Greek verses whose content is merged into a different Synodal verse.
+// Priority: hardcoded MERGED_VERSES + entries from textual-variants.json mergedVerses.
 const MERGED_VERSES = {
   '2corinthians 11:33': { syn: '11:32b', grc: '11:33', status: 'merged' },
 };
+// Merge registry entries (textual-variants.json overrides hardcoded)
+if (variants.mergedVerses) {
+  for (const v of variants.mergedVerses) {
+    const key = `${v.book} ${v.ch}:${v.v}`;
+    MERGED_VERSES[key] = {
+      syn: v.syn,
+      grc: v.grc,
+      status: 'merged',
+    };
+  }
+}
 
 // All visible lexemes across all books (for index)
 const allVisibleLexemes = new Set();
@@ -163,13 +183,15 @@ for (const bookId of NT_BOOKS) {
   // Iterate grc-only verses
   for (const [ref, grcV] of grcVerses) {
     if (verseMap[ref]) continue;
+    // MERGED_VERSES must take priority over grcOnlySet (anti-pattern §0.3)
+    if (MERGED_VERSES[ref]) {
+      verseMap[ref] = MERGED_VERSES[ref];
+      continue;
+    }
     if (grcOnlySet.has(ref)) {
       const parts = ref.split(' ');
       const [ch, v] = parts[1].split(':').map(Number);
       verseMap[ref] = { syn: null, grc: `${ch}:${v}`, status: 'grcOnly' };
-    } else if (MERGED_VERSES[ref]) {
-      // Merged already handled above
-      continue;
     } else {
       // grc verse with no syn equivalent — paired (shouldn't happen for most)
       const parts = ref.split(' ');
@@ -181,6 +203,19 @@ for (const bookId of NT_BOOKS) {
   // --- Build pairsByRef ---
   const pairsByRef = {};
 
+  // Build reverse index: syn ref → list of merged Greek refs
+  const mergedGrcBySynRef = new Map(); // synRef → [{grcRef, mergeInfo}]
+  for (const [grcRef, mergeInfo] of Object.entries(verseMap)) {
+    if (mergeInfo.status !== 'merged') continue;
+    const parts = grcRef.split(' ');
+    const grcBook = parts[0];
+    const grcChV = mergeInfo.syn;       // e.g. "11:32b"
+    const grcCh = grcChV.replace(/[a-z]$/, ''); // "11:32"
+    const synRef = `${grcBook} ${grcCh}`;
+    if (!mergedGrcBySynRef.has(synRef)) mergedGrcBySynRef.set(synRef, []);
+    mergedGrcBySynRef.get(synRef).push({ grcRef, mergeInfo });
+  }
+
   for (const [ref, verseInfo] of Object.entries(verseMap)) {
     if (verseInfo.status !== 'paired' && verseInfo.status !== 'merged') continue;
     // Only build pairs for verses with both syn and grc text
@@ -188,8 +223,16 @@ for (const bookId of NT_BOOKS) {
     const synData = synVerseData.get(ref);
     if (!synData) continue;
 
-    const grcTokens = grcTokensByRef.get(ref);
-    if (!grcTokens || grcTokens.length === 0) continue;
+    let grcTokens = grcTokensByRef.get(ref) || [];
+    // Append tokens from Greek verses merged into this syn verse
+    const mergedRefs = mergedGrcBySynRef.get(ref);
+    if (mergedRefs) {
+      for (const { grcRef } of mergedRefs) {
+        const mergedTokens = grcTokensByRef.get(grcRef);
+        if (mergedTokens) grcTokens = grcTokens.concat(mergedTokens);
+      }
+    }
+    if (grcTokens.length === 0) continue;
 
     const { text: verseText, words: synWords } = synData;
     if (!synWords || synWords.length === 0) continue;
@@ -217,8 +260,22 @@ for (const bookId of NT_BOOKS) {
     // Per-lexemeKey cursor for monotonic consumption
     const cursor = new Map(); // lexemeKey → index into grcByLexemeKey array
 
+    // Build set of word indices that fall within phrase variant spans (should not be paired)
+    const variantWordIndices = new Set();
+    const pvsForRef = phraseVariantsByRef[ref] || [];
+    for (const pv of pvsForRef) {
+      const fromIdx = pv.fromIdx || 0;
+      const toIdx = Math.min(fromIdx + (pv.ruWords?.length || 0), synWords.length);
+      for (let wi = fromIdx; wi < toIdx; wi++) {
+        variantWordIndices.add(wi);
+      }
+    }
+
     for (const w of synWords) {
       const ruWord = w.text.toLowerCase();
+
+      // Skip words in phrase variant spans (TR additions without Greek source)
+      if (variantWordIndices.has(w.i)) continue; // w.i is 0-based, variantWordIndices uses 0-based
       const span = [w.start, w.end];
 
       // Skip pure punctuation/non-lexical words

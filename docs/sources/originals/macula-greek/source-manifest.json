@@ -9,7 +9,7 @@
   "corpus": "SBLGNT",
   "files": [
     {
-      "path": "tsv/macula-greek-SBLGNT.tsv",
+      "path": "docs/macula-greek/SBLGNT/tsv/macula-greek-SBLGNT.tsv",
       "sha256": "7f71504fdee8659bdd9f85342e4103d645864c2851b8205915bb298f0c004cc5"
     }
   ],

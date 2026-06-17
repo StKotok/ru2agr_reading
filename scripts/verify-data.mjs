@@ -21,7 +21,7 @@
  * Usage: node scripts/verify-data.mjs
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
@@ -221,6 +221,154 @@ console.log('\nIndex checks...');
 const index = JSON.parse(readFileSync(INDEX_PATH, 'utf8'));
 if (index.schema !== 'alignment-index-v1') err(`index schema is "${index.schema}"`);
 ok(`Index: ${index.lexemesWithVisiblePair.length} visible lexemes`);
+
+// ── SHA verification (source manifests) ──
+console.log('\nSHA verification...');
+const SOURCES_DIR = resolve(ROOT, 'docs', 'sources');
+const SOURCE_KINDS = ['originals', 'translations', 'locales'];
+
+function isHexSha(s) {
+  return typeof s === 'string' && /^[0-9a-f]{64}$/.test(s);
+}
+
+for (const kind of SOURCE_KINDS) {
+  const kindDir = resolve(SOURCES_DIR, kind);
+  if (!existsSync(kindDir)) { warn(`Source dir missing: docs/sources/${kind}`); continue; }
+
+  for (const entry of readdirSync(kindDir)) {
+    const entryDir = resolve(kindDir, entry);
+    const manifestPath = resolve(entryDir, 'source-manifest.json');
+    if (!existsSync(manifestPath)) continue;
+
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    if (!manifest.files || !Array.isArray(manifest.files)) continue;
+
+    for (const fileRef of manifest.files) {
+      // Skip non-hex SHA placeholders (e.g. "curated-manually" for hand-curated data)
+      if (!isHexSha(fileRef.sha256)) {
+        warn(`SHA: ${manifest.id}/${fileRef.path} — non-hex SHA (${fileRef.sha256}), skipping`);
+        continue;
+      }
+
+      // Try path relative to manifest dir, then relative to repo root
+      let filePath = resolve(entryDir, fileRef.path);
+      if (!existsSync(filePath)) {
+        filePath = resolve(ROOT, fileRef.path);
+      }
+      if (!existsSync(filePath)) {
+        err(`SHA: ${manifest.id}/${fileRef.path} — file not found (checked ${entryDir} and repo root)`);
+        continue;
+      }
+      const content = readFileSync(filePath);
+      const actual = createHash('sha256').update(content).digest('hex');
+      if (actual !== fileRef.sha256) {
+        err(`SHA mismatch: ${manifest.id}/${fileRef.path} (expected ${fileRef.sha256}, got ${actual})`);
+      }
+    }
+  }
+}
+ok('SHA verification complete');
+
+// ── Orphan explanation check ──
+// Verifies that verse-level and phrase-level exclusions are correctly applied:
+//  - synOnly/grcOnly/merged verses have no visible pairs where disallowed
+//  - phrase variant spans have no visible pairs
+//  - No cross-verse tokenId references
+console.log('\nOrphan/Exclusion check...');
+
+let exclusionErrors = 0;
+
+for (const bookId of NT_BOOKS) {
+  const transPath = resolve(TRANSLATION_DIR, `${bookId}.json`);
+  const alignPath = resolve(ALIGN_DIR, `${bookId}.json`);
+  if (!existsSync(transPath) || !existsSync(alignPath)) continue;
+
+  const trans = JSON.parse(readFileSync(transPath, 'utf8'));
+  const align = JSON.parse(readFileSync(alignPath, 'utf8'));
+
+  const verseMap = align.verses || {};
+  const pairsByRef = align.pairsByRef || {};
+  const phraseVariants = align.phraseVariantsByRef || {};
+
+  // Build tokenId→verse index from original pack
+  const origPath = resolve(ORIGINAL_DIR, `${bookId}.json`);
+  let tokenVerseMap = new Map(); // tokenId → ref
+  if (existsSync(origPath)) {
+    const orig = JSON.parse(readFileSync(origPath, 'utf8'));
+    for (const ch of orig.chapters) {
+      for (const v of ch.verses) {
+        for (const t of v.tokens) {
+          tokenVerseMap.set(t.id, v.ref);
+        }
+      }
+    }
+  }
+
+  for (const ch of trans.chapters) {
+    for (const v of ch.verses) {
+      const ref = v.ref;
+      const pairs = pairsByRef[ref] || [];
+      const verseInfo = verseMap[ref];
+      const visiblePairs = pairs.filter(p => p.q === 'e' || p.q === 'f');
+
+      // Invariant 1: synOnly verses should have NO visible pairs (no Greek text)
+      if (verseInfo?.status === 'synOnly' && visiblePairs.length > 0) {
+        err(`synOnly verse ${ref} has ${visiblePairs.length} visible pairs (should have 0)`);
+        exclusionErrors++;
+      }
+
+      // Invariant 2: merged verses should have NO pairs directly
+      // (their tokens are paired via the host syn verse)
+      if (verseInfo?.status === 'merged' && pairs.length > 0) {
+        err(`merged verse ${ref} has ${pairs.length} pairs (merged tokens should pair via host verse)`);
+        exclusionErrors++;
+      }
+
+      // Invariant 3: phrase variant spans should NOT contain visible pairs
+      const pvs = phraseVariants[ref] || [];
+      for (const pv of pvs) {
+        if (!pv.span) continue;
+        for (const p of visiblePairs) {
+          // Check if pair span overlaps with variant span
+          if (p.span[0] >= pv.span[0] && p.span[1] <= pv.span[1]) {
+            err(`${ref}: visible pair at span [${p.span}] overlaps phrase variant span [${pv.span}]`);
+            exclusionErrors++;
+          }
+        }
+      }
+
+      // Invariant 4: verify no pair span exceeds verse text length
+      for (const p of pairs) {
+        if (p.span[1] > v.text.length) {
+          err(`${ref}: pair span [${p.span}] exceeds verse text length (${v.text.length})`);
+          exclusionErrors++;
+        }
+      }
+
+      // Invariant 5: verify tokenId belongs to the expected verse
+      for (const p of visiblePairs) {
+        const expectedRef = tokenVerseMap.get(p.tokenId);
+        if (expectedRef && expectedRef !== ref) {
+          // For merged verses, tokens come from different Greek verse — OK
+          const isMerged = verseInfo?.status === 'paired' &&
+            Object.entries(verseMap).some(([grcR, vi]) =>
+              vi.status === 'merged' && vi.grc && tokenVerseMap.get(p.tokenId) === grcR
+            );
+          if (!isMerged) {
+            err(`${ref}: pair.tokenId ${p.tokenId} belongs to verse ${expectedRef} (cross-verse reference)`);
+            exclusionErrors++;
+          }
+        }
+      }
+    }
+  }
+}
+
+if (exclusionErrors > 0) {
+  err(`Exclusion check FAILED: ${exclusionErrors} violation(s)`);
+} else {
+  ok('Exclusion check passed: no violations');
+}
 
 // ── Summary ──
 console.log(`\n${'='.repeat(40)}`);

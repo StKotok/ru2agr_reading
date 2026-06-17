@@ -94,14 +94,19 @@
   ],
   "grcOnlyVerses": [
     {
-      "book": "2corinthians",
-      "ch": 11,
-      "v": 33
-    },
-    {
       "book": "revelation",
       "ch": 12,
       "v": 18
+    }
+  ],
+  "mergedVerses": [
+    {
+      "book": "2corinthians",
+      "ch": 11,
+      "v": 33,
+      "syn": "11:32b",
+      "grc": "11:33",
+      "note": "Greek 11:33 is merged into Synodal 11:32 (second half)"
     }
   ],
   "synOnlyPhrases": [
