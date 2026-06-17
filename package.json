@@ -10,9 +10,18 @@
     "test": "vitest run",
     "build:macula": "node scripts/macula/build-macula.mjs",
     "build:runtime": "node scripts/build-original-packs.mjs && node scripts/build-lexicon-core.mjs && node scripts/build-locale-ru.mjs && node scripts/build-syn-packs.mjs",
-    "build:align": "node scripts/build-alignment.mjs",
-    "build:data": "npm run build:runtime && npm run build:align",
-    "verify:data": "node scripts/verify-data.mjs"
+    "build:align:candidates": "node scripts/build-alignment-candidates.mjs",
+    "build:align:certify": "node scripts/certify-alignments.mjs",
+    "build:align:write": "node scripts/write-alignment-packs.mjs",
+    "build:align:legacy": "node scripts/build-alignment.mjs",
+    "build:align": "npm run build:align:candidates && npm run build:align:certify && npm run build:align:write && npm run verify:align",
+    "build:data": "npm run build:macula && npm run build:runtime && npm run build:align",
+    "verify:align": "node scripts/verify-alignment-v2.mjs",
+    "verify:data": "node scripts/verify-data.mjs && npm run verify:align",
+    "audit:align:prepare": "node scripts/prepare-alignment-llm-audit.mjs",
+    "audit:align:import": "node scripts/import-alignment-llm-audit.mjs",
+    "check:adjudication": "node scripts/check-adjudication-status.mjs",
+    "release:align": "npm run build:data && npm run audit:align:import && npm run check:adjudication"
   },
   "devDependencies": {
     "vite": "^5.4.0",

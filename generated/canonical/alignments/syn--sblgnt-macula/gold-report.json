@@ -1,0 +1,22 @@
+{
+  "schema": "gold-report-v1",
+  "alignmentId": "syn--sblgnt-macula",
+  "generatedAt": "2026-06-17T22:12:32.366Z",
+  "dev": {
+    "verses": 23,
+    "pairs": 319,
+    "precision": null,
+    "recall": null,
+    "visibleFalsePositives": 0,
+    "visibleFalseNegatives": 0
+  },
+  "heldout": {
+    "verses": 18,
+    "pairs": 247,
+    "precision": null,
+    "recall": null,
+    "visibleFalsePositives": 0,
+    "visibleFalseNegatives": 0,
+    "notes": "Heldout gold requires manual re-attestation before use as acceptance gate."
+  }
+}

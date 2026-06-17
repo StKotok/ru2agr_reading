@@ -1,0 +1,6 @@
+{
+  "schema": "manual-certified-v1",
+  "alignmentId": "syn--sblgnt-macula",
+  "description": "Manual allowlist for C3 certifier. Add entries for important high-frequency words where deterministic C2 uniqueness is too conservative.",
+  "entries": []
+}
