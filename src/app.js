@@ -52,7 +52,16 @@ function switchScreen(screenName, params) {
   try {
     const settings = await loadSettings();
     const theme = settings.theme || 'auto';
-    document.documentElement.setAttribute('data-theme', theme);
+    const resolved = theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark'
+                     : theme === 'auto' ? 'light'
+                     : theme;
+    document.documentElement.setAttribute('data-theme', resolved);
+    // Динамический theme-color для мобильного браузерного chrome
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      const colors = { light: '#efeee9', dark: '#1E1E1E' };
+      meta.setAttribute('content', colors[resolved] || colors.light);
+    }
   } catch (_) { /* theme fallback: auto */ }
 })();
 

@@ -41,6 +41,11 @@ html {
   scroll-behavior: smooth;
 }
 
+::selection {
+  background: var(--selection);
+  color: var(--text);
+}
+
 body {
   min-height: 100dvh;
   background-color: var(--surface);
@@ -115,10 +120,15 @@ body {
   background: transparent;
   color: var(--muted);
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   cursor: pointer;
   border-radius: 8px;
   transition: background-color 0.15s, color 0.15s;
+}
+
+.nav-tab svg {
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
 .nav-tab:hover {
@@ -180,7 +190,7 @@ body {
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  filter: brightness(0.9);
 }
 
 .btn-danger {
@@ -204,7 +214,7 @@ body {
 /* === Тост === */
 .toast {
   position: fixed;
-  bottom: 80px;
+  bottom: calc(env(safe-area-inset-bottom, 16px) + 80px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--toast-bg);
@@ -235,6 +245,11 @@ input[type="range"] {
   cursor: pointer;
 }
 
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -247,8 +262,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 4px;
-  height: 4px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--primary);
   border: none;
@@ -382,7 +397,7 @@ input[type="checkbox"] {
   background: var(--surface);
   padding: 8px 0;
   z-index: 10;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid var(--surface);
   transition: border-color 0.2s ease;
 }
 
@@ -390,9 +405,21 @@ input[type="checkbox"] {
   border-bottom-color: var(--border);
 }
 
-/* === Фокус-visible fallback === */
-:focus:not(:focus-visible) {
+/* === Фокус-visible fallback (безопасный: только с полифилом) === */
+.js-focus-visible :focus:not(.focus-visible) {
   outline: none;
+}
+
+/* === prefers-reduced-motion === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* === Утилиты === */
@@ -616,6 +643,11 @@ p, h2, h3, span {
   margin: 8px 8px -40px auto;
 }
 
+.popover-close svg {
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 .popover-close:hover {
   background: var(--selection);
   color: var(--text);
@@ -656,6 +688,25 @@ p, h2, h3, span {
   to { transform: translateY(0); }
 }
 
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes sheet-down {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+.bottom-sheet-overlay[data-closing] {
+  animation: overlay-out 0.2s ease forwards;
+  pointer-events: none;
+}
+
+.bottom-sheet-overlay[data-closing] .bottom-sheet {
+  animation: sheet-down 0.25s ease forwards;
+}
+
 @media (min-width: 900px) {
   .bottom-sheet-overlay {
     display: none;
@@ -678,6 +729,14 @@ p, h2, h3, span {
   min-width: 44px;
   min-height: 44px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.bottom-sheet-close svg {
+  flex-shrink: 0;
 }
 
 /* === Карточка слова (режимы 3–5) === */
@@ -711,6 +770,13 @@ p, h2, h3, span {
   color: var(--greek);
   line-height: 1.2;
   overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+@media (max-width: 380px) {
+  .word-card-form {
+    font-size: 1.875rem;      /* 30px на узких экранах */
+  }
 }
 
 @media (min-width: 900px) {
@@ -1173,7 +1239,7 @@ p, h2, h3, span {
   background: var(--surface-card);
   cursor: pointer;
   font-family: system-ui, sans-serif;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1;
   user-select: none;
@@ -1215,6 +1281,7 @@ p, h2, h3, span {
   align-items: baseline;
   gap: 2px;
   align-self: baseline;
+  min-width: 0;
 }
 
 /* Vertical divider — explicit column, spans both rows, 4px clearance */
@@ -1663,6 +1730,13 @@ p, h2, h3, span {
   border-radius: 6px;
   background: var(--surface);
   color: var(--text);
+  transition: border-color 0.15s;
+}
+
+.dict-search:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 0;
+  border-color: var(--focus);
 }
 
 .dict-tabs {

@@ -33,7 +33,7 @@ export function openBottomSheet(content) {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'btn bottom-sheet-close';
   closeBtn.setAttribute('aria-label', 'Закрыть');
-  closeBtn.textContent = '✕';
+  closeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   closeBtn.addEventListener('click', closeBottomSheet);
   sheetEl.appendChild(closeBtn);
 
@@ -95,15 +95,24 @@ function onKeyDown(e) {
 }
 
 /**
- * Закрывает шторку.
+ * Закрывает шторку с анимацией.
  */
 export function closeBottomSheet() {
-  if (overlayEl) {
-    overlayEl.remove();
-    overlayEl = null;
-    sheetEl = null;
-  }
+  if (!overlayEl) return;
+  // Если уже закрывается — не дублируем
+  if (overlayEl.hasAttribute('data-closing')) return;
+
   document.removeEventListener('keydown', onKeyDown);
+
+  overlayEl.setAttribute('data-closing', '');
+  const el = overlayEl;
+  overlayEl = null;
+  sheetEl = null;
+
+  // Удаляем после окончания анимации (250ms sheet-down)
+  setTimeout(() => {
+    el.remove();
+  }, 260);
 }
 
 /**
