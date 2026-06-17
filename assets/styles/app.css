@@ -190,7 +190,7 @@ body {
 }
 
 .btn-primary:hover {
-  filter: brightness(0.9);
+  background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1));
 }
 
 .btn-danger {
@@ -214,7 +214,7 @@ body {
 /* === Тост === */
 .toast {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 16px) + 80px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--toast-bg);
@@ -405,8 +405,12 @@ input[type="checkbox"] {
   border-bottom-color: var(--border);
 }
 
-/* === Фокус-visible fallback (безопасный: только с полифилом) === */
-.js-focus-visible :focus:not(.focus-visible) {
+/* === Фокус-visible fallback === */
+/* Убираем браузерный outline ТОЛЬКО когда сработало :focus-visible —
+   т.е. при клике мышью (где :focus-visible НЕ match) outline остаётся.
+   В браузерах без поддержки :focus-visible селектор инвалидируется целиком —
+   безопасный fallback: показываем outline всегда. */
+:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -420,6 +424,24 @@ input[type="checkbox"] {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Функциональные анимации: удаляем мгновенно (animation не играет → animationend не сработает) */
+  .bottom-sheet-overlay[data-closing],
+  .bottom-sheet-overlay[data-closing] .bottom-sheet {
+    animation: none !important;
+  }
+}
+
+/* === Polyfill для [inert] в браузерах без нативной поддержки === */
+[inert] {
+  pointer-events: none;
+  cursor: default;
+}
+
+[inert],
+[inert] * {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* === Утилиты === */

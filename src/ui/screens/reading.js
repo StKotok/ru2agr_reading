@@ -11,6 +11,7 @@ import { renderLetterCard, renderWordCard } from '../components/word-card.js';
 import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
 import { showToast } from '../components/toast.js';
 import { navigate } from '../../router.js';
+import { iconX } from '../components/icons.js';
 
 const DEBOUNCE_MS = 500;
 const WINDOW_SIZE = 3;
@@ -811,7 +812,7 @@ function showPopover(card, anchorEl) {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'popover-close';
   closeBtn.setAttribute('aria-label', 'Закрыть');
-  closeBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  closeBtn.innerHTML = iconX(18);
   closeBtn.addEventListener('click', closePopover);
   popoverEl.appendChild(closeBtn);
 

@@ -77,3 +77,51 @@ export async function saveSettings(settings) {
     console.warn('saveSettings error:', e);
   }
 }
+
+// === Общая логика темы (используется app.js и settings screen) ===
+
+/** Карта theme → surface-цвет (для meta theme-color). */
+export const SURFACE_COLORS = { light: '#efeee9', dark: '#1E1E1E' };
+
+/** @returns {MediaQueryList} */
+export function getIS_DARK_OS() {
+  return window.matchMedia('(prefers-color-scheme: dark)');
+}
+
+/**
+ * Разрешает 'auto' → 'light' | 'dark' на основе OS-темы.
+ * @param {string} theme — 'light' | 'dark' | 'auto'
+ * @returns {'light' | 'dark'}
+ */
+export function resolveEffectiveTheme(theme) {
+  return theme === 'auto' && getIS_DARK_OS().matches ? 'dark'
+       : theme === 'auto' ? 'light'
+       : theme;
+}
+
+/**
+ * Применяет тему к DOM: data-theme, theme-color meta, localStorage.
+ * @param {string} theme — 'light' | 'dark' | 'auto'
+ */
+export function applyTheme(theme) {
+  const resolved = resolveEffectiveTheme(theme);
+  document.documentElement.setAttribute('data-theme', resolved);
+  // Кэш для мгновенного применения при следующей загрузке (FOUC-защита)
+  localStorage.setItem('theme', theme);
+  // Динамический theme-color для мобильного браузерного chrome
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute('content', SURFACE_COLORS[resolved] || SURFACE_COLORS.light);
+  }
+}
+
+/**
+ * Реакция на изменение системной темы в режиме auto.
+ * Вызвать один раз при старте для регистрации слушателя.
+ */
+export function listenForOSThemeChanges() {
+  getIS_DARK_OS().addEventListener('change', () => {
+    const current = localStorage.getItem('theme');
+    if (current === 'auto') applyTheme('auto');
+  });
+}

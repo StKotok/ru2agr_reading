@@ -2,6 +2,8 @@
  * Мобильная шторка — открытие тапом, закрытие свайпом вниз / тапом по оверлею / Esc.
  */
 
+import { iconX } from './icons.js';
+
 let overlayEl = null;
 let sheetEl = null;
 let startY = 0;
@@ -11,9 +13,13 @@ let isDragging = false;
 /**
  * Открывает шторку с содержимым.
  * @param {HTMLElement} content — содержимое шторки
+ * @returns {HTMLElement} sheet — DOM-элемент шторки (чтобы caller не делал querySelector)
  */
 export function openBottomSheet(content) {
-  closeBottomSheet();
+  // Закрываем предыдущую шторку с анимацией, но не ждём её
+  if (overlayEl && !overlayEl.hasAttribute('data-closing')) {
+    _startClose(overlayEl);
+  }
 
   overlayEl = document.createElement('div');
   overlayEl.className = 'bottom-sheet-overlay';
@@ -33,7 +39,7 @@ export function openBottomSheet(content) {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'btn bottom-sheet-close';
   closeBtn.setAttribute('aria-label', 'Закрыть');
-  closeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  closeBtn.innerHTML = iconX(20);
   closeBtn.addEventListener('click', closeBottomSheet);
   sheetEl.appendChild(closeBtn);
 
@@ -60,6 +66,8 @@ export function openBottomSheet(content) {
     const focusable = sheetEl.querySelector('button, [tabindex]');
     if (focusable) focusable.focus();
   });
+
+  return sheetEl;
 }
 
 function onTouchStart(e) {
@@ -68,7 +76,7 @@ function onTouchStart(e) {
 }
 
 function onTouchMove(e) {
-  if (!isDragging) return;
+  if (!isDragging || !sheetEl) return;
   currentY = e.touches[0].clientY;
   const delta = currentY - startY;
   if (delta > 0) {
@@ -80,6 +88,7 @@ function onTouchMove(e) {
 function onTouchEnd() {
   if (!isDragging) return;
   isDragging = false;
+  if (!sheetEl) return;
   const delta = currentY - startY;
   if (delta > 80) {
     closeBottomSheet();
@@ -94,6 +103,40 @@ function onKeyDown(e) {
   }
 }
 
+function _startClose(el) {
+  // Очищаем touch-слушатели со старого sheetEl
+  if (sheetEl) {
+    sheetEl.removeEventListener('touchstart', onTouchStart);
+    sheetEl.removeEventListener('touchmove', onTouchMove);
+    sheetEl.removeEventListener('touchend', onTouchEnd);
+  }
+
+  document.removeEventListener('keydown', onKeyDown);
+
+  // Скрываем от accessibility tree немедленно
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('inert', '');
+
+  el.setAttribute('data-closing', '');
+
+  let removed = false;
+  const doRemove = () => {
+    if (removed) return;
+    removed = true;
+    el.removeEventListener('animationend', onAnimEnd);
+    clearTimeout(fallbackTimer);
+    el.remove();
+  };
+
+  // Удаляем по окончании анимации
+  const onAnimEnd = () => doRemove();
+  el.addEventListener('animationend', onAnimEnd);
+
+  // Fallback: если animation не проигрывается (prefers-reduced-motion),
+  // удаляем элемент не позже чем через 300ms
+  const fallbackTimer = setTimeout(doRemove, 300);
+}
+
 /**
  * Закрывает шторку с анимацией.
  */
@@ -102,17 +145,11 @@ export function closeBottomSheet() {
   // Если уже закрывается — не дублируем
   if (overlayEl.hasAttribute('data-closing')) return;
 
-  document.removeEventListener('keydown', onKeyDown);
-
-  overlayEl.setAttribute('data-closing', '');
   const el = overlayEl;
   overlayEl = null;
   sheetEl = null;
 
-  // Удаляем после окончания анимации (250ms sheet-down)
-  setTimeout(() => {
-    el.remove();
-  }, 260);
+  _startClose(el);
 }
 
 /**

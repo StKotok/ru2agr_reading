@@ -308,8 +308,7 @@ export function createModeWidget(ctx) {
     updateDictCount();
 
     if (wasMobileOnOpen) {
-      openBottomSheet(popup);
-      const sheet = document.querySelector('.bottom-sheet');
+      const sheet = openBottomSheet(popup);
       if (sheet && sheet.parentNode) {
         bottomSheetObserver = new MutationObserver(() => {
           if (!document.contains(sheet)) {

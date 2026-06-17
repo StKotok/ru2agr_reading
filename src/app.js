@@ -2,7 +2,7 @@ import { Workbox } from 'workbox-window';
 import { createStore } from './state/store.js';
 import { parse, onChange } from './router.js';
 import { createNav } from './ui/components/nav.js';
-import { loadSettings } from './state/settings.js';
+import { loadSettings, applyTheme, listenForOSThemeChanges } from './state/settings.js';
 import * as readingScreen from './ui/screens/reading.js';
 import * as dictionaryScreen from './ui/screens/dictionary.js';
 import * as progressScreen from './ui/screens/progress.js';
@@ -52,18 +52,12 @@ function switchScreen(screenName, params) {
   try {
     const settings = await loadSettings();
     const theme = settings.theme || 'auto';
-    const resolved = theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark'
-                     : theme === 'auto' ? 'light'
-                     : theme;
-    document.documentElement.setAttribute('data-theme', resolved);
-    // Динамический theme-color для мобильного браузерного chrome
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) {
-      const colors = { light: '#efeee9', dark: '#1E1E1E' };
-      meta.setAttribute('content', colors[resolved] || colors.light);
-    }
+    applyTheme(theme);
   } catch (_) { /* theme fallback: auto */ }
 })();
+
+// Слушатель смены OS-темы в режиме auto
+listenForOSThemeChanges();
 
 // Регистрация service worker — используем Workbox напрямую, а не virtual:pwa-register,
 // потому что autoUpdate-обёртка vite-plugin-pwa не отдаёт наружу wb.update() —

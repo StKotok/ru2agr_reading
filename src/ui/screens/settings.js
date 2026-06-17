@@ -1,4 +1,4 @@
-import { loadSettings, saveSettings } from '../../state/settings.js';
+import { loadSettings, saveSettings, applyTheme } from '../../state/settings.js';
 import { loadProgress, saveProgress } from '../../state/progress.js';
 import { db } from '../../storage/db.js';
 
@@ -152,31 +152,8 @@ function renderResetSection() {
   container.appendChild(section);
 }
 
-// Статическая карта surface-цветов — не требует getComputedStyle (FSL-фри)
-const SURFACE_COLORS = { light: '#efeee9', dark: '#1E1E1E' };
-const IS_DARK_OS = window.matchMedia('(prefers-color-scheme: dark)');
-
-function resolveEffectiveTheme(theme) {
-  return theme === 'auto' && IS_DARK_OS.matches ? 'dark' : theme === 'auto' ? 'light' : theme;
-}
-
-function applyTheme(theme) {
-  const resolved = resolveEffectiveTheme(theme);
-  document.documentElement.setAttribute('data-theme', resolved);
-  // Кэш для мгновенного применения при следующей загрузке (FOUC-защита)
-  localStorage.setItem('theme', theme);
-  // Динамический theme-color для мобильного браузерного chrome
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) {
-    meta.setAttribute('content', SURFACE_COLORS[resolved]);
-  }
-}
-
-// Реакция на изменение системной темы в режиме auto
-IS_DARK_OS.addEventListener('change', () => {
-  const current = localStorage.getItem('theme');
-  if (current === 'auto') applyTheme('auto');
-});
+// applyTheme, resolveEffectiveTheme, SURFACE_COLORS, IS_DARK_OS и слушатель OS-темы
+// вынесены в src/state/settings.js — импортируются оттуда.
 
 export function unmount() {
   container = null;

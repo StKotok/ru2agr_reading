@@ -166,6 +166,7 @@ export function renderWordCard(data, callbacks = {}) {
   formEl.className = 'word-card-form';
   formEl.textContent = surfaceForm || lemma;
   formEl.id = 'word-card-title';
+  formEl.setAttribute('lang', 'el');
   formRow.appendChild(formEl);
 
   if (freqText) {
@@ -347,6 +348,7 @@ export function renderWordCard(data, callbacks = {}) {
     const surfaceEl = document.createElement('span');
     surfaceEl.className = 'word-card-surface';
     surfaceEl.textContent = surfaceForm;
+    surfaceEl.setAttribute('lang', 'el');
     grid.appendChild(surfaceEl);
 
     const arrow1 = document.createElement('span');
@@ -357,6 +359,7 @@ export function renderWordCard(data, callbacks = {}) {
     const lemmaEl = document.createElement('span');
     lemmaEl.className = 'word-card-lemma';
     lemmaEl.textContent = lemma;
+    lemmaEl.setAttribute('lang', 'el');
     grid.appendChild(lemmaEl);
 
     // Ряд 2: в тексте  →  словарная форма
