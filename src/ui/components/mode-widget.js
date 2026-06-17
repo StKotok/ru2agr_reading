@@ -432,13 +432,15 @@ export function createModeWidget(ctx) {
   // ---- Обновление чипа ----
   // Сигнатура структуры: при совпадении — surgical update (анимация полосок),
   // иначе — полный innerHTML.
+  // ВАЖНО: сентинелы ('greek','loading','rus') и вычисленные sig ('true|false|true')
+  // не должны пересекаться строково — иначе guard раннего возврата сработает ложно.
   let _chipSig = null;
 
-  function chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, activeWordsExist, count) {
+  function chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, hasDictWords, count) {
     const desc = [];
     if (showLetters) desc.push(`буквы ${intensity}%`);
     if (showWordLayer) {
-      if (grcUnavailable && activeWordsExist) desc.push('греческий текст недоступен');
+      if (grcUnavailable && hasDictWords) desc.push('греческий текст недоступен');
       else desc.push(`слова: ${wordLayer === 'lemma' ? 'леммы' : 'формы'}, ${count} в словаре`);
     }
     return `Греческий слой: ${desc.join('; ') || 'выключен'}`;
@@ -474,7 +476,7 @@ export function createModeWidget(ctx) {
 
     const showLetters = intensity > 0;
     const showWordLayer = wordLayer !== 'off';
-    const activeWordsExist = count > 0;
+    const hasDictWords = count > 0;
 
     if (!showLetters && !showWordLayer) {
       if (_chipSig !== 'rus') {
@@ -485,7 +487,10 @@ export function createModeWidget(ctx) {
       return;
     }
 
-    const wordsAvailable = !(grcUnavailable && activeWordsExist);
+    // Слова недоступны для показа только когда греческий текст не загружен
+    // И при этом в словаре ЕСТЬ слова. При count=0 показываем λέγω 0 —
+    // функция доступна, просто нет слов (независимо от grcStatus).
+    const wordsAvailable = !(grcUnavailable && hasDictWords);
     const sig = `${showLetters}|${showWordLayer}|${wordsAvailable}`;
 
     // Surgical update — структура та же, только значения
@@ -504,13 +509,14 @@ export function createModeWidget(ctx) {
         const wfill = chip.querySelector('.mw-word-bar-fill');
         if (wfill) wfill.style.width = `${Math.min(100, count / 10)}%`;
       }
-      chip.setAttribute('aria-label', chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, activeWordsExist, count));
+      chip.setAttribute('aria-label', chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, hasDictWords, count));
       return;
     }
 
     _chipSig = sig;
 
     const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
+    // count всегда число (dictWordCount ∈ {-1} ∪ ℕ₀), поэтому ${count} безопасен в innerHTML.
     const rightText = wordsAvailable
       ? `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`
       : '<span class="mw-na">—</span>';
@@ -544,7 +550,7 @@ export function createModeWidget(ctx) {
         + `</div>`;
     }
 
-    chip.setAttribute('aria-label', chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, activeWordsExist, count));
+    chip.setAttribute('aria-label', chipLabel(showLetters, intensity, showWordLayer, wordLayer, grcUnavailable, hasDictWords, count));
   }
 
   function updateDictCount() {
@@ -598,8 +604,7 @@ export function createModeWidget(ctx) {
     if (bottomSheetObserver) { bottomSheetObserver.disconnect(); bottomSheetObserver = null; }
   }
 
-  // Инициализация
-  updateChip();
+  // Инициализация: updateDictCount() считает слова и вызывает updateChip()
   updateDictCount();
 
   return { chip, destroy };
