@@ -24,8 +24,9 @@
       `strong`, `freq-*` как ключ в коде/IndexedDB.
 - [ ] `strongs` — **всегда массив строк**. Никогда `Number(strong[0])`. Составные
       выражения (`5228+1537+4053`) сохраняются как есть.
-- [ ] Рантайм **никогда** не сплитит `text` стиха и не пересчитывает offsets —
-      берёт замороженные `words[]`.
+- [ ] Рантайм **никогда** не сплитит `text` стиха и не пересчитывает offsets.
+      Русский якорь приходит из сгенерированного `span:[start,end]`; движок режет
+      исходный `verse.text` только через `slice()` и отдаёт промежутки как plain.
 - [ ] `q="u"` (uncertain) **никогда** не показывается пользователю.
 - [ ] Генерация **детерминирована**: повторный запуск при тех же входах → побайтово
       те же рантайм-файлы. Никаких `Date.now()`/`generatedAt` в рантайм-паках.
@@ -48,7 +49,12 @@ npm run build:data # после изменений данных/пайплайн
 - [ ] НЕ хранить полный `refs[]` в ядре — только `firstRef`.
 - [ ] НЕ моделировать 2Кор 11:33 как `grcOnly` — это `merged` (`syn:"11:32b", grc:"11:33"`).
 - [ ] НЕ использовать индекс слова как якорь выравнивания — только `span:[start,end]`.
+- [ ] НЕ оставлять в runtime-слое пунктуационные костыли (`TRAILING_PUNCT_RE`):
+      токенизатор исключает внешнюю пунктуацию из `span`, а пунктуация остаётся
+      plain-текстом между span'ами.
 - [ ] НЕ тянуть Синодал из живого API в `build:data` — только из committed snapshot.
+- [ ] НЕ забыть `assets/data/books.json`: source snapshot Синодала и runtime-manifest
+      книг — разные артефакты; PWA продолжает грузить список книг из runtime assets.
 - [ ] НЕ предполагать, что `src/ui/screens/reading.js` отсутствует — он есть (1041 стр.) и центральный.
 
 ---
@@ -72,9 +78,14 @@ npm run build:data # после изменений данных/пайплайн
       SBLGNT из `docs/macula-greek/SBLGNT` (только то, что реально читает генератор).
 - [ ] `docs/sources/originals/macula-greek/LICENSE.md` (CC BY 4.0) + `source-manifest.json`
       (схема §1.5 ниже): URL, commit/tag, SHA-256 по каждому используемому файлу, license, attribution.
-- [ ] **Синодал:** запустить `scripts/build-syn.mjs` **один раз**, сохранить сырой
-      результат в `docs/sources/translations/syn/` (committed snapshot) + `source-manifest.json`
+- [ ] **Синодал:** запустить `scripts/build-syn.mjs` **один раз** только как
+      snapshot-fetcher. Он сейчас пишет в `assets/data/bibles/syn/*` и
+      `assets/data/books.json`; этот вывод нужно перенести/нормализовать в
+      `docs/sources/translations/syn/` (committed snapshot) + `source-manifest.json`
       (URL bolls.life, дата, SHA-256). После этого `build:data` НЕ ходит в сеть.
+- [ ] Зафиксировать, что runtime `assets/data/books.json` будет заново генерироваться
+      из snapshot/manifest в Шаге 2.5, а не исчезнет вместе со старым `build-syn.mjs`
+      output.
 - [ ] **Курация RU:** скопировать `assets/data/lexicon/core.json` → `docs/sources/locales/ru/core.json`
       + `source-manifest.json` (origin = ручная курация, версия). **Старый файл пока НЕ удалять.**
 
@@ -98,6 +109,11 @@ npm run build:data # после изменений данных/пайплайн
 
 ### 1.4 Вынос canonical из publicDir
 
+- [ ] До первого финального `build:macula` принять решение по морфологии:
+      runtime либо использует raw `morph` + `src/engine/morphology.js`, либо берёт
+      готовый `morphology.labelRu` из canonical. Если выбран `labelRu`, чинить
+      `scripts/macula/lib/morphology-decoder.mjs` **до** генерации canonical;
+      если выбран raw `morph`, canonical `labelRu` не считается runtime-контрактом.
 - [ ] Перенаправить выход `scripts/macula/build-macula.mjs` с `assets/data/generated/macula/`
       на `generated/canonical/sblgnt-macula/`.
 - [ ] `.gitignore`: добавить `generated/canonical/**/tokens.jsonl`,
@@ -180,11 +196,14 @@ buildLexemeKeyMap(canonicalLexemes, curatedCoreEntries):
 ### 2.5 `scripts/build-syn-packs.mjs`
 
 - [ ] Вход: `docs/sources/translations/syn/` (committed snapshot).
-- [ ] Выход: `assets/data/translations/syn/books/{bookId}.json` (`translation-book-v1`).
+- [ ] Выход: `assets/data/translations/syn/books/{bookId}.json` (`translation-book-v1`)
+      + runtime `assets/data/books.json` (список книг для текущего UI/loader'ов).
 - [ ] `words[]` — объекты `{i, text, start, end}`; `start`/`end` — символьные offsets в `text`.
 - [ ] Токенизатор — **один общий модуль** (`scripts/macula/lib/ru-tokenizer.mjs`), тот же,
       что использует генератор выравнивания (Шаг 3). Заморозить — рантайм его не вызывает.
 - [ ] Тест: 27 книг валидны; для каждого `word`: `text === verseText.slice(start,end)`; детерминизм.
+- [ ] Тест: `assets/data/books.json` создан из snapshot, содержит 27 книг, и `src/data/bible-loader.js`
+      может продолжать читать список книг без legacy `assets/data/bibles/**`.
 
 ### 2.6 package.json scripts
 
@@ -202,8 +221,12 @@ buildLexemeKeyMap(canonicalLexemes, curatedCoreEntries):
 
 ### 3.1 `scripts/macula/lib/ru-tokenizer.mjs` (общий, см. 2.5)
 
-- [ ] Нормализация как в текущем `cleanRuWord`/`text.split(/\s+/)` с сохранением пунктуации/регистра.
-- [ ] Возвращает `[{i, text, start, end}]`. Тест на крайних случаях («Его», «его.», «нею?», дефисы).
+- [ ] Токенизатор работает по исходной строке и возвращает только lexical word span:
+      внешняя пунктуация/кавычки/скобки остаются вне `span`; регистр букв сохраняется.
+- [ ] Не использовать runtime-подход `text.split(/\s+/)` как контракт. Можно брать идеи
+      из старого `cleanRuWord`, но результатом должны быть точные offsets.
+- [ ] Возвращает `[{i, text, start, end}]`, где `text === verseText.slice(start,end)`.
+      Тесты на крайних случаях: «Его», «его.», «нею?», «"слово,"», скобки, дефисы.
 
 ### 3.2 `scripts/build-alignment.mjs`
 
@@ -217,7 +240,16 @@ buildLexemeKeyMap(canonicalLexemes, curatedCoreEntries):
 - [ ] **`phraseVariantsByRef` (phrase-level):** из `textual-variants.json.synOnlyPhrases`
       (Comma Johanneum 1Ин 5:7, Мф 6:13b, Деян 9:5 …) — `span` русского текста + `variant`.
 - [ ] **Пары:** для каждого `word` применить `ruMatches` → кандидат `lexemeKey`; найти
-      greek `tokenId` с тем же `strong` в стихе; якорь русского — `span:[word.start, word.end]`.
+      greek `tokenId` в стихе с тем же `lexemeKey` (и Strong-intersection как
+      дополнительную проверку там, где `ruMatches` пришёл из Strong-курации);
+      якорь русского — `span:[word.start, word.end]`.
+- [ ] **Монотонное потребление повторов:** для каждого `(ref, lexemeKey)` держать cursor
+      по кандидатным Greek token'ам, аналог старого `strongUsage`. Никогда не брать
+      первый найденный token повторно. Если порядок/количество повторов неоднозначны —
+      пара уходит в `q:"u"`, а не в видимый `e`/`f`.
+- [ ] Fixture-тест: стих с повторяющимся Strong/lexemeKey (минимум Ин 1:1) связывает
+      первое русское вхождение с первым Greek token, второе — со вторым, и не создаёт
+      дублей на один `tokenId`.
 - [ ] **Строгий порог (precision):** Strong-матч + `ruMatches` (+согласование падеж/число/род
       где доступно из morph) → `q:"e"`; функциональное → `q:"f"`; всё иное/неоднозначное → `q:"u"`.
 - [ ] `index.json`: `lexemesWithVisiblePair` = леммы с ≥1 видимой (`e`/`f`) парой.
@@ -265,14 +297,32 @@ buildLexemeKeyMap(canonicalLexemes, curatedCoreEntries):
 
 - [ ] `src/engine/form-layer.js` / `compose.js`: нативные поля `s`/`morph`/`strongs`/`lexemeKey`/`tokenId`;
       пары по `tokenId`; позиция русского слова — по `span`; `q="u"` не показывать никогда.
-- [ ] `src/engine/morphology.js`: проверить, что сырой `morph` парсится (уже мапит `D`); правок, скорее всего, нет.
-- [ ] Тесты: `strongs`-массивы; составной Strong (`5228+1537+4053`); нет alignment; `q=u` скрыт; парсинг morph; join `lexemeKey`; fallback EN-глосс; missing overlay не роняет рендер.
+- [ ] Переписать `applyFormLayer` с парадигмы `verseText.split(/\s+/)` на cursor/slice:
+      `plain = text.slice(cursor, span.start)`, интерактивное слово = `text.slice(span.start, span.end)`,
+      после последней пары — plain-хвост. Всё между span'ами (пробелы, пунктуация,
+      невыровненные слова, variant phrase) остаётся plain.
+- [ ] Полностью убрать из runtime `TRAILING_PUNCT_RE`/ручное отделение пунктуации:
+      внешний знак препинания не входит в `span`, поэтому не должен попадать в
+      интерактивный `Segment`.
+- [ ] Словарный lookup в движке — только по `lexemeKey` (`dictByLexemeKey`), не
+      `dictByStrong`. `strongs[]` остаётся данными для карточки/проверок/provenance,
+      но не ключом замены.
+- [ ] `src/engine/morphology.js`: если runtime выбран raw `morph`, проверить поддержку
+      MACULA-кодов и добавить тесты; если runtime выбран canonical `labelRu`, заменить
+      потребление карточки осознанно, после исправления decoder в Шаге 1.
+- [ ] Тесты: `strongs`-массивы; составной Strong (`5228+1537+4053`); нет alignment;
+      `q=u` скрыт; парсинг morph; join `lexemeKey`; lookup не использует Strong;
+      пунктуация вокруг span остаётся plain; fallback EN-глосс; missing overlay не роняет рендер.
 
 ### 4.3 UI
 
 - [ ] `src/ui/screens/reading.js`: переключить `loadBook`/alignment/lexeme-key; `verse.alignment` → `loadAlignment(bookId)` прокинуть в `composeVerse`.
 - [ ] `src/ui/render.js`: `data-*` и сбор слова из DOM → `lexemeKey`/`tokenId`/`s`.
-- [ ] `src/ui/screens/dictionary.js`, `src/ui/components/word-card.js`, `inspector.js`, `mode-widget.js`: ключ = `lexemeKey`; источник глосса = overlay→EN-fallback. Проверить, читает ли `word-card.js` `labelRu` (если да — починить canonical-декодер `morphology-decoder.mjs`).
+- [ ] `src/ui/screens/dictionary.js`, `src/ui/components/word-card.js`, `inspector.js`, `mode-widget.js`: ключ = `lexemeKey`; источник глосса = overlay→EN-fallback.
+- [ ] `word-card.js` сейчас использует `formatMorphShort/formatMorphFull`, а не
+      `morphology.labelRu`. Не вносить фиктивную зависимость от `labelRu`; менять
+      карточку только если в Шаге 1 осознанно выбран canonical `labelRu` как runtime
+      источник морфологических подписей.
 - [ ] `src/state/dictionary.js`, `src/storage/db.js`: ключ словаря = `lexemeKey` (без миграции).
 
 ### 4.4 Деградация (fail-soft)
