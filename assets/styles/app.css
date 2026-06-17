@@ -52,6 +52,22 @@ body {
   color: var(--text);
 }
 
+/* Заголовки экранов — scholarly serif */
+h2 {
+  font-family: 'Gentium Plus', serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+h3 {
+  font-family: 'Gentium Plus', serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
 /* === Layout === */
 #app {
   display: flex;
@@ -143,6 +159,11 @@ body {
   font-weight: 600;
 }
 
+.nav-tab:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
 .nav-tab:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
@@ -181,6 +202,11 @@ body {
 .btn:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.btn:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
 }
 
 .btn-primary {
@@ -403,6 +429,8 @@ input[type="checkbox"] {
 
 .scripture-text h2.is-stuck {
   border-bottom-color: var(--border);
+  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
 }
 
 /* === Фокус-visible fallback === */
@@ -1277,6 +1305,9 @@ section[data-chapter] {
   font-size: 0.875rem;
   text-align: center;
   padding: 32px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ---- Mode Widget Chip ---- */
@@ -1305,6 +1336,11 @@ section[data-chapter] {
 .mode-widget-chip:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.mode-widget-chip:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
 }
 
 /* ---- Grid row for two-sided (letters + words) ---- */
@@ -1349,7 +1385,7 @@ section[data-chapter] {
 .mw-bar {
   grid-column: 1;
   display: block;
-  height: 3px;
+  height: 5px;
   border-radius: 3px;
   background: var(--greek-bar-track);
 }
@@ -1366,7 +1402,7 @@ section[data-chapter] {
 .mw-word-bar {
   grid-column: 3;
   display: block;
-  height: 3px;
+  height: 5px;
   border-radius: 3px;
   background: var(--greek-word-bar-track);
 }
@@ -1678,6 +1714,11 @@ section[data-chapter] {
   opacity: 0.4;
 }
 
+.letter-cell:active {
+  transform: scale(0.93);
+  transition: transform 0.1s ease;
+}
+
 .letter-cell:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -1724,13 +1765,21 @@ section[data-chapter] {
 .onboarding-card {
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s;
   border: 2px solid var(--border);
+  border-left: 4px solid var(--onboarding-stripe, var(--primary));
+  padding: 16px 16px 16px 20px;
+  position: relative;
 }
 
 .onboarding-card:hover {
   border-color: var(--primary);
   background: var(--selection);
+}
+
+.onboarding-card:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
 }
 
 .onboarding-card strong {

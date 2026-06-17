@@ -27,7 +27,18 @@ export function getInspectorPanel(parent) {
  */
 export function showEmptyState() {
   if (!panelEl) return;
-  panelEl.innerHTML = '<p class="inspector-empty">Нажми на греческую букву в тексте</p>';
+  panelEl.innerHTML = `
+    <div class="inspector-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true" style="opacity:0.35;margin-bottom:12px">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        <line x1="8" y1="7" x2="16" y2="7"/>
+        <line x1="8" y1="11" x2="14" y2="11"/>
+      </svg>
+      <p>Нажми на греческую букву в тексте</p>
+    </div>`;
 }
 
 /**
