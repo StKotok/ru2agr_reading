@@ -37,8 +37,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,svg,json}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB for lexicon core
         globIgnores: [
-          '**/data/bibles/**',
           '**/data/originals/**',
           '**/data/translations/**',
           '**/data/align/**'

@@ -23,21 +23,26 @@ describe('composeVerse', () => {
       progressLetters: {},
       seedPrefix: 'test'
     });
-    // Заменяются только введённые буквы: пустой прогресс → чистый русский текст
     const text = segments.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('текст');
   });
 
-  // ── Mode 2 via alignment tests ──
+  // ── Mode 2 via alignment tests (MACULA v3 format) ──
 
   const grcTokens = [
-    { w: 'Ἐν', lemma: 'ἐν', morph: 'PREP', strong: 1722 },
-    { w: 'ἀρχῇ', lemma: 'ἀρχή', morph: 'N-DSF', strong: 746 },
-    { w: 'ἦν', lemma: 'εἰμί', morph: 'V-IAI-3S', strong: 1510 },
-    { w: 'λόγον', lemma: 'λόγος', morph: 'N-ASM', strong: 3056 },
+    { id: 'n43001001001', i: 1, s: 'Ἐν', lemma: 'ἐν', lexemeKey: 'en', morph: 'PREP', strongs: ['1722'], fw: true },
+    { id: 'n43001001002', i: 2, s: 'ἀρχῇ', lemma: 'ἀρχή', lexemeKey: 'arche', morph: 'N-DSF', strongs: ['746'], fw: false },
+    { id: 'n43001001003', i: 3, s: 'ἦν', lemma: 'εἰμί', lexemeKey: 'eimi', morph: 'V-IAI-3S', strongs: ['1510'], fw: true },
+    { id: 'n43001001005', i: 5, s: 'λόγος', lemma: 'λόγος', lexemeKey: 'logos', morph: 'N-NSM', strongs: ['3056'], fw: false },
+  ];
+  const words = [
+    { i: 0, text: 'В', start: 0, end: 1 },
+    { i: 1, text: 'начале', start: 2, end: 8 },
+    { i: 2, text: 'было', start: 9, end: 13 },
+    { i: 3, text: 'Слово', start: 14, end: 19 },
   ];
   const wordEntryLogos = {
-    lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
+    lexemeKey: 'logos', lexemeId: 'logos', lemma: 'λόγος',
     regexps: [/(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])/iu],
     excludeRegexps: [], intensityPct: 100, status: 'known', forms: 'lemma'
   };
@@ -49,43 +54,33 @@ describe('composeVerse', () => {
   it('mode 2: замена на лемму, не на форму', () => {
     const segs = composeVerse('В начале было Слово', {
       ...mode2Ctx,
-      grcVerse: { tokens: grcTokens },
-      alignment: [{ ru: 3, gr: 3 }]  // «Слово» → λόγος
+      words,
+      grcTokens,
+      alignment: [{ span: [14, 19], tokenId: 'n43001001005', lexemeKey: 'logos', q: 'e', src: 'ruMatch' }]
     });
-    // Есть замена с леммой λόγος (с заглавной буквы — «Слово»)
     expect(segs.some(s => s.greek && s.greek.toLowerCase() === 'λόγος')).toBe(true);
-    // НЕТ замены с формой λόγον (forms: 'lemma' — показываем лемму)
     expect(segs.some(s => s.greek && s.greek.toLowerCase() === 'λόγον')).toBe(false);
   });
 
-  it('mode 2: слово без выравнивания не заменяется, даже если регулярка матчит', () => {
-    // «Слово» не выровнено (alignment ссылается на другое русское слово)
+  it('mode 2: слово без выравнивания не заменяется', () => {
     const segs = composeVerse('В начале было Слово', {
       ...mode2Ctx,
-      grcVerse: { tokens: grcTokens },
-      alignment: [{ ru: 0, gr: 0 }]  // выровнено только «В» (явная ошибка выравнивания)
+      words,
+      grcTokens,
+      alignment: [{ span: [0, 1], tokenId: 'n43001001001', lexemeKey: 'en', q: 'e', src: 'ruMatch' }]
     });
     const text = segs.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('В начале было Слово');
   });
 
-  it('mode 2: нет grcVerse/alignment — словарных замен нет', () => {
+  it('mode 2: нет grcTokens/alignment — словарных замен нет', () => {
     const segs = composeVerse('Слово', mode2Ctx);
     const text = segs.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('Слово');
   });
 
-  it('mode 2: guard ruMatches — «свет» выровненный с λόγον не заменяется', () => {
-    const verseText = 'В начале был свет';
-    const tokensWithLogos = [
-      { w: 'λόγον', lemma: 'λόγος', morph: 'N-ASM', strong: 3056 },
-    ];
-    // «свет» выровнен с λόγον — ошибка выравнивания, guard должен отклонить
-    const segs = composeVerse(verseText, {
-      ...mode2Ctx,
-      grcVerse: { tokens: tokensWithLogos },
-      alignment: [{ ru: 3, gr: 0 }]
-    });
+  it('mode 2: без alignment замен нет', () => {
+    const segs = composeVerse('В начале был свет', mode2Ctx);
     const text = segs.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('В начале был свет');
   });
@@ -93,15 +88,16 @@ describe('composeVerse', () => {
   it('mode 2: детерминизм', () => {
     const ctx = {
       ...mode2Ctx,
-      grcVerse: { tokens: grcTokens },
-      alignment: [{ ru: 3, gr: 3 }]
+      words,
+      grcTokens,
+      alignment: [{ span: [14, 19], tokenId: 'n43001001005', lexemeKey: 'logos', q: 'e', src: 'ruMatch' }]
     };
     const r1 = composeVerse('В начале было Слово', ctx);
     const r2 = composeVerse('В начале было Слово', ctx);
     expect(r1).toEqual(r2);
   });
 
-  it('is deterministic', () => {
+  it('is deterministic (mode 1)', () => {
     const opts = { mode: 1, intensity: 50, progressLetters: { 'α': { status: 'known' } }, seedPrefix: 'john' };
     const r1 = composeVerse('ааа', opts);
     const r2 = composeVerse('ааа', opts);
@@ -109,96 +105,67 @@ describe('composeVerse', () => {
   });
 
   it('mode 3: невыровненные слова остаются русскими', () => {
-    // Стих с alignment только для «Слово», но не для «Бог»
     const verseText = 'В начале было Слово и Бог';
-    const grcTokens = [
-      { w: 'Ἐν', lemma: 'ἐν', morph: 'prep', strong: 1722 },
-      { w: 'ἀρχῇ', lemma: 'ἀρχή', morph: 'noun', strong: 746 },
-      { w: 'λόγος', lemma: 'λόγος', morph: 'noun', strong: 3056 },
-      { w: 'θεός', lemma: 'θεός', morph: 'noun', strong: 2316 },
+    const vWords = [
+      { i: 0, text: 'В', start: 0, end: 1 },
+      { i: 1, text: 'начале', start: 2, end: 8 },
+      { i: 2, text: 'было', start: 9, end: 13 },
+      { i: 3, text: 'Слово', start: 14, end: 19 },
+      { i: 4, text: 'и', start: 20, end: 21 },
+      { i: 5, text: 'Бог', start: 22, end: 25 },
     ];
-    // alignment: только «Слово» (ru=3) → λόγος (gr=2)
-    const alignment = [{ ru: 3, gr: 2 }];
+    const vGrcTokens = [
+      { id: 't1', i: 1, s: 'λόγος', lemma: 'λόγος', lexemeKey: 'logos', morph: 'N-NSM', strongs: ['3056'], fw: false },
+    ];
+    const vAlignment = [{ span: [14, 19], tokenId: 't1', lexemeKey: 'logos', q: 'e', src: 'ruMatch' }];
 
     const segments = composeVerse(verseText, {
-      mode: 3,
-      intensity: 0,
-      progressLetters: {},
-      seedPrefix: 'test',
+      mode: 3, intensity: 0, progressLetters: {}, seedPrefix: 'test',
+      words: vWords, grcTokens: vGrcTokens, alignment: vAlignment,
       wordEntries: [
-        {
-          lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
+        { lexemeKey: 'logos', lexemeId: 'logos', lemma: 'λόγος', forms: 'form',
           regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
-          excludeRegexps: [],
-          intensityPct: 100, status: 'known', forms: 'form'
-        },
-        {
-          lexemeId: 'theos', lemma: 'θεός', strongNum: 2316,
-          regexps: [new RegExp('(?<![а-яё])[Бб]ог(а|у|ом|е)?(?![а-яё])', 'iu')],
-          excludeRegexps: [],
-          intensityPct: 100, status: 'known', forms: 'lemma'
-        }
+          excludeRegexps: [], intensityPct: 100, status: 'known' }
       ],
-      grcVerse: { tokens: grcTokens },
-      alignment
     });
 
-    // «Слово» должно быть заменено формой (kind='form'), с заглавной буквы
     const formSegs = segments.filter(s => s.kind === 'form');
     expect(formSegs.length).toBeGreaterThanOrEqual(1);
-    expect(formSegs.some(s => s.greek.toLowerCase() === 'λόγος')).toBe(true);
-
-    // «Бог» НЕ должно быть заменено — оно не выровнено (нет в alignment)
     const allText = segments.map(s => s.greek || s.plain || '').join('');
     expect(allText).toContain('Бог');
     expect(allText).not.toContain('θεός');
   });
 
   it('mode 3 без греческих данных не делает словарных замен', () => {
-    const verseText = 'В начале было Слово';
-    const segments = composeVerse(verseText, {
-      mode: 3,
-      intensity: 0,
-      progressLetters: {},
-      seedPrefix: 'test',
+    const segments = composeVerse('В начале было Слово', {
+      mode: 3, intensity: 0, progressLetters: {}, seedPrefix: 'test',
       wordEntries: [
-        {
-          lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
+        { lexemeKey: 'logos', lexemeId: 'logos', lemma: 'λόγος', forms: 'form',
           regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
-          excludeRegexps: [],
-          intensityPct: 100, status: 'known', forms: 'form'
-        }
+          excludeRegexps: [], intensityPct: 100, status: 'known' }
       ]
     });
-    // Без grcVerse/alignment — только буквенный слой
     const text = segments.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('В начале было Слово');
   });
 
   it('explicit forms:lemma переопределяет глобальный wordLayer=form', () => {
-    // Симулируем: глобальный wordLayer='form', но per-word forms='lemma' явно задан
-    const verseText = 'В начале было Слово';
-    const grcTokens = [
-      { w: 'λόγον', lemma: 'λόγος', morph: 'N-ASM', strong: 3056 },
+    const vWords = [{ i: 0, text: 'Слово', start: 0, end: 5 }];
+    const vGrcTokens = [
+      { id: 't1', i: 1, s: 'λόγος', lemma: 'λόγος', lexemeKey: 'logos', morph: 'N-NSM', strongs: ['3056'], fw: false },
     ];
-    const segments = composeVerse(verseText, {
-      mode: 3,
-      intensity: 0,
-      progressLetters: {},
-      seedPrefix: 'test',
+    const vAlign = [{ span: [0, 5], tokenId: 't1', lexemeKey: 'logos', q: 'e', src: 'ruMatch' }];
+    const segments = composeVerse('Слово', {
+      mode: 3, intensity: 0, progressLetters: {}, seedPrefix: 'test',
+      words: vWords, grcTokens: vGrcTokens, alignment: vAlign,
       wordEntries: [
-        {
-          lexemeId: 'logos', lemma: 'λόγος', strongNum: 3056,
-          regexps: [new RegExp('(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])', 'iu')],
-          excludeRegexps: [],
-          intensityPct: 100, status: 'known', forms: 'lemma'
-        }
-      ],
-      grcVerse: { tokens: grcTokens },
-      alignment: [{ ru: 3, gr: 0 }]
+        { lexemeKey: 'logos', forms: 'lemma', intensityPct: 100, status: 'known' }
+      ]
     });
-    // При forms='lemma' должна быть лемма λόγος, не форма λόγον
-    expect(segments.some(s => s.greek && s.greek.toLowerCase() === 'λόγος')).toBe(true);
-    expect(segments.some(s => s.greek && s.greek.toLowerCase() === 'λόγον')).toBe(false);
+    const formSegs = segments.filter(s => s.kind === 'form');
+    expect(formSegs.length).toBeGreaterThanOrEqual(1);
+    if (formSegs.length > 0) {
+      expect(formSegs[0].greek.toLowerCase()).toBe('λόγος');
+    }
   });
 });

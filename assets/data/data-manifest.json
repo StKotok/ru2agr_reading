@@ -1,0 +1,33 @@
+{
+  "schema": "data-manifest-v1",
+  "version": "v3-2026-06-17",
+  "translations": [
+    {
+      "id": "syn",
+      "title": "Синодальный перевод",
+      "short": "Синод.",
+      "defaultOriginalId": "sblgnt-macula",
+      "versification": "synodal-nt",
+      "license": "Public domain",
+      "sourceManifestId": "syn-2026-06-17"
+    }
+  ],
+  "originals": [
+    {
+      "id": "sblgnt-macula",
+      "title": "SBLGNT via MACULA",
+      "language": "grc",
+      "license": "CC BY 4.0",
+      "attribution": "MACULA Greek; CC BY 4.0",
+      "sourceManifestId": "macula-greek-2026-06-17"
+    }
+  ],
+  "locales": [
+    {
+      "id": "ru",
+      "title": "Русский",
+      "defaultTranslationId": "syn",
+      "sourceManifestId": "locale-ru-2026-06-17"
+    }
+  ]
+}

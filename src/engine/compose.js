@@ -1,12 +1,26 @@
 import { applyLetterLayer } from './letter-layer.js';
-import { applyFormLayer } from './form-layer.js';
+import { applyFormLayer, buildDictByLexemeKey } from './form-layer.js';
 import { stripDiacritics } from './rules.js';
 
+/**
+ * Compose all layers for a Synodal verse.
+ *
+ * MACULA v3: alignment comes from a separate pack (loadAlignment),
+ * not embedded in syn JSON. Words come from translation pack with frozen offsets.
+ *
+ * @param {string} verseText — Synodal verse text
+ * @param {object} ctx
+ *   mode, intensity, progressLetters, seedPrefix, showDiacritics
+ *   words — frozen word tokens [{i, text, start, end}] from translation pack
+ *   grcTokens — Greek tokens [{id, i, s, lemma, lexemeKey, morph, strongs, fw}]
+ *   alignment — alignment pairs [{span, tokenId, lexemeKey, q}]
+ *   wordEntries — dict entries with lexemeKey
+ */
 export function composeVerse(verseText, ctx = {}) {
   const {
     mode = 1, intensity = 35, progressLetters = {}, seedPrefix = '',
     wordEntries = [], showDiacritics = true,
-    grcVerse = null, alignment = null
+    words = null, grcTokens = null, alignment = null
   } = ctx;
 
   const activeLetters = new Set();
@@ -16,31 +30,33 @@ export function composeVerse(verseText, ctx = {}) {
     }
   }
 
-  // Режим 1: только буквенный слой
+  // Mode 1: letter layer only
   if (mode === 1) {
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Режимы 2–3: словарный слой по выравниванию + буквенный.
-  // Без выравнивания словарных замен нет: точность важнее покрытия.
-  // forms (lemma/form) определяется в buildWordEntries() из per-word override или глобального wordLayer.
-  if (mode === 2 || mode === 3) {
-    if (grcVerse && alignment && grcVerse.tokens) {
-      const entriesWithStrong = wordEntries.map(e => ({
-        ...e,
-        strong: e.strongNum || null
-      }));
-      const segs = applyFormLayer(verseText, grcVerse.tokens, alignment, entriesWithStrong, { seedPrefix });
+  // Modes 2–5: word/form layer with alignment
+  if (mode >= 2 && mode <= 5) {
+    if (grcTokens && alignment && words) {
+      const dictByLexemeKey = buildDictByLexemeKey(wordEntries);
+      const segs = applyFormLayer(verseText, words, grcTokens, alignment, dictByLexemeKey, {
+        seedPrefix, mode,
+      });
+
+      // Apply letter layer to plain segments only
       return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics);
     }
+    // Fallback: no alignment data → letter layer
     return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
   }
 
-  // Неизвестный режим — безопасный fallback: показываем русский текст
+  // Unknown mode — safe fallback
   return [{ plain: verseText }];
 }
 
-
+/**
+ * Apply letter layer to plain segments within an already-composed form layer.
+ */
 function applyLetterToPlain(segments, activeLetters, intensity, seedPrefix, showDiacritics) {
   const result = [];
   let plainOffset = 0;

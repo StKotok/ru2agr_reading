@@ -1,4 +1,4 @@
-import { loadBook } from '../../data/bible-loader.js';
+import { loadBook, loadAlignment } from '../../data/bible-loader.js';
 import { loadProgress, saveProgress, markLetterKnown, trackNewWord } from '../../state/progress.js';
 import { loadSettings, saveSettings, deriveComposeMode, shouldLoadGreek } from '../../state/settings.js';
 import { loadAlphabet, loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
@@ -51,6 +51,7 @@ let coreLexicon = [];
 let frequencyList = null;
 let wordEntries = [];
 let grcLoadPromise = null;
+let alignmentBookData = null;
 // Безопасная ссылка на store для модульных функций (ensureGreekBookLoaded и др.)
 let storeRef = null;
 
@@ -61,6 +62,7 @@ function resetGreekBookState() {
   grcBookData = null;
   grcVerseMap = null;
   grcLoadPromise = null;
+  alignmentBookData = null;
 }
 function setGrcStatus(status) {
   if (storeRef) storeRef.update(s => ({ ...s, grcStatus: status }));
@@ -70,8 +72,8 @@ let unsubProgress = null;
 let unsubSettings = null;
 // Кэш индексных карт (coreLexicon и frequencyList не меняются во время сессии)
 let coreByIdCache = null;
-let freqByStrongCache = null;
-let strongKnownSet = null; // Set<number> — какие Strong-номера есть в словаре
+let freqByKeyCache = null;
+let lexemeKeyKnownSet = null; // Set<string> — какие lexemeKey есть в словаре
 
 async function ensureGreekBookLoaded(showToastOnFail = true) {
   // Греческие данные есть и принадлежат текущей книге — быстрый успех
@@ -198,18 +200,20 @@ export async function mount(container, ctx) {
   textArea.id = 'scripture-text';
   container.appendChild(textArea);
 
-  // Загружаем книгу (и греческий текст если нужен для словарного слоя)
+  // Загружаем книгу (и греческий текст + alignment если нужен для словарного слоя)
   try {
     const needsGreek = shouldLoadGreek(settings, getActiveWordCount());
     const loadPromises = [loadBook('syn', bookId)];
     if (needsGreek) {
       setGrcStatus('loading');
       loadPromises.push(loadBook('grc', bookId));
+      loadPromises.push(loadAlignment(bookId));
     }
     const results = await Promise.all(loadPromises);
     bookData = results[0];
     if (needsGreek) {
       grcBookData = results[1] || null;
+      alignmentBookData = results[2] || null;
       if (grcBookData) {
         buildGrcVerseMap();
         setGrcStatus('available');
@@ -394,20 +398,21 @@ function buildGreekTextFragment(grcTokens, ruText, settings) {
 
   // Греческие токены
   for (const token of grcTokens) {
-    if (token.w) {
+    const surface = token.s || token.w;
+    if (surface) {
       const span = document.createElement('span');
       span.className = 'gr grc-token';
-      span.textContent = token.w;
-      span.setAttribute('data-w', token.w);
+      span.textContent = surface;
+      span.setAttribute('data-s', surface);
       span.setAttribute('data-lemma', token.lemma || '');
       span.setAttribute('data-morph', token.morph || '');
-      span.setAttribute('data-strong', String(token.strong || ''));
+      span.setAttribute('data-lexeme-key', token.lexemeKey || '');
       span.setAttribute('tabindex', '0');
       span.setAttribute('role', 'button');
-      span.setAttribute('aria-label', `греческое слово ${token.w}`);
+      span.setAttribute('aria-label', `греческое слово ${surface}`);
 
-      // Если слово есть в словаре пользователя — подсветка
-      if (token.strong && strongKnownSet && strongKnownSet.has(token.strong)) {
+      // Если слово есть в словаре пользователя — подсветка по lexemeKey
+      if (token.lexemeKey && lexemeKeyKnownSet && lexemeKeyKnownSet.has(token.lexemeKey)) {
         span.classList.add('known');
       }
 
@@ -500,13 +505,14 @@ function renderWindowed() {
           p.appendChild(frag);
         }
       } else {
-        // Добавляем grcVerse и alignment для словарного слоя
+        // MACULA v3: передаём words (translation), grcTokens (original), alignment (pairsByRef)
         const verseCtx = { ...composeCtx };
         if (grcBookData) {
           const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
-            verseCtx.grcVerse = grcVerse;
-            verseCtx.alignment = verse.alignment || null;
+            verseCtx.grcTokens = grcVerse.tokens || null;
+            verseCtx.words = verse.words || null;
+            verseCtx.alignment = alignmentBookData?.pairsByRef?.[verse.ref] || null;
           }
         }
         const segments = composeVerse(verse.text, verseCtx);
@@ -593,19 +599,20 @@ function buildWordEntries() {
   wordEntries = [];
   const intensityMap = { often: 100, sometimes: 50, rare: 25 };
 
-  // Индекс coreLexicon по id для быстрого поиска ruMatches (кешируем)
-  coreByIdCache = new Map((coreLexicon || []).map(l => [l.id, l]));
+  // Индекс coreLexicon по lexemeKey (id) для быстрого поиска ruMatches
+  coreByIdCache = new Map((coreLexicon || []).map(l => [l.id || l.lexemeKey, l]));
 
-  // Индекс frequencyList по strong (строка) для freq-* записей (кешируем)
-  freqByStrongCache = new Map();
+  // Индекс frequencyList по lexemeKey (строка) для freq-* записей
+  freqByKeyCache = new Map();
   if (frequencyList) {
     for (const item of frequencyList) {
-      freqByStrongCache.set(String(item.strong), item);
+      const key = item.lexemeKey || item.lexemeId;
+      if (key) freqByKeyCache.set(key, item);
     }
   }
 
-  // Индекс Strong-номеров, присутствующих в словаре (для buildGreekTextFragment)
-  strongKnownSet = new Set();
+  // Индекс lexemeKey, присутствующих в словаре (для buildGreekTextFragment)
+  lexemeKeyKnownSet = new Set();
 
   // Итерируем ВСЕ записи словаря (включая freq-*)
   for (const [lexemeId, entry] of Object.entries(dictionary)) {
@@ -615,31 +622,31 @@ function buildWordEntries() {
 
     const core = coreByIdCache.get(lexemeId);
 
-    let lemma, strongNum, regexps, excludeRegexps;
+    let lemma, lexemeKey, regexps, excludeRegexps;
 
     if (core) {
       // Слово из coreLexicon — полный ruMatches guard
       lemma = core.lemma;
-      strongNum = core.strong;
+      lexemeKey = core.id || core.lexemeKey || lexemeId;
       regexps = core.ruMatches.map(r => new RegExp(r, 'iu'));
       excludeRegexps = (core.ruExclude || []).map(r => new RegExp(r, 'iu'));
     } else {
-      // freq-* запись — ищем в frequencyList по Strong
-      const strongKey = lexemeId.startsWith('freq-') ? lexemeId.replace('freq-', '') : null;
-      const freqItem = strongKey ? freqByStrongCache.get(strongKey) : null;
+      // freq-* запись — ищем в frequencyList по lexemeKey
+      const key = lexemeId.startsWith('freq-') ? lexemeId.replace('freq-', '') : lexemeId;
+      const freqItem = freqByKeyCache.get(key) || (frequencyList || []).find(f => f.lexemeId === lexemeId || f.lexemeKey === lexemeId);
       if (!freqItem) continue;
       lemma = freqItem.lemma;
-      strongNum = freqItem.strong;
+      lexemeKey = freqItem.lexemeKey || freqItem.lexemeId || key;
       regexps = [];         // нет guard'а — выравнивание достаточная гарантия
       excludeRegexps = [];
     }
 
-    if (strongNum) strongKnownSet.add(strongNum);
+    if (lexemeKey) lexemeKeyKnownSet.add(lexemeKey);
 
     wordEntries.push({
       lexemeId,
+      lexemeKey: lexemeKey || lexemeId,
       lemma,
-      strongNum,
       forms: (entry.forms != null) ? entry.forms : (settings.wordLayer === 'form' ? 'form' : 'lemma'),
       regexps,
       excludeRegexps,
@@ -699,12 +706,14 @@ function reRenderWindowed() {
           p.appendChild(frag);
         }
       } else {
+        // MACULA v3: words + grcTokens + alignment
         const verseCtx = { ...composeCtx };
         if (grcBookData) {
           const grcVerse = getGrcVerse(ch.n, verse.n);
           if (grcVerse) {
-            verseCtx.grcVerse = grcVerse;
-            verseCtx.alignment = verse.alignment || null;
+            verseCtx.grcTokens = grcVerse.tokens || null;
+            verseCtx.words = verse.words || null;
+            verseCtx.alignment = alignmentBookData?.pairsByRef?.[verse.ref] || null;
           }
         }
         const segments = composeVerse(verse.text, verseCtx);
@@ -896,31 +905,32 @@ function showPopover(card, anchorEl) {
  */
 function collectWordData(span) {
   // Поверхностная форма: в словарном слое — textContent,
-  // в греческом оригинале — data-w
-  const wAttr = span.getAttribute('data-w');
-  const surfaceForm = wAttr || span.textContent.trim();
+  // в греческом оригинале — data-s
+  const sAttr = span.getAttribute('data-s');
+  const surfaceForm = sAttr || span.textContent.trim();
   if (!surfaceForm) return null;
 
-  // Лемма
+  // LemeKey (primary key) + lemma from attributes
+  const lexemeKeyFromAttr = span.getAttribute('data-lexeme-key');
   const lexemeId = span.getAttribute('data-lexeme');
   const lemmaFromAttr = span.getAttribute('data-lemma');
-  const strongFromAttr = span.getAttribute('data-strong');
-  const strong = strongFromAttr ? parseInt(strongFromAttr) : null;
+  const morph = span.getAttribute('data-morph') || null;
 
-  // Ищем в лексиконе — по lexemeId или по strong
+  // Ищем в лексиконе — по lexemeKey или lexemeId
   const safeLexicon = coreLexicon || [];
-  const core = lexemeId
-    ? safeLexicon.find(l => l.id === lexemeId)
-    : (strong ? safeLexicon.find(l => l.strong === strong) : null);
+  const lookupKey = lexemeKeyFromAttr || lexemeId;
+  const core = lookupKey
+    ? safeLexicon.find(l => (l.id || l.lexemeKey) === lookupKey)
+    : null;
 
   const lemma = lemmaFromAttr || core?.lemma || surfaceForm;
 
-  // Частотность по strong (используется и для freq, и для translit)
-  const freq = strong
-    ? (frequencyList ? frequencyList.find(f => f.strong === strong) : null)
+  // Частотность по lexemeKey
+  const freq = lookupKey
+    ? (frequencyList ? frequencyList.find(f => (f.lexemeKey || f.lexemeId) === lookupKey) : null)
     : null;
 
-  const translit = core?.translit || freq?.translit || null;
+  const translit = core?.translit || freq?.translit || freq?.transliteration || null;
   const gloss = core?.gloss || null;
   const senses = core?.senses || null;
   const detail = core?.detail || null;
@@ -928,11 +938,10 @@ function collectWordData(span) {
   const ref = core?.ref || null;
   const allRefs = core?.allRefs || null;
   const allRefsCount = core?.allRefsCount || null;
-  const morph = span.getAttribute('data-morph') || null;
 
   // Словарная запись
   let dictEntry = null;
-  const effectiveLexemeId = lexemeId || core?.id || null;
+  const effectiveLexemeId = lexemeKeyFromAttr || lexemeId || core?.id || null;
   if (effectiveLexemeId) {
     dictEntry = dictionary[effectiveLexemeId] || null;
   }

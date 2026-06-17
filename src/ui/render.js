@@ -24,14 +24,15 @@ export function segmentsToFragment(segments, ctx = {}) {
       if (seg.letter) {
         span.setAttribute('data-letter', seg.letter);
       }
-      if (seg.lexemeId) {
-        span.setAttribute('data-lexeme', seg.lexemeId);
+      if (seg.lexemeKey || seg.lexemeId) {
+        span.setAttribute('data-lexeme-key', seg.lexemeKey || seg.lexemeId);
+        span.setAttribute('data-lexeme', seg.lexemeKey || seg.lexemeId);
       }
       if (seg.morph) {
         span.setAttribute('data-morph', seg.morph);
       }
-      if (seg.strong) {
-        span.setAttribute('data-strong', String(seg.strong));
+      if (seg.tokenId) {
+        span.setAttribute('data-token-id', seg.tokenId);
       }
       if (seg.lemma) {
         span.setAttribute('data-lemma', seg.lemma);
