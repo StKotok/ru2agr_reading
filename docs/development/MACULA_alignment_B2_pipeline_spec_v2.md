@@ -7,6 +7,25 @@
 
 ---
 
+## Quick Reference Card
+
+| Concept | Required value |
+|---|---|
+| Visible runtime pairs | `q:"e"` only |
+| Hidden runtime/canonical pairs | `q:"f"`, `q:"u"` |
+| Default when uncertain | hide pair, write blocker/proof gap |
+| Forbidden data | RusVZh, `rus_nt_strongs.xml`, UBS/MARBLE runtime fields |
+| Weak source | `data-sources/strongs-ru-alignment.json` candidates only |
+| Dev gold | `test/fixtures/macula-gold-dev.json` |
+| Heldout gold | `test/fixtures/macula-gold-heldout.json`, acceptance only |
+| Build command | `npm run build:align` |
+| Verifier command | `npm run verify:align` |
+| Release command | `npm run release:align` |
+| Release criterion | 0 visible false positives on heldout, 0 unresolved conflicts |
+| LLM role | find errors/conflicts; never promote directly to visible |
+
+---
+
 ## 0. Решение v2 в одном абзаце
 
 Мы больше не восстанавливаем старый B-пайплайн как был. RusVZh не используется.
@@ -41,6 +60,21 @@
 - `alignment-book-v1` как runtime-формат;
 - `AGENTS.md` как правила работы;
 - необходимость исправить UI P0 до релиза.
+
+### Context summary for implementers
+
+- App is a vanilla JS offline-first PWA. No framework, backend, telemetry, or
+  network build steps.
+- Runtime data lives under `assets/data/**`; large canonical data and audit
+  artifacts live under `generated/canonical/**`.
+- Russian translation packs provide frozen `words[]` with character spans.
+  Runtime must slice by spans and never re-tokenize verses.
+- Greek original packs provide MACULA token IDs, `lexemeKey`, `strongs[]`,
+  `morph`, and `fw`.
+- User-visible replacement is controlled by alignment `pair.q`, not by
+  `token.fw`, Strong, or UI heuristics.
+- There are no real users yet, but quality target is still release-grade:
+  visible wrong pair count must be zero.
 
 ---
 
@@ -122,6 +156,27 @@
 
 ## 3. Термины
 
+Use these spellings exactly in code, reports, schemas, and prose. Do not invent
+synonyms such as "сертификатор" for `certifier` or "пруф" for `proof`.
+
+| Canonical term | Meaning |
+|---|---|
+| `candidate` | hidden possible pair; never visible by itself |
+| `certified` | candidate promoted by named certifier and proof |
+| `certifier` | deterministic promotion rule, e.g. `manual-dev-gold` |
+| `proof` | machine-readable explanation for every `q:"e"` pair |
+| `blocker` | named reason preventing visibility or release |
+| `visible` | runtime-visible; in v2 this means `q:"e"` only |
+| `hidden` | not shown in UI; includes `q:"f"` and `q:"u"` |
+| `heldout` | acceptance gold only; never used to tune or certify |
+| `dev gold` | gold allowed for development and C1 certification |
+| `runtime pack` | files under `assets/data/align/...` used by the PWA |
+| `canonical artifact` | generated audit/proof/candidate files outside runtime |
+| `LLM audit` | external review layer that can block/downgrade, not promote |
+| `adjudication` | human/resolved decision over LLM or gold conflicts |
+| `release-ready` | all release blockers resolved and gates green |
+| `data prototype` | useful intermediate state, explicitly not releasable |
+
 **Candidate pair**  
 Потенциальное соответствие русского span и греческого tokenId. Кандидат не
 видим пользователю.
@@ -191,6 +246,10 @@ manual-review item. Release blocker нельзя закрывать "замет�
 - получить письменное разрешение/подтверждение от Clear Bible/Biblica или UBS
   на хранение и build-time использование MARBLE-derived полей в приватном
   репозитории.
+
+This written permission is not a release blocker when the minimal requirement
+above is satisfied. It becomes a release blocker only if UBS/MARBLE-derived
+fields remain in runtime assets or if build-only files lack provenance notes.
 
 ---
 
@@ -272,8 +331,8 @@ be "ready" until LLM audit reports exist and all conflicts are resolved.
 
 ### Command topology
 
-Use these command names unless there is a strong local reason not to. If names
-change, update this section in the same commit.
+Use these command names exactly. If a name conflicts with an existing script,
+stop and report the conflict before renaming anything.
 
 ```json
 {
@@ -284,6 +343,8 @@ change, update this section in the same commit.
   "verify:align": "node scripts/verify-alignment-v2.mjs",
   "audit:align:prepare": "node scripts/prepare-alignment-llm-audit.mjs",
   "audit:align:import": "node scripts/import-alignment-llm-audit.mjs",
+  "check:adjudication": "node scripts/check-adjudication-status.mjs",
+  "release:align": "npm run build:data && npm run audit:align:import && npm run check:adjudication",
   "build:data": "npm run build:runtime && npm run build:align && npm run verify:data"
 }
 ```
@@ -294,9 +355,12 @@ Rules:
 - `audit:align:prepare` is offline and writes prompt input JSON files.
 - `audit:align:import` is offline and validates JSON outputs produced by
   external LLM runs.
+- `check:adjudication` is offline and fails when adjudication is missing,
+  invalid, or unresolved.
 - No npm script may call an LLM API or a live Bible/API endpoint.
 - If LLM outputs are absent, deterministic commands still pass, but
   `audit-report.json` must mark release status as `blocked:llm-audit-missing`.
+- `release:align` must fail until LLM audit import and adjudication are complete.
 
 ### Canonical alignment artifact tree
 
@@ -306,6 +370,8 @@ Use this tree exactly unless changed in this document:
 generated/canonical/alignments/syn--sblgnt-macula/
   candidates.jsonl                  # may be gitignored if large
   candidates-manifest.json           # committed if candidates.jsonl omitted
+  orphans.jsonl                      # may be gitignored if large
+  orphans-manifest.json              # committed if orphans.jsonl omitted
   certified.jsonl                    # may be gitignored if large
   certified-manifest.json            # committed if certified.jsonl omitted
   proof-report.json                  # committed
@@ -315,6 +381,7 @@ generated/canonical/alignments/syn--sblgnt-macula/
   llm-audit/
     inputs/*.json                    # prompt payloads
     outputs/*/*.json                 # model outputs, grouped by role/model
+    audit-scale-report.json           # written when audit scope is too large
     import-report.json               # committed summary
 ```
 
@@ -548,6 +615,76 @@ Rules:
   variant, it must emit no candidate for that span and report
   `variant:unknown-span-status`.
 
+### Orphan record
+
+Candidate generation must also track Russian spans that have no visible pair.
+Write orphan records to:
+
+`generated/canonical/alignments/syn--sblgnt-macula/orphans.jsonl`
+
+Each line:
+
+```json
+{
+  "schema": "alignment-orphan-v1",
+  "ref": "john 1:1",
+  "span": [0, 1],
+  "ruText": "В",
+  "wordIndex": 0,
+  "reason": "function-word-hidden",
+  "blockers": ["function-word:hidden-in-v2"],
+  "candidateCount": 0,
+  "createdBy": "scripts/build-alignment-candidates.mjs"
+}
+```
+
+Allowed `reason` values:
+
+- `function-word-hidden`
+- `textual-variant`
+- `translation-addition`
+- `no-greek-equivalent`
+- `ambiguous-candidates`
+- `weak-source-only`
+- `not-in-curated-core`
+- `unknown`
+
+Rules:
+
+- Every Russian `words[]` span in `paired` or mapped `merged` verses must end
+  up as either a candidate/certified pair or an orphan record.
+- `reason:"unknown"` is allowed during prototype work but is a release blocker.
+- `synOnly`, `grcOnly`, and phrase-variant spans must be represented as orphan
+  records with variant reasons, not silently skipped.
+- Orphan records never become runtime visible.
+
+### Merged verse mapping
+
+The current required merged mapping is:
+
+```json
+{
+  "book": "2corinthians",
+  "synRef": "2corinthians 11:32",
+  "mergedGrcRef": "2corinthians 11:33",
+  "runtimeVerseEntry": {
+    "ref": "2corinthians 11:33",
+    "syn": "11:32b",
+    "grc": "11:33",
+    "status": "merged"
+  }
+}
+```
+
+Implementation rule:
+
+- candidates for Greek tokens from `2corinthians 11:33` are generated against
+  Russian spans in `2corinthians 11:32`;
+- runtime `pairsByRef` stores those pairs under `2corinthians 11:32`;
+- runtime `verses["2corinthians 11:33"]` records the `merged` entry;
+- runtime `pairsByRef["2corinthians 11:33"]` must be absent or empty;
+- verifier fails if `2corinthians 11:33` is treated as `grcOnly`.
+
 ### Gate
 
 Fail if candidate generation creates runtime files or any `q:"e"`.
@@ -657,6 +794,32 @@ too conservative.
 
 `src = "certified:manual-allowlist"`.
 
+Required proof:
+
+```json
+{
+  "certifier": "manual-allowlist",
+  "inputs": [
+    "docs/sources/alignments/syn--sblgnt-macula/manual-certified.json"
+  ],
+  "checks": [
+    "explicitly-listed-in-manual-certified",
+    "manual-entry-hash-matches-current-packs",
+    "reviewer-and-reason-present",
+    "not-in-heldout-source"
+  ],
+  "manual": {
+    "reviewer": "human-or-approved-reviewer-id",
+    "reviewedAt": "YYYY-MM-DD",
+    "reason": "brief linguistic reason",
+    "sourceHash": "sha256:..."
+  }
+}
+```
+
+Fail C3 certification if reviewer, date, reason, or source hash is missing.
+`manual-certified.json` must not include entries copied from heldout decisions.
+
 ### Certifier C4: future function/pronoun rules
 
 Do not promote to visible in v2 initial implementation. Pronoun/function rules
@@ -737,6 +900,16 @@ For the first production-ready v2 release, audit at minimum:
 
 If this is too much for the first engineering milestone, the milestone can be
 marked "data prototype", but not "release-ready".
+
+Quantified scale rule:
+
+- If `audit:align:prepare` takes more than 30 minutes wall-clock on the current
+  machine, stop after writing completed payloads and write
+  `llm-audit/audit-scale-report.json` with `blocked:audit-scale`.
+- If release-ready audit scope produces more than 2000 prompt payload files,
+  write `blocked:audit-scale` and report counts before reducing scope.
+- Do not silently skip any audit category. Reducing audit scope requires a
+  documented owner decision and keeps release status blocked until resolved.
 
 ### Prompt 1: Gold Curator
 
@@ -1042,12 +1215,48 @@ Adjudication output:
 
 `generated/canonical/alignments/syn--sblgnt-macula/adjudication-report.json`
 
+`scripts/check-adjudication-status.mjs` must validate this file. It returns
+non-zero and reports `blocked:pending-human-adjudication` when:
+
+- the file is missing;
+- JSON is invalid;
+- schema is not `adjudication-report-v1`;
+- any decision is `manual-review`;
+- any release blocker is present;
+- any decision references a missing span/tokenId;
+- any accepted decision conflicts with heldout gold.
+
 Rules:
 
 - `accept` keeps or allows `q:"e"`;
 - `downgrade` forces `q:"u"`;
 - `manual-review` blocks release;
 - no unresolved manual-review items are allowed in release.
+
+Minimum schema:
+
+```json
+{
+  "schema": "adjudication-report-v1",
+  "alignmentId": "syn--sblgnt-macula",
+  "generatedFrom": {
+    "proofReportSha256": "sha256:...",
+    "llmImportReportSha256": "sha256:..."
+  },
+  "decisions": [
+    {
+      "ref": "john 1:1",
+      "span": [11, 16],
+      "tokenId": "n43001001005",
+      "decision": "accept",
+      "finalQ": "e",
+      "reviewer": "human-or-approved-reviewer-id",
+      "reason": "brief reason"
+    }
+  ],
+  "releaseBlockers": []
+}
+```
 
 ---
 
@@ -1131,6 +1340,62 @@ Commit these:
 Do not commit huge candidate dumps if they are too large; if omitted, commit a
 manifest with hashes and counts.
 
+### `audit-report.json` minimum schema
+
+```json
+{
+  "schema": "audit-report-v1",
+  "alignmentId": "syn--sblgnt-macula",
+  "releaseStatus": "blocked:llm-audit-missing",
+  "blockers": [
+    {
+      "code": "blocked:llm-audit-missing",
+      "message": "LLM audit outputs have not been imported."
+    }
+  ],
+  "counts": {
+    "candidatePairs": 0,
+    "certifiedPairs": 0,
+    "runtimeVisiblePairs": 0,
+    "runtimeHiddenPairs": 0,
+    "orphans": 0,
+    "unknownOrphans": 0
+  },
+  "coverageSummary": {
+    "heldoutVersesAudited": 0,
+    "c2VersesAudited": 0,
+    "topLexemeKeysAudited": [],
+    "variantVersesAudited": 0,
+    "randomSampleCount": 0
+  },
+  "llm": {
+    "outputsValidated": 0,
+    "outputsInvalid": 0,
+    "importReportSha256": null
+  },
+  "adjudication": {
+    "reportSha256": null,
+    "pendingManualReview": 0,
+    "releaseBlockers": 0
+  }
+}
+```
+
+Allowed `releaseStatus` values:
+
+- `ready`
+- `data-prototype`
+- `blocked:llm-audit-missing`
+- `blocked:invalid-llm-output`
+- `blocked:unresolved-conflicts`
+- `blocked:pending-human-adjudication`
+- `blocked:audit-scale`
+- `blocked:license`
+- `blocked:verifier`
+
+`ready` is allowed only when `blockers` is empty, LLM audit has been imported,
+adjudication is complete, and verifier/gold gates are green.
+
 ---
 
 ## 15. Expected quality posture
@@ -1162,7 +1427,8 @@ new certifier rule, auditing it, and documenting its proof.
 
 - [ ] Remove `domains` from runtime schema/generator.
 - [ ] Add verifier for UBS/MARBLE leakage.
-- [ ] Add schemas for gold, candidate, certified, proof, adjudication reports.
+- [ ] Add schemas for gold, candidate, orphan, certified, proof, audit,
+      adjudication reports.
 
 ### Phase 2: gold
 
@@ -1176,6 +1442,8 @@ new certifier rule, auditing it, and documenting its proof.
 - [ ] Implement `scripts/build-alignment-candidates.mjs`.
 - [ ] All candidates are `q:"u"`.
 - [ ] Include candidate reasons and blockers.
+- [ ] Write `orphans.jsonl` / `orphans-manifest.json`; no unmatched Russian
+      span disappears silently.
 - [ ] Deterministic output.
 
 ### Phase 4: certification
@@ -1191,6 +1459,8 @@ new certifier rule, auditing it, and documenting its proof.
 - [ ] Add input builder for LLM audit prompts.
 - [ ] Archive LLM outputs.
 - [ ] Add adjudication report format.
+- [ ] Add `scripts/check-adjudication-status.mjs`.
+- [ ] Add `audit-report.json` writer with explicit `releaseStatus`.
 - [ ] Make unresolved conflicts release-blocking.
 
 ### Phase 6: runtime writer and verifier
@@ -1205,6 +1475,7 @@ new certifier rule, auditing it, and documenting its proof.
 - [ ] `npm run build:data`
 - [ ] `npm test`
 - [ ] `npm run build`
+- [ ] `npm run release:align` passes before claiming release-ready data.
 - [ ] manual QA after UI P0 is fixed.
 
 ---
@@ -1223,6 +1494,7 @@ Data layer is done only when:
 - unresolved LLM/human conflicts = 0;
 - source manifests cover actual snapshot files;
 - `build:data` is offline and deterministic;
+- `npm run release:align` passes;
 - `npm test` and `npm run build` pass.
 
 ---
