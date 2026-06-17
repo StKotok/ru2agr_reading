@@ -1,4 +1,4 @@
-import { registerSW } from 'virtual:pwa-register';
+import { Workbox } from 'workbox-window';
 import { createStore } from './state/store.js';
 import { parse, onChange } from './router.js';
 import { createNav } from './ui/components/nav.js';
@@ -56,8 +56,52 @@ function switchScreen(screenName, params) {
   } catch (_) { /* theme fallback: auto */ }
 })();
 
-// Регистрация service worker (vite-plugin-pwa)
-registerSW({ immediate: true });
+// Регистрация service worker — используем Workbox напрямую, а не virtual:pwa-register,
+// потому что autoUpdate-обёртка vite-plugin-pwa не отдаёт наружу wb.update() —
+// единственный метод, запускающий registration.update() (принудительную проверку sw.js).
+// Без него приложение на мобильных устройствах в standalone-режиме может неделями
+// не узнавать о новом деплое.
+let wb = null;
+
+if ('serviceWorker' in navigator) {
+  wb = new Workbox('./sw.js', { scope: './' });
+
+  wb.addEventListener('activated', (event) => {
+    if (event.isUpdate || event.isExternal) {
+      window.location.reload();
+    }
+  });
+
+  // wb.register() — асинхронный. Цепляем первый вызов checkForUpdate() в .then(),
+  // чтобы не вызвать wb.update() до того, как registration завершится (иначе no-op).
+  wb.register({ immediate: true })
+    .then(() => checkForUpdate())
+    .catch(() => { wb = null; }); // без SW приложение работает, просто без PWA
+}
+
+// Принудительная проверка обновления SW: каждые 5 минут и при возврате в фокус.
+// В оффлайне wb.update() тихо отклоняется. Неожиданные ошибки пишем в консоль —
+// в отличие от старого .catch(() => {}), который глушил вообще всё.
+const CHECK_INTERVAL_MS = 5 * 60 * 1000;
+let updateInterval = null;
+
+function checkForUpdate() {
+  if (!wb) return;
+  wb.update().catch(e => {
+    if (e instanceof TypeError && e.message === 'Failed to fetch') return; // офлайн — ок
+    console.warn('SW update check failed:', e);
+  });
+}
+
+if (wb) {
+  updateInterval = setInterval(checkForUpdate, CHECK_INTERVAL_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && wb) {
+    checkForUpdate();
+  }
+});
 
 // Реакция на hash-изменения
 async function handleRoute(route) {

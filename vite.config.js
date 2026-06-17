@@ -15,6 +15,9 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
+      // Не вставляем авто-регистрацию — мы используем Workbox напрямую в app.js,
+      // чтобы иметь доступ к wb.update() для принудительной проверки обновлений.
+      injectRegister: false,
       includeAssets: ['icon.svg'],
       manifest: {
         name: 'Греческая читалка Нового Завета',
