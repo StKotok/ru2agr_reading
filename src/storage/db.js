@@ -13,6 +13,10 @@ function openDB() {
       reject(request.error);
     };
     request.onsuccess = () => resolve(request.result);
+    request.onblocked = () => {
+      dbPromise = null;
+      reject(new Error('IndexedDB blocked — close other tabs and reload'));
+    };
     request.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {

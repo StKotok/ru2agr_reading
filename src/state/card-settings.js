@@ -38,7 +38,7 @@ export function loadCardSettings() {
     if (raw) {
       const saved = JSON.parse(raw);
       // Миграция: старые ключи meta/morph → grammar
-      if (saved.order) {
+      if (Array.isArray(saved.order) && saved.order.length > 0) {
         saved.order = saved.order.map(k => k === 'meta' || k === 'morph' ? 'grammar' : k);
         saved.order = [...new Set(saved.order)]; // убрать дубликаты
         // Добавить ключи, которых нет в сохранённом порядке (новые разделы)
@@ -46,7 +46,7 @@ export function loadCardSettings() {
           if (!saved.order.includes(k)) saved.order.push(k);
         }
       }
-      if (!saved.order || saved.order.length === 0) {
+      if (!Array.isArray(saved.order) || saved.order.length === 0) {
         saved.order = DEFAULT_ORDER;
       }
       return { ...DEFAULTS, ...saved };

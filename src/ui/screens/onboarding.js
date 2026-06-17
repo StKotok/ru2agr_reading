@@ -93,12 +93,14 @@ function applyPreset(preset) {
 
   if (preset.allLettersKnown) {
     const today = new Date().toISOString().split('T')[0];
-    for (const l of alphabet) {
-      if (!progress.letters[l.lower]) {
-        progress.letters[l.lower] = { status: 'known', introducedAt: today };
+    if (alphabet) {
+      for (const l of alphabet) {
+        if (!progress.letters[l.lower]) {
+          progress.letters[l.lower] = { status: 'known', introducedAt: today };
+        }
       }
     }
-  } else if (preset.introduce > 0) {
+  } else if (preset.introduce > 0 && alphabet) {
     const result = introduceLetters(preset.introduce, progress, alphabet);
     progress = result.progress;
   }

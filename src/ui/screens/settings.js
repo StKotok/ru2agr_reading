@@ -140,10 +140,8 @@ function renderResetSection() {
   btn.textContent = 'Сбросить прогресс и словарь';
   btn.addEventListener('click', () => {
     if (confirm('Сбросить весь прогресс и словарь? Это действие нельзя отменить.')) {
-      db.del('progress').then(() => {
-        db.del('dictionary').then(() => {
-          location.reload();
-        });
+      Promise.allSettled([db.del('progress'), db.del('dictionary')]).finally(() => {
+        location.reload();
       });
     }
   });

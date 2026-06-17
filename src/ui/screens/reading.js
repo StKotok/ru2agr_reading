@@ -1,5 +1,5 @@
 import { loadBook } from '../../data/bible-loader.js';
-import { loadProgress, saveProgress, markLetterKnown } from '../../state/progress.js';
+import { loadProgress, saveProgress, markLetterKnown, trackNewWord } from '../../state/progress.js';
 import { loadSettings, saveSettings, deriveComposeMode, shouldLoadGreek } from '../../state/settings.js';
 import { loadAlphabet, loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadDictionary, setWordStatus, saveDictionary, addWord, countActiveWords, isDictionaryEntry } from '../../state/dictionary.js';
@@ -39,6 +39,7 @@ let alphabet = null;
 let letterNames = null;
 let scrollTimer = null;
 let chapterPlaceholders = [];
+let chaptersEls = [];            // обновляется в renderWindowed и reRenderWindowed
 let observer = null;
 let reRenderFn = null;
 let destroyModeWidget = null;
@@ -349,6 +350,7 @@ export async function mount(container, ctx) {
     if (e.key === 'Enter') {
       const span = e.target.closest('span.gr');
       if (!span) return;
+      e.preventDefault(); // предотвращает синтетический click на role="button" в Chromium
       const letter = span.getAttribute('data-letter');
       if (letter) {
         handleLetterTap(letter, span);
@@ -447,7 +449,7 @@ function renderWindowed() {
   textArea.innerHTML = '';
 
   const chapters = bookData.chapters;
-  const chaptersEls = [];
+  chaptersEls = [];
 
   // Строим wordEntries из словаря + лексикона
   buildWordEntries();
@@ -685,13 +687,16 @@ function reRenderWindowed() {
 
       if (plainView) {
         p.appendChild(document.createTextNode(verse.text));
-      } else if (settings.readingMode === 'greek' && grcBookData) {
-        const grcVerse = getGrcVerse(ch.n, verse.n);
+      } else if (settings.readingMode === 'greek') {
+        const grcVerse = grcBookData ? getGrcVerse(ch.n, verse.n) : null;
         if (grcVerse && grcVerse.tokens) {
           const frag = buildGreekTextFragment(grcVerse.tokens, verse.text, settings);
           p.appendChild(frag);
         } else {
-          p.appendChild(document.createTextNode(verse.text));
+          // Fallback: без греческих данных показываем буквенную замену (как в renderWindowed)
+          const segments = composeVerse(verse.text, { ...composeCtx, mode: 1 });
+          const frag = segmentsToFragment(segments, renderCtx);
+          p.appendChild(frag);
         }
       } else {
         const verseCtx = { ...composeCtx };
@@ -708,6 +713,10 @@ function reRenderWindowed() {
       }
 
       section.appendChild(p);
+    }
+    // Синхронизируем chaptersEls — клонируем свежий DOM для будущей ленивой загрузки
+    if (chaptersEls[chN - 1]) {
+      chaptersEls[chN - 1] = section.cloneNode(true);
     }
   }
 }
@@ -899,9 +908,10 @@ function collectWordData(span) {
   const strong = strongFromAttr ? parseInt(strongFromAttr) : null;
 
   // Ищем в лексиконе — по lexemeId или по strong
+  const safeLexicon = coreLexicon || [];
   const core = lexemeId
-    ? coreLexicon.find(l => l.id === lexemeId)
-    : (strong ? coreLexicon.find(l => l.strong === strong) : null);
+    ? safeLexicon.find(l => l.id === lexemeId)
+    : (strong ? safeLexicon.find(l => l.strong === strong) : null);
 
   const lemma = lemmaFromAttr || core?.lemma || surfaceForm;
 
@@ -958,10 +968,12 @@ function handleWordTap(span) {
       // Добавляем в словарь если ещё нет
       if (!dictionary[lexemeId]) {
         dictionary = addWord(lexemeId, dictionary);
+        progress = trackNewWord(lexemeId, progress);
+        saveProgress(progress);
       }
       dictionary = setWordStatus(lexemeId, newStatus, dictionary);
       await saveDictionary(dictionary);
-      if (storeRef) storeRef.update(s => ({ ...s, dictionary }));
+      if (storeRef) storeRef.update(s => ({ ...s, dictionary, progress }));
 
       // Визуальная подсветка в тексте
       const spans = document.querySelectorAll(`span.gr[data-lexeme="${lexemeId}"]`);
@@ -1020,6 +1032,7 @@ export function unmount() {
   scrollTimer = null;
   bookData = null;
   reRenderFn = null;
+  chaptersEls = [];
   storeRef = null;
   if (unsubProgress) { unsubProgress(); unsubProgress = null; }
   if (unsubSettings) { unsubSettings(); unsubSettings = null; }

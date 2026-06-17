@@ -19,6 +19,11 @@ export function openBottomSheet(content) {
   // Закрываем предыдущую шторку с анимацией, но не ждём её
   if (overlayEl && !overlayEl.hasAttribute('data-closing')) {
     _startClose(overlayEl);
+  } else if (sheetEl) {
+    // Старая шторка уже в анимации закрытия — убираем touch-слушатели с неё
+    sheetEl.removeEventListener('touchstart', onTouchStart);
+    sheetEl.removeEventListener('touchmove', onTouchMove);
+    sheetEl.removeEventListener('touchend', onTouchEnd);
   }
 
   overlayEl = document.createElement('div');
@@ -72,6 +77,7 @@ export function openBottomSheet(content) {
 
 function onTouchStart(e) {
   startY = e.touches[0].clientY;
+  currentY = startY;
   isDragging = true;
 }
 

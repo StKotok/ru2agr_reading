@@ -310,6 +310,7 @@ export function createModeWidget(ctx) {
     if (wasMobileOnOpen) {
       const sheet = openBottomSheet(popup);
       if (sheet && sheet.parentNode) {
+        const overlayParent = sheet.parentNode.parentNode; // document.body
         bottomSheetObserver = new MutationObserver(() => {
           if (!document.contains(sheet)) {
             flushPendingSlider();
@@ -319,7 +320,9 @@ export function createModeWidget(ctx) {
             cleanupPopup();
           }
         });
-        bottomSheetObserver.observe(sheet.parentNode, { childList: true });
+        if (overlayParent) {
+          bottomSheetObserver.observe(overlayParent, { childList: true });
+        }
       }
     } else {
       document.body.appendChild(popup);

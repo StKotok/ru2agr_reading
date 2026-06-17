@@ -1,10 +1,12 @@
 import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting, isDictionaryEntry } from '../../state/dictionary.js';
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
+import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 
 let dict = {};
 let lexicon = [];
 let frequencyList = [];
+let progress = null;
 let container = null;
 let store = null;
 let filterStatus = 'all';
@@ -13,6 +15,7 @@ let searchQuery = '';
 let renderedCount = 0;
 let lastDividerBucket = 0;
 let bucketCoverage = {};
+let dictObserver = null;       // IntersectionObserver для ленивой подгрузки
 const PAGE_SIZE = 100;
 
 // Группировка частей речи для фильтра
@@ -80,6 +83,13 @@ function showPopover(card, anchorEl) {
   }
   if (top < 16) top = 16;
 
+  // Ограничение высоты, чтобы карточка не выходила за экран
+  const spaceBelow = window.innerHeight - top - 16;
+  const maxH = Math.max(200, spaceBelow);
+  popoverEl.style.maxHeight = maxH + 'px';
+  card.style.maxHeight = 'none';
+  card.style.overflowY = 'auto';
+
   popoverEl.style.position = 'fixed';
   popoverEl.style.top = top + 'px';
   popoverEl.style.left = left + 'px';
@@ -98,8 +108,8 @@ function showPopover(card, anchorEl) {
 export async function mount(cnt, ctx) {
   container = cnt;
   store = ctx.store;
-  [dict, lexicon, frequencyList] = await Promise.all([
-    loadDictionary(), loadCoreLexicon(), loadFrequency()
+  [dict, lexicon, frequencyList, progress] = await Promise.all([
+    loadDictionary(), loadCoreLexicon(), loadFrequency(), loadProgress()
   ]);
   // Обогащаем частотный список POS-категориями из core-словаря
   const coreByStrong = new Map((lexicon || []).map(l => [l.strong, l]));
@@ -344,15 +354,18 @@ function render() {
   renderBatch(list, filtered);
 
   if (filtered.length > PAGE_SIZE * 2) {
+    // Отключаем предыдущий observer если есть
+    if (dictObserver) dictObserver.disconnect();
+
     // Сентинел для подгрузки
     const sentinel = document.createElement('div');
     sentinel.className = 'dict-sentinel';
     sentinel.style.height = '1px';
     list.appendChild(sentinel);
 
-    const observer = new IntersectionObserver((entries) => {
+    dictObserver = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
-        observer.disconnect();
+        dictObserver.disconnect();
         sentinel.remove();
         renderBatch(list, filtered);
         if (renderedCount < filtered.length) {
@@ -361,11 +374,13 @@ function render() {
           nextSentinel.className = 'dict-sentinel';
           nextSentinel.style.height = '1px';
           list.appendChild(nextSentinel);
-          observer.observe(nextSentinel);
+          dictObserver.observe(nextSentinel);
+        } else {
+          dictObserver = null;
         }
       }
     });
-    observer.observe(sentinel);
+    dictObserver.observe(sentinel);
   }
 }
 
@@ -417,6 +432,10 @@ function renderBatch(list, filtered) {
       if (checkbox.checked) {
         if (!updated[dictId]) {
           updated = addWord(dictId, updated);
+          if (progress) {
+            progress = trackNewWord(dictId, progress);
+            saveProgress(progress);
+          }
         }
         updated = setWordSetting(dictId, 'showInText', true, updated);
       } else {
@@ -651,4 +670,4 @@ function showWordCard(item, lexeme, dictEntry, dictId, anchorEl) {
   }
 }
 
-export function unmount() { closePopover(); container = null; }
+export function unmount() { closePopover(); if (dictObserver) { dictObserver.disconnect(); dictObserver = null; } container = null; }

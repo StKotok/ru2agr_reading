@@ -90,3 +90,20 @@ export function markLetterKnown(ch, progress) {
   letters[ch] = { ...(letters[ch] || {}), status: 'known' };
   return { ...progress, letters };
 }
+
+/**
+ * Регистрирует новое слово в wordsToday (для экрана прогресса).
+ * @param {string} lexemeId
+ * @param {object} progress
+ * @returns {object} обновлённый progress
+ */
+export function trackNewWord(lexemeId, progress) {
+  const today = new Date().toISOString().split('T')[0];
+  const wordsToday = progress.wordsToday?.date === today
+    ? { ...progress.wordsToday }
+    : { date: today, added: [] };
+  if (!wordsToday.added.includes(lexemeId)) {
+    wordsToday.added = [...wordsToday.added, lexemeId];
+  }
+  return { ...progress, wordsToday };
+}
