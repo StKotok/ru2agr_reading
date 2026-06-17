@@ -66,7 +66,7 @@ function renderStep1() {
   for (const preset of PRESETS) {
     const card = document.createElement('button');
     card.className = 'card onboarding-card';
-    card.style.setProperty('--onboarding-stripe', STRIPE_COLORS[preset.id - 1]);
+    card.style.setProperty('--onboarding-stripe', STRIPE_COLORS[preset.id - 1] || 'var(--primary)');
     card.innerHTML = `<strong>${preset.title}</strong><p>${preset.desc}</p>`;
     if (preset.example) {
       card.innerHTML += `<small class="onboarding-example">${preset.example}</small>`;
@@ -121,7 +121,7 @@ function renderStep2() {
   // Иоанн 1
   const johnCard = document.createElement('button');
   johnCard.className = 'card onboarding-card';
-  johnCard.style.setProperty('--onboarding-stripe', 'var(--greek)');
+  johnCard.style.setProperty('--onboarding-stripe', STRIPE_COLORS[0]);
   johnCard.innerHTML = '<strong>Иоанн 1</strong><p>В начале было Слово — классический старт</p>';
   johnCard.addEventListener('click', () => finish('john'));
   cards.appendChild(johnCard);
@@ -129,7 +129,7 @@ function renderStep2() {
   // Марк 1
   const markCard = document.createElement('button');
   markCard.className = 'card onboarding-card';
-  markCard.style.setProperty('--onboarding-stripe', 'var(--greek-word)');
+  markCard.style.setProperty('--onboarding-stripe', STRIPE_COLORS[1]);
   markCard.innerHTML = '<strong>Марк 1</strong><p>Самое короткое Евангелие</p>';
   markCard.addEventListener('click', () => finish('mark'));
   cards.appendChild(markCard);
@@ -138,7 +138,7 @@ function renderStep2() {
   if (progress.reading.lastBook) {
     const continueCard = document.createElement('button');
     continueCard.className = 'card onboarding-card';
-    continueCard.style.setProperty('--onboarding-stripe', 'var(--progress)');
+    continueCard.style.setProperty('--onboarding-stripe', STRIPE_COLORS[2]);
     continueCard.innerHTML = '<strong>Продолжить с последнего места</strong>';
     continueCard.addEventListener('click', () => finish(progress.reading.lastBook));
     cards.appendChild(continueCard);

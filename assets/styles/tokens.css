@@ -30,8 +30,8 @@
   --font-greek: 'Gentium Plus', serif;
 
   /* Поверхности */
-  --surface: var(--beige-100);            /* #efeee9 — фон страницы */
-  --surface-card: var(--beige-200);       /* #E8E4DA — фон карточек (отделен от --surface) */
+  --surface: var(--beige-100);            /* #F7F3EB — фон страницы */
+  --surface-card: var(--beige-200);       /* #EBE3D3 — фон карточек (отделен от --surface) */
 
   /* Текст */
   --text: #2B2B2B;

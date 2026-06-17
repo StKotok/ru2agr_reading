@@ -139,7 +139,8 @@ h3 {
   font-size: 0.9375rem;
   cursor: pointer;
   border-radius: 8px;
-  transition: background-color 0.15s, color 0.15s;
+  transition: background-color 0.15s, color 0.15s, transform 0.1s ease;
+  touch-action: manipulation;
 }
 
 .nav-tab svg {
@@ -192,7 +193,8 @@ h3 {
   font-family: inherit;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s ease;
+  touch-action: manipulation;
 }
 
 .btn:hover {
@@ -457,6 +459,15 @@ input[type="checkbox"] {
   .bottom-sheet-overlay[data-closing],
   .bottom-sheet-overlay[data-closing] .bottom-sheet {
     animation: none !important;
+  }
+
+  /* Подавляем :active-трансформации */
+  .nav-tab:active,
+  .btn:active,
+  .mode-widget-chip:active,
+  .letter-cell:active,
+  .onboarding-card:active {
+    transform: none !important;
   }
 }
 
@@ -1327,6 +1338,8 @@ section[data-chapter] {
   line-height: 1;
   user-select: none;
   min-height: 32px;
+  transition: transform 0.1s ease;
+  touch-action: manipulation;
 }
 
 .mode-widget-chip:hover {
@@ -1694,7 +1707,8 @@ section[data-chapter] {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, transform 0.1s ease;
+  touch-action: manipulation;
 }
 
 .letter-cell.letter-known {
@@ -1765,11 +1779,16 @@ section[data-chapter] {
 .onboarding-card {
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s ease;
   border: 2px solid var(--border);
   border-left: 4px solid var(--onboarding-stripe, var(--primary));
   padding: 16px 16px 16px 20px;
-  position: relative;
+  touch-action: manipulation;
+}
+
+.onboarding-card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .onboarding-card:hover {
