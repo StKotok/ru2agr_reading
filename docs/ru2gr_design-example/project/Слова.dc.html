@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#cfcabf;}
+  @keyframes scSheetUp{from{transform:translateY(101%);}to{transform:translateY(0);}}
+  @keyframes scFade{from{opacity:0;}to{opacity:1;}}
+  @keyframes scToast{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+  @keyframes scPop{from{opacity:0;transform:translateY(-6px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .scScreen::-webkit-scrollbar,.scScroll::-webkit-scrollbar{width:0;height:0;}
+  .scScroll{scrollbar-width:none;}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#cfcabf;font-family:'Source Sans 3',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:40px 20px 90px;gap:30px;">
+  <div style="text-align:center;max-width:560px;">
+    <div style="font-family:'Gentium Plus',serif;font-size:30px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">Экран «Слова»</div>
+    <div style="font-size:15px;color:#6f6a5f;margin-top:7px;line-height:1.5;">Личный словарь · частотные леммы НЗ · поиск, фильтры, статусы, замены в тексте. Нажимайте на строки слов.</div>
+  </div>
+
+  <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:14px;">
+    <div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Фильтр «Часть речи» · 3 кардинально разных подхода</div>
+      <div style="font-size:13.5px;color:#6f6a5f;margin-top:6px;line-height:1.5;max-width:680px;">Замена для строки «Все / Сущ. / Глаг. / Прил. / Служ.». Все три варианта живые и общие — выбор синхронизирован с макетами ниже. Активный в макетах вариант переключается в Tweaks (свойство «posStyle»).</div>
+    </div>
+    {{ posCompare }}
+  </div>
+
+  <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:14px;">
+    <div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Статус + «В тексте» · 5 кардинально разных компактных вариантов</div>
+      <div style="font-size:13.5px;color:#6f6a5f;margin-top:6px;line-height:1.5;max-width:680px;">Замена для строки «Все · В тексте · Новые · Учу · Знаю». Виджет совмещает две функции — фильтр по статусу изучения и тоггл «показывать только слова, заменённые в тексте». Все варианты живые и общим состоянием связаны с макетами ниже.</div>
+    </div>
+    {{ sCompare }}
+  </div>
+
+  <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Десктоп · ≥ 600px · боковая навигация + инспектор справа</div>
+    <div style="width:100%;border-radius:18px;overflow:hidden;box-shadow:0 36px 80px -34px rgba(40,34,22,0.55),0 0 0 1px rgba(40,34,22,0.1);background:#f4f2ec;">
+      {{ desktop }}
+    </div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;margin-top:10px;">Мобильный · &lt; 600px · нижняя шторка</div>
+  <div style="width:402px;height:872px;background:#15140f;border-radius:54px;padding:11px;box-shadow:0 40px 90px -28px rgba(40,34,22,0.7),0 0 0 2px rgba(0,0,0,0.22);flex:0 0 auto;">
+    <div class="scScreen" style="position:relative;width:100%;height:100%;background:#ECE7DD;border-radius:44px;overflow:hidden;">
+      {{ phone }}
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Пергамент&quot;,&quot;options&quot;:[&quot;Пергамент&quot;,&quot;Сепия&quot;,&quot;Слоновая кость&quot;,&quot;Туман&quot;,&quot;Море&quot;,&quot;Лес&quot;,&quot;Роза&quot;,&quot;Лаванда&quot;,&quot;Закат&quot;,&quot;Тёмная&quot;,&quot;Ночь&quot;,&quot;Уголь&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;contrast&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Чёткий&quot;,&quot;options&quot;:[&quot;Мягкий&quot;,&quot;Чёткий&quot;,&quot;Максимальный&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;posStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Сегменты&quot;,&quot;options&quot;:[&quot;Сегменты&quot;,&quot;Список&quot;,&quot;Цвет&quot;,&quot;Чипсы&quot;],&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.serif = "'Gentium Plus', Georgia, serif";
+    this.sans  = "'Source Sans 3', system-ui, sans-serif";
+    this.THEMES = this.buildThemes();
+    this.C = this.palette();
+
+    this.WORDS = [
+      {k:'ho',        r:1,   g:'ὁ',           t:'ho',          ru:'— (артикль)',              pos:'func', posL:'Арт.',     freq:19783, strong:'G3588', add:false},
+      {k:'kai',       r:2,   g:'καί',          t:'kaí',         ru:'и, также, даже',           pos:'func', posL:'Союз',     freq:9161,  strong:'G2532', add:false},
+      {k:'autos',     r:3,   g:'αὐτός',        t:'autós',       ru:'он, сам, тот же',          pos:'func', posL:'Мест.',    freq:5597,  strong:'G846',  add:true},
+      {k:'sy',        r:4,   g:'σύ',           t:'sý',          ru:'ты',                       pos:'func', posL:'Мест.',    freq:2907,  strong:'G4771', add:true},
+      {k:'de',        r:5,   g:'δέ',           t:'dé',          ru:'же, но, а',                pos:'func', posL:'Частица',  freq:2792,  strong:'G1161', add:false},
+      {k:'en',        r:6,   g:'ἐν',           t:'en',          ru:'в, на, среди',             pos:'func', posL:'Предлог',  freq:2752,  strong:'G1722', add:true},
+      {k:'ego',       r:7,   g:'ἐγώ',          t:'egṓ',         ru:'я',                        pos:'func', posL:'Мест.',    freq:2584,  strong:'G1473', add:true},
+      {k:'eimi',      r:8,   g:'εἰμί',         t:'eimí',        ru:'быть, есть, являться',     pos:'verb', posL:'Глаг.',    freq:2462,  strong:'G1510', add:true},
+      {k:'lego',      r:9,   g:'λέγω',         t:'légō',        ru:'говорить, сказать',        pos:'verb', posL:'Глаг.',    freq:2353,  strong:'G3004', add:true},
+      {k:'eis',       r:10,  g:'εἰς',          t:'eis',         ru:'в, на, к (направление)',   pos:'func', posL:'Предлог',  freq:1767,  strong:'G1519', add:true},
+      {k:'ou',        r:11,  g:'οὐ',           t:'ou',          ru:'не, нет (факт)',            pos:'func', posL:'Частица',  freq:1606,  strong:'G3756', add:true},
+      {k:'houtos',    r:12,  g:'οὗτος',        t:'hoûtos',      ru:'этот, сей',                pos:'func', posL:'Мест.',    freq:1388,  strong:'G3778', add:true},
+      {k:'hos',       r:13,  g:'ὅς',           t:'hós',         ru:'который, кто, что',        pos:'func', posL:'Мест.',    freq:1365,  strong:'G3739', add:true},
+      {k:'theos',     r:14,  g:'θεός',         t:'theós',       ru:'Бог, бог',                 pos:'noun', posL:'Сущ.',     freq:1317,  strong:'G2316', add:true},
+      {k:'hoti',      r:15,  g:'ὅτι',          t:'hóti',        ru:'что, потому что',          pos:'func', posL:'Союз',     freq:1296,  strong:'G3754', add:false},
+      {k:'pas',       r:16,  g:'πᾶς',          t:'pâs',         ru:'весь, всякий, каждый',     pos:'adj',  posL:'Прил.',    freq:1243,  strong:'G3956', add:true},
+      {k:'me',        r:17,  g:'μή',           t:'mḗ',          ru:'не (запрет, сомнение)',    pos:'func', posL:'Частица',  freq:1042,  strong:'G3361', add:false},
+      {k:'gar',       r:18,  g:'γάρ',          t:'gár',         ru:'ибо, ведь, так как',       pos:'func', posL:'Союз',     freq:1041,  strong:'G1063', add:false},
+      {k:'iesous',    r:19,  g:'Ἰησοῦς',       t:'Iēsoûs',      ru:'Иисус',                    pos:'noun', posL:'Сущ.',     freq:917,   strong:'G2424', add:true},
+      {k:'ek',        r:20,  g:'ἐκ',           t:'ek',          ru:'из, от (исходная точка)',  pos:'func', posL:'Предлог',  freq:914,   strong:'G1537', add:true},
+      {k:'kyrios',    r:21,  g:'κύριος',       t:'kýrios',      ru:'Господь, владыка',         pos:'noun', posL:'Сущ.',     freq:717,   strong:'G2962', add:true},
+      {k:'echo',      r:22,  g:'ἔχω',          t:'échō',        ru:'иметь, держать',           pos:'verb', posL:'Глаг.',    freq:708,   strong:'G2192', add:true},
+      {k:'pros',      r:23,  g:'πρός',         t:'prós',        ru:'к, у, для',                pos:'func', posL:'Предлог',  freq:700,   strong:'G4314', add:false},
+      {k:'ginomai',   r:24,  g:'γίνομαι',      t:'gínomai',     ru:'быть, становиться',        pos:'verb', posL:'Глаг.',    freq:669,   strong:'G1096', add:true},
+      {k:'hina',      r:25,  g:'ἵνα',          t:'hína',        ru:'чтобы, дабы',              pos:'func', posL:'Союз',     freq:663,   strong:'G2443', add:true},
+      {k:'apo',       r:26,  g:'ἀπό',          t:'apó',         ru:'от, из (удаление)',        pos:'func', posL:'Предлог',  freq:646,   strong:'G0575', add:false},
+      {k:'alla',      r:27,  g:'ἀλλά',         t:'allá',        ru:'но, а, однако',            pos:'func', posL:'Союз',     freq:638,   strong:'G0235', add:true},
+      {k:'dia',       r:28,  g:'διά',          t:'diá',         ru:'через, ради, по причине',  pos:'func', posL:'Предлог',  freq:667,   strong:'G1223', add:false},
+      {k:'kata',      r:29,  g:'κατά',         t:'katá',        ru:'по, согласно, против',     pos:'func', posL:'Предлог',  freq:473,   strong:'G2596', add:false},
+      {k:'christos',  r:30,  g:'Χριστός',      t:'Christós',    ru:'Христос, Мессия',          pos:'noun', posL:'Сущ.',     freq:529,   strong:'G5547', add:true},
+      {k:'anthropos', r:31,  g:'ἄνθρωπος',     t:'ánthrōpos',   ru:'человек, люди',            pos:'noun', posL:'Сущ.',     freq:550,   strong:'G0444', add:true},
+      {k:'pneuma',    r:32,  g:'πνεῦμα',       t:'pneûma',      ru:'дух, дыхание, ветер',      pos:'noun', posL:'Сущ.',     freq:379,   strong:'G4151', add:true},
+      {k:'huios',     r:33,  g:'υἱός',         t:'hyiós',       ru:'сын',                      pos:'noun', posL:'Сущ.',     freq:377,   strong:'G5207', add:true},
+      {k:'erchomai',  r:34,  g:'ἔρχομαι',      t:'érchomai',    ru:'приходить, идти',          pos:'verb', posL:'Глаг.',    freq:636,   strong:'G2064', add:true},
+      {k:'poieo',     r:35,  g:'ποιέω',        t:'poiéō',       ru:'делать, творить',          pos:'verb', posL:'Глаг.',    freq:568,   strong:'G4160', add:true},
+      {k:'pater',     r:36,  g:'πατήρ',        t:'patḗr',       ru:'отец',                     pos:'noun', posL:'Сущ.',     freq:413,   strong:'G3962', add:true},
+      {k:'akouo',     r:37,  g:'ἀκούω',        t:'akoúō',       ru:'слышать, слушать',         pos:'verb', posL:'Глаг.',    freq:428,   strong:'G0191', add:true},
+      {k:'pisteuo',   r:38,  g:'πιστεύω',      t:'pisteúō',     ru:'верить, доверять',         pos:'verb', posL:'Глаг.',    freq:241,   strong:'G4100', add:true},
+      {k:'adelphos',  r:39,  g:'ἀδελφός',      t:'adelphós',    ru:'брат',                     pos:'noun', posL:'Сущ.',     freq:343,   strong:'G0080', add:true},
+      {k:'agapao',    r:40,  g:'ἀγαπάω',       t:'agapáō',      ru:'любить',                   pos:'verb', posL:'Глаг.',    freq:143,   strong:'G0025', add:true},
+      {k:'agape',     r:41,  g:'ἀγάπη',        t:'agápē',       ru:'любовь',                   pos:'noun', posL:'Сущ.',     freq:116,   strong:'G0026', add:true},
+      {k:'eirene',    r:42,  g:'εἰρήνη',       t:'eirḗnē',      ru:'мир, покой',               pos:'noun', posL:'Сущ.',     freq:92,    strong:'G1515', add:true},
+      {k:'charis',    r:43,  g:'χάρις',        t:'cháris',      ru:'благодать, милость',       pos:'noun', posL:'Сущ.',     freq:155,   strong:'G5485', add:true},
+      {k:'pistis',    r:44,  g:'πίστις',       t:'pístis',      ru:'вера, верность',           pos:'noun', posL:'Сущ.',     freq:243,   strong:'G4102', add:true},
+      {k:'zoe',       r:45,  g:'ζωή',          t:'zōḗ',         ru:'жизнь',                    pos:'noun', posL:'Сущ.',     freq:135,   strong:'G2222', add:true},
+      {k:'nomos',     r:46,  g:'νόμος',        t:'nómos',       ru:'закон',                    pos:'noun', posL:'Сущ.',     freq:194,   strong:'G3551', add:true},
+      {k:'kosmos',    r:47,  g:'κόσμος',       t:'kósmos',      ru:'мир, вселенная',           pos:'noun', posL:'Сущ.',     freq:186,   strong:'G2889', add:true},
+      {k:'hagios',    r:48,  g:'ἅγιος',        t:'hágios',      ru:'святой, посвящённый',      pos:'adj',  posL:'Прил.',    freq:233,   strong:'G0040', add:true},
+      {k:'aletheia',  r:49,  g:'ἀλήθεια',      t:'alḗtheia',    ru:'истина, правда',           pos:'noun', posL:'Сущ.',     freq:109,   strong:'G0225', add:true},
+      {k:'hamartia',  r:50,  g:'ἁμαρτία',      t:'hamartía',    ru:'грех',                     pos:'noun', posL:'Сущ.',     freq:173,   strong:'G0266', add:true},
+      {k:'logos',     r:53,  g:'λόγος',        t:'lógos',       ru:'слово, речь, разум',       pos:'noun', posL:'Сущ.',     freq:330,   strong:'G3056', add:true},
+      {k:'ekklesia',  r:58,  g:'ἐκκλησία',     t:'ekklēsía',    ru:'церковь, собрание',        pos:'noun', posL:'Сущ.',     freq:114,   strong:'G1577', add:true},
+      {k:'basileia',  r:61,  g:'βασιλεία',     t:'basileía',    ru:'царство, власть царя',     pos:'noun', posL:'Сущ.',     freq:162,   strong:'G0932', add:true},
+      {k:'doxa',      r:66,  g:'δόξα',         t:'dóxa',        ru:'слава, честь',             pos:'noun', posL:'Сущ.',     freq:166,   strong:'G1391', add:true},
+      {k:'euangelion',r:69,  g:'εὐαγγέλιον',   t:'euangélion',  ru:'евангелие, благая весть',  pos:'noun', posL:'Сущ.',     freq:76,    strong:'G2098', add:true},
+      {k:'sarx',      r:72,  g:'σάρξ',         t:'sárx',        ru:'плоть, тело',              pos:'noun', posL:'Сущ.',     freq:147,   strong:'G4561', add:true},
+      {k:'kardia',    r:75,  g:'καρδία',       t:'kardía',      ru:'сердце',                   pos:'noun', posL:'Сущ.',     freq:156,   strong:'G2588', add:true},
+      {k:'psyche',    r:78,  g:'ψυχή',         t:'psychḗ',      ru:'душа, жизнь',              pos:'noun', posL:'Сущ.',     freq:103,   strong:'G5590', add:true},
+      {k:'ge',        r:80,  g:'γῆ',           t:'gē',          ru:'земля, почва',             pos:'noun', posL:'Сущ.',     freq:250,   strong:'G1093', add:true},
+      {k:'horao',     r:83,  g:'ὁράω',         t:'horáō',       ru:'видеть, смотреть',         pos:'verb', posL:'Глаг.',    freq:454,   strong:'G3708', add:true},
+      {k:'ouranos',   r:86,  g:'οὐρανός',      t:'ouranós',     ru:'небо, небеса',             pos:'noun', posL:'Сущ.',     freq:273,   strong:'G3772', add:true},
+      {k:'dynamis',   r:89,  g:'δύναμις',      t:'dýnamis',     ru:'сила, мощь, чудо',         pos:'noun', posL:'Сущ.',     freq:119,   strong:'G1411', add:true},
+      {k:'ergon',     r:92,  g:'ἔργον',        t:'érgon',       ru:'дело, труд, работа',       pos:'noun', posL:'Сущ.',     freq:169,   strong:'G2041', add:true},
+      {k:'onoma',     r:95,  g:'ὄνομα',        t:'ónoma',       ru:'имя',                      pos:'noun', posL:'Сущ.',     freq:228,   strong:'G3686', add:true},
+      {k:'thanatos',  r:98,  g:'θάνατος',      t:'thánatos',    ru:'смерть',                   pos:'noun', posL:'Сущ.',     freq:120,   strong:'G2288', add:true},
+      {k:'phone',     r:101, g:'φωνή',         t:'phōnḗ',       ru:'голос, звук',              pos:'noun', posL:'Сущ.',     freq:139,   strong:'G5456', add:true},
+      {k:'hodos',     r:104, g:'ὁδός',         t:'hodós',       ru:'путь, дорога',             pos:'noun', posL:'Сущ.',     freq:101,   strong:'G3598', add:true},
+      {k:'exousia',   r:107, g:'ἐξουσία',      t:'exousía',     ru:'власть, право',            pos:'noun', posL:'Сущ.',     freq:102,   strong:'G1849', add:true},
+      {k:'grapho',    r:112, g:'γράφω',        t:'gráphō',      ru:'писать, записывать',       pos:'verb', posL:'Глаг.',    freq:191,   strong:'G1125', add:true},
+      {k:'cheir',     r:116, g:'χείρ',         t:'cheír',       ru:'рука',                     pos:'noun', posL:'Сущ.',     freq:177,   strong:'G5495', add:true},
+      {k:'mathetes',  r:120, g:'μαθητής',      t:'mathētḗs',    ru:'ученик, последователь',    pos:'noun', posL:'Сущ.',     freq:261,   strong:'G3101', add:true},
+      {k:'apostolos', r:125, g:'ἀπόστολος',    t:'apóstolos',   ru:'апостол, посланник',       pos:'noun', posL:'Сущ.',     freq:80,    strong:'G0652', add:true},
+      {k:'phos',      r:198, g:'φῶς',          t:'phôs',        ru:'свет, сияние',             pos:'noun', posL:'Сущ.',     freq:73,    strong:'G5457', add:true},
+      {k:'angelos',   r:218, g:'ἄγγελος',      t:'ángelos',     ru:'ангел, вестник',           pos:'noun', posL:'Сущ.',     freq:175,   strong:'G0032', add:true},
+      {k:'nekros',    r:230, g:'νεκρός',       t:'nekrós',      ru:'мёртвый, умерший',         pos:'adj',  posL:'Прил.',    freq:128,   strong:'G3498', add:true},
+      {k:'skotia',    r:265, g:'σκοτία',       t:'skotía',      ru:'тьма, мрак',               pos:'noun', posL:'Сущ.',     freq:17,    strong:'G4653', add:true},
+    ];
+
+    this.GROUPS = [
+      {key:'g10',  label:'Топ-10',  cov:'≈ 38% всех словоупотреблений НЗ', min:1,   max:10},
+      {key:'g50',  label:'Топ-50',  cov:'≈ 57% покрытия текста',           min:11,  max:50},
+      {key:'g100', label:'Топ-100', cov:'≈ 64% покрытия текста',           min:51,  max:100},
+      {key:'g300', label:'Топ-300', cov:'≈ 75% покрытия текста',           min:101, max:300},
+    ];
+
+    // Default statuses
+    const sm = {};
+    const knownSet   = new Set(['ho','kai','autos','de','en','ego','eimi','lego','eis','ou','theos','iesous','kyrios','christos','logos']);
+    const learnSet   = new Set(['sy','hoti','pas','ek','echo','ginomai','hina','alla','houtos','hos','pisteuo','pistis','kosmos','pneuma','phos','zoe']);
+    const newSet     = new Set(['me','gar','pros','apo','dia','kata','anthropos','huios','erchomai','poieo','pater','akouo','adelphos','agapao','agape','eirene','charis','nomos','hagios','aletheia','hamartia']);
+    this.WORDS.forEach(w => {
+      if      (knownSet.has(w.k)) sm[w.k] = 'known';
+      else if (learnSet.has(w.k)) sm[w.k] = 'learning';
+      else if (newSet.has(w.k))   sm[w.k] = 'new';
+      else                         sm[w.k] = null;
+    });
+
+    const as = new Set(this.WORDS.filter(w => w.add && w.r <= 45).map(w => w.k));
+
+    this.state = {
+      search:'', statusFilter:'all', posFilter:'all', showInText:false,
+      statusMap:sm, addedSet:as,
+      activeKey:null, sheetOpen:false, posMenuOpen:false, sMenuOpen:false,
+      visibleCount:22,
+      deskScale:1, toast:null,
+    };
+  }
+
+  /* ---- utils ---- */
+  a(hex, al) {
+    const n = parseInt(hex.slice(1), 16);
+    return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';
+  }
+  hexToRgb(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];}
+  rgbToHex(a){const c=v=>('0'+Math.round(Math.max(0,Math.min(255,v))).toString(16)).slice(-2);return '#'+c(a[0])+c(a[1])+c(a[2]);}
+  mix(x,y,t){const A=this.hexToRgb(x),B=this.hexToRgb(y);return this.rgbToHex([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]);}
+  lum(hex){const a=this.hexToRgb(hex);return (0.299*a[0]+0.587*a[1]+0.114*a[2])/255;}
+  buildThemes(){
+    const mk=(o)=>({paper:o.paper,paper2:o.alt,sidebar:o.alt,read:o.read,titlebar:o.title,ink:o.ink,inkSoft:o.inkSoft,muted:o.muted,muted2:o.muted2,line:this.a(o.ink,0.10),line2:this.a(o.ink,0.18),blue:o.blue,blueHead:o.blue,blueBg:o.blueBg,blueTx:o.blueTx,terra:o.terra,terraSoft:o.terraSoft,green:o.green,greenDk:o.greenDk,greenBg:o.greenBg});
+    return {
+      'Пергамент':mk({paper:'#ECE7DD',alt:'#E3DDD0',read:'#F6F3EE',title:'#E2DBCB',ink:'#272320',inkSoft:'#4a463e',muted:'#9a9488',muted2:'#bdb6a7',blue:'#2f5d85',blueBg:'#cdd9e6',blueTx:'#345f82',terra:'#bb763c',terraSoft:'#e7d3bf',green:'#7c9d5b',greenDk:'#5f7d44',greenBg:'#d9e3c9'}),
+      'Сепия':mk({paper:'#E9DFC8',alt:'#E2D6BB',read:'#F4ECD9',title:'#DBCEB0',ink:'#36291a',inkSoft:'#574630',muted:'#998966',muted2:'#c1b08d',blue:'#39627a',blueBg:'#d2dbdb',blueTx:'#39627a',terra:'#b3652b',terraSoft:'#e7cea9',green:'#7c8f46',greenDk:'#5e7033',greenBg:'#dedcb8'}),
+      'Слоновая кость':mk({paper:'#FAF8F3',alt:'#F1EEE6',read:'#FFFFFF',title:'#EFEBE1',ink:'#2a2722',inkSoft:'#514c43',muted:'#9b9488',muted2:'#c7c0b2',blue:'#2f5d85',blueBg:'#d8e3ef',blueTx:'#2f5d85',terra:'#c0723a',terraSoft:'#f1dac2',green:'#6f9a4f',greenDk:'#547d35',greenBg:'#e1ead0'}),
+      'Туман':mk({paper:'#E8E8EB',alt:'#DFDFE3',read:'#F4F4F7',title:'#DBDBDF',ink:'#25262b',inkSoft:'#45474e',muted:'#8a8c95',muted2:'#b6b8c0',blue:'#3a5f8a',blueBg:'#d4ddeb',blueTx:'#3a5f8a',terra:'#b06a45',terraSoft:'#e8d2c6',green:'#5f8f6a',greenDk:'#487553',greenBg:'#d4e4d8'}),
+      'Море':mk({paper:'#E2ECF0',alt:'#D7E4EA',read:'#F0F7F9',title:'#D1E0E7',ink:'#1f2a30',inkSoft:'#3c4b53',muted:'#7f939c',muted2:'#aec0c8',blue:'#2c6e8f',blueBg:'#cadfe9',blueTx:'#2c6e8f',terra:'#c07a45',terraSoft:'#edd7c3',green:'#5e9080',greenDk:'#467467',greenBg:'#cee5dd'}),
+      'Лес':mk({paper:'#E6EADD',alt:'#DCE2D0',read:'#F2F5EC',title:'#D7DEC8',ink:'#232a1f',inkSoft:'#424a39',muted:'#899078',muted2:'#b6bda6',blue:'#3a6079',blueBg:'#d2dde1',blueTx:'#3a6079',terra:'#b07239',terraSoft:'#e6d3b9',green:'#5f8240',greenDk:'#496630',greenBg:'#d8e2c2'}),
+      'Роза':mk({paper:'#F1E4E1',alt:'#EBD8D5',read:'#FAF1EF',title:'#E7D1CD',ink:'#2e2422',inkSoft:'#54443f',muted:'#a08c87',muted2:'#cbb4ae',blue:'#5a5f93',blueBg:'#dedaed',blueTx:'#5a5f93',terra:'#bb5e54',terraSoft:'#edccc6',green:'#7e9a5e',greenDk:'#5f7a43',greenBg:'#dee5ca'}),
+      'Лаванда':mk({paper:'#E9E5F0',alt:'#E1DBEC',read:'#F5F2FA',title:'#DDD6EB',ink:'#28242e',inkSoft:'#494456',muted:'#908aa0',muted2:'#bcb4cc',blue:'#5258a0',blueBg:'#dddaf1',blueTx:'#5258a0',terra:'#b06a8a',terraSoft:'#ebd1dc',green:'#6f9266',greenDk:'#547349',greenBg:'#dae7d4'}),
+      'Закат':mk({paper:'#F0E2D4',alt:'#E9D6C3',read:'#FBEFE0',title:'#E5CEB5',ink:'#34261c',inkSoft:'#5a4632',muted:'#a4876c',muted2:'#ccb191',blue:'#44708a',blueBg:'#d5e0e5',blueTx:'#44708a',terra:'#c4622f',terraSoft:'#f0d0b1',green:'#8a934a',greenDk:'#6c7434',greenBg:'#e2e2bc'}),
+      'Тёмная':mk({paper:'#26231d',alt:'#2e2a23',read:'#201d18',title:'#322d25',ink:'#ece6da',inkSoft:'#c4bdae',muted:'#8f897b',muted2:'#6c6659',blue:'#5a93cc',blueBg:'#2a3f50',blueTx:'#9cc3e2',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#33402a'}),
+      'Ночь':mk({paper:'#1b2230',alt:'#222b3b',read:'#161c28',title:'#25303f',ink:'#e3e9f2',inkSoft:'#b3bdcd',muted:'#7e879a',muted2:'#5b6577',blue:'#5fa0d6',blueBg:'#26384f',blueTx:'#a6cdef',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#2a3a28'}),
+      'Уголь':mk({paper:'#1f1f21',alt:'#28282b',read:'#19191b',title:'#2c2c2f',ink:'#ededee',inkSoft:'#c2c2c4',muted:'#8d8d90',muted2:'#66666a',blue:'#5aa0d0',blueBg:'#2b3a47',blueTx:'#9fcbe8',terra:'#d8924f',terraSoft:'#443323',green:'#84b25f',greenDk:'#aad187',greenBg:'#2c3a27'})
+    };
+  }
+  palette(){
+    const base = this.THEMES[(this.props && this.props.theme)] || this.THEMES['Пергамент'];
+    const lvlName = (this.props && this.props.contrast) || 'Чёткий';
+    const LV = {'Мягкий':{rec:0.05,elv:0.42},'Чёткий':{rec:0.11,elv:0.72},'Максимальный':{rec:0.185,elv:1.0}}[lvlName] || {rec:0.11,elv:0.72};
+    const dark = this.lum(base.paper) < 0.5;
+    const elvAmt = dark ? LV.elv*0.17 : LV.elv;
+    const recAmt = dark ? LV.rec*0.75 : LV.rec;
+    const elevate = (hex,t)=>this.mix(hex,'#ffffff',t);
+    const recess  = (hex,t)=>this.mix(hex,'#000000',t);
+    const C = Object.assign({}, base);
+    C.content  = elevate(base.paper, elvAmt*0.30);
+    C.card     = elevate(base.paper, elvAmt);
+    C.sidebar  = recess(base.paper, recAmt);
+    C.titlebar = recess(base.paper, recAmt*1.45);
+    C.read     = elevate(base.paper, elvAmt);
+    C.line     = this.a(base.ink, dark?0.13:0.09);
+    C.line2    = this.a(base.ink, dark?0.22:0.16);
+    C.cardLine = this.a(base.ink, dark?0.18:0.13);
+    C.shadow   = dark ? '0 2px 10px -2px rgba(0,0,0,.55)' : '0 1px 3px rgba(40,34,22,.10),0 10px 26px -14px rgba(40,34,22,.24)';
+    C.paper2   = C.card;
+    return C;
+  }
+  fmt(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') + '\u00d7';
+  }
+
+  /* ---- icons ---- */
+  iconRead(c) {
+    const h = React.createElement;
+    return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},
+      h('path',{d:'M12 6.5C10 5.2 7.6 5.2 5 6.2v12c2.6-1 5-1 7 .3'}),
+      h('path',{d:'M12 6.5c2-1.3 4.4-1.3 7-.3v12c-2.6-1-5-1-7 .3'}),
+      h('path',{d:'M12 6.5v12.3'}));
+  }
+  iconWords(c) {
+    const h = React.createElement;
+    return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},
+      h('path',{d:'M9 7h11M9 12h11M9 17h11'}),
+      h('circle',{cx:4.5,cy:7,r:1,fill:c,stroke:'none'}),
+      h('circle',{cx:4.5,cy:12,r:1,fill:c,stroke:'none'}),
+      h('circle',{cx:4.5,cy:17,r:1,fill:c,stroke:'none'}));
+  }
+  iconInfo(c) {
+    const h = React.createElement;
+    return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},
+      h('circle',{cx:12,cy:12,r:9}),
+      h('path',{d:'M12 11v5'}),
+      h('circle',{cx:12,cy:7.7,r:0.6,fill:c,stroke:'none'}));
+  }
+  iconSearch(c) {
+    const h = React.createElement;
+    return h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},
+      h('circle',{cx:11,cy:11,r:7}),h('path',{d:'M21 21l-4.3-4.3'}));
+  }
+  iconX(c, sz) {
+    const h = React.createElement, s = sz || 15;
+    return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
+      h('path',{d:'M6 6l12 12M18 6L6 18'}));
+  }
+  iconEye(c) {
+    const h = React.createElement;
+    return h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
+      h('path',{d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z'}),
+      h('circle',{cx:12,cy:12,r:3}));
+  }
+
+  /* ---- data ---- */
+  getFiltered() {
+    const {search, statusFilter, posFilter, showInText, statusMap, addedSet} = this.state;
+    const q = search.trim().toLowerCase();
+    return this.WORDS.filter(w => {
+      if (statusFilter !== 'all' && statusMap[w.k] !== statusFilter) return false;
+      if (posFilter !== 'all' && w.pos !== posFilter) return false;
+      if (showInText && !addedSet.has(w.k)) return false;
+      if (q && !w.g.toLowerCase().includes(q) && !w.t.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+  getGroups(filtered) {
+    return this.GROUPS.map(g => ({
+      ...g, words: filtered.filter(w => w.r >= g.min && w.r <= g.max)
+    })).filter(g => g.words.length > 0);
+  }
+
+  /* ---- actions ---- */
+  toggleAdded(k, e) {
+    e.stopPropagation();
+    const a = new Set(this.state.addedSet);
+    if (a.has(k)) { a.delete(k); } else { a.add(k); this.showToast('Слово будет показываться в тексте чтения'); }
+    this.setState({addedSet:a});
+  }
+  setStatus(k, s) {
+    const m = Object.assign({}, this.state.statusMap);
+    m[k] = m[k] === s ? null : s;
+    this.setState({statusMap:m});
+  }
+  clickRow(k, e) {
+    // Store click Y for desktop popover positioning
+    if (e) {
+      const mainEl = document.getElementById('deskMain');
+      if (mainEl) {
+        const rr = e.currentTarget.getBoundingClientRect();
+        const mr = mainEl.getBoundingClientRect();
+        const rawY = rr.top - mr.top;
+        this._popY = Math.max(56, Math.min(rawY, mr.height - 390));
+      }
+    }
+    const same = this.state.activeKey === k;
+    this.setState({activeKey: same ? null : k, sheetOpen: !same});
+  }
+  closeCard() { this.setState({activeKey:null, sheetOpen:false}); }
+  showToast(msg) {
+    const id = Date.now(); this._tid = id;
+    this.setState({toast:msg});
+    setTimeout(() => { if (this._tid === id) this.setState({toast:null}); }, 2600);
+  }
+
+  /* ---- status pill ---- */
+  sPill(k, sm) {
+    const C=this.C, h=React.createElement, s=this.state.statusMap[k];
+    if (!s) return null;
+    const cfg = {new:['Новое',C.muted,this.a(C.ink,.06)],learning:['Учу',C.blueTx,C.blueBg],known:['Знаю',C.greenDk,C.greenBg]}[s];
+    if (!cfg) return null;
+    return h('span',{style:{fontFamily:this.sans,fontSize:sm?10.5:11,fontWeight:600,color:cfg[1],background:cfg[2],padding:sm?'2px 7px':'3px 9px',borderRadius:20,whiteSpace:'nowrap',flexShrink:0}},cfg[0]);
+  }
+
+  /* ---- checkbox ---- */
+  cbx(w) {
+    const C=this.C, h=React.createElement;
+    if (!w.add) return h('div',{title:'Нет соответствия в русском тексте',style:{width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted2,fontSize:16,flexShrink:0}},'–');
+    const on = this.state.addedSet.has(w.k);
+    return h('button',{
+      onClick:e=>this.toggleAdded(w.k,e),
+      title:on?'Убрать из текста':'Показывать в тексте',
+      style:{width:28,height:28,borderRadius:9,border:'1.5px solid '+(on?C.terra:C.line2),background:on?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}
+    }, on ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null);
+  }
+
+  /* ---- single word row ---- */
+  wRow(w, isActive) {
+    const C=this.C, h=React.createElement;
+    return h('div',{
+      key:w.k, id:'row_'+w.k,
+      onClick:e=>this.clickRow(w.k,e),
+      style:{
+        display:'flex',alignItems:'center',gap:10,
+        padding:'9px 10px 9px 0',
+        borderBottom:'1px solid '+C.line,
+        cursor:'pointer',
+        background:isActive?this.a(C.terra,.055):'transparent',
+        borderLeft:'3px solid '+(isActive?C.terra:'transparent'),
+        paddingLeft: isActive?9:0,
+        opacity:!w.add?0.5:1,
+        transition:'background .1s',
+      }
+    },
+      h('span',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted2,width:32,textAlign:'right',flexShrink:0,lineHeight:1}},w.r),
+      h('div',{style:{flex:1,minWidth:0}},
+        h('div',{style:{display:'flex',alignItems:'baseline',gap:8}},
+          h('span',{style:{fontFamily:this.serif,fontSize:21,color:isActive?C.terra:C.blue,lineHeight:1.1,whiteSpace:'nowrap'}},w.g),
+          h('span',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,lineHeight:1,whiteSpace:'nowrap'}},w.t)
+        ),
+        h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted2,marginTop:2}},this.fmt(w.freq)+' в НЗ')
+      ),
+      this.sPill(w.k, true),
+      this.cbx(w)
+    );
+  }
+
+  /* ---- group divider ---- */
+  gDiv(g) {
+    const C=this.C, h=React.createElement;
+    return h('div',{key:'gd_'+g.key,style:{display:'flex',alignItems:'center',gap:9,padding:'14px 10px 6px 0'}},
+      h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.terra,flexShrink:0}},g.label),
+      h('span',{style:{flex:1,height:1,background:C.line2}}),
+      h('span',{style:{fontFamily:this.sans,fontSize:11,color:C.muted2,flexShrink:0}},g.cov)
+    );
+  }
+
+  /* ---- word list body ---- */
+  wListBody(pb) {
+    const C=this.C, h=React.createElement;
+    const {visibleCount, activeKey} = this.state;
+    const filtered = this.getFiltered();
+    const groups   = this.getGroups(filtered);
+    const total    = filtered.length;
+    const items    = [];
+    let shown = 0;
+    for (const g of groups) {
+      if (shown >= visibleCount) break;
+      items.push(this.gDiv(g));
+      for (const w of g.words) {
+        if (shown >= visibleCount) break;
+        items.push(this.wRow(w, activeKey === w.k));
+        shown++;
+      }
+    }
+    if (total === 0) items.push(h('div',{key:'empty',style:{textAlign:'center',color:C.muted,fontFamily:this.sans,fontSize:14,padding:'48px 0'}},'Ничего не найдено'));
+    else if (shown < total) items.push(h('div',{key:'more',style:{padding:'18px 0',textAlign:'center',fontFamily:this.sans,fontSize:12.5,color:C.muted2}},
+      'Ещё '+(total-shown)+' слов — прокрутите вниз…'));
+    return h('div',{style:{paddingBottom:pb||16}},items);
+  }
+
+  /* ---- word card ---- */
+  wCard(k) {
+    if (!k) return null;
+    const C=this.C, h=React.createElement;
+    const w = this.WORDS.find(x => x.k === k);
+    if (!w) return null;
+    const st = this.state;
+    const status = st.statusMap[k];
+    const added  = st.addedSet.has(k);
+    const sCfg = {
+      new:      {label:'Новое',   col:C.muted,   bg:this.a(C.ink,.05), bd:C.line2},
+      learning: {label:'Учу',     col:C.blueTx,  bg:C.blueBg,          bd:this.a(C.blue,.5)},
+      known:    {label:'Знаю',    col:C.greenDk, bg:C.greenBg,         bd:this.a(C.green,.6)},
+    };
+    return h('div',{style:{padding:'20px 20px 26px'}},
+      // Lemma + close
+      h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:14}},
+        h('div',null,
+          h('div',{style:{fontFamily:this.serif,fontSize:46,color:C.blue,lineHeight:1}},w.g),
+          h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:17,color:C.muted,marginTop:3}},w.t)
+        ),
+        h('button',{onClick:()=>this.closeCard(),style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:4}},
+          this.iconX(C.inkSoft))
+      ),
+      // Info block
+      h('div',{style:{background:this.a(C.ink,.03),border:'1px solid '+C.line,borderRadius:13,padding:'13px 15px',marginBottom:14}},
+        h('div',{style:{fontFamily:this.serif,fontSize:17,fontWeight:700,color:C.ink,lineHeight:1.4,marginBottom:7}},w.ru),
+        h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}},
+          h('span',{style:{fontFamily:this.sans,fontSize:12,fontWeight:600,color:C.blueTx,background:C.blueBg,padding:'3px 9px',borderRadius:6,whiteSpace:'nowrap'}},w.posL),
+          h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,whiteSpace:'nowrap'}},'Частота: '+this.fmt(w.freq)),
+          h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,whiteSpace:'nowrap'}},'ранг '+w.r+' в НЗ'),
+          h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted2,whiteSpace:'nowrap'}},'Strong '+w.strong)
+        )
+      ),
+      // Status
+      h('div',{style:{marginBottom:14}},
+        h('div',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:8}},'Статус изучения'),
+        h('div',{style:{display:'flex',gap:6}},
+          ['new','learning','known'].map(s => {
+            const cfg = sCfg[s], on = status === s;
+            return h('button',{key:s, onClick:()=>this.setStatus(k,s),
+              style:{flex:1,padding:'8px 0',borderRadius:10,border:'1.5px solid '+(on?cfg.bd:C.line),background:on?cfg.bg:'transparent',color:on?cfg.col:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',transition:'all .14s'}
+            },cfg.label);
+          })
+        )
+      ),
+      // Show in text
+      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'12px 0',borderTop:'1px solid '+C.line}},
+        h('div',{style:{minWidth:0}},
+          h('div',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:600,color:w.add?C.ink:C.muted2}},'Показывать в тексте'),
+          h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted,marginTop:2,lineHeight:1.3}},
+            w.add ? 'Заменяет слово в тексте чтения' : 'Нет соответствия в русском тексте')
+        ),
+        w.add
+          ? h('button',{onClick:e=>this.toggleAdded(k,e),
+              style:{width:46,height:27,borderRadius:14,border:'none',cursor:'pointer',background:added?C.terra:this.a(C.ink,.1),position:'relative',transition:'background .2s',flexShrink:0}},
+              h('span',{style:{position:'absolute',top:3.5,left:added?22:3.5,width:20,height:20,borderRadius:10,background:'#fff',transition:'left .2s',boxShadow:'0 1px 3px rgba(0,0,0,0.18)'}})
+            )
+          : h('span',{style:{fontFamily:this.sans,fontSize:18,color:C.muted2,flexShrink:0}},'–')
+      )
+    );
+  }
+
+  /* ---- search bar ---- */
+  searchBar(mobile) {
+    const C=this.C, h=React.createElement, st=this.state;
+    return h('div',{style:{display:'flex',alignItems:'center',gap:8,background:C.card,border:'1px solid '+C.cardLine,borderRadius:11,padding:mobile?'8px 11px':'9px 13px',boxShadow:'0 1px 2px rgba(40,34,22,.05)'}},
+      this.iconSearch(C.muted),
+      h('input',{value:st.search,onChange:e=>this.setState({search:e.target.value}),placeholder:'Поиск: λόγος или logos…',style:{flex:1,border:'none',background:'none',outline:'none',fontFamily:this.sans,fontSize:mobile?14:14.5,color:C.ink}}),
+      st.search ? h('button',{onClick:()=>this.setState({search:''}),style:{background:'none',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center',color:C.muted2}},this.iconX(C.muted2,14)) : null
+    );
+  }
+
+  /* ---- status tabs (Все · [В тексте] · Новые/Учу/Знаю) ---- */
+  sTabs(mobile) {
+    const C=this.C, h=React.createElement, st=this.state;
+    const tab=(v,l)=>{
+      const on = st.statusFilter === v;
+      return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
+        style:{padding:mobile?'6px 10px':'7px 14px',borderRadius:9,border:'1px solid '+(on?'transparent':C.line),background:on?C.ink:'transparent',color:on?C.paper:C.muted,fontFamily:this.sans,fontSize:mobile?12:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}
+      },l);
+    };
+    const sep=(key)=>h('span',{key:key,style:{width:1,height:18,background:C.line2,flexShrink:0,margin:mobile?'0 1px':'0 2px'}});
+    const inText=h('button',{key:'intext',onClick:()=>this.setState({showInText:!st.showInText}),
+      style:{display:'flex',alignItems:'center',gap:5,padding:mobile?'6px 10px':'7px 12px',borderRadius:9,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,fontFamily:this.sans,fontSize:mobile?12:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}},
+      this.iconEye(st.showInText?C.terra:C.muted),'В тексте');
+    return h('div',{className:mobile?'scScroll':undefined,style:{display:'flex',gap:mobile?5:6,alignItems:'center',overflowX:mobile?'auto':'visible'}},
+      tab('all','Все'),
+      sep('s1'), inText, sep('s2'),
+      tab('new','Новые'), tab('learning','Учу'), tab('known','Знаю')
+    );
+  }
+
+  /* ---- POS data ---- */
+  posOpts() { return [['all','Все'],['noun','Сущ.'],['verb','Глаг.'],['adj','Прил.'],['func','Служ.']]; }
+  posCount(v) {
+    const {search, statusFilter, showInText, statusMap, addedSet} = this.state;
+    const q = search.trim().toLowerCase();
+    return this.WORDS.filter(w => {
+      if (statusFilter !== 'all' && statusMap[w.k] !== statusFilter) return false;
+      if (showInText && !addedSet.has(w.k)) return false;
+      if (q && !w.g.toLowerCase().includes(q) && !w.t.toLowerCase().includes(q)) return false;
+      if (v !== 'all' && w.pos !== v) return false;
+      return true;
+    }).length;
+  }
+  caret(c, open) {
+    const h = React.createElement;
+    return h('svg',{width:12,height:12,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round',style:{transform:open?'rotate(180deg)':'none',transition:'transform .15s',flexShrink:0}},h('path',{d:'M6 9l6 6 6-6'}));
+  }
+
+  /* ---- POS dispatcher (driven by posStyle prop) ---- */
+  posFilterUI(mobile) {
+    const style = (this.props && this.props.posStyle) || 'Сегменты';
+    if (style === 'Чипсы') return this.posChips(mobile);
+    if (style === 'Список') return this.posDropdown(mobile);
+    if (style === 'Цвет')   return this.posColor(mobile);
+    return this.posSegmented(mobile);
+  }
+
+  /* ---- baseline: rounded chips ---- */
+  posChips(mobile) {
+    const C=this.C, h=React.createElement, st=this.state;
+    return h('div',{className:'scScroll',style:{display:'flex',gap:mobile?5:6,overflowX:'auto',paddingBottom:2}},
+      this.posOpts().map(([v,l]) => {
+        const on = st.posFilter === v;
+        return h('button',{key:v,onClick:()=>this.setState({posFilter:v}),
+          style:{padding:'4px 11px',height:27,borderRadius:14,border:'1px solid '+(on?this.a(C.blue,.4):C.line),background:on?C.blueBg:'transparent',color:on?C.blueTx:C.muted,fontFamily:this.sans,fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}
+        },l);
+      })
+    );
+  }
+
+  /* ---- approach 1: connected segmented control ---- */
+  posSegmented(mobile) {
+    const C=this.C, h=React.createElement, st=this.state;
+    return h('div',{style:{display:'inline-flex',background:this.a(C.ink,.05),border:'1px solid '+C.line,borderRadius:10,padding:3,flexShrink:0}},
+      this.posOpts().map(([v,l]) => {
+        const on = st.posFilter === v;
+        return h('button',{key:v,onClick:()=>this.setState({posFilter:v}),
+          style:{padding:mobile?'6px 11px':'7px 15px',borderRadius:7,border:'none',background:on?C.card:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:mobile?12:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}
+        },l);
+      })
+    );
+  }
+
+  /* ---- approach 2: dropdown menu with counts ---- */
+  posDropdown(mobile) {
+    const C=this.C, h=React.createElement, st=this.state;
+    const opts = this.posOpts();
+    const cur = opts.find(o => o[0] === st.posFilter) || opts[0];
+    const open = st.posMenuOpen;
+    const menu = open ? h('div',{style:{position:'absolute',top:'calc(100% + 6px)',left:0,zIndex:50,minWidth:184,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}},
+      opts.map(([v,l]) => {
+        const on = st.posFilter === v;
+        return h('button',{key:v,onClick:()=>this.setState({posFilter:v,posMenuOpen:false}),
+          style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?this.a(C.blue,.1):'transparent',color:on?C.blueTx:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}},
+          h('span',null,l),
+          h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:on?C.blueTx:C.muted2}},this.posCount(v))
+        );
+      })
+    ) : null;
+    return h('div',{'data-posmenu':'1',style:{position:'relative',flexShrink:0}},
+      h('button',{onClick:()=>this.setState({posMenuOpen:!open}),
+        style:{display:'flex',alignItems:'center',gap:8,padding:mobile?'7px 11px':'8px 13px',borderRadius:10,border:'1px solid '+(open?this.a(C.blue,.4):C.line),background:open?C.blueBg:C.card,color:C.ink,fontFamily:this.sans,fontSize:mobile?12.5:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
+        h('span',{style:{color:C.muted,fontWeight:600}},'Часть речи:'),
+        h('span',{style:{color:st.posFilter==='all'?C.inkSoft:C.blueTx,fontWeight:700}},cur[1]),
+        this.caret(C.muted, open)
+      ),
+      menu
+    );
+  }
+
+  /* ---- approach 3: semantic colour key with counts ---- */
+  posColorMap() { const C=this.C; return {all:C.inkSoft, noun:C.blue, verb:C.terra, adj:C.greenDk, func:C.muted}; }
+  posColor(mobile) {
+    const C=this.C, h=React.createElement, st=this.state;
+    const cmap = this.posColorMap();
+    return h('div',{className:'scScroll',style:{display:'flex',gap:mobile?6:7,overflowX:'auto',paddingBottom:2,alignItems:'center'}},
+      this.posOpts().map(([v,l]) => {
+        const on = st.posFilter === v;
+        const col = cmap[v];
+        return h('button',{key:v,onClick:()=>this.setState({posFilter:v}),
+          style:{display:'flex',alignItems:'center',gap:7,padding:mobile?'5px 11px':'6px 13px',borderRadius:20,border:'1.5px solid '+(on?col:this.a(col,.32)),background:on?this.a(col,.13):'transparent',color:on?col:C.muted,fontFamily:this.sans,fontSize:mobile?12:12.5,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,transition:'all .12s'}},
+          h('span',{style:{width:9,height:9,borderRadius:'50%',background:col,flexShrink:0,opacity:v==='all'?0.45:1}}),
+          l,
+          h('span',{style:{fontSize:11,fontWeight:600,color:on?col:C.muted2,opacity:.85}},this.posCount(v))
+        );
+      })
+    );
+  }
+
+  /* ---- side-by-side comparison of the 3 approaches ---- */
+  posCompareEl() {
+    const C=this.C, h=React.createElement;
+    const frame=(title,desc,node)=>h('div',{style:{flex:'1 1 300px',minWidth:282,background:C.card,border:'1px solid '+C.cardLine,borderRadius:16,padding:'18px 18px 22px',boxShadow:C.shadow,display:'flex',flexDirection:'column',gap:14}},
+      h('div',null,
+        h('div',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},title),
+        h('div',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,marginTop:4,lineHeight:1.45}},desc)
+      ),
+      h('div',{style:{display:'flex',alignItems:'flex-start',minHeight:48}},node)
+    );
+    return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},
+      frame('1 · Сегмент-контрол','Связанный единый переключатель: выбор одним касанием, фиксированная ширина, не переносится.',this.posSegmented(false)),
+      frame('2 · Выпадающий список','Свёрнут до одной кнопки со счётчиками. Экономит ширину строки фильтров — масштабируется на десятки частей речи.',this.posDropdown(false)),
+      frame('3 · Цветной ключ','Семантический цвет на каждую часть речи + счётчики. Двойная роль: фильтр и легенда для подсветки слов в тексте.',this.posColor(false))
+    );
+  }
+
+  /* ===== STATUS / «В тексте» — 5 компактных вариантов ===== */
+  sOpts() { return [['all','Все'],['new','Новые'],['learning','Учу'],['known','Знаю']]; }
+  sColorMap() { const C=this.C; return {all:C.inkSoft, new:C.muted, learning:C.blueTx, known:C.greenDk}; }
+  statusCount(v) {
+    const {search, posFilter, showInText, statusMap, addedSet} = this.state;
+    const q = search.trim().toLowerCase();
+    return this.WORDS.filter(w => {
+      if (posFilter !== 'all' && w.pos !== posFilter) return false;
+      if (showInText && !addedSet.has(w.k)) return false;
+      if (q && !w.g.toLowerCase().includes(q) && !w.t.toLowerCase().includes(q)) return false;
+      if (v !== 'all' && statusMap[w.k] !== v) return false;
+      return true;
+    }).length;
+  }
+  // reusable "В тексте" pieces
+  eyePill() {
+    const C=this.C, h=React.createElement, st=this.state;
+    return h('button',{onClick:()=>this.setState({showInText:!st.showInText}),
+      style:{display:'flex',alignItems:'center',gap:6,padding:'8px 13px',borderRadius:10,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
+      this.iconEye(st.showInText?C.terra:C.muted),'В тексте');
+  }
+  eyeIconBtn() {
+    const C=this.C, h=React.createElement, st=this.state;
+    return h('button',{onClick:()=>this.setState({showInText:!st.showInText}),title:st.showInText?'Показаны только слова в тексте':'Только слова в тексте',
+      style:{display:'flex',alignItems:'center',justifyContent:'center',width:34,height:34,borderRadius:9,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,cursor:'pointer',flexShrink:0}},
+      this.iconEye(st.showInText?C.terra:C.muted));
+  }
+  sDivider() { const C=this.C; return React.createElement('span',{style:{width:1,height:20,background:C.line2,flexShrink:0}}); }
+
+  /* ---- V1: связанный сегмент-контрол + отдельный тоггл ---- */
+  sV1() {
+    const C=this.C, h=React.createElement, st=this.state;
+    const seg = h('div',{style:{display:'inline-flex',background:this.a(C.ink,.05),border:'1px solid '+C.line,borderRadius:10,padding:3,flexShrink:0}},
+      this.sOpts().map(([v,l]) => {
+        const on = st.statusFilter === v;
+        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
+          style:{padding:'7px 14px',borderRadius:7,border:'none',background:on?C.card:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},l);
+      }));
+    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, seg, this.eyePill());
+  }
+
+  /* ---- V2: цветной ключ-легенда со счётчиками + иконка ---- */
+  sV2() {
+    const C=this.C, h=React.createElement, st=this.state;
+    const cmap = this.sColorMap();
+    const dots = h('div',{style:{display:'flex',gap:3,alignItems:'center'}},
+      this.sOpts().map(([v,l]) => {
+        const on = st.statusFilter === v, col = cmap[v];
+        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
+          style:{display:'flex',alignItems:'center',gap:6,padding:'6px 10px',borderRadius:8,border:'none',background:on?this.a(col,.12):'transparent',cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s'}},
+          h('span',{style:{width:8,height:8,borderRadius:'50%',background:col,opacity:v==='all'?.4:1,flexShrink:0}}),
+          h('span',{style:{fontFamily:this.sans,fontSize:12.5,fontWeight:on?700:500,color:on?C.ink:C.muted}},l),
+          h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:600,color:C.muted2}},this.statusCount(v))
+        );
+      }));
+    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dots, this.sDivider(), this.eyeIconBtn());
+  }
+
+  /* ---- V3: выпадающий список статусов + чип (самый компактный) ---- */
+  sV3() {
+    const C=this.C, h=React.createElement, st=this.state;
+    const opts = this.sOpts();
+    const cur = opts.find(o => o[0] === st.statusFilter) || opts[0];
+    const open = st.sMenuOpen;
+    const menu = open ? h('div',{style:{position:'absolute',top:'calc(100% + 6px)',left:0,zIndex:50,minWidth:182,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}},
+      opts.map(([v,l]) => {
+        const on = st.statusFilter === v;
+        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v,sMenuOpen:false}),
+          style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?this.a(C.ink,.07):'transparent',color:on?C.ink:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}},
+          h('span',null,l),
+          h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},this.statusCount(v))
+        );
+      })
+    ) : null;
+    const dd = h('div',{'data-smenu':'1',style:{position:'relative',flexShrink:0}},
+      h('button',{onClick:()=>this.setState({sMenuOpen:!open}),
+        style:{display:'flex',alignItems:'center',gap:8,padding:'8px 13px',borderRadius:10,border:'1px solid '+(open?C.line2:C.line),background:C.card,color:C.ink,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
+        h('span',{style:{color:C.muted}},'Статус:'),
+        h('span',{style:{fontWeight:700}},cur[1]),
+        h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},this.statusCount(st.statusFilter)),
+        this.caret(C.muted, open)
+      ),
+      menu
+    );
+    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dd, this.eyePill());
+  }
+
+  /* ---- V4: счётчик-пилюли (данные на первом плане) ---- */
+  sV4() {
+    const C=this.C, h=React.createElement, st=this.state;
+    const cmap = this.sColorMap();
+    const pills = h('div',{style:{display:'flex',gap:6}},
+      this.sOpts().map(([v,l]) => {
+        const on = st.statusFilter === v, col = cmap[v];
+        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
+          style:{display:'flex',flexDirection:'column',alignItems:'center',gap:2,minWidth:54,padding:'7px 10px',borderRadius:11,border:'1px solid '+(on?this.a(col,.45):C.line),background:on?this.a(col,.1):'transparent',cursor:'pointer',transition:'all .12s'}},
+          h('span',{style:{fontFamily:this.sans,fontSize:17,fontWeight:700,color:on?col:C.inkSoft,lineHeight:1}},this.statusCount(v)),
+          h('span',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:600,color:on?col:C.muted,lineHeight:1}},l)
+        );
+      }));
+    return h('div',{style:{display:'flex',gap:10,alignItems:'stretch',flexWrap:'wrap'}}, pills, this.eyeIconBtn());
+  }
+
+  /* ---- V5: подчёркнутые вкладки + отдельный свитч (явно два виджета) ---- */
+  sV5() {
+    const C=this.C, h=React.createElement, st=this.state;
+    const tabs = h('div',{style:{display:'flex',gap:18,borderBottom:'1px solid '+C.line}},
+      this.sOpts().map(([v,l]) => {
+        const on = st.statusFilter === v;
+        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
+          style:{padding:'2px 1px 9px',background:'none',border:'none',borderBottom:'2px solid '+(on?C.ink:'transparent'),marginBottom:-1,cursor:'pointer',fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap'}},l);
+      }));
+    const sw = h('div',{style:{display:'flex',alignItems:'center',gap:9}},
+      h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:600,color:st.showInText?C.terra:C.muted}},'Только слова в тексте'),
+      h('button',{onClick:()=>this.setState({showInText:!st.showInText}),style:{width:42,height:24,borderRadius:12,border:'none',background:st.showInText?C.terra:this.a(C.ink,.12),position:'relative',cursor:'pointer',flexShrink:0,transition:'background .2s'}},
+        h('span',{style:{position:'absolute',top:3,left:st.showInText?21:3,width:18,height:18,borderRadius:9,background:'#fff',transition:'left .18s',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}))
+    );
+    return h('div',{style:{display:'flex',flexDirection:'column',gap:15,width:'100%'}}, tabs, sw);
+  }
+
+  /* ---- compare frame for the 5 status variants ---- */
+  sCompareEl() {
+    const C=this.C, h=React.createElement;
+    const frame=(n,title,split,desc,node)=>h('div',{style:{flex:'1 1 332px',minWidth:300,background:C.card,border:'1px solid '+C.cardLine,borderRadius:16,padding:'18px 18px 22px',boxShadow:C.shadow,display:'flex',flexDirection:'column',gap:14}},
+      h('div',null,
+        h('div',{style:{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}},
+          h('div',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},n+' · '+title),
+          h('span',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase',color:split==='два'?C.terra:C.muted,background:split==='два'?C.terraSoft:this.a(C.ink,.05),padding:'2px 8px',borderRadius:20}},split==='два'?'два виджета':'один виджет')
+        ),
+        h('div',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,marginTop:5,lineHeight:1.45}},desc)
+      ),
+      h('div',{style:{display:'flex',alignItems:'flex-start',minHeight:50}},node)
+    );
+    return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},
+      frame('1','Сегмент + тоггл','два','Связанный сегмент-контрол для статуса и отдельная пилюля «В тексте». Понятная иерархия, фиксированная ширина.',this.sV1()),
+      frame('2','Цветной ключ','два','Точки-легенда со счётчиками: цвет статуса = легенда подсветки в тексте. Иконка-глаз вместо подписи экономит ширину.',this.sV2()),
+      frame('3','Список + чип','два','Статус свёрнут в одну кнопку со счётчиками — самый узкий. Масштабируется, если статусов станет больше.',this.sV3()),
+      frame('4','Счётчик-пилюли','два','Число на первом плане: видно объём каждой группы до клика. Двойная роль — фильтр и мини-статистика словаря.',this.sV4()),
+      frame('5','Вкладки + свитч','два','Лёгкие подчёркнутые вкладки статуса и явно отделённый переключатель «В тексте». Минимум рамок, максимум воздуха.',this.sV5())
+    );
+  }
+
+  /* ---- status bar (phone) ---- */
+  statusBar() {
+    const C=this.C, h=React.createElement;
+    const bars=[5,7,9,11].map((ht,i)=>h('rect',{key:i,x:i*4,y:11-ht,width:2.6,height:ht,rx:0.8,fill:C.ink}));
+    const sig=h('svg',{width:17,height:11,viewBox:'0 0 17 11'},...bars);
+    const wifi=h('svg',{width:16,height:11,viewBox:'0 0 16 11',fill:'none',stroke:C.ink,strokeWidth:1.4,strokeLinecap:'round'},h('path',{d:'M2 4.2C4 2.6 6 1.8 8 1.8s4 .8 6 2.4'}),h('path',{d:'M4 6.4C5.2 5.4 6.6 5 8 5s2.8.4 4 1.4'}),h('circle',{cx:8,cy:9,r:1,fill:C.ink,stroke:'none'}));
+    const batt=h('svg',{width:26,height:12,viewBox:'0 0 26 12'},h('rect',{x:.6,y:.6,width:21,height:10.8,rx:3,fill:'none',stroke:this.a(C.ink,.45),strokeWidth:1.2}),h('rect',{x:2.4,y:2.4,width:16,height:7.2,rx:1.6,fill:C.ink}),h('rect',{x:23,y:3.6,width:2,height:4.8,rx:1,fill:this.a(C.ink,.5)}));
+    return h('div',{style:{flex:'0 0 auto',height:46,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 26px 7px',fontFamily:this.sans,fontSize:15,fontWeight:600,color:C.ink}},
+      h('div',null,'9:41'),
+      h('div',{style:{display:'flex',gap:7,alignItems:'center'}},sig,wifi,batt));
+  }
+
+  /* ---- toast ---- */
+  toastEl(mobile) {
+    const C=this.C, h=React.createElement;
+    if (!this.state.toast) return null;
+    return h('div',{key:'toast',style:{position:'absolute',left:'50%',bottom:mobile?88:22,transform:'translateX(-50%)',zIndex:60,background:this.a('#26221c',.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13,fontWeight:500,padding:'10px 18px',borderRadius:12,maxWidth:290,textAlign:'center',boxShadow:'0 12px 32px -8px rgba(0,0,0,.42)',animation:'scToast .22s ease',whiteSpace:'nowrap'}},this.state.toast);
+  }
+
+  /* ---- PHONE app ---- */
+  phoneApp() {
+    const C=this.C, h=React.createElement, st=this.state;
+    const sheet = (st.sheetOpen && st.activeKey) ? h('div',{key:'sheet',style:{position:'absolute',inset:0,zIndex:30}},
+      h('div',{onClick:()=>this.closeCard(),style:{position:'absolute',inset:0,background:this.a('#15140f',.28),animation:'scFade .2s ease'}}),
+      h('div',{onClick:e=>e.stopPropagation(),style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'84%',background:C.card,borderRadius:'24px 24px 0 0',boxShadow:'0 -14px 50px -10px rgba(40,34,22,.38)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
+        h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:36,height:4,borderRadius:3,background:C.line2}})),
+        h('div',{className:'scScroll',style:{overflowY:'auto'}},this.wCard(st.activeKey))
+      )
+    ) : null;
+
+    return h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:C.content}},
+      this.statusBar(),
+      // Header
+      h('div',{style:{flex:'0 0 auto',padding:'2px 18px 11px',background:C.card,borderBottom:'1px solid '+C.cardLine,boxShadow:'0 6px 18px -14px rgba(40,34,22,.45)',position:'relative',zIndex:5}},
+        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',height:44}},
+          h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink}},'Словарь'),
+          h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.getFiltered().length+'\u00a0слов')
+        ),
+        h('div',{style:{marginBottom:9}},this.searchBar(true)),
+        this.sTabs(true),
+        h('div',{style:{height:8}}),
+        this.posFilterUI(true)
+      ),
+      // List
+      h('div',{id:'phoneWordList',className:'scScroll',style:{flex:1,overflowY:'auto',padding:'0 18px'}},
+        this.wListBody(80)
+      ),
+      // Bottom nav
+      h('div',{style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.cardLine,background:C.card,boxShadow:'0 -6px 18px -14px rgba(40,34,22,.45)',paddingBottom:18}},
+        [['read','Читать',c=>this.iconRead(c)],['dict','Слова',c=>this.iconWords(c)],['about','О',c=>this.iconInfo(c)]].map(([tab,lbl,icfn])=>{
+          const on=tab==='dict', col=on?C.ink:C.muted2;
+          return h('button',{key:tab,onClick:()=>on?null:this.showToast('Другие экраны — в основном прототипе'),
+            style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}},
+            icfn(col), h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:on?700:500,color:col}},lbl));
+        })
+      ),
+      sheet, this.toastEl(true)
+    );
+  }
+
+  /* ---- DESKTOP sidebar ---- */
+  deskNav() {
+    const C=this.C, h=React.createElement;
+    return h('div',{style:{width:236,flex:'0 0 auto',background:C.sidebar,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
+      h('div',{style:{padding:'0 8px 24px'}},
+        h('div',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink,lineHeight:1.15}},'Читалка НЗ'),
+        h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:2}},'греческий сквозь русский')
+      ),
+      h('div',{style:{display:'flex',flexDirection:'column',gap:4}},
+        [['read','Читать',c=>this.iconRead(c)],['dict','Слова',c=>this.iconWords(c)],['about','О приложении',c=>this.iconInfo(c)]].map(([tab,lbl,icfn])=>{
+          const on=tab==='dict', col=on?C.ink:C.inkSoft;
+          return h('button',{key:tab,onClick:()=>on?null:this.showToast('Переключить экран — в основном прототипе'),
+            style:{display:'flex',alignItems:'center',gap:12,padding:'11px 12px',borderRadius:11,border:'1px solid '+(on?C.cardLine:'transparent'),cursor:'pointer',background:on?C.card:'transparent',boxShadow:on?C.shadow:'none',textAlign:'left'}},
+            icfn(col), h('span',{style:{fontFamily:this.sans,fontSize:14.5,fontWeight:on?700:500,color:col}},lbl));
+        })
+      )
+    );
+  }
+
+  /* ---- DESKTOP main content ---- */
+  deskContent() {
+    const C=this.C, h=React.createElement, st=this.state;
+    const hasActive = !!st.activeKey;
+
+    // Left list panel
+    const listPanel = h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column',overflow:'hidden'}},
+      // Sticky header
+      h('div',{style:{flex:'0 0 auto',padding:'20px 28px 14px',borderBottom:'1px solid '+C.line}},
+        h('div',{style:{display:'flex',alignItems:'baseline',gap:12,marginBottom:12}},
+          h('span',{style:{fontFamily:this.serif,fontSize:25,fontWeight:700,color:C.ink}},'Словарь'),
+          h('span',{style:{fontFamily:this.sans,fontSize:13,color:C.muted}},this.getFiltered().length+'\u00a0слов · 1000 самых частотных лемм НЗ')
+        ),
+        h('div',{style:{marginBottom:11}},this.searchBar(false)),
+        h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
+          this.sTabs(false),
+          h('div',{style:{width:1,height:18,background:C.line2}}),
+          this.posFilterUI(false)
+        )
+      ),
+      // Scrollable list
+      h('div',{id:'deskWordList',className:'scScroll',style:{flex:1,overflowY:'auto'}},
+        h('div',{style:{maxWidth:640,padding:'0 28px 60px'}},
+          this.wListBody(24)
+        )
+      )
+    );
+
+    // Right inspector
+    const inspector = h('div',{style:{width:hasActive?316:0,flex:'0 0 auto',borderLeft:hasActive?'1px solid '+C.cardLine:'none',overflow:'hidden',background:C.card,boxShadow:hasActive?'-14px 0 30px -24px rgba(40,34,22,.5)':'none',transition:'width .18s'}},
+      hasActive
+        ? h('div',{className:'scScroll',style:{width:316,height:'100%',overflowY:'auto'}},this.wCard(st.activeKey))
+        : null
+    );
+
+    return h('div',{id:'deskMain',style:{flex:1,minWidth:0,display:'flex',position:'relative',overflow:'hidden'}},
+      listPanel,
+      inspector
+    );
+  }
+
+  /* ---- DESKTOP app ---- */
+  deskApp() {
+    const C=this.C, h=React.createElement;
+    return h('div',{style:{position:'relative',display:'flex',flexDirection:'column',height:768,background:C.content,color:C.ink}},
+      // macOS titlebar
+      h('div',{style:{flex:'0 0 auto',height:38,background:C.titlebar,borderBottom:'1px solid '+C.line,display:'flex',alignItems:'center',gap:8,padding:'0 16px'}},
+        ['#d98b6e','#dcc06a','#9bbf73'].map((c,i)=>h('span',{key:i,style:{width:11,height:11,borderRadius:'50%',background:c}}))),
+      // Body
+      h('div',{style:{flex:1,display:'flex',minHeight:0}},
+        this.deskNav(),
+        this.deskContent()
+      ),
+      this.toastEl(false)
+    );
+  }
+
+  /* ---- lifecycle ---- */
+  _setupScroll(id) {
+    const el = document.getElementById(id);
+    if (!el || el._wlOk) return;
+    el._wlOk = true;
+    el.addEventListener('scroll', () => {
+      if (el.scrollTop + el.clientHeight > el.scrollHeight - 180) {
+        this.setState(s => ({visibleCount: Math.min(s.visibleCount + 15, this.WORDS.length + 5)}));
+      }
+    });
+  }
+  componentDidMount() {
+    this._setupScroll('deskWordList');
+    this._setupScroll('phoneWordList');
+    this._onResize = () => {
+      const w = Math.min(1180, (window.innerWidth || 1180) - 40);
+      this.setState({deskScale: Math.min(1, w / 1180)});
+    };
+    this._onResize();
+    window.addEventListener('resize', this._onResize);
+    this._onDocDown = (e) => {
+      if (this.state.posMenuOpen && !(e.target.closest && e.target.closest('[data-posmenu]'))) this.setState({posMenuOpen:false});
+      if (this.state.sMenuOpen && !(e.target.closest && e.target.closest('[data-smenu]'))) this.setState({sMenuOpen:false});
+    };
+    document.addEventListener('mousedown', this._onDocDown);
+  }
+  componentDidUpdate() {
+    this._setupScroll('deskWordList');
+    this._setupScroll('phoneWordList');
+  }
+  componentWillUnmount() {
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onDocDown) document.removeEventListener('mousedown', this._onDocDown);
+  }
+
+  renderVals() {
+    this.C = this.palette();
+    const s = this.state.deskScale || 1;
+    const desktop = React.createElement('div',{style:{width:'100%',height:Math.round(768*s),overflow:'hidden'}},
+      React.createElement('div',{style:{width:1180,height:768,transformOrigin:'top left',transform:'scale('+s+')'}},
+        this.deskApp()
+      )
+    );
+    return {desktop, phone: this.phoneApp(), posCompare: this.posCompareEl(), sCompare: this.sCompareEl()};
+  }
+}
+</script>
+</body>
+</html>
