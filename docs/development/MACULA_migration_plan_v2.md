@@ -3,7 +3,8 @@
 **Date:** 2026-06-17
 **Status:** Draft for review
 **Supersedes:** `docs/development/MACULA_migration_plan_v1.md`
-**Related review:** `docs/development/MACULA_migration_plan_v1_feedback1.md`
+**Related reviews:** `docs/development/MACULA_migration_plan_v1_feedback1.md`,
+`docs/development/MACULA_migration_plan_v2_feedback1.md`
 
 ---
 
@@ -24,9 +25,16 @@ token.strong` world. The goal is to build a new MACULA-first data architecture:
    Berean Standard Bible, without duplicating the Greek corpus.
 5. User data remains stable across data-source changes through app-level
    `lexemeKey`, not raw MACULA hashes.
+6. The final runtime must not keep legacy compatibility debt. Temporary bridge
+   artifacts are allowed only for audit, comparison and rollback during the
+   migration branch. They are not part of the done state.
+7. Localization must be part of the data model from the start: Greek lexeme
+   data is language-neutral, while Russian, English and future UI-language
+   glosses, explanations and match rules live in locale overlays.
 
 The migration should be implemented as a sequence of data-model and pipeline
-changes first, UI changes second, cleanup last.
+changes first, UI changes second, cleanup last. The end state is a clean
+MACULA-first architecture, not a MACULA-to-legacy adapter.
 
 ---
 
@@ -49,6 +57,12 @@ the truth of every pair. Manual gold verification and LLM verification were
 not completed. Therefore the new plan must build `translation -> MACULA`
 alignment as a first-class product of the new pipeline, with its own gates.
 
+`MACULA_migration_plan_v2_feedback1.md` correctly warns against an unsafe
+big-bang switch, but its proposed `v2-minimal` path is not accepted as the
+target architecture. It can inform migration sequencing, but the final product
+must not retain legacy runtime paths, legacy field names as primary contracts,
+or old alignment as an authority.
+
 ---
 
 ## 2. Goals
@@ -61,6 +75,8 @@ alignment as a first-class product of the new pipeline, with its own gates.
 - Make top-1000 word data available offline, including useful per-word data
   for the dictionary screen and word cards.
 - Preserve existing user progress and dictionary data.
+- Support future UI localization without changing Greek or translation schemas:
+  Russian first, English later, then other languages.
 - Prepare the architecture for additional translations:
   - current: Synodal Russian (`syn`);
   - future: Berean Standard Bible (`bsb`);
@@ -73,6 +89,7 @@ alignment as a first-class product of the new pipeline, with its own gates.
 - Keep runtime files small, deterministic and independently cacheable.
 - Make every runtime file traceable to source hashes and generator versions.
 - Fail closed: if alignment is uncertain, do not show a word replacement.
+- Remove legacy runtime contracts before declaring the migration complete.
 - Do not weaken data invariants to make migration easier.
 
 ---
@@ -84,6 +101,9 @@ alignment as a first-class product of the new pipeline, with its own gates.
 - Do not implement BSB in this migration. The data model must allow it.
 - Do not attempt 100% word alignment coverage. Accuracy is more important.
 - Do not replace the curated Russian lexical layer with English MACULA glosses.
+- Do not collapse `translation`, `original`, `alignment` and `locale` data into
+  one legacy-shaped runtime file just to minimize the number of fetches.
+- Do not keep compatibility adapters in production after the MACULA switch.
 - Do not add adaptive learning or hidden learning metrics.
 - Do not commit new text sources without explicit license review.
 
@@ -112,8 +132,8 @@ MACULA does not provide the Russian product layer:
 - curated pedagogical availability;
 - verified Synodal-to-Greek alignment.
 
-Therefore `core.json` remains a curated overlay. It should be enriched with
-MACULA IDs, but not replaced by MACULA.
+Therefore the Russian lexical curation remains as locale overlays. It should
+be joined to MACULA by `lexemeKey`, but not replaced by MACULA.
 
 ### 4.2 Old alignment is a legacy baseline, not an oracle
 
@@ -176,6 +196,59 @@ Existing curated keys such as `logos`, `theos`, `kurios` should survive.
 New frequency-only words can use a deterministic app key, but the format must
 be documented and migrated explicitly.
 
+### 4.6 Final runtime has no legacy compatibility debt
+
+Temporary migration bridges are allowed only as branch-local tools:
+
+- compare old and new token counts;
+- compare old and new alignment coverage;
+- map old user dictionary keys to `lexemeKey`;
+- preserve rollback while the new runtime is not verified.
+
+They are not allowed in the final product state. The done state must not
+include:
+
+- `token.w` / single-number `token.strong` as the app's primary token contract;
+- `freq-*` as the long-term user dictionary key for generated words;
+- old `assets/data/bibles/{syn,grc}/` paths as the runtime source of truth;
+- alignment embedded in a translation file as the only supported model;
+- production loaders that need to understand both legacy and MACULA-native
+  runtime shapes indefinitely.
+
+If a compatibility output mode is useful, it must be named as a migration/audit
+artifact and removed or excluded from the production runtime before completion.
+
+### 4.7 Localization-ready by construction
+
+The data model separates three concerns:
+
+- **Greek lexical core:** language-neutral facts derived from MACULA:
+  `lexemeKey`, lemma, morphology, Strong arrays, frequency, forms, references,
+  semantic domains and provenance.
+- **Translation text:** a Bible translation in one language with its own
+  license, source manifest, versification and book files.
+- **Locale overlay:** UI-language curation for dictionary and word cards:
+  glosses, explanations, examples, search aliases and match rules such as
+  Russian `ruMatches`.
+
+Russian is the first locale (`ru`), but it must not be hardcoded as the only
+shape. English UI data can later be added as `en` without regenerating the Greek
+original or rewriting the Synodal/BSB translation packs.
+
+### 4.8 Logical model and physical packaging are separate
+
+The logical model is always:
+
+```text
+original + translation + alignment + lexicon core + locale overlay
+```
+
+For mobile PWA performance, the generator may additionally create physical
+bundle files, for example a per-book offline bundle that contains translation,
+original and alignment data together. Such bundles are cache/package artifacts,
+not the canonical runtime schema. They must be generated from the same logical
+packs and must not become a second source of truth.
+
 ---
 
 ## 5. Data layers
@@ -195,13 +268,20 @@ docs/sources/
 │       ├── SBLGNT/
 │       ├── LICENSE.md
 │       └── SOURCE_MANIFEST.json
-└── translations/
-    ├── syn/
-    │   ├── source files or fetch manifest
-    │   └── LICENSE.md
-    └── bsb/
-        ├── source files or fetch manifest
-        └── LICENSE.md
+├── translations/
+│   ├── syn/
+│   │   ├── source files or fetch manifest
+│   │   └── LICENSE.md
+│   └── bsb/
+│       ├── source files or fetch manifest
+│       └── LICENSE.md
+└── locales/
+    ├── ru/
+    │   ├── curated lexical overlays
+    │   └── SOURCE_MANIFEST.json
+    └── en/
+        ├── curated lexical overlays
+        └── SOURCE_MANIFEST.json
 ```
 
 Current repository paths may be migrated gradually from:
@@ -241,6 +321,11 @@ generated/canonical/
 │       ├── books/*.json
 │       ├── source-manifest.json
 │       └── build-report.json
+├── locales/
+│   └── ru/
+│       ├── lexicon/*.json
+│       ├── source-manifest.json
+│       └── build-report.json
 └── alignments/
     └── syn--sblgnt-macula/
         ├── books/*.json
@@ -270,9 +355,13 @@ assets/data/
 ├── data-manifest.json
 ├── translations.json
 ├── originals.json
+├── locales.json
 ├── lexicon/
-│   ├── top1000.full.json
-│   └── core.ru.json
+│   ├── top1000.core.json
+│   └── locales/
+│       └── ru/
+│           ├── top1000.json
+│           └── core.json
 ├── originals/
 │   └── sblgnt-macula/
 │       └── books/{bookId}.json
@@ -293,10 +382,13 @@ For this migration, only these runtime sets are implemented:
 - `originals/sblgnt-macula`;
 - `translations/syn`;
 - `align/syn--sblgnt-macula`;
-- `lexicon/top1000.full.json`;
-- `lexicon/core.ru.json`.
+- `lexicon/top1000.core.json`;
+- `lexicon/locales/ru/top1000.json`;
+- `lexicon/locales/ru/core.json`.
 
 `bsb` paths are reserved for future expansion.
+Future locale paths such as `lexicon/locales/en/*.json` are reserved for UI
+localization, not for Bible translation text.
 
 ### 5.4 User state layer
 
@@ -400,6 +492,18 @@ Used for:
 
 Not used as the primary user state key.
 
+### 6.8 `localeId`
+
+Stable ID for UI-language lexical curation:
+
+- `ru` — Russian UI overlays;
+- `en` — future English UI overlays.
+
+`localeId` is not the same as `translationId`. A user may read the Synodal
+translation with Russian UI overlays, or later read BSB with Russian UI
+overlays, or use English UI overlays with either translation if the product
+supports that combination.
+
 ---
 
 ## 7. Runtime schemas
@@ -417,13 +521,20 @@ canonical generated data only where the tradeoff is obvious and documented.
   "sources": {
     "originals": ["sblgnt-macula"],
     "translations": ["syn"],
-    "alignments": ["syn--sblgnt-macula"]
+    "alignments": ["syn--sblgnt-macula"],
+    "locales": ["ru"]
   },
   "runtimeFiles": [
     {
-      "path": "data/lexicon/top1000.full.json",
+      "path": "data/lexicon/top1000.core.json",
       "sha256": "computed-at-build-time",
-      "bytes": 606059,
+      "bytes": 450000,
+      "precache": true
+    },
+    {
+      "path": "data/lexicon/locales/ru/top1000.json",
+      "sha256": "computed-at-build-time",
+      "bytes": 250000,
       "precache": true
     }
   ]
@@ -447,6 +558,8 @@ Notes:
     "shortTitle": "Синод.",
     "direction": "ltr",
     "defaultOriginalId": "sblgnt-macula",
+    "versification": "synodal-nt",
+    "sourceManifestId": "syn-2026-06-17",
     "license": "Public domain",
     "attribution": "Синодальный перевод; see source manifest"
   }
@@ -463,6 +576,8 @@ Future BSB entry:
   "shortTitle": "BSB",
   "direction": "ltr",
   "defaultOriginalId": "sblgnt-macula",
+  "versification": "bsb",
+  "sourceManifestId": "bsb-to-be-verified",
   "license": "Public domain / verify before import",
   "attribution": "Berean Standard Bible"
 }
@@ -479,6 +594,7 @@ Do not add the BSB data until license and source snapshot are committed.
     "language": "grc",
     "title": "SBLGNT via MACULA Greek",
     "shortTitle": "SBLGNT",
+    "sourceManifestId": "macula-greek-2026-06-17",
     "license": "CC BY 4.0",
     "attribution": "MACULA Greek Linguistic Datasets, available at https://github.com/Clear-Bible/macula-greek/",
     "features": ["tokens", "lemmas", "morphology", "strongs", "frequency"]
@@ -486,7 +602,30 @@ Do not add the BSB data until license and source snapshot are committed.
 ]
 ```
 
-### 7.4 Translation book pack
+### 7.4 `assets/data/locales.json`
+
+```json
+[
+  {
+    "id": "ru",
+    "language": "ru",
+    "title": "Русский",
+    "direction": "ltr",
+    "defaultTranslationId": "syn",
+    "lexiconOverlayPath": "data/lexicon/locales/ru/top1000.json",
+    "coreOverlayPath": "data/lexicon/locales/ru/core.json",
+    "sourceManifestId": "locale-ru-2026-06-17"
+  }
+]
+```
+
+Rules:
+
+- `localeId` controls dictionary and word-card language.
+- `translationId` controls Bible text.
+- The default pairing is a product choice, not a schema constraint.
+
+### 7.5 Translation book pack
 
 Path:
 
@@ -526,7 +665,7 @@ Notes:
 - If file size is too high, `words` may be omitted and regenerated by the same
   deterministic tokenizer at runtime. Prefer storing it first for auditability.
 
-### 7.5 Greek original book pack
+### 7.6 Greek original book pack
 
 Path:
 
@@ -582,7 +721,7 @@ Field notes:
   script may additionally expose parsed `strongParts`, but must not silently
   coerce to a single number.
 
-### 7.6 Alignment book pack
+### 7.7 Alignment book pack
 
 Path:
 
@@ -623,12 +762,12 @@ Quality levels:
 Runtime replacement modes use only `e` and, if product decision allows, `f`.
 They never use `u`.
 
-### 7.7 Top-1000 lexicon pack
+### 7.8 Top-1000 Greek lexicon core pack
 
 Path:
 
 ```text
-assets/data/lexicon/top1000.full.json
+assets/data/lexicon/top1000.core.json
 ```
 
 This file must be offline available by default.
@@ -637,7 +776,7 @@ Schema:
 
 ```json
 {
-  "schema": "top1000-lexicon-v1",
+  "schema": "top1000-lexicon-core-v1",
   "originalId": "sblgnt-macula",
   "items": [
     {
@@ -653,8 +792,9 @@ Schema:
       "pos": "noun",
       "isFunctionWord": false,
       "hasAlignment": true,
-      "glossRu": "слово, речь, смысл",
-      "glossEn": ["word", "speech", "message"],
+      "sourceGlosses": {
+        "en": ["word", "speech", "message"]
+      },
       "forms": [
         {
           "s": "λόγος",
@@ -674,34 +814,59 @@ Rules:
 - Exactly top 1000 by MACULA token frequency unless a future product decision
   changes the cutoff.
 - Every item has `lexemeKey`.
-- Curated Russian fields are included where available.
-- English MACULA glosses may be included as secondary data, not as Russian UI
-  replacements.
+- No UI-language gloss is required in this file.
+- English MACULA glosses may be included as source metadata, not as UI copy.
 - `hasAlignment` means there is at least one visible `e` or `f` alignment pair
   in the currently shipped default translation alignment.
-- The dictionary screen can render fully offline from this file.
+- The dictionary screen renders from this file plus the active locale overlay.
 
-### 7.8 Curated Russian overlay
+### 7.9 Top-1000 locale overlay
 
 Path:
 
 ```text
-assets/data/lexicon/core.ru.json
+assets/data/lexicon/locales/{localeId}/top1000.json
 ```
 
 Schema:
 
 ```json
 {
-  "schema": "core-ru-v1",
+  "schema": "top1000-locale-overlay-v1",
+  "localeId": "ru",
   "items": [
     {
       "lexemeKey": "logos",
-      "maculaLexemeId": "grc-logos-04b1f3",
-      "lemma": "λόγος",
-      "translit": "logos",
-      "strongs": ["3056"],
       "gloss": "слово, речь, смысл",
+      "shortGloss": "слово",
+      "explanation": "Речь, сообщение, смысловое слово.",
+      "searchAliases": ["слово", "речь", "смысл"],
+      "examples": ["Ин 1:1", "Ин 1:14"]
+    }
+  ]
+}
+```
+
+This file is generated/curated for one UI locale and joins to the Greek core by
+`lexemeKey`.
+
+### 7.10 Curated Russian matching overlay
+
+Path:
+
+```text
+assets/data/lexicon/locales/ru/core.json
+```
+
+Schema:
+
+```json
+{
+  "schema": "core-locale-overlay-v1",
+  "localeId": "ru",
+  "items": [
+    {
+      "lexemeKey": "logos",
       "pos": "сущ., муж. род",
       "ruMatches": ["(?<![а-яё])слов(о|а|у|е|ом|ах|ами)(?![а-яё])"],
       "ruExclude": ["словно", "условие", "словарь"],
@@ -711,7 +876,9 @@ Schema:
 }
 ```
 
-This file is product curation. It is not fully generated from MACULA.
+This file is product curation. It is not fully generated from MACULA. Equivalent
+future overlays may exist for other UI locales, but Russian `ruMatches` must not
+leak into language-neutral Greek packs.
 
 ---
 
@@ -725,9 +892,11 @@ These should be precached with the app shell:
 - `data/data-manifest.json`;
 - `data/translations.json`;
 - `data/originals.json`;
+- `data/locales.json`;
 - `data/books.json` or its replacement;
-- `data/lexicon/top1000.full.json`;
-- `data/lexicon/core.ru.json`;
+- `data/lexicon/top1000.core.json`;
+- `data/lexicon/locales/ru/top1000.json`;
+- `data/lexicon/locales/ru/core.json`;
 - `data/alphabet.json`.
 
 Rationale: the dictionary and basic UI should work offline even before the user
@@ -790,7 +959,7 @@ On data manifest version change:
 
 ---
 
-## 9. Future translations
+## 9. Future translations and UI locales
 
 Adding a translation must not duplicate the Greek original or top-1000 lexicon.
 
@@ -804,7 +973,8 @@ To add BSB later:
 6. Add offline group installation for `bsb--sblgnt-macula`.
 
 The same `originals/sblgnt-macula/books/*.json` and
-`lexicon/top1000.full.json` are reused.
+`lexicon/top1000.core.json` are reused. UI-language overlays are selected by
+`localeId`, not by translation.
 
 Translation-specific alignment must be independent:
 
@@ -812,6 +982,18 @@ Translation-specific alignment must be independent:
 - `bsb--sblgnt-macula` may align more directly to SBLGNT/Majority traditions
   depending on source text and licensing;
 - each alignment has its own verification report.
+
+Adding a UI locale is a separate operation:
+
+1. Add curated locale source manifest.
+2. Generate `lexicon/locales/{localeId}/top1000.json`.
+3. Generate optional `lexicon/locales/{localeId}/core.json` for match rules and
+   curated examples.
+4. Add `{localeId}` entry to `locales.json`.
+5. Add UI strings only if the product is ready to expose that locale.
+
+Locale overlays must not duplicate Greek frequency, morphology, token or form
+data. They join by `lexemeKey`.
 
 ---
 
@@ -840,19 +1022,24 @@ Done when:
   - runtime original book;
   - runtime translation book;
   - runtime alignment book;
-  - top-1000 lexicon;
+  - top-1000 Greek lexicon core;
+  - top-1000 locale overlay;
+  - curated locale matching overlay;
   - source manifest.
 - Move or plan movement of large generated data out of `assets/`.
 - Update `build-macula` or create new generator modules:
   - canonical original;
   - runtime original packs;
-  - top-1000 lexicon pack.
+  - top-1000 Greek core pack;
+  - locale overlay packs.
 
 Done when:
 
 - generated runtime files validate against schemas;
 - generated files are deterministic;
 - large files no longer enter `dist` accidentally.
+- no final runtime schema depends on legacy `token.w`, single-number
+  `token.strong`, `freq-*` as primary key, or `assets/data/bibles/**`.
 
 ### Phase 2 — Generate Synodal translation runtime packs
 
@@ -936,7 +1123,9 @@ Done when:
   - translations;
   - originals;
   - alignments;
-  - top-1000 lexicon.
+  - locales;
+  - top-1000 Greek core;
+  - active locale overlays.
 - Update engine to consume native runtime schemas:
   - `surface`;
   - `morph`;
@@ -952,11 +1141,13 @@ Done when:
 - mode 3/4 replacements use only verified alignment;
 - mode 5 uses MACULA original book pack;
 - missing Greek/alignment data degrades gracefully.
+- engine/UI/user state use `lexemeKey` as the app-level word key.
 
 ### Phase 7 — Offline PWA behavior
 
 - Update Workbox runtime caching.
-- Precache top-1000 lexicon and core Russian overlay.
+- Precache top-1000 Greek core and the active locale overlays required for the
+  dictionary to work offline.
 - Implement per-book dependency caching:
   - translation;
   - original;
@@ -993,6 +1184,8 @@ Only after all gates pass:
 - remove obsolete generated Greek data;
 - remove obsolete docs/source snapshots with questionable licensing;
 - remove old runtime paths;
+- remove compatibility loaders/adapters that understand legacy data shapes;
+- remove or exclude migration-only compatibility outputs from production;
 - update package scripts.
 
 Do not delete legacy data before:
@@ -1024,11 +1217,14 @@ Do not delete legacy data before:
   - `q=u` hidden;
   - morphology code parsing.
 - Dictionary migration tests cover old and new keys.
+- Locale overlay tests cover `lexemeKey` joins and missing-locale-entry
+  fallback behavior.
 
 ### PWA build
 
 - `npm run build` passes.
 - `dist/` does not include canonical huge generated files.
+- `dist/` does not include migration-only compatibility outputs.
 - Runtime files under `assets/data/**` are expected and bounded in size.
 
 ### Manual QA
@@ -1048,6 +1244,7 @@ Required flows:
 - mode 4 real form replacement;
 - mode 5 Greek text;
 - dictionary top-1000 browsing offline;
+- dictionary top-1000 with active locale overlay offline;
 - word card from text;
 - word card from dictionary;
 - app reload offline.
@@ -1058,7 +1255,8 @@ Required flows:
 
 Targets for runtime PWA data:
 
-- top-1000 full lexicon: preferably under 1 MB uncompressed;
+- top-1000 Greek core plus the default locale overlay: preferably under 1 MB
+  combined uncompressed;
 - per-book original packs: compact enough for mobile parse time;
 - per-book translation/alignment packs: loaded lazily;
 - full NT offline install: acceptable for explicit user action, not forced on
@@ -1146,6 +1344,18 @@ Mitigation:
 - attribution text;
 - no new text source without license review.
 
+### 14.6 Locale and translation coupling
+
+Risk: Russian UI assumptions leak into Greek lexeme data or translation packs,
+making English UI or future languages hard to add.
+
+Mitigation:
+
+- language-neutral Greek lexicon core;
+- locale overlays joined only by `lexemeKey`;
+- `localeId` separate from `translationId`;
+- tests for missing locale entries and fallback behavior.
+
 ---
 
 ## 15. Done criteria
@@ -1154,17 +1364,21 @@ The migration is complete only when:
 
 - MACULA source manifests and attribution are committed.
 - Runtime data is generated from MACULA-first canonical data.
-- Top-1000 lexicon works offline.
+- Top-1000 Greek core and Russian locale overlays work offline.
 - All 27 Synodal books have runtime translation/original/alignment packs.
 - `syn--sblgnt-macula` alignment passes verification gates.
 - Modes 1-5 work with new runtime data.
 - User dictionary migration is tested.
+- User dictionary and progress use `lexemeKey`, not `freq-*` or external IDs,
+  as the final app-level word key.
 - `npm test` passes.
 - `npm run build` passes.
 - `npm run build:data` or its replacement passes.
 - Manual QA passes on mobile and desktop, light and dark.
 - `dist/` does not contain large canonical/audit-only MACULA files.
+- `dist/` does not contain migration-only compatibility outputs.
 - Legacy questionable data/scripts are removed only after successful switch.
+- Production loaders no longer understand or depend on old runtime data shapes.
 
 ---
 
@@ -1173,15 +1387,15 @@ The migration is complete only when:
 1. `docs: add MACULA migration plan v2`
 2. `build: define MACULA runtime schemas`
 3. `build: generate compact MACULA original packs`
-4. `build: generate top1000 offline lexicon pack`
+4. `build: generate top1000 Greek core and Russian locale overlays`
 5. `build: generate Synodal runtime translation packs`
 6. `build: generate syn-macula alignment packs`
 7. `test: add MACULA data verification gates`
-8. `feat: load runtime translation/original/alignment packs`
+8. `feat: load runtime translation/original/alignment/locale packs`
 9. `feat: migrate dictionary keys to lexemeKey`
-10. `feat: cache top1000 and per-book offline packs`
+10. `feat: cache top1000, locale overlays and per-book offline packs`
 11. `docs: update data-source attribution`
-12. `chore: remove legacy data pipeline`
+12. `chore: remove legacy data pipeline and compatibility outputs`
 
 Commit boundaries may change, but cleanup must remain last.
 
@@ -1197,4 +1411,5 @@ After approval, create an implementation plan focused on Phase 1:
 - exact schemas;
 - generator entrypoints;
 - tests for generated runtime packs;
+- tests for locale overlays and `lexemeKey` joins;
 - migration strategy for moving large generated data out of `assets/`.
