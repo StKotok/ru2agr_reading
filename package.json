@@ -9,8 +9,12 @@
     "preview": "vite preview",
     "test": "vitest run",
     "build:macula": "node scripts/macula/build-macula.mjs",
-    "build:data": "node scripts/apply-zefania-alignments.mjs && node scripts/convert-alignments.js && node scripts/refine-alignments.mjs && node scripts/build-frequency.mjs",
-    "verify:data": "node scripts/verify-alignments.mjs"
+    "build:runtime": "node scripts/build-original-packs.mjs && node scripts/build-lexicon-core.mjs && node scripts/build-locale-ru.mjs && node scripts/build-syn-packs.mjs",
+    "build:align": "node scripts/build-alignment.mjs",
+    "build:data": "npm run build:runtime",
+    "build:data:legacy": "node scripts/apply-zefania-alignments.mjs && node scripts/convert-alignments.js && node scripts/refine-alignments.mjs && node scripts/build-frequency.mjs",
+    "verify:data": "node scripts/verify-data.mjs",
+    "verify:data:legacy": "node scripts/verify-alignments.mjs"
   },
   "devDependencies": {
     "vite": "^5.4.0",
