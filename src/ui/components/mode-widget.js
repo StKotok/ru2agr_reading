@@ -455,16 +455,20 @@ export function createModeWidget(ctx) {
     const count = dictWordCount;
 
     if (readingMode === 'greek') {
-      _chipSig = 'greek';
-      chip.innerHTML = '<span class="mw-greek-label">Греч</span>';
-      chip.setAttribute('aria-label', 'Вид чтения: греческий оригинал');
+      if (_chipSig !== 'greek') {
+        _chipSig = 'greek';
+        chip.innerHTML = '<span class="mw-greek-label">Греч</span>';
+        chip.setAttribute('aria-label', 'Вид чтения: греческий оригинал');
+      }
       return;
     }
 
     if (count === -1) {
-      _chipSig = 'loading';
-      chip.innerHTML = '<span class="mw-loading">…</span>';
-      chip.setAttribute('aria-label', 'Загрузка данных…');
+      if (_chipSig !== 'loading') {
+        _chipSig = 'loading';
+        chip.innerHTML = '<span class="mw-loading">…</span>';
+        chip.setAttribute('aria-label', 'Загрузка данных…');
+      }
       return;
     }
 
@@ -473,9 +477,11 @@ export function createModeWidget(ctx) {
     const activeWordsExist = count > 0;
 
     if (!showLetters && !showWordLayer) {
-      _chipSig = 'rus';
-      chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
-      chip.setAttribute('aria-label', 'Греческий слой: выключен');
+      if (_chipSig !== 'rus') {
+        _chipSig = 'rus';
+        chip.innerHTML = '<span class="mw-rus-label">Рус</span>';
+        chip.setAttribute('aria-label', 'Греческий слой: выключен');
+      }
       return;
     }
 
@@ -504,23 +510,23 @@ export function createModeWidget(ctx) {
 
     _chipSig = sig;
 
+    const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
+    const rightText = wordsAvailable
+      ? `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`
+      : '<span class="mw-na">—</span>';
+    const rightBarHtml = wordsAvailable
+      ? `<div class="mw-word-bar"><div class="mw-word-bar-fill" style="width:${Math.min(100, count / 10)}%"></div></div>`
+      : '';
+
     if (showLetters && showWordLayer) {
       // Two-sided — CSS grid (3 columns × 2 rows)
-      const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
-      const rightText = wordsAvailable
-        ? `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`
-        : '<span class="mw-na">—</span>';
-      const rightBar = wordsAvailable
-        ? `<div class="mw-word-bar"><div class="mw-word-bar-fill" style="width:${Math.min(100, count / 10)}%"></div></div>`
-        : '<div></div>';
-
       chip.innerHTML =
         `<div class="mw-row--both">`
         + `<span class="mw-left-text"><span class="mw-alpha">α</span><span class="mw-pct">${intensity}%</span></span>`
         + `<div class="mw-divider"></div>`
         + `<span class="mw-right-text">${rightText}</span>`
         + `<div class="mw-bar"><div class="mw-bar-fill" style="width:${intensity}%"></div></div>`
-        + rightBar
+        + (rightBarHtml || '<div></div>')
         + `</div>`;
     } else if (showLetters) {
       // Left only — flex column
@@ -531,18 +537,10 @@ export function createModeWidget(ctx) {
         + `</div>`;
     } else {
       // Right only — flex column
-      const indicator = wordLayer === 'lemma' ? 'λέγω' : 'λέγει';
-      const rightText = wordsAvailable
-        ? `<span class="mw-word">${indicator}</span><span class="mw-count">${count}</span>`
-        : '<span class="mw-na">—</span>';
-      const rightBar = wordsAvailable
-        ? `<div class="mw-word-bar"><div class="mw-word-bar-fill" style="width:${Math.min(100, count / 10)}%"></div></div>`
-        : '';
-
       chip.innerHTML =
         `<div class="mw-row--single">`
         + `<span class="mw-left-text">${rightText}</span>`
-        + rightBar
+        + rightBarHtml
         + `</div>`;
     }
 
