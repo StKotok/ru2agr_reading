@@ -67,6 +67,56 @@
   domain labels, UBS dictionary senses). Для приватного репозитория хранение
   build-only исходников возможно только после provenance-документации; лучше
   получить письменное подтверждение прав.
+- `build:data` и `build:align` должны быть полностью offline и
+  детерминированными. Они не вызывают LLM, сеть или живые API.
+- LLM-аудит запускается отдельным prepare/import workflow. Отсутствие LLM API
+  не должно ломать deterministic build, но release нельзя считать готовым без
+  импортированных audit/adjudication reports.
+
+---
+
+## 2.1 Claude Code execution contract
+
+Этот раздел написан как прямое ТЗ для Claude Code. Во время имплементации
+исполнитель обязан следовать ему буквально.
+
+### Read first
+
+Перед любым изменением Claude Code должен прочитать:
+
+1. `AGENTS.md`;
+2. этот документ целиком;
+3. `docs/development/MACULA_migration_plan_v3.md`;
+4. `docs/development/MACULA_migration_implementation_plan.md`;
+5. текущие `scripts/build-alignment.mjs`, `scripts/verify-data.mjs`,
+   `src/engine/form-layer.js`, `src/engine/compose.js`.
+
+### Work rules
+
+- Не начинать с "улучшения recall". Сначала закрыть proof/verifier/gates.
+- Не удалять старый alignment-код до появления нового verifier и зелёного
+  deterministic build.
+- Не создавать новый источник истины в UI. Истина о видимости только в
+  `pair.q`, где видимое в v2 только `q:"e"`.
+- Не использовать heldout при разработке certifier-правил.
+- Не править generated runtime JSON руками.
+- Любая неоднозначность означает hidden candidate, а не видимую пару.
+- Если требование кажется слишком строгим, не ослаблять его молча. Зафиксировать
+  blocker в отчёте и остановить соответствующий gate.
+
+### Required implementation order
+
+1. Сначала добавить schemas/reports/verifier gates.
+2. Затем удалить runtime `domains` и закрыть license/provenance gate.
+3. Затем gold re-attestation scaffolding.
+4. Затем candidate generator.
+5. Затем certification.
+6. Затем runtime writer.
+7. Затем LLM audit prepare/import.
+8. В конце только QA/build/test.
+
+Запрещено начинать с runtime writer или UI-подключения: это создаёт риск
+показать непроверенные пары.
 
 ---
 
@@ -91,6 +141,12 @@ Runtime-пара с `q:"f"` или `q:"u"`, либо кандидат, не по
 Машиночитаемая запись, объясняющая, почему конкретная пара получила `q:"e"`.
 Proof хранится в `generated/canonical/alignments/.../proof-report.json`, а не
 обязательно в runtime pack.
+
+**Release blocker**  
+Любой unresolved conflict, missing proof, license gap, invalid manifest,
+runtime UBS/MARBLE leakage, failed build, failed test, failed verifier, or
+manual-review item. Release blocker нельзя закрывать "заметкой"; он должен быть
+исправлен или явно снят отдельным решением владельца проекта.
 
 ---
 
@@ -213,6 +269,57 @@ Step 7: verifier and reports gate
 `build:align` must run all deterministic steps offline. LLM audit can be a
 separate command because it may require external models. Release status cannot
 be "ready" until LLM audit reports exist and all conflicts are resolved.
+
+### Command topology
+
+Use these command names unless there is a strong local reason not to. If names
+change, update this section in the same commit.
+
+```json
+{
+  "build:align:candidates": "node scripts/build-alignment-candidates.mjs",
+  "build:align:certify": "node scripts/certify-alignments.mjs",
+  "build:align:write": "node scripts/write-alignment-packs.mjs",
+  "build:align": "npm run build:align:candidates && npm run build:align:certify && npm run build:align:write && npm run verify:align",
+  "verify:align": "node scripts/verify-alignment-v2.mjs",
+  "audit:align:prepare": "node scripts/prepare-alignment-llm-audit.mjs",
+  "audit:align:import": "node scripts/import-alignment-llm-audit.mjs",
+  "build:data": "npm run build:runtime && npm run build:align && npm run verify:data"
+}
+```
+
+Rules:
+
+- `build:align:*`, `verify:align`, `verify:data`, and `build:data` are offline.
+- `audit:align:prepare` is offline and writes prompt input JSON files.
+- `audit:align:import` is offline and validates JSON outputs produced by
+  external LLM runs.
+- No npm script may call an LLM API or a live Bible/API endpoint.
+- If LLM outputs are absent, deterministic commands still pass, but
+  `audit-report.json` must mark release status as `blocked:llm-audit-missing`.
+
+### Canonical alignment artifact tree
+
+Use this tree exactly unless changed in this document:
+
+```text
+generated/canonical/alignments/syn--sblgnt-macula/
+  candidates.jsonl                  # may be gitignored if large
+  candidates-manifest.json           # committed if candidates.jsonl omitted
+  certified.jsonl                    # may be gitignored if large
+  certified-manifest.json            # committed if certified.jsonl omitted
+  proof-report.json                  # committed
+  gold-report.json                   # committed
+  audit-report.json                  # committed
+  adjudication-report.json           # committed
+  llm-audit/
+    inputs/*.json                    # prompt payloads
+    outputs/*/*.json                 # model outputs, grouped by role/model
+    import-report.json               # committed summary
+```
+
+The verifier must use manifest hashes when full JSONL artifacts are not
+committed.
 
 ---
 
@@ -350,6 +457,55 @@ Use source IDs exactly:
 - `cand:rule-pronoun` — deterministic pronoun/morph candidates, hidden unless
   certified.
 
+### Normalization rules
+
+All candidate sources must use the same normalization helpers:
+
+- Russian candidate matching uses the frozen `words[]` from translation packs,
+  never `verse.text.split(/\s+/)`.
+- Russian matching normalizes case and `ё/е`; it must not remove internal
+  letters or guess lemmas.
+- Greek matching uses `token.lexemeKey`, `token.strongs[]`, `token.morph`,
+  `token.id`, and `token.i`.
+- Strong values stay strings. Composite Strong values such as
+  `5228+1537+4053` are not split unless a named candidate source explicitly
+  documents that split as hidden-only.
+
+### `cand:ru-strong-aggregate` exact behavior
+
+`data-sources/strongs-ru-alignment.json` has no verse or position data. It can
+only create hidden candidates:
+
+- for each Russian word, normalize it;
+- find aggregate entries where normalized word is in `ru_top_words` or equals
+  `ru_primary`;
+- for each matching aggregate Strong, find Greek tokens in the same ref whose
+  `strongs[]` contains the same string;
+- emit `q:"u"` candidate records with blocker
+  `weak-source:no-position-data`;
+- never promote these candidates directly to `q:"e"`.
+
+If this source produces many candidates for a common word, that is expected and
+must not be "fixed" by taking the first token.
+
+### Candidate blockers enum
+
+Use these exact blocker strings where applicable:
+
+- `weak-source:no-position-data`
+- `ambiguous:multiple-russian-spans`
+- `ambiguous:multiple-greek-tokens`
+- `ambiguous:competing-candidate-for-span`
+- `ambiguous:competing-candidate-for-token`
+- `variant:phrase-span`
+- `variant:unknown-span-status`
+- `variant:syn-only-verse`
+- `variant:grc-only-verse`
+- `function-word:hidden-in-v2`
+- `morph:incompatible`
+- `source:license-not-cleared`
+- `proof:missing`
+
 ### Candidate record
 
 Write candidates to:
@@ -388,6 +544,9 @@ Rules:
   spans, except to record explained hidden orphan facts.
 - For `merged` verses, candidates may reference Greek tokens from the merged
   Greek verse only through the mapped Synodal ref.
+- If candidate generation cannot determine whether a span belongs to a textual
+  variant, it must emit no candidate for that span and report
+  `variant:unknown-span-status`.
 
 ### Gate
 
@@ -461,7 +620,7 @@ Promote if and only if all conditions are true:
 - in this ref, exactly one Greek token has this lexemeKey;
 - no other candidate points to this span;
 - no other candidate points to this tokenId;
-- Greek token is not function word by current policy;
+- Greek token is certifiable under the function-word policy below;
 - pair is not inside `phraseVariantsByRef`;
 - verse status is `paired` or correctly mapped `merged`;
 - certifier has passed audit with zero confirmed errors on its sampled cases.
@@ -469,6 +628,23 @@ Promote if and only if all conditions are true:
 If any condition is unknown, do not promote.
 
 `src = "certified:unique-curated-lexeme"`.
+
+### Function-word policy for v2
+
+This policy is deliberately conservative.
+
+A Greek token is **not certifiable by C2** if any of these are true:
+
+- `token.fw === true`;
+- `token.morph` starts with or equals one of: `T`, `R`, `C`, `D`, `I`, `X`,
+  `PREP`, `CONJ`, `PRT`, `ADV`, `COND`, `INJ`;
+- `token.morph` starts with `P`, `F`, `K`, `Q`, or `S` (pronouns and related
+  forms);
+- the certifier cannot parse `token.morph`;
+- the pair would normally be classified as functional in old refine logic.
+
+These cases may still be emitted as candidates or future `q:"f"` hidden pairs.
+They must not become runtime-visible in v2 initial implementation.
 
 ### Certifier C3: manual-allowlist
 
@@ -497,6 +673,8 @@ Any blocker prevents certification:
 - ref status is `synOnly` or `grcOnly`;
 - duplicate visible span in ref;
 - duplicate visible tokenId in ref;
+- duplicate runtime span in ref, even if hidden pairs are included;
+- duplicate runtime tokenId in ref, even if hidden pairs are included;
 - pair order would be non-monotonic after sort;
 - LLM skeptic or adjudication marks it `reject`;
 - no proof record;
@@ -525,6 +703,40 @@ LLM audit is adversarial. Its job is to find mistakes, not to maximise recall.
 - If skeptic flags a plausible issue, fail closed: mark hidden until resolved.
 - All LLM inputs and outputs are archived under
   `generated/canonical/alignments/syn--sblgnt-macula/llm-audit/`.
+
+### LLM import validation
+
+`scripts/import-alignment-llm-audit.mjs` must validate every LLM output before
+it can influence reports.
+
+Fail the import if:
+
+- JSON is invalid;
+- required `schema` or `ref` is missing;
+- output references a `span` that is not in frozen `words[]`;
+- output references a `tokenId` that is not in original pack;
+- output contains duplicate `q:"e"` tokenId/span in one ref;
+- output uses `finalQ:"f"`;
+- output tries to mark a pair visible without `decision:"accept"`;
+- output includes prose outside JSON when the role required JSON only.
+
+Invalid LLM output does not get silently ignored. It creates a release blocker
+`blocked:invalid-llm-output` until the output is corrected or explicitly
+excluded by human decision.
+
+### LLM audit coverage
+
+For the first production-ready v2 release, audit at minimum:
+
+- all re-attested heldout verses;
+- all verses containing `q:"e"` pairs from C2 unique-curated-lexeme;
+- top 50 lexemeKeys by visible pair count;
+- every verse containing textual variants or merged mapping;
+- a random sample of at least 300 visible pairs, selected deterministically from
+  `proofId` hash.
+
+If this is too much for the first engineering milestone, the milestone can be
+marked "data prototype", but not "release-ready".
 
 ### Prompt 1: Gold Curator
 
@@ -876,6 +1088,8 @@ Fail if:
 - any `q:"e"` pair has no proof;
 - any `q:"e"` pair was rejected or unresolved in LLM/human audit;
 - any visible pair has duplicate span or duplicate tokenId in the same ref;
+- any included runtime pair has duplicate span or duplicate tokenId in the same
+  ref, even if `q:"f"`/`q:"u"` is hidden;
 - any pair list is not sorted by span/token order;
 - any span does not match frozen `words[]`;
 - any tokenId does not exist in original pack;
