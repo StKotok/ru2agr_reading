@@ -30,6 +30,7 @@ appEl.appendChild(nav);
 // Контейнер экрана
 const screenContainer = document.createElement('main');
 screenContainer.className = 'screen-container';
+screenContainer.id = 'main-content';
 appEl.appendChild(screenContainer);
 
 let currentScreen = null;

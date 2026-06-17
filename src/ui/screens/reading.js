@@ -185,6 +185,12 @@ export async function mount(container, ctx) {
   destroyModeWidget = modeWidget.destroy;
   bar.appendChild(modeWidget.chip);
 
+  // Семантический заголовок страницы (скрыт визуально, доступен скринридерам)
+  const pageHeading = document.createElement('h1');
+  pageHeading.className = 'visually-hidden';
+  pageHeading.id = 'reading-heading';
+  container.appendChild(pageHeading);
+
   // Контейнер текста
   const textArea = document.createElement('div');
   textArea.className = 'scripture-text';
@@ -225,6 +231,10 @@ export async function mount(container, ctx) {
 
   skeleton.remove();
   store.update(s => ({ ...s, book: bookId }));
+
+  // Обновляем заголовок страницы для скринридеров
+  const heading = container.querySelector('#reading-heading');
+  if (heading) heading.textContent = `Чтение — ${bookData.title}`;
 
   // Обновляем settings из store — пользователь мог изменить их во время загрузки
   settings = store.get().settings || settings;
@@ -365,11 +375,11 @@ function restoreScroll(bookId) {
     const targetScroll = progress.reading.lastScroll * document.documentElement.scrollHeight;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        window.scrollTo(0, targetScroll);
+        window.scrollTo({ top: targetScroll, behavior: 'instant' });
       });
     });
   } else {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 }
 

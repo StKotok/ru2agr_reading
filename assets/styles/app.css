@@ -444,6 +444,26 @@ input[type="checkbox"] {
   -webkit-user-select: none;
 }
 
+/* === Skip to content === */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 10000;
+  padding: 12px 20px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
 /* === Утилиты === */
 .visually-hidden {
   position: absolute;
@@ -542,6 +562,16 @@ p, h2, h3, span {
 .chapter-placeholder {
   opacity: 0.3;
   transition: opacity 0.2s;
+}
+
+/* Глава, только что вставленная вместо placeholder — плавное появление */
+section[data-chapter] {
+  animation: chapter-reveal 0.2s ease;
+}
+
+@keyframes chapter-reveal {
+  from { opacity: 0.3; }
+  to   { opacity: 1; }
 }
 
 /* Skeleton */
@@ -817,7 +847,7 @@ p, h2, h3, span {
 }
 
 .word-card-sep {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--muted);
   opacity: 0.4;
   margin: 0 2px;
@@ -902,7 +932,7 @@ p, h2, h3, span {
 }
 
 .word-card-inline-label {
-  font-size: 0.6875rem;         /* 11px */
+  font-size: 0.75rem;          /* 12px */
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1490,7 +1520,7 @@ p, h2, h3, span {
 .mode-widget-slider-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-bottom: 4px;
 }
@@ -1540,7 +1570,7 @@ p, h2, h3, span {
 
 /* ---- Hint ---- */
 .mode-widget-hint {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--muted);
   margin: 8px 0 0 0;
   line-height: 1.5;
@@ -1842,7 +1872,7 @@ p, h2, h3, span {
 
 .dict-badge {
   grid-area: badge;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   padding: 1px 6px;
   border-radius: 4px;
   justify-self: start;

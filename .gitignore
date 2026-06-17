@@ -5,3 +5,4 @@ scripts/sources/
 .netlify/
 data-sources/
 /.superpowers/
+/.claude/

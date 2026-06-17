@@ -1,5 +1,6 @@
 import { loadBooks } from '../../data/bible-loader.js';
 import { navigate } from '../../router.js';
+import { iconEye, iconEyeOff } from './icons.js';
 
 /**
  * Верхняя панель экрана чтения.
@@ -25,13 +26,16 @@ export function createTopBar(ctx) {
   // Кнопка «глаз» — plain view
   const eyeBtn = document.createElement('button');
   eyeBtn.className = 'btn top-bar-btn';
-  eyeBtn.textContent = '👁';
+  eyeBtn.innerHTML = iconEye(18);
+  eyeBtn.setAttribute('aria-label', 'Показать обычный русский текст');
   eyeBtn.title = 'Показать обычный русский текст';
   eyeBtn.setAttribute('aria-pressed', 'false');
   eyeBtn.addEventListener('click', () => {
     const pressed = eyeBtn.getAttribute('aria-pressed') === 'true';
     const newPressed = !pressed;
     eyeBtn.setAttribute('aria-pressed', String(newPressed));
+    eyeBtn.innerHTML = newPressed ? iconEyeOff(18) : iconEye(18);
+    eyeBtn.setAttribute('aria-label', newPressed ? 'Вернуть греческий слой' : 'Показать обычный русский текст');
     eyeBtn.title = newPressed ? 'Вернуть греческий слой' : 'Показать обычный русский текст';
     if (onEyeToggle) onEyeToggle(newPressed);
   });
@@ -94,6 +98,14 @@ export function createTopBar(ctx) {
   document.addEventListener('click', (e) => {
     if (!bar.contains(e.target)) {
       bookList.hidden = true;
+    }
+  });
+
+  // Закрытие выпадашки по Escape
+  bookList.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !bookList.hidden) {
+      bookList.hidden = true;
+      bookBtn.focus();
     }
   });
 
