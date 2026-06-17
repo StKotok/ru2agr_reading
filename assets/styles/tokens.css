@@ -97,7 +97,7 @@
   --surface-card: var(--gray-800);        /* #2A2A2A */
 
   --text: var(--gray-100);                /* #E0DCD0 */
-  --muted: var(--gray-500);               /* #8C8C8C */
+  --muted: #9A9A9A;                       /* осветлён для комфортного чтения на тёмном фоне */
 
   --greek: var(--blue-300);               /* #7BA3CC */
   --primary: var(--blue-300);             /* #7BA3CC */
