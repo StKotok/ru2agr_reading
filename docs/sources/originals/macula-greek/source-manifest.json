@@ -1,0 +1,20 @@
+{
+  "schema": "source-manifest-v1",
+  "id": "macula-greek-2026-06-17",
+  "kind": "original",
+  "name": "MACULA Greek — SBLGNT syntax trees",
+  "url": "https://github.com/Clear-Bible/macula-greek/",
+  "ref": "sblgnt-trees",
+  "commitOrTag": "sblgnt-trees (current as of 2026-06-17)",
+  "corpus": "SBLGNT",
+  "files": [
+    {
+      "path": "tsv/macula-greek-SBLGNT.tsv",
+      "sha256": "7f71504fdee8659bdd9f85342e4103d645864c2851b8205915bb298f0c004cc5"
+    }
+  ],
+  "license": "CC BY 4.0",
+  "licenseTextPath": "LICENSE.md",
+  "attribution": "MACULA Greek Linguistic Datasets, available at https://github.com/Clear-Bible/macula-greek/. SBLGNT: © 2010 Society of Biblical Literature and Logos Bible Software, CC-BY 4.0.",
+  "fetchedAt": "2026-06-17T00:00:00Z"
+}

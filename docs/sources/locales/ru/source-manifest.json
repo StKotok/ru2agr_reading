@@ -1,0 +1,19 @@
+{
+  "schema": "source-manifest-v1",
+  "id": "locale-ru-2026-06-17",
+  "kind": "locale",
+  "name": "Русская лексическая курация (ruMatches, глоссы)",
+  "url": "local",
+  "commitOrTag": "manual curation",
+  "files": [
+    {
+      "path": "core.json",
+      "sha256": "curated-manually"
+    }
+  ],
+  "license": "Proprietary (hand-curated, project-owned)",
+  "licenseTextPath": null,
+  "attribution": "Ручная курация авторов проекта ru2agr_reading",
+  "fetchedAt": "2026-06-17T00:00:00Z",
+  "notes": "Источник — assets/data/lexicon/core.json (204 леммы). Содержит ruMatches, ruExclude, глоссы, refs. Это НЕ машинные данные — ручная работа, перенос по lexemeKey в locale/ru/*. Поле id → lexemeKey."
+}

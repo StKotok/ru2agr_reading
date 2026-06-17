@@ -37,14 +37,20 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,svg,json}'],
-        globIgnores: ['**/data/bibles/**', '**/data/generated/**'],
+        globIgnores: [
+          '**/data/bibles/**',
+          '**/data/originals/**',
+          '**/data/translations/**',
+          '**/data/align/**'
+        ],
         runtimeCaching: [
           {
-            urlPattern: /\/data\/bibles\/.*/,
+            // Book packs: originals (Greek), translations (Synodal), alignment
+            urlPattern: /\/data\/(originals|translations|align)\/.*/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'bible-data',
-              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 }
+              cacheName: 'book-packs',
+              expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 }
             }
           },
           {
@@ -53,14 +59,6 @@ export default defineConfig({
             options: {
               cacheName: 'lexicon-data',
               expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 }
-            }
-          },
-          {
-            urlPattern: /\/data\/generated\/macula\/.*/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'macula-data',
-              expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 }
             }
           }
         ]

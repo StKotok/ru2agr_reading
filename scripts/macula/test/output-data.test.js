@@ -4,7 +4,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = resolve(__dirname, '..', '..', '..', 'assets', 'data', 'generated', 'macula');
+const OUT_DIR = resolve(__dirname, '..', '..', '..', 'generated', 'canonical', 'sblgnt-macula');
 
 function loadJSONL(path) {
   const raw = readFileSync(path, 'utf8').trim();

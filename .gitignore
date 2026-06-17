@@ -2,6 +2,13 @@
 /node_modules/
 /dist/
 scripts/sources/
+# Canonical intermediate files (large, regenerated)
+generated/canonical/**/tokens.jsonl
+generated/canonical/**/lexemes.json
+generated/canonical/**/verses.json
+generated/canonical/**/frequency.json
+generated/canonical/**/books/
+# Legacy data (removed in Step 4)
 assets/data/generated/
 docs/greek-nt-frequency-sources/raw/
 .netlify/

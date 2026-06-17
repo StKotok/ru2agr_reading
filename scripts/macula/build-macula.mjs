@@ -7,7 +7,7 @@
  * all data structures for the Greek NT reader application.
  *
  * Usage: node scripts/macula/build-macula.mjs
- * Output: assets/data/generated/macula/
+ * Output: generated/canonical/sblgnt-macula/
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -30,7 +30,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
 const MACULA_ROOT = resolve(ROOT, 'docs', 'macula-greek');
 const TSV_PATH = resolve(MACULA_ROOT, 'SBLGNT', 'tsv', 'macula-greek-SBLGNT.tsv');
-const OUT_DIR = resolve(ROOT, 'assets', 'data', 'generated', 'macula');
+const OUT_DIR = resolve(ROOT, 'generated', 'canonical', 'sblgnt-macula');
 
 // Canonical NT books with metadata
 const NT_BOOKS = [

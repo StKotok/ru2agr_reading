@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GreekToken",
+  "description": "A single Greek word token from SBLGNT via MACULA",
+  "type": "object",
+  "required": [
+    "id",
+    "ref",
+    "bookId",
+    "chapter",
+    "verse",
+    "surface"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "sourceId": {
+      "type": "string"
+    },
+    "lexemeId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ref": {
+      "type": "string",
+      "description": "Canonical reference: \"bookId chapter:verse\""
+    },
+    "sourceRef": {
+      "type": "string"
+    },
+    "bookId": {
+      "type": "string"
+    },
+    "chapter": {
+      "type": "integer"
+    },
+    "verse": {
+      "type": "integer"
+    },
+    "tokenIndex": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "surface": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "surfaceNfc": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "surfaceSearch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "normalized": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lemma": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lemmaSearch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "strong": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "isFunctionWord": {
+      "type": "boolean"
+    }
+  }
+}

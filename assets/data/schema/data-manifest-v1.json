@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data-manifest-v1",
+  "title": "Data Manifest (v1)",
+  "description": "Runtime metadata: active translation/original/locale + data version.",
+  "type": "object",
+  "required": ["schema", "version", "translations", "originals", "locales"],
+  "properties": {
+    "schema": { "const": "data-manifest-v1" },
+    "version": { "type": "string", "description": "SHA of all data inputs" },
+    "translations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "short", "defaultOriginalId", "versification", "license"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "short": { "type": "string" },
+          "defaultOriginalId": { "type": "string" },
+          "versification": { "type": "string" },
+          "license": { "type": "string" },
+          "sourceManifestId": { "type": "string" }
+        }
+      }
+    },
+    "originals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "language", "license", "attribution"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "language": { "type": "string" },
+          "license": { "type": "string" },
+          "attribution": { "type": "string" },
+          "sourceManifestId": { "type": "string" }
+        }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "defaultTranslationId"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "defaultTranslationId": { "type": "string" },
+          "sourceManifestId": { "type": "string" }
+        }
+      }
+    }
+  }
+}

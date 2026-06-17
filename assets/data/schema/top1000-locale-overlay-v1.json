@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "top1000-locale-overlay-v1",
+  "title": "Top-1000 Locale Overlay (v1)",
+  "description": "Locale-specific glosses and explanations for top-1000 lexicon items.",
+  "type": "object",
+  "required": ["schema", "localeId", "items"],
+  "properties": {
+    "schema": { "const": "top1000-locale-overlay-v1" },
+    "localeId": { "type": "string", "const": "ru" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["lexemeKey", "gloss"],
+        "properties": {
+          "lexemeKey": { "type": "string" },
+          "gloss": { "type": "string" },
+          "shortGloss": { "type": "string" },
+          "explanation": { "type": "string" },
+          "searchAliases": { "type": "array", "items": { "type": "string" } },
+          "examples": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
