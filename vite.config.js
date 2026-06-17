@@ -37,7 +37,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,svg,json}'],
-        globIgnores: ['**/data/bibles/**'],
+        globIgnores: ['**/data/bibles/**', '**/data/generated/**'],
         runtimeCaching: [
           {
             urlPattern: /\/data\/bibles\/.*/,
@@ -53,6 +53,14 @@ export default defineConfig({
             options: {
               cacheName: 'lexicon-data',
               expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 }
+            }
+          },
+          {
+            urlPattern: /\/data\/generated\/macula\/.*/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'macula-data',
+              expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 }
             }
           }
         ]

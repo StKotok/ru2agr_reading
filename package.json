@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "build:macula": "node scripts/macula/build-macula.mjs",
     "build:data": "node scripts/apply-zefania-alignments.mjs && node scripts/convert-alignments.js && node scripts/refine-alignments.mjs && node scripts/build-frequency.mjs",
     "verify:data": "node scripts/verify-alignments.mjs"
   },

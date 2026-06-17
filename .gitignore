@@ -2,6 +2,8 @@
 /node_modules/
 /dist/
 scripts/sources/
+assets/data/generated/
+docs/greek-nt-frequency-sources/raw/
 .netlify/
 data-sources/
 /.superpowers/
