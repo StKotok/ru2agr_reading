@@ -46,26 +46,42 @@ Pass this profile into every dispatched agent — they start cold and know nothi
 
 | Intent | Dispatch |
 |---|---|
-| Extract everything / "pull tokens" | 4 extract agents → name-tokens → apply-token(×N) → verify |
+| "profile this project" / first run | profile-project |
+| "scope: <description>" | scope-resolve |
+| Extract everything / "pull tokens" | profile → scope → 4 extract agents → format-canonical → name-tokens → apply-token(×N) → cross-check → audit-coverage → verify → report-summary |
 | Colours only | extract-colors |
 | Spacing / radii / sizing only | extract-spatial |
 | Fonts / typography only | extract-typography |
 | Find components / repeated patterns | find-components |
 | "check nothing broke" | verify-visual |
+| "did we miss anything?" | audit-coverage |
+| "final report" | report-summary |
 
 ## Pipeline
 
 ```
-Phase 0 — PROFILE: build the project profile (above).
+Phase 0 — PROFILE + SCOPE:
+  profile-project → scope-resolve → profile document + file list
+
 Phase 1 — AUDIT (parallel, independent), scoped to the profile's styling mechanism:
   extract-colors / extract-spatial / extract-typography / find-components
+
+Phase 1.5 — NORMALISE:
+  format-canonical → canonical form map (resolve .28/0.28, #fff/#ffffff, etc.)
+
 Phase 2 — NAME (sequential):
   name-tokens → dedup, destination rule, naming, conflicts, ordered apply sequence
+  (uses canonical forms from Phase 1.5)
+
 Phase 3 — APPLY (incremental, git-checkpointed):
   baseline commit/stash first; per token: apply-token → verify-visual(Tier 1) →
   OK → next ; FAIL → revert that change, report
+
 Phase 4 — FINAL VERIFY:
-  audit-coverage (no stray copies left) → verify-visual(Tier 2, optional rendered)
+  cross-check (components covered? orphan tokens?) →
+  audit-coverage (no stray copies left) →
+  verify-visual(Tier 2, optional rendered) →
+  report-summary (synthesis + open decisions + next steps)
 ```
 
 ## Token Destination Rule (general)
@@ -96,15 +112,86 @@ A dispatched subagent inherits nothing — not this skill, not your conversation
 **Never bake line numbers** into specs, plans, or edits — source moves. Locate code by
 grepping the literal (the exact value string), not by `file:line`.
 
+## Hard Gates
+
+Rules that must NEVER be violated. No exceptions, no "it worked for me", no spirit-vs-letter.
+
+### GATE 1 — URL Verification
+
+**Never tell a user to open a URL you haven't confirmed with curl first.**
+
+1. Start the dev server per the project profile
+2. `curl -sI <url>` → must be HTTP 200 (follow redirects with `-L`)
+3. If 404 — the URL is wrong. Debug, don't guess.
+4. Record the exact working URL (with extension) in the profile
+
+This gate exists because of a real 404 incident: the `serve` dev server stripped the
+`.html` extension from `ru2gr.dc.html` → redirected to `/ru2gr.dc` → 404. The
+double-extension `.dc.html` broke the clean-URL logic. The orchestrator reported
+`http://localhost:3456/ru2gr.dc` without verifying — user got a 404. This must
+never happen again in any project.
+
+### GATE 2 — Syntax Validity
+
+After ANY file edit, run the project's syntax checker:
+- JS/TS: `node --check <file>` or `npx tsc --noEmit`
+- CSS/SCSS: `npx stylelint <file>` or build gate
+- Python: `python -m py_compile <file>`
+- Swift: `swift -parse <file>`
+
+If syntax check fails — revert immediately, don't proceed to next token.
+
+### GATE 4 — Dev-Mode Label Coverage
+
+**In `?dev=1` mode, every interactive element MUST have a visible `data-section` label
+on hover, with click-to-copy to clipboard.**
+
+Three mechanisms work together:
+
+1. **Static labels** — `'data-section'` attribute on render functions' outermost `h('div',...)`
+   and on key interactive `h('button',...)` / `h('span',{role:'button'},...)` calls.
+   Naming: `{section}--{element}`, e.g. `desk-nav--read-tab`, `phone-mode-menu--backdrop`.
+
+2. **Runtime auto-labeler** — a `MutationObserver`-backed script that finds all unlabeled
+   interactive elements and derives names from: closest parent `[data-section]` as prefix +
+   element's `textContent`, `aria-label`, `title`, or `placeholder`. Runs 1.2s after load
+   and on every DOM mutation (catches dynamically-opened sheets/popups).
+
+3. **Hover + click-to-copy**:
+   - CSS: `html.dev [data-section]:hover { outline:1px dashed orange; cursor:copy; }`
+   - CSS: `html.dev [data-section]:hover::before { content:attr(data-section); ... }`
+     — label appears at top-left of the hovered element
+   - JS: `document.addEventListener('click', ...)` — finds closest `[data-section]`,
+     calls `navigator.clipboard.writeText(name)`, flashes outline green for 400ms
+
+**The label stays HIDDEN until hover.** This keeps the canvas clean for visual review.
+Hover any element → orange dashed border + name label → click → name in clipboard.
+
+**Verification:** open `?dev=1`, hover over elements to see labels, click to copy,
+paste into chat. Every tappable element should respond.
+
+### GATE 3 — No Guessing Values
+
+When extracting a token, the value must be **copied verbatim** from the source —
+never typed from memory, never "looks like it's about 0.18". If unsure, grep
+the literal in the source to confirm.
+
 ## Agents
 
 | Agent | Phase | Role |
 |---|---|---|
+| profile-project | 0 | discover styling mechanism, token system, conventions → project profile |
+| scope-resolve | 0 | user scope description → concrete file/unit list |
 | extract-colors | 1 | hardcoded colours + alpha/opacity |
 | extract-spatial | 1 | radii, padding, gaps, sizing, offsets |
 | extract-typography | 1 | font size / weight / line-height / letter-spacing |
 | find-components | 1 | repeating visual patterns + states/variants |
-| name-tokens | 2 | merge, dedup, destination rule, naming, conflicts |
+| format-canonical | 1.5 | normalise literal-form variants (.28/0.28, #fff/#ffffff) → canonical map |
+| name-tokens | 2 | merge, dedup, destination rule, naming, conflicts, ordered apply sequence |
 | apply-token | 3 | apply ONE change + static value-identity proof |
+| cross-check | 4 | verify components covered by tokens; find orphan tokens & patterns |
 | audit-coverage | 4 | find stray un-tokenized copies of an extracted value |
 | verify-visual | 3/4 | Tier 1 static value-identity; Tier 2 optional rendered pass |
+| report-summary | 4 | synthesis: token inventory, component catalogue, coverage %, open decisions |
+
+**13 agents total.** 5 report-only (no edits), 1 edit-only (apply-token), 7 mixed.

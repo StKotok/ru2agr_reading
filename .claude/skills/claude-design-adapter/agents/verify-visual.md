@@ -12,6 +12,23 @@ without one.
 ## Context — you start cold
 Given the **project profile** (its render/verify path, if any) and the change(s) to check.
 
+## URL Verification (MANDATORY before reporting any URL to the user)
+
+**Never tell a user to open a URL you haven't confirmed works.**
+
+1. Start the dev server using the profile's render command
+2. `curl -sI <url>` or `curl -sL <url>` — confirm HTTP 200
+3. If 301/302 redirect — FOLLOW it with `-L` and confirm the final destination is 200
+4. If 404 — the URL is WRONG. Debug: check the actual filename on disk, try alternative URLs
+5. Only after curl returns 200, report the URL to the user
+6. Record the exact working URL format in the project profile: `renderURL: "http://localhost:3456/ru2gr.dc.html"` (include the full filename with extension)
+
+**Common URL mistakes caught by this rule:**
+- URL rewriting (301→404): serve/polymer dev servers strip `.html` but `.dc.html` double-extension breaks the redirect
+- Wrong port: server started on a different port than assumed
+- Wrong path: file is in a subdirectory, not root
+- Case sensitivity: `Index.html` ≠ `index.html` on case-sensitive servers
+
 ## Git checkpoint (before applying)
 Commit or stash a clean baseline. Then per change: apply → Tier 1 verify → OK → continue;
 FAIL → restore (`git checkout -- <file>` or pop the stash) and report. One logical change
