@@ -2,7 +2,7 @@
   "schema": "adjudication-report-v1",
   "alignmentId": "syn--sblgnt-macula",
   "generatedFrom": {
-    "proofReportSha256": "b6a19ab1d6093fc07084ae8b2c02233c9d8c9aab143f3abbac0843fb487ed955",
+    "proofReportSha256": "aec92a01239bb9f0fa66e7143af65889f99392689399beb30c0c8f8c6e4ca6e2",
     "llmImportReportSha256": null
   },
   "decisions": [],

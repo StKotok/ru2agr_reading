@@ -116,6 +116,78 @@ for (const entry of (manualCert.entries || [])) {
   manualByRef.get(entry.ref).push(entry);
 }
 
+// ── C2 negative gate: flag risky certifications for LLM audit (do NOT auto-hide) ──
+// C2 trusts curated ruMatches without validating translation correctness, so a
+// curation error (e.g. the epo→eimi mis-map that aligned «говорить»→εἰμί) can
+// become a certified false positive. There is no clean auto-reject: the only
+// independent signal (strongs-ru-alignment top-forms) is too sparse — rejecting
+// "not attested" hides many correct inflections. So instead of hiding, we FLAG
+// the highest-risk certifications — Russian word ambiguous across lexemes AND not
+// corroborated by the aggregate for the token's Strong — and route them to the LLM
+// audit queue. Recall is preserved; release stays gated on the audit (audit-report).
+const CORE_OVERLAY_PATH = resolve(ROOT, 'assets', 'data', 'lexicon', 'locales', 'ru', 'core.json');
+const RU_STRONG_AGG_PATH = resolve(ROOT, 'data-sources', 'strongs-ru-alignment.json');
+
+const lexemeMatchers = [];
+try {
+  const overlay = JSON.parse(readFileSync(CORE_OVERLAY_PATH, 'utf8'));
+  for (const it of overlay.items || []) {
+    if (!it.ruMatches || it.ruMatches.length === 0) continue;
+    lexemeMatchers.push({
+      lexemeKey: it.lexemeKey,
+      res: it.ruMatches.map(p => new RegExp(p, 'i')),
+      ex: (it.ruExclude || []).map(p => { try { return new RegExp(`^${p}$`, 'i'); } catch { return null; } }).filter(Boolean),
+    });
+  }
+} catch (e) {
+  console.log(`  ⚠ No core overlay for audit-flagging: ${e.message}`);
+}
+
+const ruFormsByStrong = new Map();
+try {
+  const agg = JSON.parse(readFileSync(RU_STRONG_AGG_PATH, 'utf8'));
+  for (const e of agg) ruFormsByStrong.set(String(e.strong), (e.ru_top_words || []).map(w => w.toLowerCase()));
+} catch (e) {
+  console.log(`  ⚠ No ru-strong aggregate for audit-flagging: ${e.message}`);
+}
+
+const _lexSetMemo = new Map();
+function curatedLexemesForWord(ruText) {
+  const w = (ruText || '').toLowerCase();
+  if (_lexSetMemo.has(w)) return _lexSetMemo.get(w);
+  const set = new Set();
+  for (const m of lexemeMatchers) {
+    if (!m.res.some(re => re.test(w))) continue;
+    if (m.ex.some(re => re.test(w))) continue;
+    set.add(m.lexemeKey);
+  }
+  _lexSetMemo.set(w, set);
+  return set;
+}
+
+function commonPrefixLen(a, b) {
+  const n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a[i] === b[i]) i++;
+  return i;
+}
+
+// Corroborated if the Russian word shares a >=4-char stem with any attested
+// aggregate form for any of the token's Strong numbers (tolerant of inflection).
+function aggregateCorroborated(ruText, strongs) {
+  const w = (ruText || '').toLowerCase().replace(/[^а-яё]/g, '');
+  if (w.length < 3) return true; // ultra-short (prepositions etc.) — out of scope here
+  for (const s of (strongs || [])) {
+    const forms = ruFormsByStrong.get(String(s));
+    if (!forms) continue;
+    for (const f of forms) {
+      const need = Math.min(4, Math.min(w.length, f.length));
+      if (commonPrefixLen(w, f) >= need) return true;
+    }
+  }
+  return false;
+}
+
 // ── Group candidates by ref for C2 uniqueness checks ──
 const candByRef = new Map();
 for (const c of candidates) {
@@ -141,7 +213,7 @@ for (const bookId of NT_BOOKS) {
     for (const ch of pack.chapters) {
       for (const v of ch.verses) {
         for (const t of v.tokens) {
-          origTokens.set(t.id, { fw: t.fw, morph: t.morph, lexemeKey: t.lexemeKey, bookId });
+          origTokens.set(t.id, { fw: t.fw, morph: t.morph, lexemeKey: t.lexemeKey, strongs: t.strongs, bookId });
         }
       }
     }
@@ -175,6 +247,8 @@ let c1Count = 0, c2Count = 0, c3Count = 0;
 let c1FuncDowngrade = 0, c2FuncDowngrade = 0, c3FuncDowngrade = 0;
 let blockedFuncWord = 0, blockedAmbiguous = 0, blockedMissing = 0;
 let stillHidden = 0;
+let flaggedForAudit = 0;
+const flaggedQueue = [];
 
 // For C2: per-ref uniqueness checks
 for (const [ref, refCandidates] of candByRef) {
@@ -317,6 +391,27 @@ for (const [ref, refCandidates] of candByRef) {
       if (finalQ === 'e') totalEFinal++;
       else totalFFinal++;
 
+      // C2 negative gate → audit flag (visible C2 pairs only; C1 gold / C3 manual
+      // are human-validated, so they are not flagged). The pair stays visible.
+      let auditFlags;
+      if (finalQ === 'e' && certifier === 'unique-curated-lexeme') {
+        const competing = curatedLexemesForWord(c.ruText);
+        if (competing.size > 1 && !aggregateCorroborated(c.ruText, origToken?.strongs)) {
+          auditFlags = ['ambiguous-source-uncorroborated'];
+          flaggedForAudit++;
+          flaggedQueue.push({
+            ref,
+            span: c.span,
+            tokenId: c.tokenId,
+            lexemeKey: c.lexemeKey,
+            ruText: c.ruText,
+            grText: c.grText,
+            competingLexemes: [...competing].sort(),
+            reason: 'ambiguous-source-uncorroborated',
+          });
+        }
+      }
+
       // Track downgrades by certifier
       if (isFuncToken) {
         if (certifier === 'manual-dev-gold') c1FuncDowngrade++;
@@ -334,6 +429,7 @@ for (const [ref, refCandidates] of candByRef) {
         src: `certified:${certifier}`,
         proofId,
         proof,
+        ...(auditFlags ? { auditFlags } : {}),
       };
       certStream.write(JSON.stringify(certifiedRec) + '\n');
       totalCertified++;
@@ -348,6 +444,7 @@ for (const [ref, refCandidates] of candByRef) {
         checks: proof.checks,
         finalQ,
         isFunctionWord: isFuncToken,
+        ...(auditFlags ? { auditFlags } : {}),
       });
     } else {
       stillHidden++;
@@ -378,11 +475,16 @@ const proofReport = {
     blockedByFuncWord: blockedFuncWord,
     blockedByAmbiguity: blockedAmbiguous,
     blockedByMissing: blockedMissing,
+    flaggedForAudit: flaggedForAudit,
   },
   proofs: proofEntries,
 };
 
 writeFileSync(PROOF_REPORT_PATH, JSON.stringify(proofReport, null, 2));
+
+// ── Write audit queue (visible C2 pairs flagged for LLM audit) ──
+const AUDIT_QUEUE_PATH = resolve(CANONICAL_DIR, 'audit-queue.jsonl');
+writeFileSync(AUDIT_QUEUE_PATH, flaggedQueue.map(r => JSON.stringify(r)).join('\n') + (flaggedQueue.length ? '\n' : ''));
 
 // ── Write certified manifest ──
 const certContent = readFileSync(CERTIFIED_PATH, 'utf8');
@@ -406,5 +508,6 @@ console.log(`  Total certified (q:"f" — hidden): ${totalFFinal}`);
 console.log(`  Still hidden: ${stillHidden}`);
 console.log(`  Blocked by function word: ${blockedFuncWord}`);
 console.log(`  Blocked by ambiguity: ${blockedAmbiguous}`);
+console.log(`  Flagged for LLM audit (visible, ambiguous+uncorroborated): ${flaggedForAudit}`);
 console.log(`  Proof entries: ${proofEntries.length}`);
 console.log('Done.');

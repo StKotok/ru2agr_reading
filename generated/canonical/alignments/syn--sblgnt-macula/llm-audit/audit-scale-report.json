@@ -1,0 +1,9 @@
+{
+  "schema": "audit-scale-report-v1",
+  "alignmentId": "syn--sblgnt-macula",
+  "generatedAt": "2026-06-18T06:36:48.767Z",
+  "status": "stub",
+  "message": "LLM audit inputs not yet generated. Priority set (flagged pairs) is enumerated in inputs/priority-flagged.json.",
+  "flaggedPairs": 124,
+  "estimatedPromptFiles": 32505
+}

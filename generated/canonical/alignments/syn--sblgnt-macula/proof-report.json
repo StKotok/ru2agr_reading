@@ -1,7 +1,7 @@
 {
   "schema": "proof-report-v1",
   "alignmentId": "syn--sblgnt-macula",
-  "generatedAt": "2026-06-18T06:11:17.828Z",
+  "generatedAt": "2026-06-18T06:37:34.996Z",
   "summary": {
     "totalCandidates": 123235,
     "totalCertified": 15740,
@@ -16,7 +16,8 @@
     "stillHidden": 107495,
     "blockedByFuncWord": 15481,
     "blockedByAmbiguity": 49681,
-    "blockedByMissing": 0
+    "blockedByMissing": 0,
+    "flaggedForAudit": 124
   },
   "proofs": [
     {
@@ -752,7 +753,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 1:25|39-43|n40001025008|huios",
@@ -2957,7 +2961,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 4:9|15-18|n40004009006|pas",
@@ -4940,7 +4947,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 5:28|43-50|n40005028009|gune",
@@ -7400,7 +7410,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 7:24|5-12|n40007024001|pas",
@@ -9626,7 +9639,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 9:6|23-26|n40009006008|huios",
@@ -12125,7 +12141,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 10:27|17-24|n40010027006|skotia",
@@ -14267,7 +14286,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 12:7|38-42|n40012007007|thelo",
@@ -21764,7 +21786,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 16:13|38-43|n40016013004|iesous",
@@ -23255,7 +23280,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 17:13|43-49|n40017013007|ioannes",
@@ -34532,7 +34560,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 25:24|73-80|n40025024016|anthropos",
@@ -34658,7 +34689,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 25:28|31-36|n40025028008|didomi",
@@ -39572,7 +39606,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 27:19|44-48|n40027019011|gune",
@@ -41756,7 +41793,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "matthew 28:5|0-5|n40028005004|angelos",
@@ -44687,7 +44727,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 2:10|23-26|n41002010008|huios",
@@ -49559,7 +49602,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 5:43|56-62|n41005043010|lego",
@@ -50021,7 +50067,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 6:14|57-64|n41006014013|lego",
@@ -53927,7 +53976,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 9:6|41-45|n41009006008|egeneto",
@@ -54410,7 +54462,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 9:19|19-25|n41009019005|lego",
@@ -55586,7 +55641,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 9:43|65-70|n41009043014|eiserchomai",
@@ -58841,7 +58899,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 11:19|39-45|n41011019008|polis",
@@ -64070,7 +64131,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 14:40|93-101|n41014040017|apokrinomai",
@@ -65855,7 +65919,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "mark 15:11|29-34|n41015011006|ochlos",
@@ -68354,7 +68421,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 1:35|0-5|n42001035004|angelos",
@@ -72240,7 +72310,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 2:49|102-106|n42002049015|pater",
@@ -76461,7 +76534,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 5:24|23-26|n42005024006|huios",
@@ -76776,7 +76852,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 5:28|14-17|n42005028003|pas",
@@ -78288,7 +78367,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 6:27|19-25|n42006027003|lego",
@@ -78981,7 +79063,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 7:6|86-93|n42007006020|lego",
@@ -80472,7 +80557,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 7:39|103-110|n42007039022|gune",
@@ -81018,7 +81106,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 8:5|0-5|n42008005001|exerchomai",
@@ -81522,7 +81613,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 8:16|120-124|n42008016021|phos",
@@ -83916,7 +84010,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 9:12|89-94|n42009012014|ochlos",
@@ -88662,7 +88759,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 11:16|48-52|n42011016006|ouranos",
@@ -89292,7 +89392,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 11:35|14-18|n42011035005|phos",
@@ -90363,7 +90466,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 12:12|11-14|n42012012004|pneuma",
@@ -90405,7 +90511,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 12:13|9-15|n42012013006|ochlos",
@@ -91497,7 +91606,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 12:47|98-103|n42012047022|polys",
@@ -91539,7 +91651,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 12:48|72-79|n42012048011|pas",
@@ -91749,7 +91864,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 12:55|26-34|n42012055005|lego",
@@ -92778,7 +92896,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 13:20|4-10|n42013020003|lego",
@@ -95823,7 +95944,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 16:4|86-91|n42016004014|oikos",
@@ -101136,7 +101260,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 19:22|81-88|n42019022014|anthropos",
@@ -108381,7 +108508,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 24:24|83-89|n42024024021|horao",
@@ -108696,7 +108826,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 24:32|45-51|n42024032007|kardia",
@@ -109494,7 +109627,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "luke 24:51|66-70|n42024051015|ouranos",
@@ -111549,7 +111685,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 1:31|45-49|n43001031015|hudor",
@@ -111675,7 +111814,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 1:33|44-48|n43001033011|hudor",
@@ -113964,7 +114106,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 2:24|48-52|n43002024012|pas",
@@ -114027,7 +114172,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 3:1|16-19|n43003001001|eimi",
@@ -115419,7 +115567,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 3:21|53-57|n43003021014|ergon",
@@ -116826,7 +116977,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 4:10|42-45|n43004010009|dorea",
@@ -117309,7 +117463,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 4:18|89-96|n43004018015|lego",
@@ -119451,7 +119608,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 6:7|7-14|n43006007001|apokrinomai",
@@ -122580,7 +122740,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 6:60|0-6|n43006060001|polys",
@@ -122643,7 +122806,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 6:60|59-64|n43006060012|logos",
@@ -122895,7 +123061,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 6:65|43-48|n43006065008|oudeis",
@@ -124659,7 +124828,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 7:36|15-20|n43007036004|logos",
@@ -130161,7 +130333,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 9:40|50-57|n43009040011|lego",
@@ -131169,7 +131344,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 10:28|4-7|n43010028002|didomi",
@@ -134151,7 +134329,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 11:42|42-48|n43011042014|lego",
@@ -135936,7 +136117,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 12:19|61-67|n43012019011|oudeis",
@@ -137007,7 +137191,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 12:41|24-29|n43012041005|horao",
@@ -138141,7 +138328,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 13:11|39-45|n43013011008|lego",
@@ -140850,7 +141040,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 14:27|84-90|n43014027021|kardia",
@@ -141081,7 +141274,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 14:31|25-30|n43014031007|agapao",
@@ -143370,7 +143566,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 17:3|49-58|n43017003012|alethinos",
@@ -144777,7 +144976,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 18:2|52-57|n43018002013|iesous",
@@ -147150,7 +147352,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 19:5|6-11|n43019005001|exerchomai",
@@ -149460,7 +149665,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "john 20:10|5-12|n43020010007|mathletes",
@@ -159015,7 +159223,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 4:24|39-44|n44004024006|phone",
@@ -163236,7 +163447,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 7:13|90-93|n44007013016|genes",
@@ -163404,7 +163618,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 7:19|22-26|n44007019004|genes",
@@ -163698,7 +163915,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 7:26|93-99|n44007026015|adelphos",
@@ -167647,7 +167867,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 9:9|6-9|n44009009003|hemera",
@@ -167689,7 +167912,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 9:10|10-13|n44009010001|eimi",
@@ -173443,7 +173669,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 11:27|5-8|n44011027005|hemera",
@@ -180079,7 +180308,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 16:3|128-131|n44016003016|eimi",
@@ -182830,7 +183062,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 17:28|99-102|n44017028020|genes",
@@ -183061,7 +183296,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 17:33|5-10|n44017033003|paulos",
@@ -185308,7 +185546,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 19:15|43-48|n44019015014|paulos",
@@ -185896,7 +186137,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 19:28|54-60|n44019028008|lego",
@@ -186064,7 +186308,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 19:33|15-21|n44019033010|ioudaios",
@@ -191062,7 +191309,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 23:5|25-31|n44023005007|adelphos",
@@ -191923,7 +192173,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 23:29|56-62|n44023029007|nomos",
@@ -194401,7 +194654,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "acts 26:27|11-15|n44026027002|basileus",
@@ -199423,7 +199679,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "romans 2:26|48-54|n45002026008|nomos",
@@ -200116,7 +200375,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "romans 3:17|13-17|n45003017002|hodos",
@@ -209608,7 +209870,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "romans 10:19|41-47|n45010019007|protos",
@@ -210343,7 +210608,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "romans 11:20|48-53|n45011020008|pistis",
@@ -218783,7 +219051,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1corinthians 5:2|97-101|n46005002016|ergon",
@@ -223712,7 +223983,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1corinthians 11:3|32-39|n46011003006|pas",
@@ -225728,7 +226002,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1corinthians 12:25|26-30|n46012025007|soma",
@@ -229256,7 +229533,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1corinthians 15:45|58-67|n46015045013|eschatos",
@@ -231314,7 +231594,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "2corinthians 1:19|4-7|n47001019005|huios",
@@ -237194,7 +237477,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "2corinthians 11:23|133-139|n47011023018|thanatos",
@@ -237929,7 +238215,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "2corinthians 12:14|0-3|n47012014001|idou",
@@ -244061,7 +244350,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "galatians 6:12|22-27|n48006012005|sarx",
@@ -246372,7 +246664,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "ephesians 2:14|12-15|n49002014005|eirene",
@@ -251118,7 +251413,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "ephesians 6:21|54-58|n49006021011|pas",
@@ -252252,7 +252550,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "philippians 1:12|82-98|n50001012014|euangelion",
@@ -254928,7 +255229,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "philippians 4:5|32-36|n50004005005|pas",
@@ -257434,7 +257738,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "colossians 2:1|115-120|n51002001017|horao",
@@ -259555,7 +259862,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "colossians 4:6|79-87|n51004006015|apokrinomai",
@@ -260605,7 +260915,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1thessalonians 1:7|30-34|n52001007005|pas",
@@ -261172,7 +261485,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1thessalonians 2:9|16-22|n52002009003|adelphos",
@@ -268690,7 +269006,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1timothy 3:15|53-57|n54003015009|oikos",
@@ -270244,7 +270563,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1timothy 6:1|103-106|n54006001016|onoma",
@@ -272281,7 +272603,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "2timothy 2:3|41-47|n55002003006|iesous",
@@ -275200,7 +275525,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "titus 1:13|88-92|n56001013016|pistis",
@@ -277006,7 +277334,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "philemon 1:16|31-36|n57001016007|adelphos",
@@ -278338,7 +278669,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "hebrews 2:9|3-8|n58002009008|blepo",
@@ -279388,7 +279722,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "hebrews 3:12|45-51|n58003012008|kardia",
@@ -290561,7 +290898,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "james 2:24|15-22|n59002024006|anthropos",
@@ -299646,7 +299986,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1john 1:6|88-94|n62001006018|aletheia",
@@ -299793,7 +300136,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1john 1:8|27-32|n62001008004|hamartia",
@@ -299856,7 +300202,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1john 1:10|65-70|n62001010011|logos",
@@ -303468,7 +303817,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1john 4:21|49-53|n62004021012|theos",
@@ -304478,7 +304830,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1john 5:13|97-102|n62005013007|zoe",
@@ -304562,7 +304917,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "1john 5:16|15-20|n62005016005|adelphos",
@@ -310164,7 +310522,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "revelation 2:24|155-160|n66002024028|allos",
@@ -312369,7 +312730,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "revelation 5:9|119-123|n66005009021|theos",
@@ -316002,7 +316366,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "revelation 9:19|87-92|n66009019022|echo",
@@ -322890,7 +323257,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "revelation 17:1|9-13|n66017001003|heis",
@@ -326334,7 +326704,10 @@
         "not-in-variant-span"
       ],
       "finalQ": "e",
-      "isFunctionWord": false
+      "isFunctionWord": false,
+      "auditFlags": [
+        "ambiguous-source-uncorroborated"
+      ]
     },
     {
       "proofId": "revelation 19:13|36-42|n66019013005|aima",

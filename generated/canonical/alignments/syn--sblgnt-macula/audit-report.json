@@ -6,6 +6,10 @@
     {
       "code": "blocked:llm-audit-missing",
       "message": "LLM audit outputs have not been imported. This is expected for initial data prototype."
+    },
+    {
+      "code": "blocked:flagged-pairs-pending-audit",
+      "message": "124 visible C2 pairs are flagged (ambiguous source + uncorroborated) and must be confirmed by LLM audit/adjudication before release. See audit-queue.jsonl."
     }
   ],
   "counts": {
@@ -14,7 +18,8 @@
     "runtimeVisiblePairs": 15652,
     "runtimeHiddenPairs": 0,
     "orphans": 42542,
-    "unknownOrphans": 0
+    "unknownOrphans": 0,
+    "flaggedForAudit": 124
   },
   "coverageSummary": {
     "heldoutVersesAudited": 0,

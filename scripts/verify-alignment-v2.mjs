@@ -370,6 +370,7 @@ const auditReport = {
     runtimeHiddenPairs: 0,
     orphans: 0,
     unknownOrphans: 0,
+    flaggedForAudit: 0,
   },
   coverageSummary: {
     heldoutVersesAudited: 0,
@@ -418,8 +419,23 @@ try {
     }
   }
   auditReport.counts.runtimeVisiblePairs = rtVisible;
+
+  // C2 negative gate: visible pairs flagged (ambiguous source + uncorroborated)
+  if (existsSync(resolve(CANONICAL_DIR, 'proof-report.json'))) {
+    const pr = JSON.parse(readFileSync(resolve(CANONICAL_DIR, 'proof-report.json'), 'utf8'));
+    auditReport.counts.flaggedForAudit = pr.summary?.flaggedForAudit || 0;
+  }
 } catch (e) {
   warn(`Could not fill audit counts: ${e.message}`);
+}
+
+// Flagged-but-unaudited pairs gate release until the LLM audit confirms them.
+if (auditReport.counts.flaggedForAudit > 0) {
+  auditReport.blockers.push({
+    code: 'blocked:flagged-pairs-pending-audit',
+    message: `${auditReport.counts.flaggedForAudit} visible C2 pairs are flagged (ambiguous source + uncorroborated) and must be confirmed by LLM audit/adjudication before release. See audit-queue.jsonl.`,
+  });
+  warn(`${auditReport.counts.flaggedForAudit} certified pairs flagged for audit (blocked:flagged-pairs-pending-audit)`);
 }
 
 writeFileSync(resolve(CANONICAL_DIR, 'audit-report.json'), JSON.stringify(auditReport, null, 2));
