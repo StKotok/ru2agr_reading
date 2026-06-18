@@ -9,11 +9,11 @@
     }
   ],
   "counts": {
-    "candidatePairs": 123669,
-    "certifiedPairs": 15111,
-    "runtimeVisiblePairs": 15023,
+    "candidatePairs": 123235,
+    "certifiedPairs": 15740,
+    "runtimeVisiblePairs": 15652,
     "runtimeHiddenPairs": 0,
-    "orphans": 42681,
+    "orphans": 42542,
     "unknownOrphans": 0
   },
   "coverageSummary": {

@@ -39,8 +39,11 @@ const FORM_TO_PARENT = {
   // Demonstrative (οὗτος)
   touto: 'houtos',  // neuter nominative/accusative
 
+  // ἔπω/εἶπον (G2036) is the suppletive aorist of λέγω, not a form of εἰμί.
+  // Mapping it to eimi leaked its сказ/говор ruMatches into the eimi overlay,
+  // producing certified εἰμί↔«говорить/сказал» false positives. Map to lego.
+  epo: 'lego',
   // εἰμί verb forms (all map to eimi)
-  epo: 'eimi',      // (actually a different verb but curated as form)
   esti: 'eimi',     // 3rd sing. present
   esomai: 'eimi',   // future
   'on-2': 'eimi',   // present participle

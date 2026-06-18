@@ -2,7 +2,7 @@
   "schema": "orphans-manifest-v1",
   "alignmentId": "syn--sblgnt-macula",
   "path": "orphans.jsonl",
-  "count": 42681,
-  "sha256": "f0bdf07b29d2e503d5cc74c55d8127e405abca232c8a437d07d13bf893997da9",
-  "generatedAt": "2026-06-17T22:11:50.188Z"
+  "count": 42542,
+  "sha256": "09dcaa4f55aceac8ff37c1f3c085dcea6b637b479c7aeb3c5fc1a70c8d6141bd",
+  "generatedAt": "2026-06-18T06:11:16.626Z"
 }

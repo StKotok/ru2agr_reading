@@ -2,7 +2,7 @@
   "schema": "candidates-manifest-v1",
   "alignmentId": "syn--sblgnt-macula",
   "path": "candidates.jsonl",
-  "count": 123669,
-  "sha256": "e3f5a662af368e71cdb1d27f918d0018d968efa5377f303056d180a789743a5e",
-  "generatedAt": "2026-06-17T22:11:50.175Z"
+  "count": 123235,
+  "sha256": "dcfa96243543084bfb69268ca8a04d4971f485618c9e564a94b6e1371b9b0934",
+  "generatedAt": "2026-06-18T06:11:16.612Z"
 }
