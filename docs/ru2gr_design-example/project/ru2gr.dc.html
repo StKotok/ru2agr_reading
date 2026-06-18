@@ -307,6 +307,7 @@ class Component extends DCLogic {
     const C = Object.assign({}, base);
     // Surface distinction: paper stays flat, read elevates
     C.read     = dark ? this.wordMix(base.read, '#ffffff', LV.elv * 0.4) : this.wordMix(base.read, '#ffffff', LV.elv);
+    C.paper    = dark ? this.wordMix(base.paper, '#ffffff', LV.elv * 0.15) : this.wordMix(base.paper, '#000000', LV.elv * 0.15);
     C.paper2   = dark ? this.wordMix(base.paper2, '#000000', LV.elv * 0.5) : this.wordMix(base.paper2, '#000000', LV.elv * 0.7);
     C.sidebar  = dark ? this.wordMix(base.sidebar, '#000000', LV.elv * 0.5) : this.wordMix(base.sidebar, '#000000', LV.elv * 0.7);
     C.line     = this.a(base.ink, dark ? LV.lineAlpha * 0.8 : LV.lineAlpha);
@@ -1296,12 +1297,11 @@ class Component extends DCLogic {
    * 5. COMPOSITION — renderVals (аналог src/ui/render.js)
    * ================================================================ */
   renderVals() {
-    const theme = this.props.theme ?? 'Пергамент';
     this.CR = this.readerPalette();
     this.CRW = this.readerWordPalette();
     return {
-      theme: theme,
-      contrast: this.props.contrast ?? 'Чёткий',
+      theme: this.state.readerTheme,
+      contrast: this.state.readerContrast,
       posStyle: this.props.posStyle ?? 'Сегменты',
       reader: {
         phone: this.readerRenderPhone(),
