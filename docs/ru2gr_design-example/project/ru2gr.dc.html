@@ -1626,26 +1626,9 @@ class Component extends DCLogic {
     return h('div',{style:{display:'flex',flexDirection:'column',gap:15,width:'100%'}}, tabs, sw);
   }
 
-  /* ---- compare frame for the 5 status variants ---- */
+  /* ---- compare frame for the 5 status variants (removed) ---- */
   wordSCompareEl() {
-    const C=this.CW, h=React.createElement;
-    const frame=(n,title,split,desc,node)=>h('div',{style:{flex:'1 1 332px',minWidth:300,background:C.card,border:'1px solid '+C.cardLine,borderRadius:16,padding:'18px 18px 22px',boxShadow:C.shadow,display:'flex',flexDirection:'column',gap:14}},
-      h('div',null,
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}},
-          h('div',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},n+' · '+title),
-          h('span',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase',color:split==='два'?C.terra:C.muted,background:split==='два'?C.terraSoft:this.a(C.ink,.05),padding:'2px 8px',borderRadius:20}},split==='два'?'два виджета':'один виджет')
-        ),
-        h('div',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,marginTop:5,lineHeight:1.45}},desc)
-      ),
-      h('div',{style:{display:'flex',alignItems:'flex-start',minHeight:50}},node)
-    );
-    return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},
-      frame('1','Сегмент + тоггл','два','Связанный сегмент-контрол для статуса и отдельная пилюля «В тексте». Понятная иерархия, фиксированная ширина.',this.wordSV1()),
-      frame('2','Цветной ключ','два','Точки-легенда со счётчиками: цвет статуса = легенда подсветки в тексте. Иконка-глаз вместо подписи экономит ширину.',this.wordSV2()),
-      frame('3','Список + чип','два','Статус свёрнут в одну кнопку со счётчиками — самый узкий. Масштабируется, если статусов станет больше.',this.wordSV3()),
-      frame('4','Счётчик-пилюли','два','Число на первом плане: видно объём каждой группы до клика. Двойная роль — фильтр и мини-статистика словаря.',this.wordSV4()),
-      frame('5','Вкладки + свитч','два','Лёгкие подчёркнутые вкладки статуса и явно отделённый переключатель «В тексте». Минимум рамок, максимум воздуха.',this.wordSV5())
-    );
+    return null;
   }
 
   /* ---- status bar (phone) ---- */
