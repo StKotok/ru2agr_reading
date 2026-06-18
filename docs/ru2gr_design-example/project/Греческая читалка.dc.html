@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script src="./ru2gr-tokens.js"></script>
 <style>
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:#cfcabf;}
@@ -45,10 +46,7 @@
   <div style="width:100%;max-width:1000px;display:flex;flex-direction:column;gap:16px;margin-top:8px;">
     <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;border-bottom:1px solid rgba(40,34,22,0.16);padding-bottom:10px;">Варианты · переключатель режимов 1–4</div>
     <div style="display:flex;flex-wrap:wrap;gap:18px;">
-      <div style="flex:1 1 280px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">A · Сегмент-шаги + дропдаун</b> — выбрано для прототипа</div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;padding:18px;min-height:150px;">{{ galModeA }}</div>
-      </div>
+
       <div style="flex:1 1 280px;">
         <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">B · Шкала погружения</b> — кликабельно, меняет прототип</div>
         <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;padding:18px;min-height:150px;">{{ galModeB }}</div>
@@ -60,42 +58,17 @@
     </div>
     <div style="font-size:13px;color:#6f6a5f;margin-top:4px;">Компактные варианты — в 2–3 раза меньше по площади (тоже кликабельны)</div>
     <div style="display:flex;flex-wrap:wrap;gap:18px;">
-      <div style="flex:1 1 280px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">D · Точки-степпер</b></div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;padding:18px;min-height:96px;display:flex;align-items:center;justify-content:center;">{{ galModeD }}</div>
-      </div>
-      <div style="flex:1 1 280px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">E · Мини-степпер «Шаг 2/4»</b></div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;padding:18px;min-height:96px;display:flex;align-items:center;justify-content:center;">{{ galModeE }}</div>
-      </div>
-      <div style="flex:1 1 280px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">F · Микро-сегмент</b></div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;padding:18px;min-height:96px;display:flex;align-items:center;justify-content:center;">{{ galModeF }}</div>
-      </div>
+
     </div>
     <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;border-bottom:1px solid rgba(40,34,22,0.16);padding-bottom:10px;margin-top:12px;">Варианты · верхняя панель</div>
     <div style="display:flex;flex-wrap:wrap;gap:18px;">
-      <div style="flex:1 1 330px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">Двухрядная</b> — книга сверху, режим строкой ниже (в прототипе)</div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;overflow:hidden;">{{ galTop1 }}</div>
-      </div>
-      <div style="flex:1 1 330px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">Однорядная</b> — книга, шаги и «глаз» в одну строку</div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;overflow:hidden;">{{ galTop2 }}</div>
-      </div>
+
     </div>
 
     <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;border-bottom:1px solid rgba(40,34,22,0.16);padding-bottom:10px;margin-top:12px;">Варианты · чип состояния (в шапке экрана чтения)</div>
     <div style="font-size:13px;color:#6f6a5f;margin-top:-4px;max-width:740px;line-height:1.5;">Всегда виден в верхней панели и показывает сводку активного греческого слоя. Три визуальных решения — каждое во всех шести состояниях (в строке-шапке вверху показан пример «оба слоя»).</div>
     <div style="display:flex;flex-wrap:wrap;gap:18px;">
-      <div style="flex:1 1 300px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">1 · Текстовый токен</b> — один пилл, цветовая типографика</div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;padding:18px;">{{ chip1 }}</div>
-      </div>
-      <div style="flex:1 1 300px;">
-        <div style="font-size:13px;color:#6f6a5f;margin-bottom:9px;"><b style="color:#2b2620;">3 · Индикатор</b> — кольцо интенсивности + точки слоёв</div>
-        <div style="background:#ECE7DD;border:1px solid rgba(40,34,22,0.12);border-radius:18px;padding:18px;">{{ chip3 }}</div>
-      </div>
+
     </div>
     <div style="font-size:13px;color:#6f6a5f;margin-top:10px;max-width:740px;line-height:1.5;">Две новые трактовки <b style="color:#2b2620;">левой части</b> — самого индикатора интенсивности замены букв (правый слой со словом оставлен как есть для сравнения).</div>
     <div style="display:flex;flex-wrap:wrap;gap:18px;">
@@ -231,6 +204,7 @@ class Component extends DCLogic {
   /* ---------- utils ---------- */
   a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
   buildThemes(){
+    if(window.RU2GR)return window.RU2GR.THEMES;
     const mk=(o)=>({paper:o.paper,paper2:o.alt,sidebar:o.alt,read:o.read,titlebar:o.title,ink:o.ink,inkSoft:o.inkSoft,muted:o.muted,muted2:o.muted2,line:this.a(o.ink,0.10),line2:this.a(o.ink,0.18),blue:o.blue,blueHead:o.blue,blueBg:o.blueBg,blueTx:o.blueTx,terra:o.terra,terraSoft:o.terraSoft,green:o.green,greenDk:o.greenDk,greenBg:o.greenBg});
     return {
       'Пергамент':mk({paper:'#ECE7DD',alt:'#E7E1D3',read:'#F6F3EE',title:'#E2DBCB',ink:'#272320',inkSoft:'#4a463e',muted:'#9a9488',muted2:'#bdb6a7',blue:'#2f5d85',blueBg:'#cdd9e6',blueTx:'#345f82',terra:'#bb763c',terraSoft:'#e7d3bf',green:'#7c9d5b',greenDk:'#5f7d44',greenBg:'#d9e3c9'}),
@@ -306,6 +280,14 @@ class Component extends DCLogic {
     return h('div',{style:{display:'flex',gap:2,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:3}},
       [1,2,3,4].map(n=>h('button',{key:n,onClick:(e)=>{e.stopPropagation();this.setMode(n);},style:{width:small?26:30,height:small?26:30,border:'none',cursor:'pointer',borderRadius:8,fontFamily:this.sans,fontSize:small?13:14,fontWeight:700,background:n===m?C.ink:'transparent',color:n===m?C.paper:C.muted,transition:'all .15s'}},n)));
   }
+  modeBarEl(small){
+    const C=this.C,h=React.createElement,m=this.state.mode;
+    const segH=small?3:4,segW=small?22:28;
+    const label=h('div',{style:{fontFamily:this.sans,fontSize:small?10.5:12,fontWeight:700,color:C.ink,textAlign:'center',marginBottom:small?4:5,letterSpacing:'0.01em'}},this.modeShort[m-1]);
+    const segs=h('div',{style:{display:'flex',gap:3}},
+      [1,2,3,4].map(n=>h('button',{key:n,onClick:(e)=>{e.stopPropagation();this.setMode(n);},title:this.modeNames[n-1],style:{width:segW,height:segH,border:'none',borderRadius:segH,background:n<=m?C.terra:this.a(C.ink,0.14),cursor:'pointer',padding:0,transition:'background .2s ease'}})));
+    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center'}},label,segs);
+  }
   renderTopHeader(){
     const h=React.createElement,C=this.C,st=this.state;
     const bookRow=h('div',{style:{display:'flex',alignItems:'center',gap:10,padding:'9px 18px 11px'}},
@@ -313,7 +295,7 @@ class Component extends DCLogic {
         h('span',{style:{fontSize:23,fontWeight:700,letterSpacing:'-0.01em',whiteSpace:'nowrap'}},'Иоанн,'),
         h('span',{style:{fontFamily:this.serif,fontSize:18,color:C.inkSoft,fontWeight:700,whiteSpace:'nowrap'}},'1'),
         h('span',{style:{transform:'translateY(2px)',flex:'0 0 auto'}},this.chev(C.muted))),
-      h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},this.segmentEl(true)),
+      h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('button',{onClick:(e)=>{e.stopPropagation();this.setState({dropdown:!st.dropdown});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.chipH1(this.liveChipState()))),
       h('div',{style:{display:'flex',gap:6,alignItems:'center',flex:'0 0 auto'}},
         h('button',{onClick:()=>this.toggleSimple(),title:'Простой вид',style:{width:38,height:38,borderRadius:11,border:'1px solid '+(st.simpleView?this.a(C.terra,0.4):C.line),background:st.simpleView?this.a(C.terra,0.12):this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},this.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
         h('button',{onClick:()=>this.setState({intensityOpen:!st.intensityOpen}),title:'Настройки замены',style:{width:38,height:38,borderRadius:11,border:'1px solid '+C.line,background:this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
@@ -684,7 +666,7 @@ class Component extends DCLogic {
         h('span',{style:{fontFamily:this.sans,fontSize:18,fontWeight:700,color:C.inkSoft}},'1'),
         h('span',{style:{flex:'0 0 auto'}},this.chev(C.muted))),
       h('div',{style:{width:1,height:26,background:C.line}}),
-      this.segmentEl(false),
+      h('button',{onClick:()=>this.setState({dropdown:!st.dropdown}),style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.chipH1(this.liveChipState())),
       h('div',{style:{flex:1}}),
       h('button',{onClick:()=>this.toggleSimple(),title:'Простой вид',style:{width:40,height:40,borderRadius:11,border:'1px solid '+(st.simpleView?this.a(C.terra,0.4):C.line),background:st.simpleView?this.a(C.terra,0.12):this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto'}},this.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
       st.dropdown?h('div',{style:{position:'absolute',top:64,left:258,width:336,background:C.paper,border:'1px solid '+C.line2,borderRadius:16,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.45)',overflow:'hidden',zIndex:30,animation:'scPop .16s ease'}},this.modeMenuList()):null,
@@ -776,6 +758,15 @@ class Component extends DCLogic {
       {id:'offline',label:'«α35% · —» — словарь без данных',desc:'слой слов включён, но греческий текст недоступен (нет сети/данных). Словарные замены не работают.',pct:35,words:'offline'},
       {id:'greek',label:'«Греч» — вкладка «Греческий»',desc:'греческий текст как основной.'}
     ];
+  }
+  liveChipState(){
+    const st=this.state;
+    const pct=Math.round(st.intensity*100);
+    if(pct===0 && st.mode<4) return {id:'rus'};
+    if(st.mode===4) return {id:'greek'};
+    if(st.mode===1) return {id:'alpha',pct};
+    const words=st.mode===2?'lemma':'forms';
+    return {id:words,pct,words,count:st.addedSet.length};
   }
   chip1(s){
     const C=this.C,h=React.createElement;
@@ -896,9 +887,13 @@ class Component extends DCLogic {
   _hbarWord(s){
     const C=this.C,h=React.createElement;
     if(s.words==='offline') return h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:this.a(C.terra,0.55)}},'—');
-    return h('span',{key:'w',style:{display:'inline-flex',alignItems:'baseline'}},
+    const pct=Math.min(100,(s.count/1000)*100);
+    const textRow=h('span',{style:{display:'inline-flex',alignItems:'baseline'}},
       h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
       h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
+    const bar=h('span',{style:{display:'block',height:3,borderRadius:3,background:this.a(C.terra,0.16),marginTop:4,position:'relative',overflow:'hidden'}},
+      h('span',{style:{position:'absolute',left:0,top:0,bottom:0,width:pct+'%',background:C.terra,borderRadius:3}}));
+    return h('span',{key:'w',style:{display:'inline-flex',flexDirection:'column',alignItems:'stretch'}},textRow,bar);
   }
   // H1 — тонкая полоска под «α 35%»
   chipH1(s){

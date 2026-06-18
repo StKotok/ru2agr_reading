@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script src="./ru2gr-tokens.js"></script>
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#cfcabf;}
+  .scScroll::-webkit-scrollbar,.scScreen::-webkit-scrollbar{width:0;height:0;}
+  .scScroll{scrollbar-width:none;}
+  @keyframes scSheetUp{from{transform:translateY(101%);}to{transform:translateY(0);}}
+  @keyframes scFade{from{opacity:0;}to{opacity:1;}}
+  @keyframes scToast{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+  @keyframes scPop{from{opacity:0;transform:translateY(-6px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#cfcabf;">
+
+  <!-- ── Sticky canvas bar ── -->
+  <div style="position:sticky;top:0;z-index:500;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(207,202,191,0.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(40,34,22,0.10);">
+    <div style="display:flex;align-items:baseline;gap:11px;">
+      <span style="font-family:'Gentium Plus',serif;font-size:19px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">ru2gr</span>
+      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;color:#9a9488;font-weight:500;">Читалка Нового Завета · дизайн-система</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10.5px;font-weight:700;color:#bdb6a7;letter-spacing:0.10em;text-transform:uppercase;">{{ theme }}</span>
+      <span style="width:1px;height:14px;background:rgba(40,34,22,0.15);display:inline-block;"></span>
+      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10.5px;font-weight:600;color:#c4beb0;letter-spacing:0.04em;">{{ contrast }}</span>
+    </div>
+  </div>
+
+  <!-- ── 01 · Греческая читалка ── -->
+  <div style="display:flex;align-items:center;gap:12px;padding:28px 28px 0;">
+    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#9a9488;white-space:nowrap;flex:0 0 auto;">01</span>
+    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7a7468;white-space:nowrap;flex:0 0 auto;">Греческая читалка</span>
+    <div style="flex:1;height:1px;background:rgba(40,34,22,0.14);"></div>
+  </div>
+  <dc-import name="Греческая читалка" theme="{{ theme }}" hint-size="100%,2400px"></dc-import>
+
+  <!-- ── 02 · Слова ── -->
+  <div style="display:flex;align-items:center;gap:12px;padding:12px 28px 0;">
+    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#9a9488;white-space:nowrap;flex:0 0 auto;">02</span>
+    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7a7468;white-space:nowrap;flex:0 0 auto;">Слова</span>
+    <div style="flex:1;height:1px;background:rgba(40,34,22,0.14);"></div>
+  </div>
+  <dc-import name="Слова" theme="{{ theme }}" contrast="{{ contrast }}" pos-style="{{ posStyle }}" hint-size="100%,2000px"></dc-import>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;theme&quot;:    {&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Пергамент&quot;,&quot;options&quot;:[&quot;Пергамент&quot;,&quot;Сепия&quot;,&quot;Слоновая кость&quot;,&quot;Туман&quot;,&quot;Море&quot;,&quot;Лес&quot;,&quot;Роза&quot;,&quot;Лаванда&quot;,&quot;Закат&quot;,&quot;Тёмная&quot;,&quot;Ночь&quot;,&quot;Уголь&quot;],&quot;tsType&quot;:&quot;string&quot;},
+  &quot;contrast&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Чёткий&quot;,&quot;options&quot;:[&quot;Мягкий&quot;,&quot;Чёткий&quot;,&quot;Максимальный&quot;],&quot;tsType&quot;:&quot;string&quot;},
+  &quot;posStyle&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Сегменты&quot;,&quot;options&quot;:[&quot;Сегменты&quot;,&quot;Список&quot;,&quot;Цвет&quot;,&quot;Чипсы&quot;],&quot;tsType&quot;:&quot;string&quot;}
+}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      theme:    this.props.theme    ?? 'Пергамент',
+      contrast: this.props.contrast ?? 'Чёткий',
+      posStyle: this.props.posStyle ?? 'Сегменты',
+    };
+  }
+}
+</script>
+</body>
+</html>
