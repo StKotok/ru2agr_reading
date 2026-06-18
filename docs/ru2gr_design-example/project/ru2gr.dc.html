@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
+<script src="./ru2gr-tokens.js"></script>
+<script src="./ru2gr-data.js"></script>
+<script src="./ru2gr-utils.js"></script>
+<script src="./ru2gr-render.js"></script>
 </head>
 <body>
 <x-dc>
@@ -11,7 +15,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<script src="./ru2gr-tokens.js"></script>
 <style>
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:#cfcabf;}
@@ -65,1224 +68,140 @@
   </div>
 </div>
 
-
-
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","default":"Пергамент","options":["Пергамент","Сепия","Слоновая кость","Туман","Море","Лес","Роза","Лаванда","Закат","Тёмная","Ночь","Уголь"],"tsType":"string"},"contrast":{"editor":"enum","default":"Чёткий","options":["Мягкий","Чёткий","Максимальный"],"tsType":"string"},"posStyle":{"editor":"enum","default":"Сегменты","options":["Сегменты","Список","Цвет","Чипсы"],"tsType":"string"}}'>
-const LV_TABLE = {'Мягкий':{elv:0.02,lineAlpha:0.06,line2Alpha:0.10,shadowAlpha:0.04},'Чёткий':{elv:0.06,lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14},'Максимальный':{elv:0.12,lineAlpha:0.16,line2Alpha:0.28,shadowAlpha:0.26}};
-const WORD_ELV_TABLE = {'Мягкий':0.03,'Чёткий':0.07,'Максимальный':0.12};
+const D = window.RU2GR_DATA;
+const U = window.RU2GR_UTILS;
+
 class Component extends DCLogic {
   constructor(props) {
     super(props);
+    this._mounted = false;
     this.serif = "'Gentium Plus', Georgia, serif";
     this.sans  = "'Source Sans 3', system-ui, sans-serif";
-    this.THEMES = this.buildThemes();
+    this.THEMES = window.RU2GR ? window.RU2GR.THEMES : null;
 
-    this.r2g = {'а':'α','б':'β','в':'β','г':'γ','д':'δ','е':'ε','з':'ζ','и':'ι','к':'κ','л':'λ','м':'μ','н':'ν','о':'ο','п':'π','р':'ρ','с':'σ','т':'τ','у':'υ','ф':'φ','х':'χ'};
-    this.LET = {
-      'α':{u:'Α',l:'α',name:'альфа',sound:'звучит примерно как «а»',eq:'Ближе всего к русской «а»'},
-      'β':{u:'Β',l:'β',name:'бета',sound:'в койне читается как «в»',eq:'Ближе к русской «в»'},
-      'γ':{u:'Γ',l:'γ',name:'гамма',sound:'читается как «г»',eq:'Русская «г»'},
-      'δ':{u:'Δ',l:'δ',name:'дельта',sound:'читается как «д»',eq:'Русская «д»'},
-      'ε':{u:'Ε',l:'ε',name:'эпсилон',sound:'краткое «э / е»',eq:'Русская «е»'},
-      'ζ':{u:'Ζ',l:'ζ',name:'дзета',sound:'читается как «з / дз»',eq:'Близко к русской «з»'},
-      'ι':{u:'Ι',l:'ι',name:'йота',sound:'читается как «и»',eq:'Русская «и»'},
-      'κ':{u:'Κ',l:'κ',name:'каппа',sound:'читается как «к»',eq:'Русская «к»'},
-      'λ':{u:'Λ',l:'λ',name:'ламбда',sound:'читается как «л»',eq:'Русская «л»'},
-      'μ':{u:'Μ',l:'μ',name:'мю',sound:'читается как «м»',eq:'Русская «м»'},
-      'ν':{u:'Ν',l:'ν',name:'ню',sound:'читается примерно как «н»',eq:'Ближе всего к русской «н»'},
-      'ο':{u:'Ο',l:'ο',name:'омикрон',sound:'краткое «о»',eq:'Русская «о»'},
-      'π':{u:'Π',l:'π',name:'пи',sound:'читается как «п»',eq:'Русская «п»'},
-      'ρ':{u:'Ρ',l:'ρ',name:'ро',sound:'читается как «р»',eq:'Русская «р»'},
-      'σ':{u:'Σ',l:'σ',name:'сигма',sound:'читается как «с»',eq:'Русская «с» (в конце слова — ς)'},
-      'τ':{u:'Τ',l:'τ',name:'тау',sound:'читается как «т»',eq:'Русская «т»'},
-      'υ':{u:'Υ',l:'υ',name:'ипсилон',sound:'читается как «ю / и»',eq:'Между русскими «у» и «и»'},
-      'φ':{u:'Φ',l:'φ',name:'фи',sound:'читается как «ф»',eq:'Русская «ф»'},
-      'χ':{u:'Χ',l:'χ',name:'хи',sound:'читается как «х»',eq:'Русская «х»'}
-    };
-    this.A = {
-      be:{lemma:'εἰμί',defaultForm:'ἐστί',translit:'estí / es-tee’',pos:'глаг.',strong:'G2076',rank:'Топ-10',freq:'2 458×',morph:['неопр.','неизм.'],inThisVerse:'есть',also:'является, значит, означает (толкование), принадлежит (владение)',defn:'Глагол бытия: «есть, является, существует». Самый частотный глагол НЗ. Употребляется как связка, для выражения существования, принадлежности, тождества. Имеет богатую систему спряжения с супплетивными формами.',deriv:'Первичный глагол бытия; индоевропейский корень *es- (быть).'},
-      logos:{lemma:'λόγος',defaultForm:'λόγος',translit:'lógos',pos:'сущ.',strong:'G3056',rank:'Топ-100',freq:'330×',morph:['муж. род','ед. ч.','им. п.'],inThisVerse:'слово',also:'речь, весть, разум, смысл, учение',defn:'Слово, речь, весть; разумное основание, смысл. В прологе Иоанна — Логос, предвечное Слово.',deriv:'От λέγω «говорить, собирать».'},
-      theos:{lemma:'θεός',defaultForm:'θεός',translit:'theós',pos:'сущ.',strong:'G2316',rank:'Топ-20',freq:'1 317×',morph:['муж. род','ед. ч.'],inThisVerse:'Бог',also:'Бог, божество',defn:'Бог; верховное Божество. В НЗ — Бог Отец, а также употребляется о Христе.',deriv:'Древнее индоевропейское слово для божества.'},
-      phos:{lemma:'φῶς',defaultForm:'φῶς',translit:'phôs',pos:'сущ.',strong:'G5457',rank:'Топ-300',freq:'73×',morph:['ср. род','ед. ч.'],inThisVerse:'свет',also:'свет, сияние, источник света',defn:'Свет — физический и духовный; символ истины, святости и присутствия Божия.',deriv:'От φάος; корень φα- «светить, являть».'},
-      anthropos:{lemma:'ἄνθρωπος',defaultForm:'ἄνθρωπος',translit:'ánthrōpos',pos:'сущ.',strong:'G444',rank:'Топ-50',freq:'550×',morph:['муж. род','ед. ч.'],inThisVerse:'человек',also:'человек, люди, мужчина',defn:'Человек как родовое понятие; человеческое существо.',deriv:'Возможно от ἀνήρ «муж» + ὤψ «лицо».'},
-      hina:{lemma:'ἵνα',defaultForm:'ἵνα',translit:'hína',pos:'союз',strong:'G2443',rank:'Топ-50',freq:'663×',morph:['неизм.'],inThisVerse:'чтобы',also:'чтобы, дабы, так что',defn:'Союз цели: «чтобы, дабы». Вводит придаточные цели и следствия.',deriv:'Древний союз цели.'},
-      ou:{lemma:'οὐ',defaultForm:'οὐ',translit:'ou',pos:'частица',strong:'G3756',rank:'Топ-20',freq:'1 606×',morph:['неизм.'],inThisVerse:'не',also:'не, нет (отрицание факта)',defn:'Отрицательная частица «не». Отрицает реальный факт — в отличие от μή.',deriv:'Древняя отрицательная частица.'},
-      alla:{lemma:'ἀλλά',defaultForm:'ἀλλά',translit:'allá',pos:'союз',strong:'G235',rank:'Топ-50',freq:'638×',morph:['неизм.'],inThisVerse:'но',also:'но, а, однако, напротив',defn:'Противительный союз «но, а». Вводит сильное противопоставление.',deriv:'Множ. ср. рода от ἄλλος «другой».'},
-      eis:{lemma:'εἰς',defaultForm:'εἰς',translit:'eis',pos:'предлог',strong:'G1519',rank:'Топ-10',freq:'1 767×',morph:['+ вин. п.'],inThisVerse:'в',also:'в, на, для, к (направление, цель)',defn:'Предлог с винительным падежом: движение внутрь, направление, цель.',deriv:'Связан с ἐν «в».'},
-      hos:{lemma:'ὅς',defaultForm:'ὅς',translit:'hós',pos:'мест.',strong:'G3739',rank:'Топ-20',freq:'1 365×',morph:['относит.'],inThisVerse:'который',also:'который, кто, что',defn:'Относительное местоимение «который, кто, что».',deriv:'Древнее относительное местоимение.'},
-      pas:{lemma:'πᾶς',defaultForm:'πᾶς',translit:'pâs',pos:'прил.',strong:'G3956',rank:'Топ-20',freq:'1 243×',morph:['всякий','каждый'],inThisVerse:'всякий',also:'весь, всякий, каждый, все',defn:'Весь, всякий, каждый. Обозначает полноту или совокупность.',deriv:'Древнее индоевропейское слово.'}
-    };
-    const RAW = [
-      {n:1, ru:"В начале {было|be:ἦν} {Слово|logos:λόγος}, и {Слово|logos:λόγος} {было|be:ἦν} у {Бога|theos:θεόν}, и {Слово|logos:λόγος} {было|be:ἦν} {Бог|theos:θεὸς}.", gr:"Ἐν ἀρχῇ {ἦν|be} ὁ {λόγος|logos}, καὶ ὁ {λόγος|logos} {ἦν|be} πρὸς τὸν {θεόν|theos}, καὶ {θεὸς|theos} {ἦν|be} ὁ {λόγος|logos}."},
-      {n:2, ru:"Оно {было|be:ἦν} в начале у {Бога|theos:θεόν}.", gr:"οὗτος {ἦν|be} ἐν ἀρχῇ πρὸς τὸν {θεόν|theos}."},
-      {n:3, ru:"Все чрез Него начало быть, и без Него ничто не начало быть, что начало быть.", gr:"πάντα δι’ αὐτοῦ ἐγένετο, καὶ χωρὶς αὐτοῦ ἐγένετο οὐδὲ ἕν ὃ γέγονεν."},
-      {n:4, ru:"В Нем {была|be:ἦν} жизнь, и жизнь {была|be:ἦν} {свет|phos:φῶς} {человеков|anthropos:ἀνθρώπων}.", gr:"ἐν αὐτῷ ζωὴ {ἦν|be}, καὶ ἡ ζωὴ {ἦν|be} τὸ {φῶς|phos} τῶν {ἀνθρώπων|anthropos}·"},
-      {n:5, ru:"И {свет|phos:φῶς} во тьме светит, и тьма {не|ou:οὐ} объяла его.", gr:"καὶ τὸ {φῶς|phos} ἐν τῇ σκοτίᾳ φαίνει, καὶ ἡ σκοτία αὐτὸ {οὐ|ou} κατέλαβεν."},
-      {n:6, ru:"{Был|be:ἦν} {человек|anthropos:ἄνθρωπος}, посланный от {Бога|theos:θεοῦ}; имя ему Иоанн.", gr:"ἐγένετο {ἄνθρωπος|anthropos} ἀπεσταλμένος παρὰ {θεοῦ|theos}, ὄνομα αὐτῷ Ἰωάννης·"},
-      {n:7, ru:"Он пришел для свидетельства, {чтобы|hina:ἵνα} свидетельствовать о {Свете|phos:φωτός}, {дабы|hina:ἵνα} {все|pas:πάντες} уверовали чрез него.", gr:"οὗτος ἦλθεν {εἰς|eis} μαρτυρίαν, {ἵνα|hina} μαρτυρήσῃ περὶ τοῦ {φωτός|phos}, {ἵνα|hina} {πάντες|pas} πιστεύσωσιν δι’ αὐτοῦ."},
-      {n:8, ru:"Он {не|ou:οὐκ} {был|be:ἦν} {свет|phos:φῶς}, {но|alla:ἀλλ’} был послан, {чтобы|hina:ἵνα} свидетельствовать о {Свете|phos:φωτός}.", gr:"{οὐκ|ou} {ἦν|be} ἐκεῖνος τὸ {φῶς|phos}, {ἀλλ’|alla} {ἵνα|hina} μαρτυρήσῃ περὶ τοῦ {φωτός|phos}."},
-      {n:9, ru:"{Был|be:ἦν} {Свет|phos:φῶς} истинный, {Который|hos:ὃ} просвещает {всякого человека|anthropos:ἄνθρωπον}, приходящего {в|eis:εἰς} мир.", gr:"{Ἦν|be} τὸ {φῶς|phos} τὸ ἀληθινόν, {ὃ|hos} φωτίζει {πάντα|pas} {ἄνθρωπον|anthropos}, ἐρχόμενον {εἰς|eis} τὸν κόσμον."}
-    ];
-    this.verses = RAW.map(v=>({n:v.n, tokens:this.readerBuildTokens(v.ru), g:this.readerBuildTokens(v.gr), plain:this.readerPlainRu(this.readerBuildTokens(v.ru))}));
-    this.cont = [
-      {n:10, ru:"В мире был, и мир чрез Него начало быть, и мир Его не познал."},
-      {n:11, ru:"Пришел к своим, и свои Его не приняли."}
-    ];
-    this.dict = [
-      {grp:'Топ-10', cov:'≈ 38% всех словоупотреблений НЗ', rows:[
-        {r:1,g:'ὁ',t:'ho',f:'19 783×',k:'ho',add:false},
-        {r:3,g:'αὐτός',t:'autós',f:'5 597×',k:'autos',add:true},
-        {r:5,g:'δέ',t:'dé',f:'2 792×',k:'de',add:false},
-        {r:7,g:'ἐγώ',t:'egṓ',f:'2 584×',k:'ego',add:true},
-        {r:8,g:'εἰμί',t:'eimí',f:'2 462×',k:'be',add:true},
-        {r:9,g:'λέγω',t:'légō',f:'2 353×',k:'lego',add:true},
-        {r:10,g:'εἰς',t:'eis',f:'1 767×',k:'eis',add:true}
-      ]},
-      {grp:'Топ-50', cov:'≈ 57% покрытия текста', rows:[
-        {r:11,g:'οὐ',t:'ou',f:'1 606×',k:'ou',add:true},
-        {r:13,g:'ὅς',t:'hós',f:'1 365×',k:'hos',add:true},
-        {r:14,g:'θεός',t:'theós',f:'1 317×',k:'theos',add:true},
-        {r:16,g:'πᾶς',t:'pâs',f:'1 243×',k:'pas',add:true},
-        {r:19,g:'Ἰησοῦς',t:'Iēsoûs',f:'917×',k:'iesous',add:true},
-        {r:22,g:'κύριος',t:'kýrios',f:'717×',k:'kyrios',add:true},
-        {r:25,g:'γίνομαι',t:'gínomai',f:'669×',k:'ginomai',add:true},
-        {r:27,g:'ἵνα',t:'hína',f:'663×',k:'hina',add:true},
-        {r:31,g:'ἀλλά',t:'allá',f:'638×',k:'alla',add:true}
-      ]},
-      {grp:'Топ-100', cov:'≈ 64% покрытия текста', rows:[
-        {r:36,g:'ἄνθρωπος',t:'ánthrōpos',f:'550×',k:'anthropos',add:true},
-        {r:53,g:'λόγος',t:'lógos',f:'330×',k:'logos',add:true},
-        {r:78,g:'δόξα',t:'dóxa',f:'166×',k:'doxa',add:true}
-      ]},
-      {grp:'Топ-300', cov:'≈ 75% покрытия текста', rows:[
-        {r:142,g:'ζωή',t:'zōḗ',f:'135×',k:'zoe',add:true},
-        {r:198,g:'φῶς',t:'phôs',f:'73×',k:'phos',add:true},
-        {r:265,g:'σκοτία',t:'skotía',f:'17×',k:'skotia',add:true}
-      ]}
-    ];
-    this.modeNames = ['Только греческие буквы','Леммы из словаря','Реальные формы оригинала','Греческий основной'];
-    this.modeShort = ['Буквы','Леммы','Формы','Греческий'];
-    this.modeDesc = [
-      'Русские буквы постепенно заменяются греческими',
-      'Слова из вашего словаря — в словарной форме',
-      'Слова из словаря — в реальной форме оригинала',
-      'Греческий текст, русский перевод под стихом'
-    ];
-    this.secLabels = {gram:'Грамматика',pron:'Произношение',dict:'Словарная форма',trans:'Перевод',status:'Статус',mean:'Значения',defn:'Определение',deriv:'Деривация'};
+    // Алфавит и словарь
+    this.r2g  = D.r2g;
+    this.LET  = D.LET;
+    this.A    = D.A;
+
+    // Стихи
+    this.verses = D.RAW_VERSES.map(v => {
+      const ruToks = U.buildTokens(v.ru);
+      return { n: v.n, tokens: ruToks, g: U.buildTokens(v.gr), plain: U.plainFromTokens(ruToks) };
+    });
+    this.cont = D.CONT_VERSES;
+
+    // Словарь
+    this.dict = D.DICT_GROUPS;
+    this.WORDS = D.WORDS;
+    this.GROUPS = D.GROUPS;
+
+    // Режимы и метки
+    this.modeNames = D.MODE_NAMES;
+    this.modeShort = D.MODE_SHORT;
+    this.modeDesc  = D.MODE_DESC;
+    this.secLabels = D.SEC_LABELS;
+
+    // Начальное состояние
     this.state = {
       tab:'read', mode:1, intensity:0.5, simpleView:false,
       dropdown:false, intensityOpen:false, gearOpen:false,
       sheet:null, card:null,
       readerSearch:'', dictFilter:'all',
-      readerAddedSet:['be','logos','theos','phos','anthropos','hina','ou','alla','eis'],
-      readerStatusMap:{be:'learning',eis:'known',ou:'known',theos:'known',logos:'known',phos:'learning',anthropos:'learning',hina:'new',alla:'new',hos:'new',pas:'new',autos:'learning',ego:'learning',lego:'learning',iesous:'known',kyrios:'known',ginomai:'new',doxa:'new',zoe:'new',skotia:'new',ho:null,de:null},
+      readerAddedSet: D.computeReaderAddedSet(D.WORDS),
+      readerStatusMap: D.computeReaderStatusMap(D.WORDS),
       knownLetters:['ν','α','ο'],
       cardOrder:['gram','pron','dict','trans','status','mean','defn','deriv'],
       cardHidden:[],
       readerToast:null, readerDeskScale:1,
-      readerTheme:'Пергамент', readerContrast:'Чёткий'
+      readerTheme: this.props.theme || 'Пергамент',
+      readerContrast: this.props.contrast || 'Чёткий'
     };
-
-    this.WORDS = [
-      {k:'ho',        r:1,   g:'ὁ',           t:'ho',          ru:'— (артикль)',              pos:'func', posL:'Арт.',     freq:19783, strong:'G3588', add:false},
-      {k:'kai',       r:2,   g:'καί',          t:'kaí',         ru:'и, также, даже',           pos:'func', posL:'Союз',     freq:9161,  strong:'G2532', add:false},
-      {k:'autos',     r:3,   g:'αὐτός',        t:'autós',       ru:'он, сам, тот же',          pos:'func', posL:'Мест.',    freq:5597,  strong:'G846',  add:true},
-      {k:'sy',        r:4,   g:'σύ',           t:'sý',          ru:'ты',                       pos:'func', posL:'Мест.',    freq:2907,  strong:'G4771', add:true},
-      {k:'de',        r:5,   g:'δέ',           t:'dé',          ru:'же, но, а',                pos:'func', posL:'Частица',  freq:2792,  strong:'G1161', add:false},
-      {k:'en',        r:6,   g:'ἐν',           t:'en',          ru:'в, на, среди',             pos:'func', posL:'Предлог',  freq:2752,  strong:'G1722', add:true},
-      {k:'ego',       r:7,   g:'ἐγώ',          t:'egṓ',         ru:'я',                        pos:'func', posL:'Мест.',    freq:2584,  strong:'G1473', add:true},
-      {k:'eimi',      r:8,   g:'εἰμί',         t:'eimí',        ru:'быть, есть, являться',     pos:'verb', posL:'Глаг.',    freq:2462,  strong:'G1510', add:true},
-      {k:'lego',      r:9,   g:'λέγω',         t:'légō',        ru:'говорить, сказать',        pos:'verb', posL:'Глаг.',    freq:2353,  strong:'G3004', add:true},
-      {k:'eis',       r:10,  g:'εἰς',          t:'eis',         ru:'в, на, к (направление)',   pos:'func', posL:'Предлог',  freq:1767,  strong:'G1519', add:true},
-      {k:'ou',        r:11,  g:'οὐ',           t:'ou',          ru:'не, нет (факт)',            pos:'func', posL:'Частица',  freq:1606,  strong:'G3756', add:true},
-      {k:'houtos',    r:12,  g:'οὗτος',        t:'hoûtos',      ru:'этот, сей',                pos:'func', posL:'Мест.',    freq:1388,  strong:'G3778', add:true},
-      {k:'hos',       r:13,  g:'ὅς',           t:'hós',         ru:'который, кто, что',        pos:'func', posL:'Мест.',    freq:1365,  strong:'G3739', add:true},
-      {k:'theos',     r:14,  g:'θεός',         t:'theós',       ru:'Бог, бог',                 pos:'noun', posL:'Сущ.',     freq:1317,  strong:'G2316', add:true},
-      {k:'hoti',      r:15,  g:'ὅτι',          t:'hóti',        ru:'что, потому что',          pos:'func', posL:'Союз',     freq:1296,  strong:'G3754', add:false},
-      {k:'pas',       r:16,  g:'πᾶς',          t:'pâs',         ru:'весь, всякий, каждый',     pos:'adj',  posL:'Прил.',    freq:1243,  strong:'G3956', add:true},
-      {k:'me',        r:17,  g:'μή',           t:'mḗ',          ru:'не (запрет, сомнение)',    pos:'func', posL:'Частица',  freq:1042,  strong:'G3361', add:false},
-      {k:'gar',       r:18,  g:'γάρ',          t:'gár',         ru:'ибо, ведь, так как',       pos:'func', posL:'Союз',     freq:1041,  strong:'G1063', add:false},
-      {k:'iesous',    r:19,  g:'Ἰησοῦς',       t:'Iēsoûs',      ru:'Иисус',                    pos:'noun', posL:'Сущ.',     freq:917,   strong:'G2424', add:true},
-      {k:'ek',        r:20,  g:'ἐκ',           t:'ek',          ru:'из, от (исходная точка)',  pos:'func', posL:'Предлог',  freq:914,   strong:'G1537', add:true},
-      {k:'kyrios',    r:21,  g:'κύριος',       t:'kýrios',      ru:'Господь, владыка',         pos:'noun', posL:'Сущ.',     freq:717,   strong:'G2962', add:true},
-      {k:'echo',      r:22,  g:'ἔχω',          t:'échō',        ru:'иметь, держать',           pos:'verb', posL:'Глаг.',    freq:708,   strong:'G2192', add:true},
-      {k:'pros',      r:23,  g:'πρός',         t:'prós',        ru:'к, у, для',                pos:'func', posL:'Предлог',  freq:700,   strong:'G4314', add:false},
-      {k:'ginomai',   r:24,  g:'γίνομαι',      t:'gínomai',     ru:'быть, становиться',        pos:'verb', posL:'Глаг.',    freq:669,   strong:'G1096', add:true},
-      {k:'hina',      r:25,  g:'ἵνα',          t:'hína',        ru:'чтобы, дабы',              pos:'func', posL:'Союз',     freq:663,   strong:'G2443', add:true},
-      {k:'apo',       r:26,  g:'ἀπό',          t:'apó',         ru:'от, из (удаление)',        pos:'func', posL:'Предлог',  freq:646,   strong:'G0575', add:false},
-      {k:'alla',      r:27,  g:'ἀλλά',         t:'allá',        ru:'но, а, однако',            pos:'func', posL:'Союз',     freq:638,   strong:'G0235', add:true},
-      {k:'dia',       r:28,  g:'διά',          t:'diá',         ru:'через, ради, по причине',  pos:'func', posL:'Предлог',  freq:667,   strong:'G1223', add:false},
-      {k:'kata',      r:29,  g:'κατά',         t:'katá',        ru:'по, согласно, против',     pos:'func', posL:'Предлог',  freq:473,   strong:'G2596', add:false},
-      {k:'christos',  r:30,  g:'Χριστός',      t:'Christós',    ru:'Христос, Мессия',          pos:'noun', posL:'Сущ.',     freq:529,   strong:'G5547', add:true},
-      {k:'anthropos', r:31,  g:'ἄνθρωπος',     t:'ánthrōpos',   ru:'человек, люди',            pos:'noun', posL:'Сущ.',     freq:550,   strong:'G0444', add:true},
-      {k:'pneuma',    r:32,  g:'πνεῦμα',       t:'pneûma',      ru:'дух, дыхание, ветер',      pos:'noun', posL:'Сущ.',     freq:379,   strong:'G4151', add:true},
-      {k:'huios',     r:33,  g:'υἱός',         t:'hyiós',       ru:'сын',                      pos:'noun', posL:'Сущ.',     freq:377,   strong:'G5207', add:true},
-      {k:'erchomai',  r:34,  g:'ἔρχομαι',      t:'érchomai',    ru:'приходить, идти',          pos:'verb', posL:'Глаг.',    freq:636,   strong:'G2064', add:true},
-      {k:'poieo',     r:35,  g:'ποιέω',        t:'poiéō',       ru:'делать, творить',          pos:'verb', posL:'Глаг.',    freq:568,   strong:'G4160', add:true},
-      {k:'pater',     r:36,  g:'πατήρ',        t:'patḗr',       ru:'отец',                     pos:'noun', posL:'Сущ.',     freq:413,   strong:'G3962', add:true},
-      {k:'akouo',     r:37,  g:'ἀκούω',        t:'akoúō',       ru:'слышать, слушать',         pos:'verb', posL:'Глаг.',    freq:428,   strong:'G0191', add:true},
-      {k:'pisteuo',   r:38,  g:'πιστεύω',      t:'pisteúō',     ru:'верить, доверять',         pos:'verb', posL:'Глаг.',    freq:241,   strong:'G4100', add:true},
-      {k:'adelphos',  r:39,  g:'ἀδελφός',      t:'adelphós',    ru:'брат',                     pos:'noun', posL:'Сущ.',     freq:343,   strong:'G0080', add:true},
-      {k:'agapao',    r:40,  g:'ἀγαπάω',       t:'agapáō',      ru:'любить',                   pos:'verb', posL:'Глаг.',    freq:143,   strong:'G0025', add:true},
-      {k:'agape',     r:41,  g:'ἀγάπη',        t:'agápē',       ru:'любовь',                   pos:'noun', posL:'Сущ.',     freq:116,   strong:'G0026', add:true},
-      {k:'eirene',    r:42,  g:'εἰρήνη',       t:'eirḗnē',      ru:'мир, покой',               pos:'noun', posL:'Сущ.',     freq:92,    strong:'G1515', add:true},
-      {k:'charis',    r:43,  g:'χάρις',        t:'cháris',      ru:'благодать, милость',       pos:'noun', posL:'Сущ.',     freq:155,   strong:'G5485', add:true},
-      {k:'pistis',    r:44,  g:'πίστις',       t:'pístis',      ru:'вера, верность',           pos:'noun', posL:'Сущ.',     freq:243,   strong:'G4102', add:true},
-      {k:'zoe',       r:45,  g:'ζωή',          t:'zōḗ',         ru:'жизнь',                    pos:'noun', posL:'Сущ.',     freq:135,   strong:'G2222', add:true},
-      {k:'nomos',     r:46,  g:'νόμος',        t:'nómos',       ru:'закон',                    pos:'noun', posL:'Сущ.',     freq:194,   strong:'G3551', add:true},
-      {k:'kosmos',    r:47,  g:'κόσμος',       t:'kósmos',      ru:'мир, вселенная',           pos:'noun', posL:'Сущ.',     freq:186,   strong:'G2889', add:true},
-      {k:'hagios',    r:48,  g:'ἅγιος',        t:'hágios',      ru:'святой, посвящённый',      pos:'adj',  posL:'Прил.',    freq:233,   strong:'G0040', add:true},
-      {k:'aletheia',  r:49,  g:'ἀλήθεια',      t:'alḗtheia',    ru:'истина, правда',           pos:'noun', posL:'Сущ.',     freq:109,   strong:'G0225', add:true},
-      {k:'hamartia',  r:50,  g:'ἁμαρτία',      t:'hamartía',    ru:'грех',                     pos:'noun', posL:'Сущ.',     freq:173,   strong:'G0266', add:true},
-      {k:'logos',     r:53,  g:'λόγος',        t:'lógos',       ru:'слово, речь, разум',       pos:'noun', posL:'Сущ.',     freq:330,   strong:'G3056', add:true},
-      {k:'ekklesia',  r:58,  g:'ἐκκλησία',     t:'ekklēsía',    ru:'церковь, собрание',        pos:'noun', posL:'Сущ.',     freq:114,   strong:'G1577', add:true},
-      {k:'basileia',  r:61,  g:'βασιλεία',     t:'basileía',    ru:'царство, власть царя',     pos:'noun', posL:'Сущ.',     freq:162,   strong:'G0932', add:true},
-      {k:'doxa',      r:66,  g:'δόξα',         t:'dóxa',        ru:'слава, честь',             pos:'noun', posL:'Сущ.',     freq:166,   strong:'G1391', add:true},
-      {k:'euangelion',r:69,  g:'εὐαγγέλιον',   t:'euangélion',  ru:'евангелие, благая весть',  pos:'noun', posL:'Сущ.',     freq:76,    strong:'G2098', add:true},
-      {k:'sarx',      r:72,  g:'σάρξ',         t:'sárx',        ru:'плоть, тело',              pos:'noun', posL:'Сущ.',     freq:147,   strong:'G4561', add:true},
-      {k:'kardia',    r:75,  g:'καρδία',       t:'kardía',      ru:'сердце',                   pos:'noun', posL:'Сущ.',     freq:156,   strong:'G2588', add:true},
-      {k:'psyche',    r:78,  g:'ψυχή',         t:'psychḗ',      ru:'душа, жизнь',              pos:'noun', posL:'Сущ.',     freq:103,   strong:'G5590', add:true},
-      {k:'ge',        r:80,  g:'γῆ',           t:'gē',          ru:'земля, почва',             pos:'noun', posL:'Сущ.',     freq:250,   strong:'G1093', add:true},
-      {k:'horao',     r:83,  g:'ὁράω',         t:'horáō',       ru:'видеть, смотреть',         pos:'verb', posL:'Глаг.',    freq:454,   strong:'G3708', add:true},
-      {k:'ouranos',   r:86,  g:'οὐρανός',      t:'ouranós',     ru:'небо, небеса',             pos:'noun', posL:'Сущ.',     freq:273,   strong:'G3772', add:true},
-      {k:'dynamis',   r:89,  g:'δύναμις',      t:'dýnamis',     ru:'сила, мощь, чудо',         pos:'noun', posL:'Сущ.',     freq:119,   strong:'G1411', add:true},
-      {k:'ergon',     r:92,  g:'ἔργον',        t:'érgon',       ru:'дело, труд, работа',       pos:'noun', posL:'Сущ.',     freq:169,   strong:'G2041', add:true},
-      {k:'onoma',     r:95,  g:'ὄνομα',        t:'ónoma',       ru:'имя',                      pos:'noun', posL:'Сущ.',     freq:228,   strong:'G3686', add:true},
-      {k:'thanatos',  r:98,  g:'θάνατος',      t:'thánatos',    ru:'смерть',                   pos:'noun', posL:'Сущ.',     freq:120,   strong:'G2288', add:true},
-      {k:'phone',     r:101, g:'φωνή',         t:'phōnḗ',       ru:'голос, звук',              pos:'noun', posL:'Сущ.',     freq:139,   strong:'G5456', add:true},
-      {k:'hodos',     r:104, g:'ὁδός',         t:'hodós',       ru:'путь, дорога',             pos:'noun', posL:'Сущ.',     freq:101,   strong:'G3598', add:true},
-      {k:'exousia',   r:107, g:'ἐξουσία',      t:'exousía',     ru:'власть, право',            pos:'noun', posL:'Сущ.',     freq:102,   strong:'G1849', add:true},
-      {k:'grapho',    r:112, g:'γράφω',        t:'gráphō',      ru:'писать, записывать',       pos:'verb', posL:'Глаг.',    freq:191,   strong:'G1125', add:true},
-      {k:'cheir',     r:116, g:'χείρ',         t:'cheír',       ru:'рука',                     pos:'noun', posL:'Сущ.',     freq:177,   strong:'G5495', add:true},
-      {k:'mathetes',  r:120, g:'μαθητής',      t:'mathētḗs',    ru:'ученик, последователь',    pos:'noun', posL:'Сущ.',     freq:261,   strong:'G3101', add:true},
-      {k:'apostolos', r:125, g:'ἀπόστολος',    t:'apóstolos',   ru:'апостол, посланник',       pos:'noun', posL:'Сущ.',     freq:80,    strong:'G0652', add:true},
-      {k:'phos',      r:198, g:'φῶς',          t:'phôs',        ru:'свет, сияние',             pos:'noun', posL:'Сущ.',     freq:73,    strong:'G5457', add:true},
-      {k:'angelos',   r:218, g:'ἄγγελος',      t:'ángelos',     ru:'ангел, вестник',           pos:'noun', posL:'Сущ.',     freq:175,   strong:'G0032', add:true},
-      {k:'nekros',    r:230, g:'νεκρός',       t:'nekrós',      ru:'мёртвый, умерший',         pos:'adj',  posL:'Прил.',    freq:128,   strong:'G3498', add:true},
-      {k:'skotia',    r:265, g:'σκοτία',       t:'skotía',      ru:'тьма, мрак',               pos:'noun', posL:'Сущ.',     freq:17,    strong:'G4653', add:true},
-    ];
-
-    this.GROUPS = [
-      {key:'g10',  label:'Топ-10',  cov:'≈ 38% всех словоупотреблений НЗ', min:1,   max:10},
-      {key:'g50',  label:'Топ-50',  cov:'≈ 57% покрытия текста',           min:11,  max:50},
-      {key:'g100', label:'Топ-100', cov:'≈ 64% покрытия текста',           min:51,  max:100},
-      {key:'g300', label:'Топ-300', cov:'≈ 75% покрытия текста',           min:101, max:300},
-    ];
-
-    // Default statuses
-    const sm = {};
-    const knownSet   = new Set(['ho','kai','autos','de','en','ego','eimi','lego','eis','ou','theos','iesous','kyrios','christos','logos']);
-    const learnSet   = new Set(['sy','hoti','pas','ek','echo','ginomai','hina','alla','houtos','hos','pisteuo','pistis','kosmos','pneuma','phos','zoe']);
-    const newSet     = new Set(['me','gar','pros','apo','dia','kata','anthropos','huios','erchomai','poieo','pater','akouo','adelphos','agapao','agape','eirene','charis','nomos','hagios','aletheia','hamartia']);
-    this.WORDS.forEach(w => {
-      if      (knownSet.has(w.k)) sm[w.k] = 'known';
-      else if (learnSet.has(w.k)) sm[w.k] = 'learning';
-      else if (newSet.has(w.k))   sm[w.k] = 'new';
-      else                         sm[w.k] = null;
-    });
-
-    const as = new Set(this.WORDS.filter(w => w.add && w.r <= 45).map(w => w.k));
 
     Object.assign(this.state, {
       readerWordSearch:'', readerWordStatusFilter:'all', readerWordPosFilter:'all', readerWordShowInText:false,
-      readerWordStatusMap:Object.assign({}, sm), readerWordAddedSet:new Set(as),
       readerWordActiveKey:null, readerWordSheetOpen:false, readerWordPosMenuOpen:false, readerWordSMenuOpen:false,
       readerWordVisibleCount:22, readerWordToast:null,
     });
-  
-  }
-
-
-  /* ================================================================
-   * 1. UTILITIES — общие хелперы, палитры, цветовая математика
-   *    (аналог lib/ + src/ui/)
-   * ================================================================ */
-  a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
-  buildThemes(){return window.RU2GR ? window.RU2GR.THEMES : null;}
-  readerCt() { return this.state.readerContrast || 'Чёткий'; }
-  readerPalette(){
-    const base = this.THEMES[this.state.readerTheme] || this.THEMES['Пергамент'];
-    const ct = this.readerCt();
-    const LV = LV_TABLE[ct] || LV_TABLE['Чёткий'];
-    const dark = this.wordLum(base.paper) < 0.5;
-    const C = Object.assign({}, base);
-    // Surface distinction: paper stays subtly lifted, read elevates more
-    C.read     = dark ? this.wordMix(base.read, '#ffffff', LV.elv * 0.4) : this.wordMix(base.read, '#ffffff', LV.elv);
-    C.paper    = dark ? this.wordMix(base.paper, '#ffffff', LV.elv * 0.15) : this.wordMix(base.paper, '#000000', LV.elv * 0.15);
-    C.paper2   = dark ? this.wordMix(base.paper2, '#000000', LV.elv * 0.5) : this.wordMix(base.paper2, '#000000', LV.elv * 0.7);
-    C.sidebar  = dark ? this.wordMix(base.sidebar, '#000000', LV.elv * 0.5) : this.wordMix(base.sidebar, '#000000', LV.elv * 0.7);
-    C.line     = this.a(base.ink, dark ? LV.lineAlpha * 0.8 : LV.lineAlpha);
-    C.line2    = this.a(base.ink, dark ? LV.line2Alpha * 0.8 : LV.line2Alpha);
-    C.shadow   = dark
-      ? `0 2px ${6 + LV.shadowAlpha * 22}px -2px rgba(0,0,0,${0.25 + LV.shadowAlpha * 0.8})`
-      : `0 1px ${2 + LV.shadowAlpha * 8}px rgba(40,34,22,${0.04 + LV.shadowAlpha * 0.35}),0 ${6 + LV.shadowAlpha * 24}px ${14 + LV.shadowAlpha * 34}px -12px rgba(40,34,22,${0.10 + LV.shadowAlpha * 0.5})`;
-    return C;
-  }
-  readerWordPalette(){
-    const C = Object.assign({}, this.CR);
-    // Elevation relative to CR (contrast already applied to line/line2/shadow)
-    const dark = this.wordLum(C.paper) < 0.5;
-    const ct = this.readerCt();
-    const elv = WORD_ELV_TABLE[ct] || 0.07;
-    C.content  = dark ? this.wordMix(C.read, '#ffffff', elv * 0.25) : this.wordMix(C.read, '#ffffff', elv * 0.3);
-    C.card     = dark ? this.wordMix(C.paper, '#ffffff', elv) : this.wordMix(C.paper, '#ffffff', elv);
-    C.sidebar  = dark ? this.wordMix(C.sidebar || C.paper2, '#000000', elv * 0.4) : this.wordMix(C.sidebar || C.paper2, '#000000', elv * 0.6);
-    C.titlebar = dark ? this.wordMix(C.titlebar, '#000000', elv * 0.6) : this.wordMix(C.titlebar, '#000000', elv * 0.8);
-    C.cardLine = C.line;
-    return C;
-  }
-
-
-
-
-  /* ---------- utils ---------- */
-
-  /* ================================================================
-   * 2. SCREEN: reading — экран чтения (аналог src/ui/screens/reading.js)
-   * ================================================================ */
-  readerRand(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return ((h>>>0)%10000)/10000;}
-  readerBuildTokens(str){
-    const out=[]; const re=/\{([^}]*)\}([^\s{]*)|([^\s{]+)/g; let m;
-    while((m=re.exec(str))){
-      if(m[1]!==undefined){
-        const inner=m[1], trail=m[2]||''; const bar=inner.indexOf('|');
-        const ru=inner.slice(0,bar); let rest=inner.slice(bar+1), id=rest, form=null;
-        const ci=rest.indexOf(':'); if(ci>=0){id=rest.slice(0,ci);form=rest.slice(ci+1);}
-        out.push({kind:'align',ru:ru,id:id,form:form,trail:trail});
-      } else if(m[3]!==undefined){ out.push({kind:'word',text:m[3]}); }
-    }
-    return out;
-  }
-  readerPlainRu(toks){return toks.map(t=>t.kind==='align'?(t.ru+(t.trail||'')):t.text).join(' ');}
-  readerIsAdded(id){return this.state.readerAddedSet.indexOf(id)>=0;}
-
-  /* ---------- actions ---------- */
-  readerSetMode(m){this.setState({mode:m,dropdown:false});}
-  readerToggleSimple(){this.setState({simpleView:!this.state.simpleView});}
-  readerShowToast(msg){const id=Date.now();this._t=id;this.setState({readerToast:msg});setTimeout(()=>{if(this._t===id)this.setState({readerToast:null});},3400);}
-  readerOpenWordById(id,form){const a=this.A[id];if(!a)return;this.setState({sheet:'word',gearOpen:false,card:{key:id,lemma:a.lemma,form:form||a.defaultForm,translit:a.translit,pos:a.pos,strong:a.strong,rank:a.rank,freq:a.freq,morph:a.morph,inThisVerse:a.inThisVerse,also:a.also,defn:a.defn,deriv:a.deriv}});}
-  readerOpenWordRow(row){const a=this.A[row.k];const base={key:row.k,lemma:row.g,form:row.g,translit:row.t,rank:'Топ-'+(row.r<=10?'10':row.r<=50?'50':row.r<=100?'100':'300'),freq:row.f};const card=a?{key:row.k,lemma:a.lemma,form:a.defaultForm,translit:a.translit,pos:a.pos,strong:a.strong,rank:a.rank,freq:a.freq,morph:a.morph,inThisVerse:a.inThisVerse,also:a.also,defn:a.defn,deriv:a.deriv}:base;this.setState({sheet:'word',gearOpen:false,card:card});}
-  readerOpenLetter(g){const L=this.LET[g];if(!L)return;this.setState({sheet:'letter',card:{letter:g,L:L}});}
-  readerCloseSheet(){this.setState({sheet:null,gearOpen:false});}
-  readerSetStatus(key,s){const sm=Object.assign({},this.state.readerStatusMap);sm[key]=s;this.setState({readerStatusMap:sm});}
-  readerToggleLetterKnown(g){const k=this.state.knownLetters.slice();const i=k.indexOf(g);if(i>=0){k.splice(i,1);}else{k.push(g);this.readerShowToast('Буква «'+this.LET[g].name+'» отмечена как освоенная');}this.setState({knownLetters:k});}
-  readerToggleAdded(row){const s=this.state.readerAddedSet.slice();const i=s.indexOf(row.k);if(i>=0){s.splice(i,1);}else{s.push(row.k);this.readerShowToast('«'+row.g+'» теперь будет появляться в тексте');}this.setState({readerAddedSet:s});}
-  readerToggleSection(key){const h=this.state.cardHidden.slice();const i=h.indexOf(key);if(i>=0)h.splice(i,1);else h.push(key);this.setState({cardHidden:h});}
-  readerMoveSection(key,dir){const o=this.state.cardOrder.slice();const i=o.indexOf(key);const j=i+dir;if(j<0||j>=o.length)return;const tmp=o[i];o[i]=o[j];o[j]=tmp;this.setState({cardOrder:o});}
-
-  /* ---------- icons ---------- */
-
-  /*    2a — иконки (аналог src/ui/components/icons.js) */
-  readerIc(d,c,sw){const h=React.createElement;return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:sw||1.7,strokeLinecap:'round',strokeLinejoin:'round'},...(Array.isArray(d)?d:[d]).map((p,i)=>h('path',{key:i,d:p})));}
-  readerIconRead(c,sz){const s=sz||23;const h=React.createElement;return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M12 6.5C10 5.2 7.6 5.2 5 6.2v12c2.6-1 5-1 7 .3'}),h('path',{d:'M12 6.5c2-1.3 4.4-1.3 7-.3v12c-2.6-1-5-1-7 .3'}),h('path',{d:'M12 6.5v12.3'}));}
-  readerIconWords(c,sz){const s=sz||23;const h=React.createElement;return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M9 7h11M9 12h11M9 17h11'}),h('circle',{cx:4.5,cy:7,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:12,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:17,r:1,fill:c,stroke:'none'}));}
-  readerIconInfo(c,sz){const s=sz||23;const h=React.createElement;return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('circle',{cx:12,cy:12,r:9}),h('path',{d:'M12 11v5'}),h('circle',{cx:12,cy:7.7,r:0.6,fill:c,stroke:'none'}));}
-  readerIconEye(c,off){const h=React.createElement;if(off)return h('svg',{width:21,height:21,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M3 3l18 18'}),h('path',{d:'M10.6 6.2A9.7 9.7 0 0112 6c5 0 9 4.5 10 6-0.5 0.9-1.5 2.2-3 3.3M6.2 7.3C4.2 8.6 2.7 10.4 2 12c1 1.5 5 6 10 6 1.4 0 2.7-.3 3.9-.9'}),h('path',{d:'M9.8 9.9a3 3 0 004.2 4.2'}));return h('svg',{width:21,height:21,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z'}),h('circle',{cx:12,cy:12,r:3}));}
-  readerIconGear(c){const h=React.createElement;return h('svg',{width:20,height:20,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.6,strokeLinecap:'round',strokeLinejoin:'round'},h('circle',{cx:12,cy:12,r:3}),h('path',{d:'M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z'}));}
-  readerChev(c,dir){const h=React.createElement;const d=dir==='up'?'M6 15l6-6 6 6':'M6 9l6 6 6-6';return h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:d}));}
-  readerChevH(c,dir){const h=React.createElement;const d=dir==='left'?'M15 18l-6-6 6-6':'M9 6l6 6-6 6';return h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2.2,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:d}));}
-
-  /* ---------- status bar ---------- */
-
-  /*    2b — статус-бар, тосты, шторки, оверлеи (аналог src/ui/components/) */
-  renderStatusBar(C){
-    const h=React.createElement;
-    const bars=[5,7,9,11].map((ht,i)=>h('rect',{key:i,x:i*4,y:11-ht,width:2.6,height:ht,rx:0.8,fill:C.ink}));
-    const signal=h('svg',{width:17,height:11,viewBox:'0 0 17 11'},...bars);
-    const wifi=h('svg',{width:16,height:11,viewBox:'0 0 16 11',fill:'none',stroke:C.ink,strokeWidth:1.4,strokeLinecap:'round'},h('path',{d:'M2 4.2C4 2.6 6 1.8 8 1.8s4 .8 6 2.4'}),h('path',{d:'M4 6.4C5.2 5.4 6.6 5 8 5s2.8.4 4 1.4'}),h('circle',{cx:8,cy:9,r:1,fill:C.ink,stroke:'none'}));
-    const batt=h('svg',{width:26,height:12,viewBox:'0 0 26 12'},h('rect',{x:0.6,y:0.6,width:21,height:10.8,rx:3,fill:'none',stroke:this.a(C.ink,0.45),strokeWidth:1.2}),h('rect',{x:2.4,y:2.4,width:16,height:7.2,rx:1.6,fill:C.ink}),h('rect',{x:23,y:3.6,width:2,height:4.8,rx:1,fill:this.a(C.ink,0.5)}));
-    return h('div',{style:{flex:'0 0 auto',height:46,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 26px 7px',fontFamily:this.sans,fontSize:15,fontWeight:600,color:C.ink}},
-      h('div',null,'9:41'),
-      h('div',{style:{display:'flex',gap:7,alignItems:'center'}},signal,wifi,batt));
-  }
-  readerRenderStatusBar(){return this.renderStatusBar(this.CR);}
-
-  /* ---------- top header (read) ---------- */
-
-  /*    2c — rendering: текст, словарь, about, навигация */
-  readerSegmentEl(small){
-    const h=React.createElement,C=this.CR,m=this.state.mode;
-    return h('div',{style:{display:'flex',gap:2,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:3}},
-      [1,2,3,4].map(n=>h('button',{key:n,onClick:(e)=>{e.stopPropagation();this.readerSetMode(n);},style:{width:small?26:30,height:small?26:30,border:'none',cursor:'pointer',borderRadius:8,fontFamily:this.sans,fontSize:small?13:14,fontWeight:700,background:n===m?C.ink:'transparent',color:n===m?C.paper:C.muted,transition:'all .15s'}},n)));
-  }
-  readerModeBarEl(small){
-    const C=this.CR,h=React.createElement,m=this.state.mode;
-    const segH=small?3:4,segW=small?22:28;
-    const label=h('div',{style:{fontFamily:this.sans,fontSize:small?10.5:12,fontWeight:700,color:C.ink,textAlign:'center',marginBottom:small?4:5,letterSpacing:'0.01em'}},this.modeShort[m-1]);
-    const segs=h('div',{style:{display:'flex',gap:3}},
-      [1,2,3,4].map(n=>h('button',{key:n,onClick:(e)=>{e.stopPropagation();this.readerSetMode(n);},title:this.modeNames[n-1],style:{width:segW,height:segH,border:'none',borderRadius:segH,background:n<=m?C.terra:this.a(C.ink,0.14),cursor:'pointer',padding:0,transition:'background .2s ease'}})));
-    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center'}},label,segs);
-  }
-  readerRenderTopHeader(){
-    const h=React.createElement,C=this.CR,st=this.state;
-    const bookRow=h('div',{style:{display:'flex',alignItems:'center',gap:10,padding:'9px 18px 11px'}},
-      h('button',{onClick:()=>this.readerShowToast('Выбор книги — в полной версии'),style:{display:'flex',alignItems:'baseline',gap:8,background:'none',border:'none',cursor:'pointer',padding:0,color:C.ink,fontFamily:this.serif,whiteSpace:'nowrap',flex:'0 0 auto'}},
-        h('span',{style:{fontSize:23,fontWeight:700,letterSpacing:'-0.01em',whiteSpace:'nowrap'}},'Иоанн,'),
-        h('span',{style:{fontFamily:this.serif,fontSize:18,color:C.inkSoft,fontWeight:700,whiteSpace:'nowrap'}},'1'),
-        h('span',{style:{transform:'translateY(2px)',flex:'0 0 auto'}},this.readerChev(C.muted))),
-      h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('button',{onClick:(e)=>{e.stopPropagation();this.setState({dropdown:!st.dropdown});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState()))),
-      h('div',{style:{display:'flex',gap:6,alignItems:'center',flex:'0 0 auto'}},
-        h('button',{onClick:()=>this.readerToggleSimple(),title:'Простой вид',style:{width:38,height:38,borderRadius:11,border:'1px solid '+(st.simpleView?this.a(C.terra,0.4):C.line),background:st.simpleView?this.a(C.terra,0.12):this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},this.readerIconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
-        h('button',{onClick:()=>this.setState({intensityOpen:!st.intensityOpen}),title:'Настройки замены',style:{width:38,height:38,borderRadius:11,border:'1px solid '+C.line,background:this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
-          [0,1,2].map(i=>h('span',{key:i,style:{width:3.5,height:3.5,borderRadius:'50%',background:C.inkSoft,display:'block'}})))));
-    return h('div',{style:{position:'sticky',top:0,zIndex:6,background:C.paper,borderBottom:'1px solid '+C.line,backdropFilter:'blur(6px)'}},bookRow);
-  }
-
-  /* ---------- reading text ---------- */
-  readerRenderRuLetters(text,key){
-    const C=this.CR,h=React.createElement;
-    if(this.state.simpleView||this.state.mode!==1) return text;
-    const out=[];
-    for(let i=0;i<text.length;i++){
-      const ch=text[i],low=ch.toLowerCase(),gl=this.r2g[low];
-      if(gl && this.readerRand(key+'_'+i) < this.state.intensity){
-        const up=ch!==low,glyph=up?this.LET[gl].u:gl;
-        out.push(h('span',{key:i,role:'button',tabIndex:0,onClick:(e)=>{e.stopPropagation();this.readerOpenLetter(gl);},onKeyDown:(e)=>{if(e.key==='Enter'){e.stopPropagation();this.readerOpenLetter(gl);}},style:{color:C.blue,cursor:'pointer',borderBottom:'1px dotted '+this.a(C.blue,0.45),outline:'none'}},glyph));
-      } else out.push(ch);
-    }
-    return out;
-  }
-  readerRenderToken(t,vi,ti,greek){
-    const C=this.CR,h=React.createElement,st=this.state;
-    if(greek){
-      if(t.kind==='align'){
-        const added=this.readerIsAdded(t.id);
-        return h(React.Fragment,{key:ti},
-          h('span',{role:'button',tabIndex:0,onClick:()=>this.readerOpenWordById(t.id,t.ru),onKeyDown:(e)=>{if(e.key==='Enter')this.readerOpenWordById(t.id,t.ru);},style:{color:added?C.terra:C.ink,cursor:'pointer',borderBottom:'1px dotted '+this.a(added?C.terra:C.ink,0.4),outline:'none'}},t.ru),
-          t.trail?h('span',null,t.trail):null);
-      }
-      return h(React.Fragment,{key:ti},t.text);
-    }
-    if(t.kind==='align'){
-      const added=this.readerIsAdded(t.id),a=this.A[t.id]||{};
-      if(!st.simpleView && st.mode>=2 && added){
-        const disp=st.mode===2?a.lemma:(t.form||a.defaultForm||a.lemma);
-        return h(React.Fragment,{key:ti},
-          h('span',{role:'button',tabIndex:0,onClick:()=>this.readerOpenWordById(t.id,disp),onKeyDown:(e)=>{if(e.key==='Enter')this.readerOpenWordById(t.id,disp);},style:{color:C.terra,cursor:'pointer',borderBottom:'1px dotted '+this.a(C.terra,0.45),outline:'none'}},disp),
-          t.trail?h('span',null,t.trail):null);
-      }
-      return h(React.Fragment,{key:ti},
-        h('span',{style:st.simpleView?null:{borderBottom:'1px dotted '+this.a(C.ink,0.18)}},this.readerRenderRuLetters(t.ru,vi+'-'+ti)),
-        t.trail?h('span',null,t.trail):null);
-    }
-    return h(React.Fragment,{key:ti},this.readerRenderRuLetters(t.text,vi+'-'+ti));
-  }
-  readerRenderVerse(v,vi){
-    const C=this.CR,h=React.createElement,st=this.state;
-    const greek=st.mode===4 && !st.simpleView;
-    const toks=greek?v.g:v.tokens;
-    const num=h('sup',{style:{color:C.muted2,fontSize:'0.6em',fontWeight:700,marginRight:5,fontFamily:this.sans,verticalAlign:'0.55em'}},v.n);
-    const nodes=[num];
-    toks.forEach((t,ti)=>{nodes.push(this.readerRenderToken(t,vi,ti,greek));nodes.push(' ');});
-    const main=h('div',{style:{fontFamily:this.serif,fontSize:greek?20:18.5,lineHeight:greek?1.55:1.72,color:C.ink,letterSpacing:greek?'0':'0'}},nodes);
-    if(greek){
-      return h('div',{key:vi,style:{marginBottom:17}},main,h('div',{style:{fontFamily:this.serif,fontSize:14.5,color:C.muted,marginTop:3,lineHeight:1.5}},h('sup',{style:{fontSize:'0.7em',fontFamily:this.sans,marginRight:3}},v.n),v.plain));
-    }
-    return h('div',{key:vi,style:{marginBottom:'0.5em',display:'inline'}},main);
-  }
-  readerRenderRead(){
-    const C=this.CR,h=React.createElement;
-    const verses=this.verses.map((v,i)=>this.readerRenderVerse(v,i));
-    const contNodes=this.cont.map((v,i)=>h('span',{key:i,style:{fontFamily:this.serif,fontSize:18.5,lineHeight:1.72,color:C.ink}},h('sup',{style:{color:C.muted2,fontSize:'0.6em',fontWeight:700,marginRight:5,fontFamily:this.sans,verticalAlign:'0.55em'}},v.n),v.ru+' '));
-    const cont=h('div',{style:{marginTop:8,maskImage:'linear-gradient(180deg,#000 0%,transparent 88%)',WebkitMaskImage:'linear-gradient(180deg,#000 0%,transparent 88%)'}},contNodes);
-    return h('div',{className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',position:'relative',background:C.read}},
-      this.readerRenderTopHeader(),
-      h('div',{style:{padding:'18px 22px 60px'}},
-        h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.18em',textTransform:'uppercase',color:C.muted2,marginBottom:14}},'Евангелие от Иоанна · глава 1'),
-        verses,cont));
-  }
-
-  /* ---------- dictionary (replaced by readerWord* methods in 2h) ---------- */
-  readerRenderDict(){
-    return this.readerRenderWordPhoneContent();
-  }
-
-  readerRenderWordPhoneContent(){
-    const C=this.CRW, h=React.createElement;
-    return h('div',{style:{flex:1,display:'flex',flexDirection:'column',minHeight:0,background:C.content}},
-      h('div',{style:{flex:'0 0 auto',padding:'2px 18px 11px',background:C.card,borderBottom:'1px solid '+C.cardLine,boxShadow:'0 6px 18px -14px rgba(40,34,22,.45)',position:'relative',zIndex:5}},
-        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',height:44}}, h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink}},'Словарь'), h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.readerWordGetFiltered().length+' слов')),
-        h('div',{style:{marginBottom:9}},this.readerWordSearchBar(true)),
-        this.readerWordSV3(),
-        h('div',{style:{height:8}}),
-        this.readerWordPosDropdown(true)),
-      h('div',{id:'readerPhoneWordList',className:'scScroll',style:{flex:1,overflowY:'auto',padding:'0 18px'}}, this.readerWordWListBody(80)));
-  }
-
-  readerRenderWordPhoneSheet(){
-    const C=this.CRW, h=React.createElement, st=this.state;
-    if(!st.readerWordSheetOpen || !st.readerWordActiveKey) return null;
-    return h('div',{key:'rwsheet',style:{position:'absolute',inset:0,zIndex:30}},
-      h('div',{onClick:()=>this.readerWordCloseCard(),style:{position:'absolute',inset:0,background:this.a('#15140f',.28),animation:'scFade .2s ease'}}),
-      h('div',{onClick:e=>e.stopPropagation(),style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'84%',background:C.card,borderRadius:'24px 24px 0 0',boxShadow:'0 -14px 50px -10px rgba(40,34,22,.38)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
-        h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:36,height:4,borderRadius:3,background:C.line2}})),
-        h('div',{className:'scScroll',style:{overflowY:'auto'}},this.readerWordWCard(st.readerWordActiveKey))));
-  }
-
-  /* ---------- about ---------- */
-  readerRenderAbout(){
-    const C=this.CR,h=React.createElement;
-    const lic=(t,s)=>h('div',{style:{padding:'13px 0',borderBottom:'1px solid '+C.line}},h('div',{style:{fontFamily:this.serif,fontSize:16,color:C.ink,fontWeight:700}},t),h('div',{style:{fontFamily:this.sans,fontSize:13,color:C.muted,marginTop:2}},s));
-    return h('div',{className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto'}},
-      h('div',{style:{padding:'26px 22px 60px'}},
-        h('div',{style:{fontFamily:this.serif,fontSize:26,fontWeight:700,color:C.ink}},'О приложении'),
-        h('div',{style:{fontFamily:this.sans,fontSize:13.5,color:C.muted,marginTop:4,marginBottom:6}},'Версия 1.0.0 · работает офлайн (PWA)'),
-        h('p',{style:{fontFamily:this.serif,fontSize:16,lineHeight:1.6,color:C.inkSoft,marginBottom:18}},'Спокойная читалка Нового Завета, в которой греческий постепенно проступает сквозь русский Синодальный перевод — в темпе, который вы задаёте сами.'),
-        h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',color:C.muted,marginBottom:2}},'Данные и лицензии'),
-        lic('SBLGNT','Греческий текст · CC-BY 4.0'),
-        lic('Синодальный перевод','Русский текст · public domain'),
-        lic('Gentium Plus','Шрифт · SIL Open Font License'),
-        lic('bolls.life','Источник данных API'),
-        h('div',{onClick:()=>this.readerShowToast('Ссылка откроется в браузере'),style:{marginTop:20,display:'inline-flex',alignItems:'center',gap:8,fontFamily:this.sans,fontSize:14,fontWeight:600,color:C.blue,cursor:'pointer'}},'Открыть на GitHub',this.readerChev(C.blue))));
-  }
-
-  /* ---------- settings ---------- */
-  readerThemeList(){ return ['Пергамент','Сепия','Слоновая кость','Туман','Море','Лес','Роза','Лаванда','Закат','Тёмная','Ночь','Уголь']; }
-  readerContrastList(){ return ['Мягкий','Чёткий','Максимальный']; }
-  readerRenderSettings(){
-    const C=this.CR, h=React.createElement, st=this.state;
-    const themes=this.readerThemeList();
-    const contrasts=this.readerContrastList();
-    const themeChip=(key)=>{ const t=this.THEMES[key]; const on=st.readerTheme===key; return h('button',{key:key,onClick:()=>this.setState({readerTheme:key}),style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'10px 6px 12px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?this.a(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(33.333% - 8px)',minWidth:0}},
-      h('div',{style:{width:'100%',height:32,borderRadius:7,background:t.paper,border:'1px solid '+this.a(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:this.serif,fontSize:18,color:t.ink,lineHeight:1}},'αβ')),
-      h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
-    return h('div',{className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',background:C.read}},
-      h('div',{style:{padding:'18px 20px 60px'}},
-        h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginBottom:18}},'Настройки'),
-        h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:10}},'Тема'),
-        h('div',{style:{display:'flex',flexWrap:'wrap',gap:8,marginBottom:22}}, themes.map(themeChip)),
-        h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:10}},'Контраст'),
-        h('div',{style:{display:'inline-flex',background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},
-          contrasts.map(ct=>{const on=st.readerContrast===ct;return h('button',{key:ct,onClick:()=>this.setState({readerContrast:ct}),style:{padding:'8px 16px',borderRadius:7,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct);}))));
-  }
-  readerRenderDeskSettings(){
-    const C=this.CR, h=React.createElement, st=this.state;
-    const themes=this.readerThemeList();
-    const contrasts=this.readerContrastList();
-    const themeChip=(key)=>{ const t=this.THEMES[key]; const on=st.readerTheme===key; return h('button',{key:key,onClick:()=>this.setState({readerTheme:key}),style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'12px 8px 14px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?this.a(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(25% - 9px)',minWidth:0}},
-      h('div',{style:{width:'100%',height:38,borderRadius:8,background:t.paper,border:'1px solid '+this.a(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:this.serif,fontSize:20,color:t.ink,lineHeight:1}},'αβ')),
-      h('span',{style:{fontFamily:this.sans,fontSize:12,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
-    return h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
-      h('div',{className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
-        h('div',{style:{maxWidth:700,margin:'0 auto',padding:'34px 44px 70px'}},
-          h('div',{style:{fontFamily:this.serif,fontSize:26,fontWeight:700,color:C.ink,marginBottom:22}},'Настройки'),
-          h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Тема'),
-          h('div',{style:{display:'flex',flexWrap:'wrap',gap:10,marginBottom:28}}, themes.map(themeChip)),
-          h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Контраст'),
-          h('div',{style:{display:'inline-flex',background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:4}},
-            contrasts.map(ct=>{const on=st.readerContrast===ct;return h('button',{key:ct,onClick:()=>this.setState({readerContrast:ct}),style:{padding:'9px 20px',borderRadius:8,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:14,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct);})))));
-  }
-
-  /* ---------- bottom nav ---------- */
-  readerRenderBottomNav(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    const items=[['read','Читать',this.readerIconRead.bind(this)],['dict','Слова',this.readerIconWords.bind(this)],['settings','Настр',this.readerIconGear.bind(this)],['about','О',this.readerIconInfo.bind(this)]];
-    return h('div',{style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.line,background:this.a(C.paper,0.96),paddingBottom:18,backdropFilter:'blur(8px)'}},
-      items.map(it=>{const on=st.tab===it[0];const col=on?C.ink:C.muted2;return h('button',{key:it[0],onClick:()=>this.setState({tab:it[0],dropdown:false,intensityOpen:false}),style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}},it[2](col),h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:on?700:500,color:col}},it[1]));}));
-  }
-
-  /* ---------- overlays ---------- */
-  readerRenderModeMenu(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    if(!st.dropdown) return null;
-    return h('div',{key:'dd',style:{position:'absolute',inset:0,zIndex:20}},
-      h('div',{onClick:()=>this.setState({dropdown:false}),style:{position:'absolute',inset:0,background:this.a('#15140f',0.18)}}),
-      h('div',{style:{position:'absolute',top:150,left:14,right:14,background:C.paper,border:'1px solid '+C.line2,borderRadius:18,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.5)',overflow:'hidden',animation:'scPop .16s ease'}},
-        this.modeNames.map((nm,i)=>{const n=i+1,on=st.mode===n;return h('button',{key:n,onClick:()=>this.readerSetMode(n),style:{display:'flex',alignItems:'center',gap:13,width:'100%',textAlign:'left',padding:'13px 16px',background:on?this.a(C.terra,0.08):'transparent',border:'none',borderBottom:i<3?'1px solid '+C.line:'none',cursor:'pointer'}},
-          h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:9,background:on?C.ink:this.a(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:this.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
-          h('span',{style:{flex:1}},h('div',{style:{fontFamily:this.sans,fontSize:14.5,fontWeight:600,color:C.ink}},nm),h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:1,lineHeight:1.35}},this.modeDesc[i])),
-          on?h('span',null,h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))):null);})));
-  }
-  readerRenderIntensity(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    if(!st.intensityOpen) return null;
-    return h('div',{key:'int',style:{position:'absolute',inset:0,zIndex:20}},
-      h('div',{onClick:()=>this.setState({intensityOpen:false}),style:{position:'absolute',inset:0}}),
-      h('div',{style:{position:'absolute',top:92,right:14,width:262,background:C.paper,border:'1px solid '+C.line2,borderRadius:16,boxShadow:'0 22px 46px -16px rgba(40,34,22,0.5)',padding:'15px 16px',animation:'scPop .16s ease'}},
-        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}},
-          h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:700,color:C.ink}},'Интенсивность букв'),
-          h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:700,color:C.terra}},Math.round(st.intensity*100)+'%')),
-        h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted,marginBottom:10}},'Сколько русских букв заменяется греческими · влияет на Режим 1'),
-        h('input',{type:'range',min:0,max:100,value:Math.round(st.intensity*100),onChange:(e)=>this.setState({intensity:(+e.target.value)/100,mode:this.state.mode===1?1:this.state.mode}),style:{width:'100%',accentColor:C.terra,cursor:'pointer'}}),
-        st.mode!==1?h('div',{style:{marginTop:9,fontFamily:this.sans,fontSize:11.5,color:C.muted2,display:'flex',gap:6,alignItems:'center'}},'Активно в Режиме 1 ·',h('button',{onClick:()=>this.readerSetMode(1),style:{background:'none',border:'none',color:C.blue,fontWeight:600,cursor:'pointer',fontSize:11.5,padding:0,fontFamily:this.sans}},'перейти')):null));
-  }
-  readerRenderToast(){
-    const C=this.CR,h=React.createElement;
-    if(!this.state.readerToast) return null;
-    return h('div',{key:'toast',style:{position:'absolute',left:'50%',bottom:96,transform:'translateX(-50%)',zIndex:40,background:this.a('#26221c',0.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13.5,fontWeight:500,padding:'11px 18px',borderRadius:13,maxWidth:320,textAlign:'center',boxShadow:'0 14px 34px -10px rgba(0,0,0,0.5)',animation:'scToast .25s ease'}},this.state.readerToast);
-  }
-
-  /* ---------- word sheet ---------- */
-  readerSecLabel(t){return React.createElement('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:this.CR.muted,marginBottom:6,marginTop:18}},t);}
-  readerRenderSection(key,cd){
-    const C=this.CR,h=React.createElement;
-    if(key==='gram'){ if(!cd.pos) return null; return h('div',{key:key},
-      h('div',{style:{display:'flex',alignItems:'center',gap:9,flexWrap:'wrap',marginTop:6}},
-        h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.inkSoft}},cd.pos),
-        cd.strong?h('span',{style:{fontFamily:this.sans,fontSize:13,color:C.muted}},'· '+cd.strong):null,
-        (cd.morph||[]).map((m,i)=>h('span',{key:i,style:{fontFamily:this.sans,fontSize:12.5,fontWeight:600,color:C.blueTx,background:C.blueBg,padding:'3px 10px',borderRadius:7}},m)))); }
-    if(key==='pron'){ if(!cd.translit) return null; return h('div',{key:key},this.readerSecLabel('Произношение'),
-      h('div',{style:{display:'flex',alignItems:'center',gap:11}},
-        h('span',{style:{fontFamily:this.serif,fontSize:19,color:C.ink}},cd.translit),
-        h('button',{onClick:()=>this.readerShowToast('Аудио-произношение — в следующей версии'),style:{width:30,height:30,borderRadius:'50%',border:'1px solid '+C.line2,background:'none',cursor:'pointer',opacity:0.5,display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:C.inkSoft},h('path',{d:'M8 5v14l11-7z'})))),
-      h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:13.5,color:C.muted2,marginTop:6}},'Произношение — учебное приближение, не научная реконструкция.')); }
-    if(key==='dict'){ if(!cd.lemma) return null; return h('div',{key:key},this.readerSecLabel('Словарная форма'),
-      h('div',{style:{display:'flex',alignItems:'center',gap:13}},
-        h('span',{style:{fontFamily:this.serif,fontSize:26,color:C.terra}},cd.form),
-        this.readerChev(C.muted2),
-        h('span',{style:{fontFamily:this.serif,fontSize:26,color:C.blue}},cd.lemma)),
-      h('div',{style:{display:'flex',gap:38,marginTop:2,fontFamily:this.sans,fontSize:11.5,color:C.muted2}},h('span',null,'в тексте'),h('span',null,'словарная форма'))); }
-    if(key==='trans'){ if(!cd.inThisVerse) return null; return h('div',{key:key},this.readerSecLabel('В этом стихе'),
-      h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink}},cd.inThisVerse)); }
-    if(key==='status'){ const cur=this.state.readerStatusMap[cd.key]||'new'; const opt=[['new','Новое'],['learning','Учу'],['known','Знаю']];
-      return h('div',{key:key},this.readerSecLabel('Статус изучения'),
-        h('div',{style:{display:'flex',gap:8}},opt.map(o=>{const on=cur===o[0];const cmap={new:C.muted,learning:C.blueTx,known:C.greenDk};return h('button',{key:o[0],onClick:()=>this.readerSetStatus(cd.key,o[0]),style:{flex:1,padding:'9px 0',borderRadius:10,border:'1.5px solid '+(on?(o[0]==='known'?C.green:o[0]==='learning'?C.blue:C.line2):C.line),background:on?(o[0]==='known'?C.green:o[0]==='learning'?C.blue:this.a(C.ink,0.05)):'transparent',color:on?(o[0]==='new'?C.inkSoft:'#fff'):C.muted,fontFamily:this.sans,fontSize:13.5,fontWeight:600,cursor:'pointer'}},o[1]);}))); }
-    if(key==='mean'){ if(!cd.also) return null; return h('div',{key:key},this.readerSecLabel('Также означает'),h('div',{style:{fontFamily:this.serif,fontSize:16.5,lineHeight:1.5,color:C.ink}},cd.also)); }
-    if(key==='defn'){ if(!cd.defn) return null; return h('div',{key:key},this.readerSecLabel('Определение'),h('div',{style:{fontFamily:this.serif,fontSize:16.5,lineHeight:1.55,color:C.inkSoft}},cd.defn)); }
-    if(key==='deriv'){ if(!cd.deriv) return null; return h('div',{key:key},this.readerSecLabel('Происхождение'),h('div',{style:{fontFamily:this.serif,fontSize:16.5,lineHeight:1.55,color:C.inkSoft}},cd.deriv)); }
-    return null;
-  }
-  readerRenderGearMenu(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    if(!st.gearOpen) return null;
-    return h('div',{style:{position:'absolute',top:54,right:14,width:250,background:C.paper,border:'1px solid '+C.line2,borderRadius:14,boxShadow:'0 20px 44px -14px rgba(40,34,22,0.5)',padding:'10px 8px',zIndex:30,animation:'scPop .15s ease'}},
-      h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,padding:'4px 8px 8px'}},'Разделы карточки'),
-      st.cardOrder.map((k,i)=>{const hidden=st.cardHidden.indexOf(k)>=0;return h('div',{key:k,style:{display:'flex',alignItems:'center',gap:6,padding:'6px 8px'}},
-        h('button',{onClick:()=>this.readerToggleSection(k),style:{flex:1,display:'flex',alignItems:'center',gap:8,background:'none',border:'none',cursor:'pointer',padding:0,textAlign:'left'}},
-          h('span',{style:{width:16,height:16,borderRadius:5,border:'1.5px solid '+(hidden?C.line2:C.terra),background:hidden?'transparent':C.terra,display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto'}},hidden?null:h('svg',{width:11,height:11,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3.5,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))),
-          h('span',{style:{fontFamily:this.sans,fontSize:13.5,color:hidden?C.muted2:C.ink}},this.secLabels[k])),
-        h('button',{onClick:()=>this.readerMoveSection(k,-1),disabled:i===0,style:{background:'none',border:'none',cursor:i===0?'default':'pointer',opacity:i===0?0.25:0.8,padding:2}},this.readerChev(C.inkSoft,'up')),
-        h('button',{onClick:()=>this.readerMoveSection(k,1),disabled:i===st.cardOrder.length-1,style:{background:'none',border:'none',cursor:'pointer',opacity:i===st.cardOrder.length-1?0.25:0.8,padding:2}},this.readerChev(C.inkSoft,'down')));}));
-  }
-  readerRenderWordSheet(){
-    const C=this.CR,h=React.createElement,st=this.state,cd=st.card;
-    if(st.sheet!=='word'||!cd) return null;
-    const visible=st.cardOrder.filter(k=>st.cardHidden.indexOf(k)<0);
-    return h('div',{key:'wsheet',style:{position:'absolute',inset:0,zIndex:35}},
-      h('div',{onClick:()=>this.readerCloseSheet(),style:{position:'absolute',inset:0,background:this.a('#15140f',0.34),animation:'scFade .2s ease'}}),
-      h('div',{onClick:(e)=>e.stopPropagation(),style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'88%',background:C.paper,borderRadius:'26px 26px 0 0',boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
-        h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:38,height:4.5,borderRadius:3,background:C.line2}})),
-        h('div',{className:'scScroll',style:{overflowY:'auto',padding:'8px 24px 30px',position:'relative'}},
-          h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,marginTop:6}},
-            h('div',null,
-              h('div',{style:{fontFamily:this.serif,fontSize:46,fontWeight:400,color:C.blue,lineHeight:1}},cd.lemma),
-              h('div',{style:{display:'flex',gap:8,marginTop:6,fontFamily:this.sans,fontSize:13,color:C.muted}},h('span',null,cd.rank||''),cd.freq?h('span',null,'· '+cd.freq):null)),
-            h('div',{style:{display:'flex',gap:6,flex:'0 0 auto'}},
-              h('button',{onClick:()=>this.setState({gearOpen:!st.gearOpen}),style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?this.a(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},this.readerIconGear(C.inkSoft)),
-              h('button',{onClick:()=>this.readerCloseSheet(),style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
-          this.readerRenderGearMenu(),
-          visible.map(k=>this.readerRenderSection(k,cd)))));
-  }
-  readerRenderLetterSheet(){
-    const C=this.CR,h=React.createElement,st=this.state,cd=st.card;
-    if(st.sheet!=='letter'||!cd) return null;
-    const known=st.knownLetters.indexOf(cd.letter)>=0,L=cd.L;
-    return h('div',{key:'lsheet',style:{position:'absolute',inset:0,zIndex:35}},
-      h('div',{onClick:()=>this.readerCloseSheet(),style:{position:'absolute',inset:0,background:this.a('#15140f',0.34),animation:'scFade .2s ease'}}),
-      h('div',{onClick:(e)=>e.stopPropagation(),style:{position:'absolute',left:0,right:0,bottom:0,background:C.paper,borderRadius:'26px 26px 0 0',boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
-        h('div',{style:{display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:38,height:4.5,borderRadius:3,background:C.line2}})),
-        h('div',{style:{padding:'14px 26px 32px',position:'relative'}},
-          h('button',{onClick:()=>this.readerCloseSheet(),style:{position:'absolute',top:8,right:20,width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))),
-          h('div',{style:{fontFamily:this.serif,fontSize:62,color:C.blue,lineHeight:1.05,fontWeight:400}},L.u+' '+L.l),
-          h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginTop:8}},L.name),
-          h('div',{style:{fontFamily:this.serif,fontSize:18,color:C.muted,marginTop:6}},L.sound),
-          h('div',{style:{fontFamily:this.serif,fontSize:18,color:C.ink,marginTop:4}},L.eq),
-          h('button',{onClick:()=>this.readerToggleLetterKnown(cd.letter),style:{marginTop:18,padding:'13px 22px',borderRadius:13,border:'none',cursor:'pointer',fontFamily:this.sans,fontSize:15,fontWeight:600,background:known?C.green:this.a(C.ink,0.06),color:known?'#fff':C.ink,display:'inline-flex',alignItems:'center',gap:8}},known?'Освоена ✓':'Я знаю эту букву'),
-          h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:14,color:C.muted2,marginTop:18,lineHeight:1.5}},'Произношение — учебное приближение, не научная реконструкция.'))));
-  }
-
-  /* ---------- gallery previews ---------- */
-
-  /*    2d — gallery previews (миниатюры для дизайн-системы) */
-  readerGalModeD(){
-    const C=this.CR,h=React.createElement,cur=this.state.mode;
-    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:11}},
-      h('div',{style:{display:'flex',alignItems:'center'}},[1,2,3,4].map((n,i)=>{const on=n<=cur;return h(React.Fragment,{key:n},i>0?h('span',{style:{width:18,height:2,background:on?C.terra:this.a(C.ink,0.12)}}):null,h('button',{onClick:()=>this.readerSetMode(n),title:this.modeNames[n-1],style:{width:n===cur?15:11,height:n===cur?15:11,borderRadius:'50%',border:'none',background:on?C.terra:this.a(C.ink,0.18),cursor:'pointer',padding:0,transition:'all .2s'}}));})),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'Шаг '+cur+' · '+this.modeShort[cur-1]));
-  }
-  readerGalModeE(){
-    const C=this.CR,h=React.createElement,cur=this.state.mode;
-    const arrow=(dir,to,dis)=>h('button',{onClick:()=>{if(!dis)this.readerSetMode(to);},disabled:dis,style:{width:26,height:26,borderRadius:'50%',border:'none',background:C.paper,boxShadow:'0 1px 2px rgba(40,34,22,0.12)',cursor:dis?'default':'pointer',opacity:dis?0.35:1,display:'flex',alignItems:'center',justifyContent:'center',padding:0}},this.readerChevH(C.inkSoft,dir));
-    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:10}},
-      h('div',{style:{display:'inline-flex',alignItems:'center',gap:8,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:22,padding:'5px 7px'}},
-        arrow('left',Math.max(1,cur-1),cur===1),
-        h('span',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:700,color:C.ink,minWidth:46,textAlign:'center'}},'Шаг '+cur+'/4'),
-        arrow('right',Math.min(4,cur+1),cur===4)),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.modeNames[cur-1]));
-  }
-  readerGalModeF(){
-    const C=this.CR,h=React.createElement,cur=this.state.mode;
-    const inits=['Бкв','Лем','Фрм','Грч'];
-    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:10}},
-      h('div',{style:{display:'inline-flex',gap:2,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:9,padding:2}},
-        inits.map((s,i)=>{const on=cur===i+1;return h('button',{key:i,onClick:()=>this.readerSetMode(i+1),title:this.modeNames[i],style:{padding:'4px 9px',height:26,borderRadius:7,border:'none',background:on?C.ink:'transparent',color:on?C.paper:C.muted,fontFamily:this.sans,fontSize:12,fontWeight:700,cursor:'pointer'}},s);})),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'Шаг '+cur+' · '+this.modeNames[cur-1]));
-  }
-  readerGalModeA(){
-    const C=this.CR,h=React.createElement;
-    const seg=h('div',{style:{display:'flex',gap:2,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:3,width:'max-content'}},
-      [1,2,3,4].map(n=>h('div',{key:n,style:{width:28,height:28,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:13,background:n===2?C.ink:'transparent',color:n===2?C.paper:C.muted}},n)));
-    const menu=h('div',{style:{marginTop:12,border:'1px solid '+C.line2,borderRadius:12,overflow:'hidden'}},
-      this.modeNames.map((nm,i)=>h('div',{key:i,style:{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',background:i===1?this.a(C.terra,0.08):'transparent',borderBottom:i<3?'1px solid '+C.line:'none'}},
-        h('span',{style:{width:22,height:22,borderRadius:7,background:i===1?C.ink:this.a(C.ink,0.07),color:i===1?C.paper:C.muted,fontFamily:this.sans,fontWeight:700,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center'}},i+1),
-        h('span',{style:{fontFamily:this.sans,fontSize:12.5,color:C.ink,fontWeight:i===1?600:400}},nm))));
-    return h('div',null,h('div',{style:{display:'flex',alignItems:'center',gap:10}},seg,h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'Шаг 2 ▾')),menu);
-  }
-  readerGalModeB(){
-    const C=this.CR,h=React.createElement,cur=this.state.mode;
-    const labels=this.modeShort;
-    return h('div',null,
-      h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.muted,marginBottom:14}},'Погружение'),
-      h('div',{style:{position:'relative',height:8,background:this.a(C.ink,0.07),borderRadius:8,margin:'0 6px'}},
-        h('div',{style:{position:'absolute',left:0,top:0,bottom:0,width:((cur-1)/3*100)+'%',background:C.terra,borderRadius:8,transition:'width .25s'}}),
-        [0,1,2,3].map(i=>h('button',{key:i,onClick:()=>this.readerSetMode(i+1),style:{position:'absolute',left:'calc('+(i/3*100)+'% - 9px)',top:-5,width:18,height:18,borderRadius:'50%',border:'2px solid '+(i+1<=cur?C.terra:C.muted2),background:i+1<=cur?C.terra:C.paper,cursor:'pointer',padding:0}}))),
-      h('div',{style:{display:'flex',justifyContent:'space-between',marginTop:10}},labels.map((l,i)=>h('button',{key:i,onClick:()=>this.readerSetMode(i+1),style:{background:'none',border:'none',cursor:'pointer',fontFamily:this.sans,fontSize:11.5,fontWeight:cur===i+1?700:500,color:cur===i+1?C.terra:C.muted,padding:0}},l))));
-  }
-  readerGalModeC(){
-    const C=this.CR,h=React.createElement,cur=this.state.mode;
-    return h('div',null,
-      h('div',{style:{display:'flex',gap:7,flexWrap:'wrap'}},this.modeShort.map((l,i)=>{const on=cur===i+1;return h('button',{key:i,onClick:()=>this.readerSetMode(i+1),style:{padding:'8px 14px',borderRadius:20,border:'1px solid '+(on?'transparent':C.line2),background:on?C.ink:'transparent',color:on?C.paper:C.inkSoft,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer'}},l);})),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:14,lineHeight:1.4}},this.modeDesc[cur-1]));
-  }
-  readerGalTop1(){
-    const C=this.CR,h=React.createElement;
-    return h('div',null,
-      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px 6px'}},
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:7}},h('span',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink}},'Иоанн'),h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'глава 1 ▾')),
-        h('div',{style:{display:'flex',gap:6}},h('div',{style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},this.readerIconEye(C.inkSoft)),h('div',{style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center',gap:2.5}},[0,1,2].map(i=>h('span',{key:i,style:{width:3,height:3,borderRadius:'50%',background:C.inkSoft}}))))),
-      h('div',{style:{display:'flex',alignItems:'center',gap:9,padding:'6px 16px 14px',borderTop:'1px solid '+C.line,marginTop:4}},
-        h('div',{style:{display:'flex',gap:2,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},[1,2,3,4].map(n=>h('span',{key:n,style:{width:26,height:26,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:12.5,background:n===1?C.ink:'transparent',color:n===1?C.paper:C.muted}},n))),
-        h('div',{style:{flex:1}},h('div',{style:{fontFamily:this.sans,fontSize:10,fontWeight:700,letterSpacing:'0.1em',color:C.muted2,textTransform:'uppercase'}},'Шаг 1'),h('div',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:600,color:C.ink}},'Только греческие буквы')),
-        this.readerChev(C.muted)));
-  }
-  readerGalTop2(){
-    const C=this.CR,h=React.createElement;
-    return h('div',{style:{display:'flex',alignItems:'center',gap:10,padding:'16px 16px'}},
-      h('div',{style:{display:'flex',alignItems:'baseline',gap:5}},h('span',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},'Иоанн'),this.readerChev(C.muted)),
-      h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('div',{style:{display:'flex',gap:2,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},[1,2,3,4].map(n=>h('span',{key:n,style:{width:26,height:26,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:12.5,background:n===2?C.ink:'transparent',color:n===2?C.paper:C.muted}},n)))),
-      h('div',{style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},this.readerIconEye(C.inkSoft)));
-  }
-
-  readerCardSections(cd){return this.state.cardOrder.filter(k=>this.state.cardHidden.indexOf(k)<0).map(k=>this.readerRenderSection(k,cd));}
-
-  /* ---------- DESKTOP (>=600px) ---------- */
-
-  /*    2e — desktop layout (боковая навигация + инспектор) */
-  readerModeMenuList(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    return this.modeNames.map((nm,i)=>{const n=i+1,on=st.mode===n;return h('button',{key:n,onClick:()=>this.readerSetMode(n),style:{display:'flex',alignItems:'center',gap:13,width:'100%',textAlign:'left',padding:'13px 16px',background:on?this.a(C.terra,0.08):'transparent',border:'none',borderBottom:i<3?'1px solid '+C.line:'none',cursor:'pointer'}},
-      h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:9,background:on?C.ink:this.a(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:this.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
-      h('span',{style:{flex:1}},h('div',{style:{fontFamily:this.sans,fontSize:14.5,fontWeight:600,color:C.ink}},nm),h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:1,lineHeight:1.35}},this.modeDesc[i])),
-      on?h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})):null);});
-  }
-  readerRenderDeskNav(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    const items=[['read','Читать',this.readerIconRead.bind(this)],['dict','Слова',this.readerIconWords.bind(this)],['settings','Настройки',this.readerIconGear.bind(this)],['about','О приложении',this.readerIconInfo.bind(this)]];
-    const themes=[['Светлая','Пергамент'],['Тёмная','Тёмная'],['Авто','Пергамент']];
-    const activeTheme=st.readerTheme;
-    return h('div',{style:{width:236,flex:'0 0 auto',background:C.paper2,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
-      h('div',{style:{padding:'0 8px 26px'}},
-        h('div',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink,lineHeight:1.15}},'Читалка НЗ'),
-        h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:2}},'греческий сквозь русский')),
-      h('div',{style:{display:'flex',flexDirection:'column',gap:4}},
-        items.map(it=>{const on=st.tab===it[0];const col=on?C.ink:C.inkSoft;return h('button',{key:it[0],onClick:()=>this.setState({tab:it[0],dropdown:false}),style:{display:'flex',alignItems:'center',gap:12,padding:'11px 12px',borderRadius:11,border:'none',cursor:'pointer',background:on?C.paper:'transparent',boxShadow:on?'0 1px 3px rgba(40,34,22,0.08)':'none',textAlign:'left'}},
-          it[2](col),h('span',{style:{fontFamily:this.sans,fontSize:14.5,fontWeight:on?700:500,color:col}},it[1]));})),
-      h('div',{style:{flex:1}}),
-      h('div',{style:{padding:'0 6px'}},
-        h('div',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted2,marginBottom:8}},'Тема'),
-        h('div',{style:{display:'flex',gap:3,background:this.a(C.ink,0.05),borderRadius:10,padding:3}},
-          themes.map(([label,key])=>{const on=activeTheme===key;return h('button',{key:label,onClick:()=>this.setState({readerTheme:key}),style:{flex:1,padding:'7px 0',borderRadius:7,border:'none',cursor:'pointer',background:on?C.paper:'transparent',boxShadow:on?'0 1px 2px rgba(40,34,22,0.1)':'none',fontFamily:this.sans,fontSize:12,fontWeight:on?700:500,color:on?C.ink:C.muted}},label);}))));
-  }
-  readerRenderDeskTopPanel(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    return h('div',{style:{position:'relative',display:'flex',alignItems:'center',gap:18,padding:'15px 32px',borderBottom:'1px solid '+C.line,flex:'0 0 auto',zIndex:5}},
-      h('button',{onClick:()=>this.readerShowToast('Выбор книги — в полной версии'),style:{display:'flex',alignItems:'baseline',gap:8,background:'none',border:'none',cursor:'pointer',padding:0,whiteSpace:'nowrap'}},
-        h('span',{style:{fontFamily:this.serif,fontSize:22,fontWeight:700,color:C.ink}},'Иоанн,'),
-        h('span',{style:{fontFamily:this.sans,fontSize:18,fontWeight:700,color:C.inkSoft}},'1'),
-        h('span',{style:{flex:'0 0 auto'}},this.readerChev(C.muted))),
-      h('div',{style:{width:1,height:26,background:C.line}}),
-      h('button',{onClick:()=>this.setState({dropdown:!st.dropdown}),style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState())),
-      h('div',{style:{flex:1}}),
-      h('button',{onClick:()=>this.readerToggleSimple(),title:'Простой вид',style:{width:40,height:40,borderRadius:11,border:'1px solid '+(st.simpleView?this.a(C.terra,0.4):C.line),background:st.simpleView?this.a(C.terra,0.12):this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto'}},this.readerIconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
-      st.dropdown?h('div',{style:{position:'absolute',top:64,left:258,width:336,background:C.paper,border:'1px solid '+C.line2,borderRadius:16,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.45)',overflow:'hidden',zIndex:30,animation:'scPop .16s ease'}},this.readerModeMenuList()):null,
-      st.dropdown?h('div',{onClick:()=>this.setState({dropdown:false}),style:{position:'fixed',inset:0,zIndex:20}}):null);
-  }
-  readerRenderDeskRead(){
-    const C=this.CR,h=React.createElement;
-    const verses=this.verses.map((v,i)=>this.readerRenderVerse(v,i));
-    const contNodes=this.cont.map((v,i)=>h('span',{key:i,style:{fontFamily:this.serif,fontSize:19,lineHeight:1.75,color:C.ink}},h('sup',{style:{color:C.muted2,fontSize:'0.6em',fontWeight:700,marginRight:5,fontFamily:this.sans,verticalAlign:'0.55em'}},v.n),v.ru+' '));
-    const cont=h('div',{style:{marginTop:8,maskImage:'linear-gradient(180deg,#000 0%,transparent 88%)',WebkitMaskImage:'linear-gradient(180deg,#000 0%,transparent 88%)'}},contNodes);
-    return h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
-      this.readerRenderDeskTopPanel(),
-      h('div',{className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
-        h('div',{style:{maxWidth:700,margin:'0 auto',padding:'34px 44px 70px'}},
-          h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.18em',textTransform:'uppercase',color:C.muted2,marginBottom:18}},'Евангелие от Иоанна · глава 1'),
-          h('div',{style:{fontSize:19,lineHeight:1.78}},verses),cont)));
-  }
-  readerRenderDeskDict(){
-    return this.readerWordDeskContent();
-  }
-  readerRenderDeskInspector(){
-    const C=this.CR,h=React.createElement,st=this.state,cd=st.card;
-    let body;
-    if(st.sheet==='word'&&cd){
-      body=h('div',{className:'scScroll',style:{overflowY:'auto',padding:'22px 24px 32px',position:'relative'}},
-        h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}},
-          h('div',null,
-            h('div',{style:{fontFamily:this.serif,fontSize:44,color:C.blue,lineHeight:1}},cd.lemma),
-            h('div',{style:{display:'flex',gap:8,marginTop:6,fontFamily:this.sans,fontSize:13,color:C.muted}},h('span',null,cd.rank||''),cd.freq?h('span',null,'· '+cd.freq):null)),
-          h('div',{style:{display:'flex',gap:6,flex:'0 0 auto'}},
-            h('button',{onClick:()=>this.setState({gearOpen:!st.gearOpen}),style:{width:34,height:34,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?this.a(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},this.readerIconGear(C.inkSoft)),
-            h('button',{onClick:()=>this.readerCloseSheet(),style:{width:34,height:34,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
-        this.readerRenderGearMenu(),
-        this.readerCardSections(cd));
-    } else if(st.sheet==='letter'&&cd){
-      const known=st.knownLetters.indexOf(cd.letter)>=0,L=cd.L;
-      body=h('div',{style:{padding:'22px 24px 32px',position:'relative'}},
-        h('button',{onClick:()=>this.readerCloseSheet(),style:{position:'absolute',top:18,right:20,width:34,height:34,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))),
-        h('div',{style:{fontFamily:this.serif,fontSize:60,color:C.blue,lineHeight:1.05}},L.u+' '+L.l),
-        h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginTop:8}},L.name),
-        h('div',{style:{fontFamily:this.serif,fontSize:18,color:C.muted,marginTop:6}},L.sound),
-        h('div',{style:{fontFamily:this.serif,fontSize:18,color:C.ink,marginTop:4}},L.eq),
-        h('button',{onClick:()=>this.readerToggleLetterKnown(cd.letter),style:{marginTop:18,padding:'12px 22px',borderRadius:13,border:'none',cursor:'pointer',fontFamily:this.sans,fontSize:15,fontWeight:600,background:known?C.green:this.a(C.ink,0.06),color:known?'#fff':C.ink}},known?'Освоена ✓':'Я знаю эту букву'),
-        h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:14,color:C.muted2,marginTop:18,lineHeight:1.5}},'Произношение — учебное приближение, не научная реконструкция.'));
-    } else {
-      body=h('div',{style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',textAlign:'center',padding:'0 30px',gap:14}},
-        h('div',{style:{width:54,height:54,borderRadius:14,border:'1.5px dashed '+C.line2,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.serif,fontSize:26,color:C.muted2}},'α'),
-        h('div',{style:{fontFamily:this.serif,fontSize:17,color:C.muted,lineHeight:1.5,maxWidth:230}},'Выберите греческое слово или букву в тексте — карточка появится здесь.'));
-    }
-    return h('div',{style:{width:364,flex:'0 0 auto',borderLeft:'1px solid '+C.line,background:C.paper,position:'relative',display:'flex',flexDirection:'column'}},body);
-  }
-  readerRenderDesktop(){const h=React.createElement,s=this.state.readerDeskScale||1;return h('div',{style:{width:'100%',height:Math.round(768*s),overflow:'hidden'}},h('div',{style:{width:1180,height:768,transformOrigin:'top left',transform:'scale('+s+')'}},this.readerRenderDesktopApp()));}
-  readerRenderDesktopApp(){
-    const C=this.CR,h=React.createElement,st=this.state;
-    const main=st.tab==='read'?this.readerRenderDeskRead():st.tab==='dict'?this.readerRenderDeskDict():st.tab==='settings'?this.readerRenderDeskSettings():h('div',{style:{flex:1,minWidth:0,display:'flex',justifyContent:'center',overflow:'hidden'}},h('div',{style:{width:700,display:'flex',flexDirection:'column'}},this.readerRenderAbout()));
-    return h('div',{style:{position:'relative',display:'flex',flexDirection:'column',height:768,background:C.paper,color:C.ink,fontFamily:this.serif}},
-      h('div',{style:{flex:'0 0 auto',height:38,background:C.titlebar,borderBottom:'1px solid '+C.line,display:'flex',alignItems:'center',gap:8,padding:'0 16px'}},
-        ['#d98b6e','#dcc06a','#9bbf73'].map((c,i)=>h('span',{key:i,style:{width:11,height:11,borderRadius:'50%',background:c}}))),
-      h('div',{style:{flex:1,display:'flex',minHeight:0}},
-        this.readerRenderDeskNav(),
-        main,
-        st.tab==='read'?this.readerRenderDeskInspector():null),
-      st.tab==='dict'?this.readerWordToastEl(false):this.readerRenderToast());
-  }
-
-  /* ---------- status chip variants ---------- */
-
-  /*    2f — status-chip variants (виджеты режимов) */
-  readerChipStates(){
-    return [
-      {id:'rus',label:'«Рус» — всё выключено',desc:'интенсивность букв 0%, слой слов выкл. Греческого слоя нет.'},
-      {id:'alpha',label:'«α35%» — только буквы',desc:'включена замена букв с указанной интенсивностью.',pct:35},
-      {id:'lemma',label:'«α35% · λέγω 137» — оба слоя',desc:'буквы 35% + словарь; λέγω = словарная форма (леммы). 137 слов в словаре.',pct:35,words:'lemma',count:137},
-      {id:'forms',label:'«α35% · λέγει 137» — оба слоя, формы',desc:'то же, но слой слов в режиме реальных форм оригинала (λέγει вместо λέγω).',pct:35,words:'forms',count:137},
-      {id:'offline',label:'«α35% · —» — словарь без данных',desc:'слой слов включён, но греческий текст недоступен (нет сети/данных). Словарные замены не работают.',pct:35,words:'offline'},
-      {id:'greek',label:'«Греч» — вкладка «Греческий»',desc:'греческий текст как основной.'}
-    ];
-  }
-  readerLiveChipState(){
-    const st=this.state;
-    const pct=Math.round(st.intensity*100);
-    if(pct===0 && st.mode<4) return {id:'rus'};
-    if(st.mode===4) return {id:'greek'};
-    if(st.mode===1) return {id:'alpha',pct};
-    const words=st.mode===2?'lemma':'forms';
-    return {id:words,pct,words,count:st.readerAddedSet.length};
-  }
-  readerChip1(s){
-    const C=this.CR,h=React.createElement;
-    const wrap=(filled,kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:this.a(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'5px 11px',height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids);
-    if(s.id==='rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
-    if(s.id==='greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    const alpha=h('span',{key:'a',style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
-      h('span',{style:{color:C.ink,marginLeft:1}},s.pct+'%'));
-    if(s.id==='alpha') return wrap(false,[alpha]);
-    const sep=h('span',{key:'s',style:{color:C.muted2,margin:'0 8px'}},'·');
-    let words;
-    if(s.words==='offline'){
-      words=h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:this.a(C.terra,0.55)}},'—');
-    } else {
-      words=h('span',{key:'w',style:{display:'inline-flex',alignItems:'baseline'}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
-    }
-    return wrap(false,[alpha,sep,words]);
-  }
-  readerChip2(s){
-    const C=this.CR,h=React.createElement;
-    const shell=(kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',gap:4,fontFamily:this.sans,fontWeight:600,fontSize:13}},kids);
-    const zone=(bg,bd,col,kids,key)=>h('div',{key:key,style:{display:'inline-flex',alignItems:'center',gap:5,background:bg,border:'1px solid '+bd,borderRadius:8,padding:'4px 10px',height:28,color:col,whiteSpace:'nowrap',lineHeight:1}},kids);
-    if(s.id==='rus') return shell([zone(this.a(C.ink,0.045),C.line2,C.muted,[h('span',{key:1,style:{letterSpacing:'0.03em'}},'Рус')],'z')]);
-    if(s.id==='greek') return shell([zone(C.blue,C.blue,C.paper,[h('span',{key:1,style:{fontFamily:this.serif,fontWeight:700,fontSize:14}},'Греческий')],'z')]);
-    const lz=zone(C.blueBg,this.a(C.blue,0.28),C.blueTx,[
-      h('span',{key:1,style:{fontFamily:this.serif,fontSize:15,color:C.blue}},'α'),
-      h('span',{key:2},s.pct+'%')],'l');
-    if(s.id==='alpha') return shell([lz]);
-    let wz;
-    if(s.words==='offline'){
-      wz=h('div',{key:'w',style:{display:'inline-flex',alignItems:'center',gap:5,background:'transparent',border:'1px dashed '+this.a(C.terra,0.45),borderRadius:8,padding:'4px 10px',height:28,color:this.a(C.terra,0.85),whiteSpace:'nowrap',fontSize:12.5,lineHeight:1}},
-        h('span',{style:{fontFamily:this.serif,fontSize:15}},'—'),h('span',null,'нет данных'));
-    } else {
-      wz=zone(C.terraSoft,this.a(C.terra,0.32),C.terra,[
-        h('span',{key:1,style:{fontFamily:this.serif,fontStyle:'italic',fontSize:14}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{key:2,style:{opacity:0.65}},s.count)],'w');
-    }
-    return shell([lz,wz]);
-  }
-  readerChip3(s){
-    const C=this.CR,h=React.createElement;
-    const ring=(pct)=>{const r=7.5,c=2*Math.PI*r;return h('svg',{width:19,height:19,viewBox:'0 0 19 19'},
-      h('circle',{cx:9.5,cy:9.5,r:r,fill:'none',stroke:this.a(C.blue,0.16),strokeWidth:2.6}),
-      h('circle',{cx:9.5,cy:9.5,r:r,fill:'none',stroke:C.blue,strokeWidth:2.6,strokeLinecap:'round',strokeDasharray:c,strokeDashoffset:c*(1-pct/100),transform:'rotate(-90 9.5 9.5)'}));};
-    const wrap=(kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',gap:7,background:this.a(C.ink,0.045),border:'1px solid '+C.line2,borderRadius:20,padding:'4px 13px 4px 6px',height:30,fontFamily:this.sans,fontSize:13,fontWeight:600,whiteSpace:'nowrap'}},kids);
-    if(s.id==='rus') return wrap([
-      h('span',{key:1,style:{width:17,height:17,marginLeft:1,borderRadius:'50%',border:'2px solid '+C.muted2,display:'inline-block'}}),
-      h('span',{key:2,style:{color:C.muted}},'Рус')]);
-    if(s.id==='greek') return wrap([
-      h('span',{key:1,style:{width:18,height:18,marginLeft:1,borderRadius:'50%',background:C.blue,display:'inline-flex',alignItems:'center',justifyContent:'center',color:C.paper,fontFamily:this.serif,fontSize:12,fontWeight:700}},'Γ'),
-      h('span',{key:2,style:{color:C.ink}},'Греческий')]);
-    const ringEl=h('span',{key:'r',style:{position:'relative',display:'inline-flex',alignItems:'center',justifyContent:'center',marginLeft:1}},ring(s.pct),
-      h('span',{style:{position:'absolute',fontFamily:this.serif,fontSize:9,color:C.blue,lineHeight:1}},'α'));
-    const pctEl=h('span',{key:'p',style:{color:C.ink}},s.pct+'%');
-    if(s.id==='alpha') return wrap([ringEl,pctEl]);
-    const div=h('span',{key:'d',style:{width:1,height:14,background:C.line2,margin:'0 1px'}});
-    let badge;
-    if(s.words==='offline'){
-      badge=h('span',{key:'b',style:{display:'inline-flex',alignItems:'center',gap:5,color:this.a(C.terra,0.8)}},
-        h('span',{style:{width:7,height:7,borderRadius:'50%',border:'1.5px dashed '+C.terra,display:'inline-block'}}),
-        h('span',{style:{fontFamily:this.serif,fontSize:15}},'—'));
-    } else {
-      badge=h('span',{key:'b',style:{display:'inline-flex',alignItems:'center',gap:5}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:14,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12}},s.count));
-    }
-    return wrap([ringEl,pctEl,div,badge]);
-  }
-  readerChip4(s){
-    const C=this.CR,h=React.createElement;
-    const wrap=(filled,kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:this.a(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'5px 11px',height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids);
-    if(s.id==='rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
-    if(s.id==='greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    const fillGlyph=h('span',{key:'g',style:{position:'relative',display:'inline-block',width:14,height:18,marginRight:6}},
-      h('span',{style:{position:'absolute',inset:0,fontFamily:this.serif,fontSize:18,color:this.a(C.blue,0.2),lineHeight:'18px',textAlign:'center'}},'α'),
-      h('span',{style:{position:'absolute',inset:0,fontFamily:this.serif,fontSize:18,color:C.blue,lineHeight:'18px',textAlign:'center',clipPath:'inset('+(100-s.pct)+'% 0 0 0)',WebkitClipPath:'inset('+(100-s.pct)+'% 0 0 0)'}},'α'));
-    const alpha=h('span',{key:'a',style:{display:'inline-flex',alignItems:'center'}},fillGlyph,h('span',{style:{color:C.ink}},s.pct+'%'));
-    if(s.id==='alpha') return wrap(false,[alpha]);
-    const sep=h('span',{key:'s',style:{color:C.muted2,margin:'0 8px'}},'·');
-    let words;
-    if(s.words==='offline'){
-      words=h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:this.a(C.terra,0.55)}},'—');
-    } else {
-      words=h('span',{key:'w',style:{display:'inline-flex',alignItems:'baseline'}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
-    }
-    return wrap(false,[alpha,sep,words]);
-  }
-  readerChip5(s){
-    const C=this.CR,h=React.createElement;
-    const wrap=(filled,kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:this.a(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'5px 11px',height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids);
-    if(s.id==='rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
-    if(s.id==='greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    const n=5,active=Math.max(1,Math.round(s.pct/100*n));
-    const bars=h('span',{key:'b',style:{display:'inline-flex',alignItems:'flex-end',gap:2,height:13,marginRight:7}},
-      [0,1,2,3,4].map(i=>h('span',{key:i,style:{width:2.5,height:5+i*2,borderRadius:1.2,background:i<active?C.blue:this.a(C.ink,0.14)}})));
-    const alpha=h('span',{key:'a',style:{display:'inline-flex',alignItems:'center'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue,marginRight:6}},'α'),
-      bars,
-      h('span',{style:{color:C.ink}},s.pct+'%'));
-    if(s.id==='alpha') return wrap(false,[alpha]);
-    const sep=h('span',{key:'s',style:{color:C.muted2,margin:'0 8px'}},'·');
-    let words;
-    if(s.words==='offline'){
-      words=h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:this.a(C.terra,0.55)}},'—');
-    } else {
-      words=h('span',{key:'w',style:{display:'inline-flex',alignItems:'baseline'}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
-    }
-    return wrap(false,[alpha,sep,words]);
-  }
-  /* ---- horizontal-bar indicator variants (replace circular ring) ---- */
-  reader_hbarWord(s){
-    const C=this.CR,h=React.createElement;
-    if(s.words==='offline') return h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:this.a(C.terra,0.55)}},'—');
-    const pct=Math.min(100,(s.count/1000)*100);
-    const textRow=h('span',{style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-      h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
-    const bar=h('span',{style:{display:'block',height:3,borderRadius:3,background:this.a(C.terra,0.16),marginTop:4,position:'relative',overflow:'hidden'}},
-      h('span',{style:{position:'absolute',left:0,top:0,bottom:0,width:pct+'%',background:C.terra,borderRadius:3}}));
-    return h('span',{key:'w',style:{display:'inline-flex',flexDirection:'column',alignItems:'stretch'}},textRow,bar);
-  }
-  // H1 — тонкая полоска под «α 35%»
-  readerChipH1(s){
-    const C=this.CR,h=React.createElement;
-    const wrap=(filled,kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:this.a(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'6px 11px',minHeight:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids);
-    if(s.id==='rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
-    if(s.id==='greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    const row=h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
-      h('span',{style:{color:C.ink,marginLeft:1}},s.pct+'%'));
-    const bar=h('span',{key:'bar',style:{display:'block',height:3,borderRadius:3,background:this.a(C.blue,0.16),marginTop:4,position:'relative',overflow:'hidden'}},
-      h('span',{style:{position:'absolute',left:0,top:0,bottom:0,width:s.pct+'%',background:C.blue,borderRadius:3}}));
-    const left=h('span',{key:'l',style:{display:'inline-flex',flexDirection:'column',alignItems:'stretch'}},row,bar);
-    if(s.id==='alpha') return wrap(false,[left]);
-    const sep=h('span',{key:'s',style:{color:C.muted2,margin:'0 9px'}},'·');
-    return wrap(false,[left,sep,this.reader_hbarWord(s)]);
-  }
-  // H2 — сегментированная шкала под «α 35%»
-  readerChipH2(s){
-    const C=this.CR,h=React.createElement;
-    const wrap=(filled,kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:this.a(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'6px 11px',minHeight:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids);
-    if(s.id==='rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
-    if(s.id==='greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    const row=h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
-      h('span',{style:{color:C.ink,marginLeft:1}},s.pct+'%'));
-    const n=8,active=Math.max(1,Math.round(s.pct/100*n));
-    const bar=h('span',{key:'bar',style:{display:'flex',gap:2,marginTop:4}},
-      [0,1,2,3,4,5,6,7].map(i=>h('span',{key:i,style:{flex:1,height:3.5,borderRadius:1.5,background:i<active?C.blue:this.a(C.ink,0.13)}})));
-    const left=h('span',{key:'l',style:{display:'inline-flex',flexDirection:'column',alignItems:'stretch'}},row,bar);
-    if(s.id==='alpha') return wrap(false,[left]);
-    const sep=h('span',{key:'s',style:{color:C.muted2,margin:'0 9px'}},'·');
-    return wrap(false,[left,sep,this.reader_hbarWord(s)]);
-  }
-  // H3 — полоска с бегунком-точкой под «α 35%»
-  readerChipH3(s){
-    const C=this.CR,h=React.createElement;
-    const wrap=(filled,kids)=>h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:this.a(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'6px 11px',minHeight:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids);
-    if(s.id==='rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
-    if(s.id==='greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    const row=h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
-      h('span',{style:{color:C.ink,marginLeft:1}},s.pct+'%'));
-    const bar=h('span',{key:'bar',style:{display:'block',height:5,borderRadius:5,background:this.a(C.blue,0.14),marginTop:4,position:'relative'}},
-      h('span',{style:{position:'absolute',left:0,top:0,bottom:0,width:s.pct+'%',background:C.blue,borderRadius:5}}),
-      h('span',{style:{position:'absolute',left:'calc('+s.pct+'% - 3px)',top:'50%',transform:'translateY(-50%)',width:7,height:7,borderRadius:'50%',background:C.paper,border:'1.5px solid '+C.blue}}));
-    const left=h('span',{key:'l',style:{display:'inline-flex',flexDirection:'column',alignItems:'stretch'}},row,bar);
-    if(s.id==='alpha') return wrap(false,[left]);
-    const sep=h('span',{key:'s',style:{color:C.muted2,margin:'0 9px'}},'·');
-    return wrap(false,[left,sep,this.reader_hbarWord(s)]);
-  }
-  readerChipGallery(fn){
-    const C=this.CR,h=React.createElement,self=this;
-    const states=this.readerChipStates();
-    const lemma=states[2];
-    const bar=h('div',{style:{display:'flex',alignItems:'center',gap:9,padding:'9px 13px',background:C.read,border:'1px solid '+C.line,borderRadius:12,marginBottom:16}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,fontWeight:700,color:C.ink}},'Иоанн 1'),
-      h('span',{style:{transform:'translateY(1px)',flex:'0 0 auto'}},this.readerChev(C.muted2)),
-      h('span',{style:{flex:1}}),
-      fn.call(self,lemma));
-    const rows=states.map((s,i)=>h('div',{key:i,style:{padding:'13px 0',borderBottom:i<states.length-1?'1px solid '+C.line:'none'}},
-      h('div',{style:{marginBottom:8}},fn.call(self,s)),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,lineHeight:1.45}},
-        h('b',{style:{color:C.inkSoft,fontWeight:700}},s.label),h('br'),s.desc)));
-    return h('div',null,bar,h('div',null,rows));
-  }
-
-  /* ---------- compose ---------- */
-
-  /*    2g — phone composition */
-  readerRenderContent(){const t=this.state.tab;if(t==='read')return this.readerRenderRead();if(t==='dict')return this.readerRenderDict();if(t==='settings')return this.readerRenderSettings();return this.readerRenderAbout();}
-  readerRenderPhone(){
-    const C=this.CR,h=React.createElement,st=this.state,isDict=st.tab==='dict';
-    return h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:C.paper,color:C.ink}},
-      this.readerRenderStatusBar(),
-      this.readerRenderContent(),
-      this.readerRenderBottomNav(),
-      isDict?null:this.readerRenderModeMenu(),
-      isDict?null:this.readerRenderIntensity(),
-      isDict?this.readerWordToastEl(true):this.readerRenderToast(),
-      isDict?this.readerRenderWordPhoneSheet():this.readerRenderWordSheet(),
-      isDict?null:this.readerRenderLetterSheet());
   }
 
   /* ================================================================
-   * 2h — встроенный экран «Слова» (портирован из секции 3, токены CR)
+   * 1. УТИЛИТЫ — тонкие обёртки над RU2GR_UTILS
    * ================================================================ */
-  readerWordGetFiltered(){
-    const st=this.state, q=st.readerWordSearch.trim().toLowerCase();
-    return this.WORDS.filter(w=>{
-      if(st.readerWordStatusFilter!=='all' && st.readerWordStatusMap[w.k]!==st.readerWordStatusFilter) return false;
-      if(st.readerWordPosFilter!=='all' && w.pos!==st.readerWordPosFilter) return false;
-      if(st.readerWordShowInText && !st.readerWordAddedSet.has(w.k)) return false;
-      if(q && !w.g.toLowerCase().includes(q) && !w.t.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }
-  readerWordGetGroups(filtered){
-    return this.GROUPS.map(g=>({...g, words:filtered.filter(w=>w.r>=g.min && w.r<=g.max)})).filter(g=>g.words.length>0);
-  }
-  readerWordToggleAdded(k,e){ e.stopPropagation(); const a=new Set(this.state.readerWordAddedSet); if(a.has(k)){a.delete(k);}else{a.add(k);this.readerWordShowToast('Слово будет показываться в тексте чтения');} this.setState({readerWordAddedSet:a}); }
-  readerWordSetStatus(k,s){ const m=Object.assign({},this.state.readerWordStatusMap); m[k]=m[k]===s?null:s; this.setState({readerWordStatusMap:m}); }
-  readerWordClickRow(k,e){
-    if(e){ const mainEl=document.getElementById('readerDeskMain'); if(mainEl){ const rr=e.currentTarget.getBoundingClientRect(), mr=mainEl.getBoundingClientRect(); this._rpopY=Math.max(56,Math.min(rr.top-mr.top,mr.height-390)); } }
-    const same=this.state.readerWordActiveKey===k; this.setState({readerWordActiveKey:same?null:k, readerWordSheetOpen:!same});
-  }
-  readerWordCloseCard(){ this.setState({readerWordActiveKey:null, readerWordSheetOpen:false}); }
-  readerWordShowToast(msg){ const id=Date.now(); this._rtid=id; this.setState({readerWordToast:msg}); setTimeout(()=>{if(this._rtid===id)this.setState({readerWordToast:null});},2600); }
-  readerWordSPill(k,sm){
-    const C=this.CRW, h=React.createElement, s=this.state.readerWordStatusMap[k];
-    if(!s) return null;
-    const cfg={new:['Новое',C.muted,this.a(C.ink,.06)],learning:['Учу',C.blueTx,C.blueBg],known:['Знаю',C.greenDk,C.greenBg]}[s];
-    if(!cfg) return null;
-    return h('span',{style:{fontFamily:this.sans,fontSize:sm?10.5:11,fontWeight:600,color:cfg[1],background:cfg[2],padding:sm?'2px 7px':'3px 9px',borderRadius:20,whiteSpace:'nowrap',flexShrink:0}},cfg[0]);
-  }
-  readerWordCbx(w){
-    const C=this.CRW, h=React.createElement;
-    if(!w.add) return h('div',{title:'Нет соответствия в русском тексте',style:{width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted2,fontSize:16,flexShrink:0}},'–');
-    const on=this.state.readerWordAddedSet.has(w.k);
-    return h('button',{onClick:e=>this.readerWordToggleAdded(w.k,e),title:on?'Убрать из текста':'Показывать в тексте',style:{width:28,height:28,borderRadius:9,border:'1.5px solid '+(on?C.terra:C.line2),background:on?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, on?h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})):null);
-  }
-  readerWordWRow(w,isActive){
-    const C=this.CRW, h=React.createElement;
-    return h('div',{key:w.k,id:'rw_row_'+w.k,onClick:e=>this.readerWordClickRow(w.k,e),style:{display:'flex',alignItems:'center',gap:10,padding:'9px 10px 9px 0',borderBottom:'1px solid '+C.line,cursor:'pointer',background:isActive?this.a(C.terra,.055):'transparent',borderLeft:'3px solid '+(isActive?C.terra:'transparent'),paddingLeft:isActive?9:0,opacity:!w.add?0.5:1,transition:'background .1s'}},
-      h('span',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted2,width:32,textAlign:'right',flexShrink:0,lineHeight:1}},w.r),
-      h('div',{style:{flex:1,minWidth:0}},
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:8}}, h('span',{style:{fontFamily:this.serif,fontSize:21,color:isActive?C.terra:C.blue,lineHeight:1.1,whiteSpace:'nowrap'}},w.g), h('span',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,lineHeight:1,whiteSpace:'nowrap'}},w.t)),
-        h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted2,marginTop:2}},this.wordFmt(w.freq)+' в НЗ')),
-      this.readerWordSPill(w.k,true),
-      this.readerWordCbx(w));
-  }
-  readerWordGDiv(g){
-    const C=this.CRW, h=React.createElement;
-    return h('div',{key:'rw_gd_'+g.key,style:{display:'flex',alignItems:'center',gap:9,padding:'14px 10px 6px 0'}}, h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.terra,flexShrink:0}},g.label), h('span',{style:{flex:1,height:1,background:C.line2}}), h('span',{style:{fontFamily:this.sans,fontSize:11,color:C.muted2,flexShrink:0}},g.cov));
-  }
-  readerWordWListBody(pb){
-    const C=this.CRW, h=React.createElement, st=this.state, vc=st.readerWordVisibleCount;
-    const filtered=this.readerWordGetFiltered(), groups=this.readerWordGetGroups(filtered), total=filtered.length;
-    const items=[]; let shown=0;
-    for(const g of groups){ if(shown>=vc) break; items.push(this.readerWordGDiv(g)); for(const w of g.words){ if(shown>=vc) break; items.push(this.readerWordWRow(w,st.readerWordActiveKey===w.k)); shown++; } }
-    if(total===0) items.push(h('div',{key:'empty',style:{textAlign:'center',color:C.muted,fontFamily:this.sans,fontSize:14,padding:'48px 0'}},'Ничего не найдено'));
-    else if(shown<total) items.push(h('div',{key:'more',style:{padding:'18px 0',textAlign:'center',fontFamily:this.sans,fontSize:12.5,color:C.muted2}},'Ещё '+(total-shown)+' слов — прокрутите вниз…'));
-    return h('div',{style:{paddingBottom:pb||16}},items);
-  }
-  readerWordWCard(k){
-    if(!k) return null;
-    const C=this.CRW, h=React.createElement, w=this.WORDS.find(x=>x.k===k);
-    if(!w) return null;
-    const st=this.state, status=st.readerWordStatusMap[k], added=st.readerWordAddedSet.has(k);
-    const sCfg={new:{label:'Новое',col:C.muted,bg:this.a(C.ink,.05),bd:C.line2},learning:{label:'Учу',col:C.blueTx,bg:C.blueBg,bd:this.a(C.blue,.5)},known:{label:'Знаю',col:C.greenDk,bg:C.greenBg,bd:this.a(C.green,.6)}};
-    return h('div',{style:{padding:'20px 20px 26px'}},
-      h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:14}},
-        h('div',null, h('div',{style:{fontFamily:this.serif,fontSize:46,color:C.blue,lineHeight:1}},w.g), h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:17,color:C.muted,marginTop:3}},w.t)),
-        h('button',{onClick:()=>this.readerWordCloseCard(),style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:4}}, this.readerWordIconX(C.inkSoft))),
-      h('div',{style:{background:this.a(C.ink,.03),border:'1px solid '+C.line,borderRadius:13,padding:'13px 15px',marginBottom:14}},
-        h('div',{style:{fontFamily:this.serif,fontSize:17,fontWeight:700,color:C.ink,lineHeight:1.4,marginBottom:7}},w.ru),
-        h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}, h('span',{style:{fontFamily:this.sans,fontSize:12,fontWeight:600,color:C.blueTx,background:C.blueBg,padding:'3px 9px',borderRadius:6,whiteSpace:'nowrap'}},w.posL), h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,whiteSpace:'nowrap'}},'Частота: '+this.wordFmt(w.freq)), h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,whiteSpace:'nowrap'}},'ранг '+w.r+' в НЗ'), h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted2,whiteSpace:'nowrap'}},'Strong '+w.strong))),
-      h('div',{style:{marginBottom:14}},
-        h('div',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:8}},'Статус изучения'),
-        h('div',{style:{display:'flex',gap:6}}, ['new','learning','known'].map(s=>{const cfg=sCfg[s], on=status===s; return h('button',{key:s,onClick:()=>this.readerWordSetStatus(k,s),style:{flex:1,padding:'8px 0',borderRadius:10,border:'1.5px solid '+(on?cfg.bd:C.line),background:on?cfg.bg:'transparent',color:on?cfg.col:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',transition:'all .14s'}},cfg.label);}))),
-      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'12px 0',borderTop:'1px solid '+C.line}},
-        h('div',{style:{minWidth:0}}, h('div',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:600,color:w.add?C.ink:C.muted2}},'Показывать в тексте'), h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted,marginTop:2,lineHeight:1.3}}, w.add?'Заменяет слово в тексте чтения':'Нет соответствия в русском тексте')),
-        w.add?h('button',{onClick:e=>this.readerWordToggleAdded(k,e),style:{width:46,height:27,borderRadius:14,border:'none',cursor:'pointer',background:added?C.terra:this.a(C.ink,.1),position:'relative',transition:'background .2s',flexShrink:0}}, h('span',{style:{position:'absolute',top:3.5,left:added?22:3.5,width:20,height:20,borderRadius:10,background:'#fff',transition:'left .2s',boxShadow:'0 1px 3px rgba(0,0,0,0.18)'}})):h('span',{style:{fontFamily:this.sans,fontSize:18,color:C.muted2,flexShrink:0}},'–')));
-  }
-  readerWordIconX(c,sz){ const h=React.createElement, s=sz||15; return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'}, h('path',{d:'M6 6l12 12M18 6L6 18'})); }
-  readerWordSearchBar(mobile){
-    const C=this.CRW, h=React.createElement, st=this.state;
-    return h('div',{style:{display:'flex',alignItems:'center',gap:8,background:C.card,border:'1px solid '+C.cardLine,borderRadius:11,padding:mobile?'8px 11px':'9px 13px',boxShadow:'0 1px 2px rgba(40,34,22,.05)'}}, this.wordIconSearch(C.muted), h('input',{value:st.readerWordSearch,onChange:e=>this.setState({readerWordSearch:e.target.value}),placeholder:'Поиск: λόγος или logos…',style:{flex:1,border:'none',background:'none',outline:'none',fontFamily:this.sans,fontSize:mobile?14:14.5,color:C.ink}}), st.readerWordSearch?h('button',{onClick:()=>this.setState({readerWordSearch:''}),style:{background:'none',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center',color:C.muted2}},this.readerWordIconX(C.muted2,14)):null);
-  }
-  readerWordCaret(c,open){ const h=React.createElement; return h('svg',{width:12,height:12,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round',style:{transform:open?'rotate(180deg)':'none',transition:'transform .15s',flexShrink:0}},h('path',{d:'M6 9l6 6 6-6'})); }
-  readerWordEyePill(){
-    const C=this.CRW, h=React.createElement, st=this.state;
-    return h('button',{onClick:()=>this.setState({readerWordShowInText:!st.readerWordShowInText}),style:{display:'flex',alignItems:'center',gap:6,padding:'8px 13px',borderRadius:10,border:'1px solid '+(st.readerWordShowInText?this.a(C.terra,.45):C.line),background:st.readerWordShowInText?C.terraSoft:'transparent',color:st.readerWordShowInText?C.terra:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}, this.wordIconEye(st.readerWordShowInText?C.terra:C.muted),'В тексте');
-  }
-  readerWordPosOpts(){ return [['all','Все'],['noun','Сущ.'],['verb','Глаг.'],['adj','Прил.'],['func','Служ.']]; }
-  readerWordPosCount(v){
-    const st=this.state, q=st.readerWordSearch.trim().toLowerCase();
-    return this.WORDS.filter(w=>{ if(st.readerWordStatusFilter!=='all'&&st.readerWordStatusMap[w.k]!==st.readerWordStatusFilter)return false; if(st.readerWordShowInText&&!st.readerWordAddedSet.has(w.k))return false; if(q&&!w.g.toLowerCase().includes(q)&&!w.t.toLowerCase().includes(q))return false; if(v!=='all'&&w.pos!==v)return false; return true; }).length;
-  }
-  readerWordPosDropdown(mobile){
-    const C=this.CRW, h=React.createElement, st=this.state, opts=this.readerWordPosOpts(), cur=opts.find(o=>o[0]===st.readerWordPosFilter)||opts[0], open=st.readerWordPosMenuOpen;
-    const menu=open?h('div',{style:{position:'absolute',top:'calc(100% + 6px)',left:0,zIndex:50,minWidth:184,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}}, opts.map(([v,l])=>{const on=st.readerWordPosFilter===v; return h('button',{key:v,onClick:()=>this.setState({readerWordPosFilter:v,readerWordPosMenuOpen:false}),style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?this.a(C.blue,.1):'transparent',color:on?C.blueTx:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}}, h('span',null,l), h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:on?C.blueTx:C.muted2}},this.readerWordPosCount(v)));})):null;
-    return h('div',{'data-rwposmenu':'1',style:{position:'relative',flexShrink:0}}, h('button',{onClick:()=>this.setState({readerWordPosMenuOpen:!open}),style:{display:'flex',alignItems:'center',gap:8,padding:mobile?'7px 11px':'8px 13px',borderRadius:10,border:'1px solid '+(open?this.a(C.blue,.4):C.line),background:open?C.blueBg:C.card,color:C.ink,fontFamily:this.sans,fontSize:mobile?12.5:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}, h('span',{style:{color:C.muted,fontWeight:600}},'Часть речи:'), h('span',{style:{color:st.readerWordPosFilter==='all'?C.inkSoft:C.blueTx,fontWeight:700}},cur[1]), this.readerWordCaret(C.muted,open)), menu);
-  }
-  readerWordSOpts(){ return [['all','Все'],['new','Новые'],['learning','Учу'],['known','Знаю']]; }
-  readerWordStatusCount(v){
-    const st=this.state, q=st.readerWordSearch.trim().toLowerCase();
-    return this.WORDS.filter(w=>{ if(st.readerWordPosFilter!=='all'&&w.pos!==st.readerWordPosFilter)return false; if(st.readerWordShowInText&&!st.readerWordAddedSet.has(w.k))return false; if(q&&!w.g.toLowerCase().includes(q)&&!w.t.toLowerCase().includes(q))return false; if(v!=='all'&&st.readerWordStatusMap[w.k]!==v)return false; return true; }).length;
-  }
-  readerWordSV3(){
-    const C=this.CRW, h=React.createElement, st=this.state, opts=this.readerWordSOpts(), cur=opts.find(o=>o[0]===st.readerWordStatusFilter)||opts[0], open=st.readerWordSMenuOpen;
-    const menu=open?h('div',{style:{position:'absolute',top:'calc(100% + 6px)',left:0,zIndex:50,minWidth:182,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}}, opts.map(([v,l])=>{const on=st.readerWordStatusFilter===v; return h('button',{key:v,onClick:()=>this.setState({readerWordStatusFilter:v,readerWordSMenuOpen:false}),style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?this.a(C.ink,.07):'transparent',color:on?C.ink:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}}, h('span',null,l), h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},this.readerWordStatusCount(v)));})):null;
-    const dd=h('div',{'data-rwsmenu':'1',style:{position:'relative',flexShrink:0}}, h('button',{onClick:()=>this.setState({readerWordSMenuOpen:!open}),style:{display:'flex',alignItems:'center',gap:8,padding:'8px 13px',borderRadius:10,border:'1px solid '+(open?C.line2:C.line),background:C.card,color:C.ink,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}, h('span',{style:{color:C.muted}},'Статус:'), h('span',{style:{fontWeight:700}},cur[1]), h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},this.readerWordStatusCount(st.readerWordStatusFilter)), this.readerWordCaret(C.muted,open)), menu);
-    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dd, this.readerWordEyePill());
-  }
-  readerWordStatusBar(){ return this.renderStatusBar(this.CRW); }
-  readerWordToastEl(mobile){
-    const C=this.CRW, h=React.createElement;
-    if(!this.state.readerWordToast) return null;
-    return h('div',{key:'rwtoast',style:{position:'absolute',left:'50%',bottom:mobile?88:22,transform:'translateX(-50%)',zIndex:60,background:this.a('#26221c',.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13,fontWeight:500,padding:'10px 18px',borderRadius:12,maxWidth:290,textAlign:'center',boxShadow:'0 12px 32px -8px rgba(0,0,0,.42)',animation:'scToast .22s ease',whiteSpace:'nowrap'}},this.state.readerWordToast);
-  }
-  readerWordPhoneApp(){
-    const C=this.CRW, h=React.createElement, st=this.state;
-    const sheet=(st.readerWordSheetOpen && st.readerWordActiveKey)?h('div',{key:'rwsheet',style:{position:'absolute',inset:0,zIndex:30}}, h('div',{onClick:()=>this.readerWordCloseCard(),style:{position:'absolute',inset:0,background:this.a('#15140f',.28),animation:'scFade .2s ease'}}), h('div',{onClick:e=>e.stopPropagation(),style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'84%',background:C.card,borderRadius:'24px 24px 0 0',boxShadow:'0 -14px 50px -10px rgba(40,34,22,.38)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}}, h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:36,height:4,borderRadius:3,background:C.line2}})), h('div',{className:'scScroll',style:{overflowY:'auto'}},this.readerWordWCard(st.readerWordActiveKey)))):null;
-    return h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:C.content}},
-      this.readerWordStatusBar(),
-      h('div',{style:{flex:'0 0 auto',padding:'2px 18px 11px',background:C.card,borderBottom:'1px solid '+C.cardLine,boxShadow:'0 6px 18px -14px rgba(40,34,22,.45)',position:'relative',zIndex:5}},
-        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',height:44}}, h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink}},'Словарь'), h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.readerWordGetFiltered().length+' слов')),
-        h('div',{style:{marginBottom:9}},this.readerWordSearchBar(true)),
-        this.readerWordSV3(),
-        h('div',{style:{height:8}}),
-        this.readerWordPosDropdown(true)),
-      h('div',{id:'readerPhoneWordList',className:'scScroll',style:{flex:1,overflowY:'auto',padding:'0 18px'}}, this.readerWordWListBody(80)),
-      h('div',{style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.cardLine,background:C.card,boxShadow:'0 -6px 18px -14px rgba(40,34,22,.45)',paddingBottom:18}},
-        [['read','Читать',c=>this.readerIconRead(c)],['dict','Слова',c=>this.readerIconWords(c)],['about','О',c=>this.readerIconInfo(c)]].map(([tab,lbl,icfn])=>{const on=tab==='dict', col=on?C.ink:C.muted2; return h('button',{key:tab,onClick:()=>this.setState({tab:tab,dropdown:false}),style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}}, icfn(col), h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:on?700:500,color:col}},lbl));})),
-      sheet, this.readerWordToastEl(true));
-  }
-  readerWordDeskContent(){
-    const C=this.CRW, h=React.createElement, st=this.state, hasActive=!!st.readerWordActiveKey;
-    const listPanel=h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column',overflow:'hidden'}},
-      h('div',{style:{flex:'0 0 auto',padding:'20px 28px 14px',borderBottom:'1px solid '+C.line}},
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:12,marginBottom:12}}, h('span',{style:{fontFamily:this.serif,fontSize:25,fontWeight:700,color:C.ink}},'Словарь'), h('span',{style:{fontFamily:this.sans,fontSize:13,color:C.muted}},this.readerWordGetFiltered().length+' слов · 1000 самых частотных лемм НЗ')),
-        h('div',{style:{marginBottom:11}},this.readerWordSearchBar(false)),
-        h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}, this.readerWordSV3(), h('div',{style:{width:1,height:18,background:C.line2}}), this.readerWordPosDropdown(false))),
-      h('div',{id:'readerDeskWordList',className:'scScroll',style:{flex:1,overflowY:'auto'}}, h('div',{style:{maxWidth:640,padding:'0 28px 60px'}}, this.readerWordWListBody(24))));
-    const inspector=h('div',{style:{width:hasActive?316:0,flex:'0 0 auto',borderLeft:hasActive?'1px solid '+C.cardLine:'none',overflow:'hidden',background:C.card,boxShadow:hasActive?'-14px 0 30px -24px rgba(40,34,22,.5)':'none',transition:'width .18s'}}, hasActive?h('div',{className:'scScroll',style:{width:316,height:'100%',overflowY:'auto'}},this.readerWordWCard(st.readerWordActiveKey)):null);
-    return h('div',{id:'readerDeskMain',style:{flex:1,minWidth:0,display:'flex',position:'relative',overflow:'hidden'}}, listPanel, inspector);
-  }
-  readerWordSetupScroll(id){
-    const el=document.getElementById(id);
-    if(!el||el._rwlOk) return;
-    el._rwlOk=true;
-    el.addEventListener('scroll',()=>{ if(el.scrollTop+el.clientHeight>el.scrollHeight-180){ this.setState(s=>({readerWordVisibleCount:Math.min(s.readerWordVisibleCount+15,this.WORDS.length+5)})); } });
-  }
+  a(hex, al)       { return U.alpha(hex, al); }
+  buildThemes()     { return this.THEMES; }
+  readerCt()        { return this.state.readerContrast || 'Чёткий'; }
+  readerPalette()   { return U.buildReaderPalette(this.THEMES, this.state.readerTheme, this.readerCt(), D.LV_TABLE); }
+  readerWordPalette(){ return U.buildReaderWordPalette(this.CR, this.readerCt(), D.WORD_ELV_TABLE); }
 
+  /* ---------- текст ---------- */
+  readerRand(str)         { return U.hashString(str); }
+  readerBuildTokens(str)  { return U.buildTokens(str); }
+  readerPlainRu(toks)     { return U.plainFromTokens(toks); }
 
-
-
-  /* ---- utils ---- */
-
-  /* ---- shared utilities (used by readerWord* methods) ---- */
-  _hexToRgb(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];}
-  _rgbToHex(a){const c=v=>('0'+Math.round(Math.max(0,Math.min(255,v))).toString(16)).slice(-2);return '#'+c(a[0])+c(a[1])+c(a[2]);}
-  wordMix(x,y,t){const A=this._hexToRgb(x),B=this._hexToRgb(y);return this._rgbToHex([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]);}
-  wordLum(hex){const a=this._hexToRgb(hex);return (0.299*a[0]+0.587*a[1]+0.114*a[2])/255;}
-  wordFmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+"×";}
-  wordIconSearch(c){ const h=React.createElement; return h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'}, h('circle',{cx:11,cy:11,r:7}),h('path',{d:'M21 21l-4.3-4.3'})); }
-  wordIconEye(c){ const h=React.createElement; return h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'}, h('path',{d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z'}), h('circle',{cx:12,cy:12,r:3})); }
-
+  /* ---------- экшены ---------- */
+  readerIsAdded(id)       { return this.state.readerAddedSet.has(id); }
+  readerSetMode(m)        { this.setState({ mode: m, dropdown: false }); }
+  readerToggleSimple()    { this.setState({ simpleView: !this.state.simpleView }); }
+  readerShowToast(msg)    { const id = Date.now(); this._t = id; this.setState({ readerToast: msg }); setTimeout(() => { if (this._mounted && this._t === id) this.setState({ readerToast: null }); }, 3400); }
+  readerOpenWordById(id, form) {
+    const a = this.A[id]; if (!a) return;
+    this.setState({ sheet: 'word', gearOpen: false, card: { key: id, lemma: a.lemma, form: form || a.defaultForm, translit: a.translit, pos: a.pos, strong: a.strong, rank: a.rank, freq: a.freq, morph: a.morph, inThisVerse: a.inThisVerse, also: a.also, defn: a.defn, deriv: a.deriv } });
+  }
+  readerOpenWordRow(row) {
+    const a = this.A[row.k];
+    const base = { key: row.k, lemma: row.g, form: row.g, translit: row.t, rank: 'Топ-' + (row.r <= 10 ? '10' : row.r <= 50 ? '50' : row.r <= 100 ? '100' : '300'), freq: row.f };
+    const card = a ? { key: row.k, lemma: a.lemma, form: a.defaultForm, translit: a.translit, pos: a.pos, strong: a.strong, rank: a.rank, freq: a.freq, morph: a.morph, inThisVerse: a.inThisVerse, also: a.also, defn: a.defn, deriv: a.deriv } : base;
+    this.setState({ sheet: 'word', gearOpen: false, card: card });
+  }
+  readerOpenLetter(g) {
+    const L = this.LET[g]; if (!L) return;
+    this.setState({ sheet: 'letter', card: { letter: g, L: L } });
+  }
+  readerCloseSheet()     { this.setState({ sheet: null, gearOpen: false }); }
+  readerSetStatus(key, s){ const sm = Object.assign({}, this.state.readerStatusMap); sm[key] = s; this.setState({ readerStatusMap: sm }); }
+  readerToggleLetterKnown(g) {
+    const k = this.state.knownLetters.slice(); const i = k.indexOf(g);
+    if (i >= 0) { k.splice(i, 1); } else { k.push(g); this.readerShowToast('Буква «' + this.LET[g].name + '» отмечена как освоенная'); }
+    this.setState({ knownLetters: k });
+  }
+  readerToggleAdded(row) {
+    const s = new Set(this.state.readerAddedSet);
+    if (s.has(row.k)) { s.delete(row.k); } else { s.add(row.k); this.readerShowToast('«' + row.g + '» теперь будет появляться в тексте'); }
+    this.setState({ readerAddedSet: s });
+  }
+  readerToggleSection(key) {
+    const h = this.state.cardHidden.slice(); const i = h.indexOf(key);
+    if (i >= 0) h.splice(i, 1); else h.push(key);
+    this.setState({ cardHidden: h });
+  }
+  readerMoveSection(key, dir) {
+    const o = this.state.cardOrder.slice(); const i = o.indexOf(key); const j = i + dir;
+    if (j < 0 || j >= o.length) return;
+    const tmp = o[i]; o[i] = o[j]; o[j] = tmp;
+    this.setState({ cardOrder: o });
+  }
 
   /* ================================================================
    * 4. LIFECYCLE
    * ================================================================ */
   componentDidMount() {
+    this._mounted = true;
     this._onResize = () => {
       const w = Math.min(1180, (window.innerWidth || 1180) - 40);
       const s = Math.min(1, w / 1180);
-      this.setState({readerDeskScale: s});
+      this.setState({ readerDeskScale: s });
     };
     this._onResize();
     window.addEventListener('resize', this._onResize);
     this._onDocDown = (e) => {
       if (this.state.readerWordPosMenuOpen && !(e.target.closest && e.target.closest('[data-rwposmenu]')))
-        this.setState({readerWordPosMenuOpen:false});
+        this.setState({ readerWordPosMenuOpen: false });
       if (this.state.readerWordSMenuOpen && !(e.target.closest && e.target.closest('[data-rwsmenu]')))
-        this.setState({readerWordSMenuOpen:false});
+        this.setState({ readerWordSMenuOpen: false });
     };
     document.addEventListener('mousedown', this._onDocDown);
   }
@@ -1291,37 +210,38 @@ class Component extends DCLogic {
     this.readerWordSetupScroll('readerPhoneWordList');
   }
   componentWillUnmount() {
+    this._mounted = false;
     if (this._onResize) window.removeEventListener('resize', this._onResize);
     if (this._onDocDown) document.removeEventListener('mousedown', this._onDocDown);
+    this._cleanupScrollListeners();
   }
 
-
   /* ================================================================
-   * 5. COMPOSITION — renderVals (аналог src/ui/render.js)
+   * 5. COMPOSITION — renderVals
    * ================================================================ */
   renderVals() {
-    this.CR = this.readerPalette();
+    this.CR  = this.readerPalette();
     this.CRW = this.readerWordPalette();
     return {
       theme: this.state.readerTheme,
       contrast: this.state.readerContrast,
       posStyle: this.props.posStyle ?? 'Сегменты',
       reader: {
-        phone: this.readerRenderPhone(),
-        desktop: this.readerRenderDesktop(),
+        phone:    this.readerRenderPhone(),
+        desktop:  this.readerRenderDesktop(),
         galModeA: this.readerGalModeA(),
         galModeB: this.readerGalModeB(),
         galModeC: this.readerGalModeC(),
         galModeD: this.readerGalModeD(),
         galModeE: this.readerGalModeE(),
         galModeF: this.readerGalModeF(),
-        galTop1: this.readerGalTop1(),
-        galTop2: this.readerGalTop2(),
-        chip1: this.readerChipGallery(this.readerChip1),
-        chip2: this.readerChipGallery(this.readerChip2),
-        chip3: this.readerChipGallery(this.readerChip3),
-        chip4: this.readerChipGallery(this.readerChip4),
-        chip5: this.readerChipGallery(this.readerChip5),
+        galTop1:  this.readerGalTop1(),
+        galTop2:  this.readerGalTop2(),
+        chip1:  this.readerChipGallery(this.readerChip1),
+        chip2:  this.readerChipGallery(this.readerChip2),
+        chip3:  this.readerChipGallery(this.readerChip3),
+        chip4:  this.readerChipGallery(this.readerChip4),
+        chip5:  this.readerChipGallery(this.readerChip5),
         chipH1: this.readerChipGallery(this.readerChipH1),
         chipH2: this.readerChipGallery(this.readerChipH2),
         chipH3: this.readerChipGallery(this.readerChipH3),
@@ -1329,6 +249,9 @@ class Component extends DCLogic {
     };
   }
 }
+
+// Примешать все render-методы к прототипу Component
+Object.assign(Component.prototype, window.RU2GR_RENDER);
 </script>
 </body>
 </html>
