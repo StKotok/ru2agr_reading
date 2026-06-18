@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="./ru2gr-tokens.js"></script>
 <style>
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:#cfcabf;}
@@ -27,14 +28,6 @@
   <div style="text-align:center;max-width:560px;">
     <div style="font-family:'Gentium Plus',serif;font-size:30px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">Экран «Слова»</div>
     <div style="font-size:15px;color:#6f6a5f;margin-top:7px;line-height:1.5;">Личный словарь · частотные леммы НЗ · поиск, фильтры, статусы, замены в тексте. Нажимайте на строки слов.</div>
-  </div>
-
-  <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:14px;">
-    <div>
-      <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Фильтр «Часть речи» · 3 кардинально разных подхода</div>
-      <div style="font-size:13.5px;color:#6f6a5f;margin-top:6px;line-height:1.5;max-width:680px;">Замена для строки «Все / Сущ. / Глаг. / Прил. / Служ.». Все три варианта живые и общие — выбор синхронизирован с макетами ниже. Активный в макетах вариант переключается в Tweaks (свойство «posStyle»).</div>
-    </div>
-    {{ posCompare }}
   </div>
 
   <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:14px;">
@@ -188,6 +181,7 @@ class Component extends DCLogic {
   mix(x,y,t){const A=this.hexToRgb(x),B=this.hexToRgb(y);return this.rgbToHex([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]);}
   lum(hex){const a=this.hexToRgb(hex);return (0.299*a[0]+0.587*a[1]+0.114*a[2])/255;}
   buildThemes(){
+    if(window.RU2GR)return window.RU2GR.THEMES;
     const mk=(o)=>({paper:o.paper,paper2:o.alt,sidebar:o.alt,read:o.read,titlebar:o.title,ink:o.ink,inkSoft:o.inkSoft,muted:o.muted,muted2:o.muted2,line:this.a(o.ink,0.10),line2:this.a(o.ink,0.18),blue:o.blue,blueHead:o.blue,blueBg:o.blueBg,blueTx:o.blueTx,terra:o.terra,terraSoft:o.terraSoft,green:o.green,greenDk:o.greenDk,greenBg:o.greenBg});
     return {
       'Пергамент':mk({paper:'#ECE7DD',alt:'#E3DDD0',read:'#F6F3EE',title:'#E2DBCB',ink:'#272320',inkSoft:'#4a463e',muted:'#9a9488',muted2:'#bdb6a7',blue:'#2f5d85',blueBg:'#cdd9e6',blueTx:'#345f82',terra:'#bb763c',terraSoft:'#e7d3bf',green:'#7c9d5b',greenDk:'#5f7d44',greenBg:'#d9e3c9'}),
@@ -797,9 +791,9 @@ class Component extends DCLogic {
           h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.getFiltered().length+'\u00a0слов')
         ),
         h('div',{style:{marginBottom:9}},this.searchBar(true)),
-        this.sTabs(true),
+        this.sV3(),
         h('div',{style:{height:8}}),
-        this.posFilterUI(true)
+        this.posDropdown(true)
       ),
       // List
       h('div',{id:'phoneWordList',className:'scScroll',style:{flex:1,overflowY:'auto',padding:'0 18px'}},
@@ -852,9 +846,9 @@ class Component extends DCLogic {
         ),
         h('div',{style:{marginBottom:11}},this.searchBar(false)),
         h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
-          this.sTabs(false),
+          this.sV3(),
           h('div',{style:{width:1,height:18,background:C.line2}}),
-          this.posFilterUI(false)
+          this.posDropdown(false)
         )
       ),
       // Scrollable list
