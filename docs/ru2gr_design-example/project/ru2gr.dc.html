@@ -66,35 +66,6 @@
 </div>
 
 
-  <div style="display:flex;align-items:center;gap:12px;padding:12px 28px 0;">
-    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#9a9488;white-space:nowrap;flex:0 0 auto;">02</span>
-    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7a7468;white-space:nowrap;flex:0 0 auto;">Слова</span>
-    <div style="flex:1;height:1px;background:rgba(40,34,22,0.14);"></div>
-  </div>
-
-
-<div style="min-height:100vh;background:#cfcabf;font-family:'Source Sans 3',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:40px 20px 90px;gap:30px;">
-  <div style="text-align:center;max-width:560px;">
-    <div style="font-family:'Gentium Plus',serif;font-size:30px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">Экран «Слова»</div>
-  </div>
-
-  {{ words.sCompare }}
-
-  <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:12px;">
-    <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Десктоп · ≥ 600px · боковая навигация + инспектор справа</div>
-    <div style="width:100%;border-radius:18px;overflow:hidden;box-shadow:0 36px 80px -34px rgba(40,34,22,0.55),0 0 0 1px rgba(40,34,22,0.1);background:#f4f2ec;">
-      {{ words.desktop }}
-    </div>
-  </div>
-
-  <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;margin-top:10px;">Мобильный · &lt; 600px · нижняя шторка</div>
-  <div style="width:402px;height:872px;background:#15140f;border-radius:54px;padding:11px;box-shadow:0 40px 90px -28px rgba(40,34,22,0.7),0 0 0 2px rgba(0,0,0,0.22);flex:0 0 auto;">
-    <div class="scScreen" style="position:relative;width:100%;height:100%;background:#ECE7DD;border-radius:44px;overflow:hidden;">
-      {{ words.phone }}
-    </div>
-  </div>
-</div>
-
 
 </div>
 </x-dc>
@@ -208,7 +179,8 @@ class Component extends DCLogic {
       knownLetters:['ν','α','ο'],
       cardOrder:['gram','pron','dict','trans','status','mean','defn','deriv'],
       cardHidden:[],
-      readerToast:null, readerDeskScale:1
+      readerToast:null, readerDeskScale:1,
+      readerTheme:'Пергамент', readerContrast:'Чёткий'
     };
 
     this.WORDS = [
@@ -312,12 +284,6 @@ class Component extends DCLogic {
     const as = new Set(this.WORDS.filter(w => w.add && w.r <= 45).map(w => w.k));
 
     Object.assign(this.state, {
-      wordSearch:'', statusFilter:'all', posFilter:'all', showInText:false,
-      wordStatusMap:sm, wordAddedSet:as,
-      activeKey:null, sheetOpen:false, posMenuOpen:false, sMenuOpen:false,
-      visibleCount:22,
-      wordDeskScale:1, wordToast:null,
-      // Reader-embedded words screen state (independent copy)
       readerWordSearch:'', readerWordStatusFilter:'all', readerWordPosFilter:'all', readerWordShowInText:false,
       readerWordStatusMap:Object.assign({}, sm), readerWordAddedSet:new Set(as),
       readerWordActiveKey:null, readerWordSheetOpen:false, readerWordPosMenuOpen:false, readerWordSMenuOpen:false,
@@ -333,31 +299,7 @@ class Component extends DCLogic {
    * ================================================================ */
   a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
   buildThemes(){return window.RU2GR ? window.RU2GR.THEMES : null;}
-  readerPalette(){ return this.THEMES[(this.props && this.props.theme)] || this.THEMES['Пергамент']; 
-  }
-  wordPalette(){
-    const base = this.THEMES[(this.props && this.props.theme)] || this.THEMES['Пергамент'];
-    const lvlName = (this.props && this.props.contrast) || 'Чёткий';
-    const LV = {'Мягкий':{rec:0.05,elv:0.42},'Чёткий':{rec:0.11,elv:0.72},'Максимальный':{rec:0.185,elv:1.0}}[lvlName] || {rec:0.11,elv:0.72};
-    const dark = this.wordLum(base.paper) < 0.5;
-    const elvAmt = dark ? LV.elv*0.17 : LV.elv;
-    const recAmt = dark ? LV.rec*0.75 : LV.rec;
-    const elevate = (hex,t)=>this.wordMix(hex,'#ffffff',t);
-    const recess  = (hex,t)=>this.wordMix(hex,'#000000',t);
-    const C = Object.assign({}, base);
-    C.content  = elevate(base.paper, elvAmt*0.30);
-    C.card     = elevate(base.paper, elvAmt);
-    C.sidebar  = recess(base.paper, recAmt);
-    C.titlebar = recess(base.paper, recAmt*1.45);
-    C.read     = elevate(base.paper, elvAmt);
-    C.line     = this.a(base.ink, dark?0.13:0.09);
-    C.line2    = this.a(base.ink, dark?0.22:0.16);
-    C.cardLine = this.a(base.ink, dark?0.18:0.13);
-    C.shadow   = dark ? '0 2px 10px -2px rgba(0,0,0,.55)' : '0 1px 3px rgba(40,34,22,.10),0 10px 26px -14px rgba(40,34,22,.24)';
-    C.paper2   = C.card;
-    return C;
-
-  }
+  readerPalette(){ return this.THEMES[this.state.readerTheme] || this.THEMES['Пергамент']; }
   readerWordPalette(){
     const C = Object.assign({}, this.CR);
     C.content  = C.read;
@@ -574,10 +516,47 @@ class Component extends DCLogic {
         h('div',{onClick:()=>this.readerShowToast('Ссылка откроется в браузере'),style:{marginTop:20,display:'inline-flex',alignItems:'center',gap:8,fontFamily:this.sans,fontSize:14,fontWeight:600,color:C.blue,cursor:'pointer'}},'Открыть на GitHub',this.readerChev(C.blue))));
   }
 
+  /* ---------- settings ---------- */
+  readerThemeList(){ return ['Пергамент','Сепия','Слоновая кость','Туман','Море','Лес','Роза','Лаванда','Закат','Тёмная','Ночь','Уголь']; }
+  readerContrastList(){ return ['Мягкий','Чёткий','Максимальный']; }
+  readerRenderSettings(){
+    const C=this.CR, h=React.createElement, st=this.state;
+    const themes=this.readerThemeList();
+    const contrasts=this.readerContrastList();
+    const themeChip=(key)=>{ const t=this.THEMES[key]; const on=st.readerTheme===key; return h('button',{key:key,onClick:()=>this.setState({readerTheme:key}),style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'10px 6px 12px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?this.a(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(33.333% - 8px)',minWidth:0}},
+      h('div',{style:{width:'100%',height:32,borderRadius:7,background:t.paper,border:'1px solid '+this.a(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:this.serif,fontSize:18,color:t.ink,lineHeight:1}},'αβ')),
+      h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
+    return h('div',{className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',background:C.read}},
+      h('div',{style:{padding:'18px 20px 60px'}},
+        h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginBottom:18}},'Настройки'),
+        h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:10}},'Тема'),
+        h('div',{style:{display:'flex',flexWrap:'wrap',gap:8,marginBottom:22}}, themes.map(themeChip)),
+        h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:10}},'Контраст'),
+        h('div',{style:{display:'inline-flex',background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},
+          contrasts.map(ct=>{const on=st.readerContrast===ct;return h('button',{key:ct,onClick:()=>this.setState({readerContrast:ct}),style:{padding:'8px 16px',borderRadius:7,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct);}))));
+  }
+  readerRenderDeskSettings(){
+    const C=this.CR, h=React.createElement, st=this.state;
+    const themes=this.readerThemeList();
+    const contrasts=this.readerContrastList();
+    const themeChip=(key)=>{ const t=this.THEMES[key]; const on=st.readerTheme===key; return h('button',{key:key,onClick:()=>this.setState({readerTheme:key}),style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'12px 8px 14px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?this.a(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(25% - 9px)',minWidth:0}},
+      h('div',{style:{width:'100%',height:38,borderRadius:8,background:t.paper,border:'1px solid '+this.a(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:this.serif,fontSize:20,color:t.ink,lineHeight:1}},'αβ')),
+      h('span',{style:{fontFamily:this.sans,fontSize:12,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
+    return h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
+      h('div',{className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
+        h('div',{style:{maxWidth:700,margin:'0 auto',padding:'34px 44px 70px'}},
+          h('div',{style:{fontFamily:this.serif,fontSize:26,fontWeight:700,color:C.ink,marginBottom:22}},'Настройки'),
+          h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Тема'),
+          h('div',{style:{display:'flex',flexWrap:'wrap',gap:10,marginBottom:28}}, themes.map(themeChip)),
+          h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Контраст'),
+          h('div',{style:{display:'inline-flex',background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:4}},
+            contrasts.map(ct=>{const on=st.readerContrast===ct;return h('button',{key:ct,onClick:()=>this.setState({readerContrast:ct}),style:{padding:'9px 20px',borderRadius:8,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:14,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct);}))))));
+  }
+
   /* ---------- bottom nav ---------- */
   readerRenderBottomNav(){
     const C=this.CR,h=React.createElement,st=this.state;
-    const items=[['read','Читать',this.readerIconRead.bind(this)],['dict','Слова',this.readerIconWords.bind(this)],['about','О',this.readerIconInfo.bind(this)]];
+    const items=[['read','Читать',this.readerIconRead.bind(this)],['dict','Слова',this.readerIconWords.bind(this)],['settings','Настр',this.readerIconGear.bind(this)],['about','О',this.readerIconInfo.bind(this)]];
     return h('div',{style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.line,background:this.a(C.paper,0.96),paddingBottom:18,backdropFilter:'blur(8px)'}},
       items.map(it=>{const on=st.tab===it[0];const col=on?C.ink:C.muted2;return h('button',{key:it[0],onClick:()=>this.setState({tab:it[0],dropdown:false,intensityOpen:false}),style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}},it[2](col),h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:on?700:500,color:col}},it[1]));}));
   }
@@ -778,8 +757,9 @@ class Component extends DCLogic {
   }
   readerRenderDeskNav(){
     const C=this.CR,h=React.createElement,st=this.state;
-    const items=[['read','Читать',this.readerIconRead.bind(this)],['dict','Слова',this.readerIconWords.bind(this)],['about','О приложении',this.readerIconInfo.bind(this)]];
-    const themes=['Светлая','Тёмная','Авто'];
+    const items=[['read','Читать',this.readerIconRead.bind(this)],['dict','Слова',this.readerIconWords.bind(this)],['settings','Настройки',this.readerIconGear.bind(this)],['about','О приложении',this.readerIconInfo.bind(this)]];
+    const themes=[['Светлая','Пергамент'],['Тёмная','Тёмная'],['Авто','Пергамент']];
+    const activeTheme=st.readerTheme;
     return h('div',{style:{width:236,flex:'0 0 auto',background:C.paper2,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
       h('div',{style:{padding:'0 8px 26px'}},
         h('div',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink,lineHeight:1.15}},'Читалка НЗ'),
@@ -791,7 +771,7 @@ class Component extends DCLogic {
       h('div',{style:{padding:'0 6px'}},
         h('div',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted2,marginBottom:8}},'Тема'),
         h('div',{style:{display:'flex',gap:3,background:this.a(C.ink,0.05),borderRadius:10,padding:3}},
-          themes.map((t,i)=>h('button',{key:t,onClick:()=>{if(i>0)this.readerShowToast(t==='Авто'?'Авто-тема — следует за системой (в полной версии)':'Тёмная тема — добавим позже');},style:{flex:1,padding:'7px 0',borderRadius:7,border:'none',cursor:'pointer',background:i===0?C.paper:'transparent',boxShadow:i===0?'0 1px 2px rgba(40,34,22,0.1)':'none',fontFamily:this.sans,fontSize:12,fontWeight:i===0?700:500,color:i===0?C.ink:C.muted}},t)))));
+          themes.map(([label,key])=>{const on=activeTheme===key;return h('button',{key:label,onClick:()=>this.setState({readerTheme:key}),style:{flex:1,padding:'7px 0',borderRadius:7,border:'none',cursor:'pointer',background:on?C.paper:'transparent',boxShadow:on?'0 1px 2px rgba(40,34,22,0.1)':'none',fontFamily:this.sans,fontSize:12,fontWeight:on?700:500,color:on?C.ink:C.muted}},label);}))));
   }
   readerRenderDeskTopPanel(){
     const C=this.CR,h=React.createElement,st=this.state;
@@ -856,7 +836,7 @@ class Component extends DCLogic {
   readerRenderDesktop(){const h=React.createElement,s=this.state.readerDeskScale||1;return h('div',{style:{width:'100%',height:Math.round(768*s),overflow:'hidden'}},h('div',{style:{width:1180,height:768,transformOrigin:'top left',transform:'scale('+s+')'}},this.readerRenderDesktopApp()));}
   readerRenderDesktopApp(){
     const C=this.CR,h=React.createElement,st=this.state;
-    const main=st.tab==='read'?this.readerRenderDeskRead():st.tab==='dict'?this.readerRenderDeskDict():h('div',{style:{flex:1,minWidth:0,display:'flex',justifyContent:'center',overflow:'hidden'}},h('div',{style:{width:700,display:'flex',flexDirection:'column'}},this.readerRenderAbout()));
+    const main=st.tab==='read'?this.readerRenderDeskRead():st.tab==='dict'?this.readerRenderDeskDict():st.tab==='settings'?this.readerRenderDeskSettings():h('div',{style:{flex:1,minWidth:0,display:'flex',justifyContent:'center',overflow:'hidden'}},h('div',{style:{width:700,display:'flex',flexDirection:'column'}},this.readerRenderAbout()));
     return h('div',{style:{position:'relative',display:'flex',flexDirection:'column',height:768,background:C.paper,color:C.ink,fontFamily:this.serif}},
       h('div',{style:{flex:'0 0 auto',height:38,background:C.titlebar,borderBottom:'1px solid '+C.line,display:'flex',alignItems:'center',gap:8,padding:'0 16px'}},
         ['#d98b6e','#dcc06a','#9bbf73'].map((c,i)=>h('span',{key:i,style:{width:11,height:11,borderRadius:'50%',background:c}}))),
@@ -1085,7 +1065,7 @@ class Component extends DCLogic {
   /* ---------- compose ---------- */
 
   /*    2g — phone composition */
-  readerRenderContent(){const t=this.state.tab;if(t==='read')return this.readerRenderRead();if(t==='dict')return this.readerRenderDict();return this.readerRenderAbout();}
+  readerRenderContent(){const t=this.state.tab;if(t==='read')return this.readerRenderRead();if(t==='dict')return this.readerRenderDict();if(t==='settings')return this.readerRenderSettings();return this.readerRenderAbout();}
   readerRenderPhone(){
     const C=this.CR,h=React.createElement,st=this.state,isDict=st.tab==='dict';
     return h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:C.paper,color:C.ink}},
@@ -1255,659 +1235,14 @@ class Component extends DCLogic {
 
   /* ---- utils ---- */
 
-  /* ================================================================
-   * 3. SCREEN: dictionary — экран словаря (аналог src/ui/screens/dictionary.js)
-   * ================================================================ */
+  /* ---- shared utilities (used by readerWord* methods) ---- */
   _hexToRgb(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];}
   _rgbToHex(a){const c=v=>('0'+Math.round(Math.max(0,Math.min(255,v))).toString(16)).slice(-2);return '#'+c(a[0])+c(a[1])+c(a[2]);}
   wordMix(x,y,t){const A=this._hexToRgb(x),B=this._hexToRgb(y);return this._rgbToHex([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]);}
   wordLum(hex){const a=this._hexToRgb(hex);return (0.299*a[0]+0.587*a[1]+0.114*a[2])/255;}
-	  wordFmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+"×";}
-
-  /* ---- icons ---- */
-
-  /*    3a — иконки */
-  wordIconRead(c){return this.readerIconRead(c,22);}
-  wordIconWords(c){return this.readerIconWords(c,22);}
-  wordIconInfo(c){return this.readerIconInfo(c,22);}
-  wordIconSearch(c) {
-    const h = React.createElement;
-    return h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},
-      h('circle',{cx:11,cy:11,r:7}),h('path',{d:'M21 21l-4.3-4.3'}));
-  }
-  wordIconX(c, sz) {
-    const h = React.createElement, s = sz || 15;
-    return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
-      h('path',{d:'M6 6l12 12M18 6L6 18'}));
-  }
-  wordIconEye(c) {
-    const h = React.createElement;
-    return h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
-      h('path',{d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z'}),
-      h('circle',{cx:12,cy:12,r:3}));
-  }
-
-  /* ---- data ---- */
-
-  /*    3b — data queries + actions */
-  wordGetFiltered() {
-    const {wordSearch:search, statusFilter, posFilter, showInText, wordStatusMap:statusMap, wordAddedSet:addedSet} = this.state;
-    const q = search.trim().toLowerCase();
-    return this.WORDS.filter(w => {
-      if (statusFilter !== 'all' && statusMap[w.k] !== statusFilter) return false;
-      if (posFilter !== 'all' && w.pos !== posFilter) return false;
-      if (showInText && !addedSet.has(w.k)) return false;
-      if (q && !w.g.toLowerCase().includes(q) && !w.t.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }
-  wordGetGroups(filtered) {
-    return this.GROUPS.map(g => ({
-      ...g, words: filtered.filter(w => w.r >= g.min && w.r <= g.max)
-    })).filter(g => g.words.length > 0);
-  }
-
-  /* ---- actions ---- */
-  wordToggleAdded(k, e) {
-    e.stopPropagation();
-    const a = new Set(this.state.wordAddedSet);
-    if (a.has(k)) { a.delete(k); } else { a.add(k); this.wordShowToast('Слово будет показываться в тексте чтения'); }
-    this.setState({wordAddedSet:a});
-  }
-  wordSetStatus(k, s) {
-    const m = Object.assign({}, this.state.wordStatusMap);
-    m[k] = m[k] === s ? null : s;
-    this.setState({wordStatusMap:m});
-  }
-  wordClickRow(k, e) {
-    // Store click Y for desktop popover positioning
-    if (e) {
-      const mainEl = document.getElementById('deskMain');
-      if (mainEl) {
-        const rr = e.currentTarget.getBoundingClientRect();
-        const mr = mainEl.getBoundingClientRect();
-        const rawY = rr.top - mr.top;
-        this._popY = Math.max(56, Math.min(rawY, mr.height - 390));
-      }
-    }
-    const same = this.state.activeKey === k;
-    this.setState({activeKey: same ? null : k, sheetOpen: !same});
-  }
-  wordCloseCard() { this.setState({activeKey:null, sheetOpen:false}); }
-  wordShowToast(msg) {
-    const id = Date.now(); this._tid = id;
-    this.setState({wordToast:msg});
-    setTimeout(() => { if (this._tid === id) this.setState({wordToast:null}); }, 2600);
-  }
-
-  /* ---- status pill ---- */
-
-  /*    3c — rendering: строки, группы, карточки, поиск, фильтры */
-  wordSPill(k, sm) {
-    const C=this.CW, h=React.createElement, s=this.state.wordStatusMap[k];
-    if (!s) return null;
-    const cfg = {new:['Новое',C.muted,this.a(C.ink,.06)],learning:['Учу',C.blueTx,C.blueBg],known:['Знаю',C.greenDk,C.greenBg]}[s];
-    if (!cfg) return null;
-    return h('span',{style:{fontFamily:this.sans,fontSize:sm?10.5:11,fontWeight:600,color:cfg[1],background:cfg[2],padding:sm?'2px 7px':'3px 9px',borderRadius:20,whiteSpace:'nowrap',flexShrink:0}},cfg[0]);
-  }
-
-  /* ---- checkbox ---- */
-  wordCbx(w) {
-    const C=this.CW, h=React.createElement;
-    if (!w.add) return h('div',{title:'Нет соответствия в русском тексте',style:{width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted2,fontSize:16,flexShrink:0}},'–');
-    const on = this.state.wordAddedSet.has(w.k);
-    return h('button',{
-      onClick:e=>this.wordToggleAdded(w.k,e),
-      title:on?'Убрать из текста':'Показывать в тексте',
-      style:{width:28,height:28,borderRadius:9,border:'1.5px solid '+(on?C.terra:C.line2),background:on?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}
-    }, on ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null);
-  }
-
-  /* ---- single word row ---- */
-  wordWRow(w, isActive) {
-    const C=this.CW, h=React.createElement;
-    return h('div',{
-      key:w.k, id:'row_'+w.k,
-      onClick:e=>this.wordClickRow(w.k,e),
-      style:{
-        display:'flex',alignItems:'center',gap:10,
-        padding:'9px 10px 9px 0',
-        borderBottom:'1px solid '+C.line,
-        cursor:'pointer',
-        background:isActive?this.a(C.terra,.055):'transparent',
-        borderLeft:'3px solid '+(isActive?C.terra:'transparent'),
-        paddingLeft: isActive?9:0,
-        opacity:!w.add?0.5:1,
-        transition:'background .1s',
-      }
-    },
-      h('span',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted2,width:32,textAlign:'right',flexShrink:0,lineHeight:1}},w.r),
-      h('div',{style:{flex:1,minWidth:0}},
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:8}},
-          h('span',{style:{fontFamily:this.serif,fontSize:21,color:isActive?C.terra:C.blue,lineHeight:1.1,whiteSpace:'nowrap'}},w.g),
-          h('span',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,lineHeight:1,whiteSpace:'nowrap'}},w.t)
-        ),
-        h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted2,marginTop:2}},this.wordFmt(w.freq)+' в НЗ')
-      ),
-      this.wordSPill(w.k, true),
-      this.wordCbx(w)
-    );
-  }
-
-  /* ---- group divider ---- */
-  wordGDiv(g) {
-    const C=this.CW, h=React.createElement;
-    return h('div',{key:'gd_'+g.key,style:{display:'flex',alignItems:'center',gap:9,padding:'14px 10px 6px 0'}},
-      h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.terra,flexShrink:0}},g.label),
-      h('span',{style:{flex:1,height:1,background:C.line2}}),
-      h('span',{style:{fontFamily:this.sans,fontSize:11,color:C.muted2,flexShrink:0}},g.cov)
-    );
-  }
-
-  /* ---- word list body ---- */
-  wordWListBody(pb) {
-    const C=this.CW, h=React.createElement;
-    const {visibleCount, activeKey} = this.state;
-    const filtered = this.wordGetFiltered();
-    const groups   = this.wordGetGroups(filtered);
-    const total    = filtered.length;
-    const items    = [];
-    let shown = 0;
-    for (const g of groups) {
-      if (shown >= visibleCount) break;
-      items.push(this.wordGDiv(g));
-      for (const w of g.words) {
-        if (shown >= visibleCount) break;
-        items.push(this.wordWRow(w, activeKey === w.k));
-        shown++;
-      }
-    }
-    if (total === 0) items.push(h('div',{key:'empty',style:{textAlign:'center',color:C.muted,fontFamily:this.sans,fontSize:14,padding:'48px 0'}},'Ничего не найдено'));
-    else if (shown < total) items.push(h('div',{key:'more',style:{padding:'18px 0',textAlign:'center',fontFamily:this.sans,fontSize:12.5,color:C.muted2}},
-      'Ещё '+(total-shown)+' слов — прокрутите вниз…'));
-    return h('div',{style:{paddingBottom:pb||16}},items);
-  }
-
-  /* ---- word card ---- */
-  wordWCard(k) {
-    if (!k) return null;
-    const C=this.CW, h=React.createElement;
-    const w = this.WORDS.find(x => x.k === k);
-    if (!w) return null;
-    const st = this.state;
-    const status = st.wordStatusMap[k];
-    const added  = st.wordAddedSet.has(k);
-    const sCfg = {
-      new:      {label:'Новое',   col:C.muted,   bg:this.a(C.ink,.05), bd:C.line2},
-      learning: {label:'Учу',     col:C.blueTx,  bg:C.blueBg,          bd:this.a(C.blue,.5)},
-      known:    {label:'Знаю',    col:C.greenDk, bg:C.greenBg,         bd:this.a(C.green,.6)},
-    };
-    return h('div',{style:{padding:'20px 20px 26px'}},
-      // Lemma + close
-      h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:14}},
-        h('div',null,
-          h('div',{style:{fontFamily:this.serif,fontSize:46,color:C.blue,lineHeight:1}},w.g),
-          h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:17,color:C.muted,marginTop:3}},w.t)
-        ),
-        h('button',{onClick:()=>this.wordCloseCard(),style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:4}},
-          this.wordIconX(C.inkSoft))
-      ),
-      // Info block
-      h('div',{style:{background:this.a(C.ink,.03),border:'1px solid '+C.line,borderRadius:13,padding:'13px 15px',marginBottom:14}},
-        h('div',{style:{fontFamily:this.serif,fontSize:17,fontWeight:700,color:C.ink,lineHeight:1.4,marginBottom:7}},w.ru),
-        h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}},
-          h('span',{style:{fontFamily:this.sans,fontSize:12,fontWeight:600,color:C.blueTx,background:C.blueBg,padding:'3px 9px',borderRadius:6,whiteSpace:'nowrap'}},w.posL),
-          h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,whiteSpace:'nowrap'}},'Частота: '+this.wordFmt(w.freq)),
-          h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,whiteSpace:'nowrap'}},'ранг '+w.r+' в НЗ'),
-          h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted2,whiteSpace:'nowrap'}},'Strong '+w.strong)
-        )
-      ),
-      // Status
-      h('div',{style:{marginBottom:14}},
-        h('div',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:8}},'Статус изучения'),
-        h('div',{style:{display:'flex',gap:6}},
-          ['new','learning','known'].map(s => {
-            const cfg = sCfg[s], on = status === s;
-            return h('button',{key:s, onClick:()=>this.wordSetStatus(k,s),
-              style:{flex:1,padding:'8px 0',borderRadius:10,border:'1.5px solid '+(on?cfg.bd:C.line),background:on?cfg.bg:'transparent',color:on?cfg.col:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',transition:'all .14s'}
-            },cfg.label);
-          })
-        )
-      ),
-      // Show in text
-      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'12px 0',borderTop:'1px solid '+C.line}},
-        h('div',{style:{minWidth:0}},
-          h('div',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:600,color:w.add?C.ink:C.muted2}},'Показывать в тексте'),
-          h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted,marginTop:2,lineHeight:1.3}},
-            w.add ? 'Заменяет слово в тексте чтения' : 'Нет соответствия в русском тексте')
-        ),
-        w.add
-          ? h('button',{onClick:e=>this.wordToggleAdded(k,e),
-              style:{width:46,height:27,borderRadius:14,border:'none',cursor:'pointer',background:added?C.terra:this.a(C.ink,.1),position:'relative',transition:'background .2s',flexShrink:0}},
-              h('span',{style:{position:'absolute',top:3.5,left:added?22:3.5,width:20,height:20,borderRadius:10,background:'#fff',transition:'left .2s',boxShadow:'0 1px 3px rgba(0,0,0,0.18)'}})
-            )
-          : h('span',{style:{fontFamily:this.sans,fontSize:18,color:C.muted2,flexShrink:0}},'–')
-      )
-    );
-  }
-
-  /* ---- search bar ---- */
-  wordSearchBar(mobile) {
-    const C=this.CW, h=React.createElement, st=this.state;
-    return h('div',{style:{display:'flex',alignItems:'center',gap:8,background:C.card,border:'1px solid '+C.cardLine,borderRadius:11,padding:mobile?'8px 11px':'9px 13px',boxShadow:'0 1px 2px rgba(40,34,22,.05)'}},
-      this.wordIconSearch(C.muted),
-      h('input',{value:st.wordSearch,onChange:e=>this.setState({wordSearch:e.target.value}),placeholder:'Поиск: λόγος или logos…',style:{flex:1,border:'none',background:'none',outline:'none',fontFamily:this.sans,fontSize:mobile?14:14.5,color:C.ink}}),
-      st.wordSearch ? h('button',{onClick:()=>this.setState({wordSearch:''}),style:{background:'none',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center',color:C.muted2}},this.wordIconX(C.muted2,14)) : null
-    );
-  }
-
-  /* ---- status tabs (Все · [В тексте] · Новые/Учу/Знаю) ---- */
-  wordSTabs(mobile) {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const tab=(v,l)=>{
-      const on = st.statusFilter === v;
-      return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-        style:{padding:mobile?'6px 10px':'7px 14px',borderRadius:9,border:'1px solid '+(on?'transparent':C.line),background:on?C.ink:'transparent',color:on?C.paper:C.muted,fontFamily:this.sans,fontSize:mobile?12:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}
-      },l);
-    };
-    const sep=(key)=>h('span',{key:key,style:{width:1,height:18,background:C.line2,flexShrink:0,margin:mobile?'0 1px':'0 2px'}});
-    const inText=h('button',{key:'intext',onClick:()=>this.setState({showInText:!st.showInText}),
-      style:{display:'flex',alignItems:'center',gap:5,padding:mobile?'6px 10px':'7px 12px',borderRadius:9,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,fontFamily:this.sans,fontSize:mobile?12:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}},
-      this.wordIconEye(st.showInText?C.terra:C.muted),'В тексте');
-    return h('div',{className:mobile?'scScroll':undefined,style:{display:'flex',gap:mobile?5:6,alignItems:'center',overflowX:mobile?'auto':'visible'}},
-      tab('all','Все'),
-      sep('s1'), inText, sep('s2'),
-      tab('new','Новые'), tab('learning','Учу'), tab('known','Знаю')
-    );
-  }
-
-  /* ---- POS data ---- */
-
-  /*    3d — POS-фильтр (сегменты / список / цвет / чипсы) */
-  wordPosOpts() { return [['all','Все'],['noun','Сущ.'],['verb','Глаг.'],['adj','Прил.'],['func','Служ.']]; }
-  wordPosCount(v) {
-    const {wordSearch:search, statusFilter, showInText, wordStatusMap:statusMap, wordAddedSet:addedSet} = this.state;
-    const q = search.trim().toLowerCase();
-    return this.WORDS.filter(w => {
-      if (statusFilter !== 'all' && statusMap[w.k] !== statusFilter) return false;
-      if (showInText && !addedSet.has(w.k)) return false;
-      if (q && !w.g.toLowerCase().includes(q) && !w.t.toLowerCase().includes(q)) return false;
-      if (v !== 'all' && w.pos !== v) return false;
-      return true;
-    }).length;
-  }
-  wordCaret(c, open) {
-    const h = React.createElement;
-    return h('svg',{width:12,height:12,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round',style:{transform:open?'rotate(180deg)':'none',transition:'transform .15s',flexShrink:0}},h('path',{d:'M6 9l6 6 6-6'}));
-  }
-
-  /* ---- POS dispatcher (driven by posStyle prop) ---- */
-  wordPosFilterUI(mobile) {
-    const style = (this.props && this.props.posStyle) || 'Сегменты';
-    if (style === 'Чипсы') return this.wordPosChips(mobile);
-    if (style === 'Список') return this.wordPosDropdown(mobile);
-    if (style === 'Цвет')   return this.wordPosColor(mobile);
-    return this.wordPosSegmented(mobile);
-  }
-
-  /* ---- baseline: rounded chips ---- */
-  wordPosChips(mobile) {
-    const C=this.CW, h=React.createElement, st=this.state;
-    return h('div',{className:'scScroll',style:{display:'flex',gap:mobile?5:6,overflowX:'auto',paddingBottom:2}},
-      this.wordPosOpts().map(([v,l]) => {
-        const on = st.posFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({posFilter:v}),
-          style:{padding:'4px 11px',height:27,borderRadius:14,border:'1px solid '+(on?this.a(C.blue,.4):C.line),background:on?C.blueBg:'transparent',color:on?C.blueTx:C.muted,fontFamily:this.sans,fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}
-        },l);
-      })
-    );
-  }
-
-  /* ---- approach 1: connected segmented control ---- */
-  wordPosSegmented(mobile) {
-    const C=this.CW, h=React.createElement, st=this.state;
-    return h('div',{style:{display:'inline-flex',background:this.a(C.ink,.05),border:'1px solid '+C.line,borderRadius:10,padding:3,flexShrink:0}},
-      this.wordPosOpts().map(([v,l]) => {
-        const on = st.posFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({posFilter:v}),
-          style:{padding:mobile?'6px 11px':'7px 15px',borderRadius:7,border:'none',background:on?C.card:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:mobile?12:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}
-        },l);
-      })
-    );
-  }
-
-  /* ---- approach 2: dropdown menu with counts ---- */
-  wordPosDropdown(mobile) {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const opts = this.wordPosOpts();
-    const cur = opts.find(o => o[0] === st.posFilter) || opts[0];
-    const open = st.posMenuOpen;
-    const menu = open ? h('div',{style:{position:'absolute',top:'calc(100% + 6px)',left:0,zIndex:50,minWidth:184,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}},
-      opts.map(([v,l]) => {
-        const on = st.posFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({posFilter:v,posMenuOpen:false}),
-          style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?this.a(C.blue,.1):'transparent',color:on?C.blueTx:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}},
-          h('span',null,l),
-          h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:on?C.blueTx:C.muted2}},this.wordPosCount(v))
-        );
-      })
-    ) : null;
-    return h('div',{'data-posmenu':'1',style:{position:'relative',flexShrink:0}},
-      h('button',{onClick:()=>this.setState({posMenuOpen:!open}),
-        style:{display:'flex',alignItems:'center',gap:8,padding:mobile?'7px 11px':'8px 13px',borderRadius:10,border:'1px solid '+(open?this.a(C.blue,.4):C.line),background:open?C.blueBg:C.card,color:C.ink,fontFamily:this.sans,fontSize:mobile?12.5:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
-        h('span',{style:{color:C.muted,fontWeight:600}},'Часть речи:'),
-        h('span',{style:{color:st.posFilter==='all'?C.inkSoft:C.blueTx,fontWeight:700}},cur[1]),
-        this.wordCaret(C.muted, open)
-      ),
-      menu
-    );
-  }
-
-  /* ---- approach 3: semantic colour key with counts ---- */
-  wordPosColorMap() { const C=this.CW; return {all:C.inkSoft, noun:C.blue, verb:C.terra, adj:C.greenDk, func:C.muted}; }
-  wordPosColor(mobile) {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const cmap = this.wordPosColorMap();
-    return h('div',{className:'scScroll',style:{display:'flex',gap:mobile?6:7,overflowX:'auto',paddingBottom:2,alignItems:'center'}},
-      this.wordPosOpts().map(([v,l]) => {
-        const on = st.posFilter === v;
-        const col = cmap[v];
-        return h('button',{key:v,onClick:()=>this.setState({posFilter:v}),
-          style:{display:'flex',alignItems:'center',gap:7,padding:mobile?'5px 11px':'6px 13px',borderRadius:20,border:'1.5px solid '+(on?col:this.a(col,.32)),background:on?this.a(col,.13):'transparent',color:on?col:C.muted,fontFamily:this.sans,fontSize:mobile?12:12.5,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,transition:'all .12s'}},
-          h('span',{style:{width:9,height:9,borderRadius:'50%',background:col,flexShrink:0,opacity:v==='all'?0.45:1}}),
-          l,
-          h('span',{style:{fontSize:11,fontWeight:600,color:on?col:C.muted2,opacity:.85}},this.wordPosCount(v))
-        );
-      })
-    );
-  }
-
-  /* ---- side-by-side comparison of the 3 approaches ---- */
-  wordPosCompareEl() {
-    const C=this.CW, h=React.createElement;
-    const frame=(title,desc,node)=>h('div',{style:{flex:'1 1 300px',minWidth:282,background:C.card,border:'1px solid '+C.cardLine,borderRadius:16,padding:'18px 18px 22px',boxShadow:C.shadow,display:'flex',flexDirection:'column',gap:14}},
-      h('div',null,
-        h('div',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},title),
-        h('div',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,marginTop:4,lineHeight:1.45}},desc)
-      ),
-      h('div',{style:{display:'flex',alignItems:'flex-start',minHeight:48}},node)
-    );
-    return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},
-      frame('1 · Сегмент-контрол','Связанный единый переключатель: выбор одним касанием, фиксированная ширина, не переносится.',this.wordPosSegmented(false)),
-      frame('2 · Выпадающий список','Свёрнут до одной кнопки со счётчиками. Экономит ширину строки фильтров — масштабируется на десятки частей речи.',this.wordPosDropdown(false)),
-      frame('3 · Цветной ключ','Семантический цвет на каждую часть речи + счётчики. Двойная роль: фильтр и легенда для подсветки слов в тексте.',this.wordPosColor(false))
-    );
-  }
-
-  /* ===== STATUS / «В тексте» — 5 компактных вариантов ===== */
-
-  /*    3e — статус-фильтр (V1–V5) */
-  wordSOpts() { return [['all','Все'],['new','Новые'],['learning','Учу'],['known','Знаю']]; }
-  wordSColorMap() { const C=this.CW; return {all:C.inkSoft, new:C.muted, learning:C.blueTx, known:C.greenDk}; }
-  wordStatusCount(v) {
-    const {wordSearch:search, posFilter, showInText, wordStatusMap:statusMap, wordAddedSet:addedSet} = this.state;
-    const q = search.trim().toLowerCase();
-    return this.WORDS.filter(w => {
-      if (posFilter !== 'all' && w.pos !== posFilter) return false;
-      if (showInText && !addedSet.has(w.k)) return false;
-      if (q && !w.g.toLowerCase().includes(q) && !w.t.toLowerCase().includes(q)) return false;
-      if (v !== 'all' && statusMap[w.k] !== v) return false;
-      return true;
-    }).length;
-  }
-  // reusable "В тексте" pieces
-  wordEyePill() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    return h('button',{onClick:()=>this.setState({showInText:!st.showInText}),
-      style:{display:'flex',alignItems:'center',gap:6,padding:'8px 13px',borderRadius:10,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
-      this.wordIconEye(st.showInText?C.terra:C.muted),'В тексте');
-  }
-  wordEyeIconBtn() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    return h('button',{onClick:()=>this.setState({showInText:!st.showInText}),title:st.showInText?'Показаны только слова в тексте':'Только слова в тексте',
-      style:{display:'flex',alignItems:'center',justifyContent:'center',width:34,height:34,borderRadius:9,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,cursor:'pointer',flexShrink:0}},
-      this.wordIconEye(st.showInText?C.terra:C.muted));
-  }
-  wordSDivider() { const C=this.CW; return React.createElement('span',{style:{width:1,height:20,background:C.line2,flexShrink:0}}); }
-
-  /* ---- V1: связанный сегмент-контрол + отдельный тоггл ---- */
-  wordSV1() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const seg = h('div',{style:{display:'inline-flex',background:this.a(C.ink,.05),border:'1px solid '+C.line,borderRadius:10,padding:3,flexShrink:0}},
-      this.wordSOpts().map(([v,l]) => {
-        const on = st.statusFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{padding:'7px 14px',borderRadius:7,border:'none',background:on?C.card:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},l);
-      }));
-    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, seg, this.wordEyePill());
-  }
-
-  /* ---- V2: цветной ключ-легенда со счётчиками + иконка ---- */
-  wordSV2() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const cmap = this.wordSColorMap();
-    const dots = h('div',{style:{display:'flex',gap:3,alignItems:'center'}},
-      this.wordSOpts().map(([v,l]) => {
-        const on = st.statusFilter === v, col = cmap[v];
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{display:'flex',alignItems:'center',gap:6,padding:'6px 10px',borderRadius:8,border:'none',background:on?this.a(col,.12):'transparent',cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s'}},
-          h('span',{style:{width:8,height:8,borderRadius:'50%',background:col,opacity:v==='all'?.4:1,flexShrink:0}}),
-          h('span',{style:{fontFamily:this.sans,fontSize:12.5,fontWeight:on?700:500,color:on?C.ink:C.muted}},l),
-          h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:600,color:C.muted2}},this.wordStatusCount(v))
-        );
-      }));
-    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dots, this.wordSDivider(), this.wordEyeIconBtn());
-  }
-
-  /* ---- V3: выпадающий список статусов + чип (самый компактный) ---- */
-  wordSV3() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const opts = this.wordSOpts();
-    const cur = opts.find(o => o[0] === st.statusFilter) || opts[0];
-    const open = st.sMenuOpen;
-    const menu = open ? h('div',{style:{position:'absolute',top:'calc(100% + 6px)',left:0,zIndex:50,minWidth:182,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}},
-      opts.map(([v,l]) => {
-        const on = st.statusFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v,sMenuOpen:false}),
-          style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?this.a(C.ink,.07):'transparent',color:on?C.ink:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}},
-          h('span',null,l),
-          h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},this.wordStatusCount(v))
-        );
-      })
-    ) : null;
-    const dd = h('div',{'data-smenu':'1',style:{position:'relative',flexShrink:0}},
-      h('button',{onClick:()=>this.setState({sMenuOpen:!open}),
-        style:{display:'flex',alignItems:'center',gap:8,padding:'8px 13px',borderRadius:10,border:'1px solid '+(open?C.line2:C.line),background:C.card,color:C.ink,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
-        h('span',{style:{color:C.muted}},'Статус:'),
-        h('span',{style:{fontWeight:700}},cur[1]),
-        h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},this.wordStatusCount(st.statusFilter)),
-        this.wordCaret(C.muted, open)
-      ),
-      menu
-    );
-    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dd, this.wordEyePill());
-  }
-
-  /* ---- V4: счётчик-пилюли (данные на первом плане) ---- */
-  wordSV4() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const cmap = this.wordSColorMap();
-    const pills = h('div',{style:{display:'flex',gap:6}},
-      this.wordSOpts().map(([v,l]) => {
-        const on = st.statusFilter === v, col = cmap[v];
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{display:'flex',flexDirection:'column',alignItems:'center',gap:2,minWidth:54,padding:'7px 10px',borderRadius:11,border:'1px solid '+(on?this.a(col,.45):C.line),background:on?this.a(col,.1):'transparent',cursor:'pointer',transition:'all .12s'}},
-          h('span',{style:{fontFamily:this.sans,fontSize:17,fontWeight:700,color:on?col:C.inkSoft,lineHeight:1}},this.wordStatusCount(v)),
-          h('span',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:600,color:on?col:C.muted,lineHeight:1}},l)
-        );
-      }));
-    return h('div',{style:{display:'flex',gap:10,alignItems:'stretch',flexWrap:'wrap'}}, pills, this.wordEyeIconBtn());
-  }
-
-  /* ---- V5: подчёркнутые вкладки + отдельный свитч (явно два виджета) ---- */
-  wordSV5() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const tabs = h('div',{style:{display:'flex',gap:18,borderBottom:'1px solid '+C.line}},
-      this.wordSOpts().map(([v,l]) => {
-        const on = st.statusFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{padding:'2px 1px 9px',background:'none',border:'none',borderBottom:'2px solid '+(on?C.ink:'transparent'),marginBottom:-1,cursor:'pointer',fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap'}},l);
-      }));
-    const sw = h('div',{style:{display:'flex',alignItems:'center',gap:9}},
-      h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:600,color:st.showInText?C.terra:C.muted}},'Только слова в тексте'),
-      h('button',{onClick:()=>this.setState({showInText:!st.showInText}),style:{width:42,height:24,borderRadius:12,border:'none',background:st.showInText?C.terra:this.a(C.ink,.12),position:'relative',cursor:'pointer',flexShrink:0,transition:'background .2s'}},
-        h('span',{style:{position:'absolute',top:3,left:st.showInText?21:3,width:18,height:18,borderRadius:9,background:'#fff',transition:'left .18s',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}))
-    );
-    return h('div',{style:{display:'flex',flexDirection:'column',gap:15,width:'100%'}}, tabs, sw);
-  }
-
-  /* ---- compare frame for the 5 status variants (removed) ---- */
-  wordSCompareEl() {
-    return null;
-  }
-
-  /* ---- status bar (phone) ---- */
-
-  /*    3f — phone/desktop layout + infinite scroll */
-  wordStatusBar(){return this.renderStatusBar(this.CW);}
-
-  /* ---- toast ---- */
-  wordToastEl(mobile) {
-    const C=this.CW, h=React.createElement;
-    if (!this.state.wordToast) return null;
-    return h('div',{key:'toast',style:{position:'absolute',left:'50%',bottom:mobile?88:22,transform:'translateX(-50%)',zIndex:60,background:this.a('#26221c',.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13,fontWeight:500,padding:'10px 18px',borderRadius:12,maxWidth:290,textAlign:'center',boxShadow:'0 12px 32px -8px rgba(0,0,0,.42)',animation:'scToast .22s ease',whiteSpace:'nowrap'}},this.state.wordToast);
-  }
-
-  /* ---- PHONE app ---- */
-  wordPhoneApp() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const sheet = (st.sheetOpen && st.activeKey) ? h('div',{key:'sheet',style:{position:'absolute',inset:0,zIndex:30}},
-      h('div',{onClick:()=>this.wordCloseCard(),style:{position:'absolute',inset:0,background:this.a('#15140f',.28),animation:'scFade .2s ease'}}),
-      h('div',{onClick:e=>e.stopPropagation(),style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'84%',background:C.card,borderRadius:'24px 24px 0 0',boxShadow:'0 -14px 50px -10px rgba(40,34,22,.38)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
-        h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:36,height:4,borderRadius:3,background:C.line2}})),
-        h('div',{className:'scScroll',style:{overflowY:'auto'}},this.wordWCard(st.activeKey))
-      )
-    ) : null;
-
-    return h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:C.content}},
-      this.wordStatusBar(),
-      // Header
-      h('div',{style:{flex:'0 0 auto',padding:'2px 18px 11px',background:C.card,borderBottom:'1px solid '+C.cardLine,boxShadow:'0 6px 18px -14px rgba(40,34,22,.45)',position:'relative',zIndex:5}},
-        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',height:44}},
-          h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink}},'Словарь'),
-          h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.wordGetFiltered().length+'\u00a0слов')
-        ),
-        h('div',{style:{marginBottom:9}},this.wordSearchBar(true)),
-        this.wordSV3(),
-        h('div',{style:{height:8}}),
-        this.wordPosDropdown(true)
-      ),
-      // List
-      h('div',{id:'phoneWordList',className:'scScroll',style:{flex:1,overflowY:'auto',padding:'0 18px'}},
-        this.wordWListBody(80)
-      ),
-      // Bottom nav
-      h('div',{style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.cardLine,background:C.card,boxShadow:'0 -6px 18px -14px rgba(40,34,22,.45)',paddingBottom:18}},
-        [['read','Читать',c=>this.wordIconRead(c)],['dict','Слова',c=>this.wordIconWords(c)],['about','О',c=>this.wordIconInfo(c)]].map(([tab,lbl,icfn])=>{
-          const on=tab==='dict', col=on?C.ink:C.muted2;
-          return h('button',{key:tab,onClick:()=>on?null:this.wordShowToast('Другие экраны — в основном прототипе'),
-            style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}},
-            icfn(col), h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:on?700:500,color:col}},lbl));
-        })
-      ),
-      sheet, this.wordToastEl(true)
-    );
-  }
-
-  /* ---- DESKTOP sidebar ---- */
-  wordDeskNav() {
-    const C=this.CW, h=React.createElement;
-    return h('div',{style:{width:236,flex:'0 0 auto',background:C.sidebar,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
-      h('div',{style:{padding:'0 8px 24px'}},
-        h('div',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink,lineHeight:1.15}},'Читалка НЗ'),
-        h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:2}},'греческий сквозь русский')
-      ),
-      h('div',{style:{display:'flex',flexDirection:'column',gap:4}},
-        [['read','Читать',c=>this.wordIconRead(c)],['dict','Слова',c=>this.wordIconWords(c)],['about','О приложении',c=>this.wordIconInfo(c)]].map(([tab,lbl,icfn])=>{
-          const on=tab==='dict', col=on?C.ink:C.inkSoft;
-          return h('button',{key:tab,onClick:()=>on?null:this.wordShowToast('Переключить экран — в основном прототипе'),
-            style:{display:'flex',alignItems:'center',gap:12,padding:'11px 12px',borderRadius:11,border:'1px solid '+(on?C.cardLine:'transparent'),cursor:'pointer',background:on?C.card:'transparent',boxShadow:on?C.shadow:'none',textAlign:'left'}},
-            icfn(col), h('span',{style:{fontFamily:this.sans,fontSize:14.5,fontWeight:on?700:500,color:col}},lbl));
-        })
-      )
-    );
-  }
-
-  /* ---- DESKTOP main content ---- */
-  wordDeskContent() {
-    const C=this.CW, h=React.createElement, st=this.state;
-    const hasActive = !!st.activeKey;
-
-    // Left list panel
-    const listPanel = h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column',overflow:'hidden'}},
-      // Sticky header
-      h('div',{style:{flex:'0 0 auto',padding:'20px 28px 14px',borderBottom:'1px solid '+C.line}},
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:12,marginBottom:12}},
-          h('span',{style:{fontFamily:this.serif,fontSize:25,fontWeight:700,color:C.ink}},'Словарь'),
-          h('span',{style:{fontFamily:this.sans,fontSize:13,color:C.muted}},this.wordGetFiltered().length+'\u00a0слов · 1000 самых частотных лемм НЗ')
-        ),
-        h('div',{style:{marginBottom:11}},this.wordSearchBar(false)),
-        h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
-          this.wordSV3(),
-          h('div',{style:{width:1,height:18,background:C.line2}}),
-          this.wordPosDropdown(false)
-        )
-      ),
-      // Scrollable list
-      h('div',{id:'deskWordList',className:'scScroll',style:{flex:1,overflowY:'auto'}},
-        h('div',{style:{maxWidth:640,padding:'0 28px 60px'}},
-          this.wordWListBody(24)
-        )
-      )
-    );
-
-    // Right inspector
-    const inspector = h('div',{style:{width:hasActive?316:0,flex:'0 0 auto',borderLeft:hasActive?'1px solid '+C.cardLine:'none',overflow:'hidden',background:C.card,boxShadow:hasActive?'-14px 0 30px -24px rgba(40,34,22,.5)':'none',transition:'width .18s'}},
-      hasActive
-        ? h('div',{className:'scScroll',style:{width:316,height:'100%',overflowY:'auto'}},this.wordWCard(st.activeKey))
-        : null
-    );
-
-    return h('div',{id:'deskMain',style:{flex:1,minWidth:0,display:'flex',position:'relative',overflow:'hidden'}},
-      listPanel,
-      inspector
-    );
-  }
-
-  /* ---- DESKTOP app ---- */
-  wordDeskApp() {
-    const C=this.CW, h=React.createElement;
-    return h('div',{style:{position:'relative',display:'flex',flexDirection:'column',height:768,background:C.content,color:C.ink}},
-      // macOS titlebar
-      h('div',{style:{flex:'0 0 auto',height:38,background:C.titlebar,borderBottom:'1px solid '+C.line,display:'flex',alignItems:'center',gap:8,padding:'0 16px'}},
-        ['#d98b6e','#dcc06a','#9bbf73'].map((c,i)=>h('span',{key:i,style:{width:11,height:11,borderRadius:'50%',background:c}}))),
-      // Body
-      h('div',{style:{flex:1,display:'flex',minHeight:0}},
-        this.wordDeskNav(),
-        this.wordDeskContent()
-      ),
-      this.wordToastEl(false)
-    );
-  }
-
-  /* ---- lifecycle ---- */
-  word_setupScroll(id) {
-    const el = document.getElementById(id);
-    if (!el || el._wlOk) return;
-    el._wlOk = true;
-    el.addEventListener('scroll', () => {
-      if (el.scrollTop + el.clientHeight > el.scrollHeight - 180) {
-        this.setState(s => ({visibleCount: Math.min(s.visibleCount + 15, this.WORDS.length + 5)}));
-      }
-    });
-  }
-
-
+  wordFmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+"×";}
+  wordIconSearch(c){ const h=React.createElement; return h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'}, h('circle',{cx:11,cy:11,r:7}),h('path',{d:'M21 21l-4.3-4.3'})); }
+  wordIconEye(c){ const h=React.createElement; return h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'}, h('path',{d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z'}), h('circle',{cx:12,cy:12,r:3})); }
 
 
   /* ================================================================
@@ -1917,15 +1252,11 @@ class Component extends DCLogic {
     this._onResize = () => {
       const w = Math.min(1180, (window.innerWidth || 1180) - 40);
       const s = Math.min(1, w / 1180);
-      this.setState({readerDeskScale: s, wordDeskScale: s});
+      this.setState({readerDeskScale: s});
     };
     this._onResize();
     window.addEventListener('resize', this._onResize);
     this._onDocDown = (e) => {
-      if (this.state.posMenuOpen && !(e.target.closest && e.target.closest('[data-posmenu]')))
-        this.setState({posMenuOpen:false});
-      if (this.state.sMenuOpen && !(e.target.closest && e.target.closest('[data-smenu]')))
-        this.setState({sMenuOpen:false});
       if (this.state.readerWordPosMenuOpen && !(e.target.closest && e.target.closest('[data-rwposmenu]')))
         this.setState({readerWordPosMenuOpen:false});
       if (this.state.readerWordSMenuOpen && !(e.target.closest && e.target.closest('[data-rwsmenu]')))
@@ -1934,8 +1265,6 @@ class Component extends DCLogic {
     document.addEventListener('mousedown', this._onDocDown);
   }
   componentDidUpdate() {
-    this.word_setupScroll('deskWordList');
-    this.word_setupScroll('phoneWordList');
     this.readerWordSetupScroll('readerDeskWordList');
     this.readerWordSetupScroll('readerPhoneWordList');
   }
@@ -1952,7 +1281,6 @@ class Component extends DCLogic {
     const theme = this.props.theme ?? 'Пергамент';
     this.CR = this.readerPalette();
     this.CRW = this.readerWordPalette();
-    this.CW = this.wordPalette();
     return {
       theme: theme,
       contrast: this.props.contrast ?? 'Чёткий',
@@ -1976,12 +1304,6 @@ class Component extends DCLogic {
         chipH1: this.readerChipGallery(this.readerChipH1),
         chipH2: this.readerChipGallery(this.readerChipH2),
         chipH3: this.readerChipGallery(this.readerChipH3),
-      },
-      words: {
-        phone: this.wordPhoneApp(),
-        desktop: this.wordDeskApp(),
-        posCompare: this.wordPosCompareEl(),
-        sCompare: this.wordSCompareEl(),
       }
     };
   }
