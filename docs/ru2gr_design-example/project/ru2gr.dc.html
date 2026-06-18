@@ -299,24 +299,30 @@ class Component extends DCLogic {
    * ================================================================ */
   a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
   buildThemes(){return window.RU2GR ? window.RU2GR.THEMES : null;}
-  readerPalette(){ return this.THEMES[this.state.readerTheme] || this.THEMES['Пергамент']; }
-  readerWordPalette(){
-    const C = Object.assign({}, this.CR);
+  readerPalette(){
+    const base = this.THEMES[this.state.readerTheme] || this.THEMES['Пергамент'];
     const ct = this.state.readerContrast || 'Чёткий';
-    const LV = {'Мягкий':{elv:0.03,rec:0.04,shadowAlpha:0.06},'Чёткий':{elv:0.08,rec:0.09,shadowAlpha:0.14},'Максимальный':{elv:0.14,rec:0.16,shadowAlpha:0.24}}[ct] || {elv:0.08,rec:0.09,shadowAlpha:0.14};
-    const dark = this.wordLum(C.paper) < 0.5;
-    const elv = dark ? LV.elv * 0.5 : LV.elv;
-    const rec = dark ? LV.rec * 0.6 : LV.rec;
-    C.content  = dark ? this.wordMix(C.read, '#ffffff', elv * 0.3) : this.wordMix(C.read, '#ffffff', elv * 0.3);
-    C.card     = dark ? this.wordMix(C.paper, '#ffffff', elv) : this.wordMix(C.paper, '#ffffff', elv);
-    C.sidebar  = dark ? this.wordMix(C.paper2 || C.sidebar, '#000000', rec * 0.5) : this.wordMix(C.paper2 || C.sidebar, '#000000', rec);
-    C.titlebar = dark ? this.wordMix(C.titlebar, '#000000', rec * 0.7) : this.wordMix(C.titlebar, '#000000', rec);
-    C.line     = this.a(C.ink, dark ? 0.08 + LV.shadowAlpha * 0.3 : 0.08 + LV.shadowAlpha * 0.5);
-    C.line2    = this.a(C.ink, dark ? 0.15 + LV.shadowAlpha * 0.4 : 0.15 + LV.shadowAlpha * 0.6);
-    C.cardLine = this.a(C.ink, dark ? 0.12 + LV.shadowAlpha * 0.3 : 0.12 + LV.shadowAlpha * 0.5);
+    const LV = {'Мягкий':{lineAlpha:0.06,line2Alpha:0.10,shadowAlpha:0.06},'Чёткий':{lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14},'Максимальный':{lineAlpha:0.15,line2Alpha:0.26,shadowAlpha:0.24}}[ct] || {lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14};
+    const dark = this.wordLum(base.paper) < 0.5;
+    const C = Object.assign({}, base);
+    C.line     = this.a(base.ink, dark ? LV.lineAlpha * 0.8 : LV.lineAlpha);
+    C.line2    = this.a(base.ink, dark ? LV.line2Alpha * 0.8 : LV.line2Alpha);
     C.shadow   = dark
       ? `0 2px ${8 + LV.shadowAlpha * 20}px -2px rgba(0,0,0,${0.3 + LV.shadowAlpha * 0.7})`
       : `0 1px ${2 + LV.shadowAlpha * 6}px rgba(40,34,22,${0.06 + LV.shadowAlpha * 0.3}),0 ${8 + LV.shadowAlpha * 20}px ${18 + LV.shadowAlpha * 28}px -14px rgba(40,34,22,${0.14 + LV.shadowAlpha * 0.4})`;
+    return C;
+  }
+  readerWordPalette(){
+    const C = Object.assign({}, this.CR);
+    // Elevation relative to CR (contrast already applied to line/line2/shadow)
+    const dark = this.wordLum(C.paper) < 0.5;
+    const ct = this.state.readerContrast || 'Чёткий';
+    const elv = {'Мягкий':0.03,'Чёткий':0.07,'Максимальный':0.12}[ct] || 0.07;
+    C.content  = dark ? this.wordMix(C.read, '#ffffff', elv * 0.25) : this.wordMix(C.read, '#ffffff', elv * 0.3);
+    C.card     = dark ? this.wordMix(C.paper, '#ffffff', elv) : this.wordMix(C.paper, '#ffffff', elv);
+    C.sidebar  = dark ? this.wordMix(C.sidebar || C.paper2, '#000000', elv * 0.4) : this.wordMix(C.sidebar || C.paper2, '#000000', elv * 0.6);
+    C.titlebar = dark ? this.wordMix(C.titlebar, '#000000', elv * 0.6) : this.wordMix(C.titlebar, '#000000', elv * 0.8);
+    C.cardLine = C.line;
     return C;
   }
 
