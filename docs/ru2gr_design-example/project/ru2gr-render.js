@@ -9,6 +9,27 @@
   var R = {};
 
   /* ================================================================
+   * ДИЗАЙН-ТОКЕНЫ (извлечены claude-design-adapter)
+   * Константы, не зависящие от темы. Цвета — в ru2gr-tokens.js.
+   * ================================================================ */
+  var TK = {
+    // Типографика
+    fsBody: 16, fsLabel: 11, fsSec: 18, fsChip: 13.5, fsDesc: 12, fsMeta: 11.5,
+    fwActive: 700, fwInactive: 500, fwEmphasis: 600,
+    lhTight: 1, lhProse: 1.55, lhVerse: 1.72,
+    lsLabel: '0.12em', lsChip: '0.03em',
+    // Пространственные
+    radius: 10, radiusSm: 7, radiusLg: 16,
+    chipPad: '5px 11px', chipHPad: '6px 11px', chipHeight: 30, chipMinHeight: 30,
+    sheetTopRadius: '26px 26px 0 0',
+    topBtnSize: 36, sheetBtnSize: 36, inspBtnSize: 32, iconBtnSize: 32,
+    deskContentWidth: 700, deskContentPad: '34px 44px 70px',
+    segPad: 3, segGap: 2, itemGap: 8, rowGap: 10, panelGap: 12,
+    barHeight: 3, dividerWidth: 1,
+    navWidth: 236, inspWidth: 364,
+  };
+
+  /* ================================================================
    * 2b — статус-бар
    * ================================================================ */
 
@@ -24,7 +45,7 @@
       h('rect',{x:0.6,y:0.6,width:21,height:10.8,rx:3,fill:'none',stroke:U.alpha(C.ink,0.45),strokeWidth:1.2}),
       h('rect',{x:2.4,y:2.4,width:16,height:7.2,rx:1.6,fill:C.ink}),
       h('rect',{x:23,y:3.6,width:2,height:4.8,rx:1,fill:U.alpha(C.ink,0.5)}));
-    return h('div',{style:{flex:'0 0 auto',height:46,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 26px 7px',fontFamily:this.sans,fontSize:15,fontWeight:600,color:C.ink}},
+    return h('div',{'data-section':'phone-status-bar',style:{flex:'0 0 auto',height:46,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 26px 7px',fontFamily:this.sans,fontSize:15,fontWeight:600,color:C.ink}},
       h('div',null,'9:41'),
       h('div',{style:{display:'flex',gap:7,alignItems:'center'}},signal,wifi,batt));
   };
@@ -35,7 +56,7 @@
 
   R.readerSegmentEl = function (small) {
     var h = React.createElement, C = this.CR, m = this.state.mode;
-    return h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:3}},
+    return h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:TK.radius,padding:3}},
       [1,2,3,4].map(function(n){ return h('button',{key:n,onClick:function(e){e.stopPropagation();this.readerSetMode(n);}.bind(this),style:{width:small?26:30,height:small?26:30,border:'none',cursor:'pointer',borderRadius:8,fontFamily:this.sans,fontSize:small?13:14,fontWeight:700,background:n===m?C.ink:'transparent',color:n===m?C.paper:C.muted,transition:'all .15s'}},n); },this));
   };
 
@@ -51,16 +72,16 @@
   R.readerRenderTopHeader = function () {
     var h = React.createElement, C = this.CR, st = this.state, self = this;
     var bookRow = h('div',{style:{display:'flex',alignItems:'center',gap:10,padding:'9px 18px 11px'}},
-      h('button',{onClick:function(){self.readerShowToast('Выбор книги — в полной версии');},style:{display:'flex',alignItems:'baseline',gap:8,background:'none',border:'none',cursor:'pointer',padding:0,color:C.ink,fontFamily:this.serif,whiteSpace:'nowrap',flex:'0 0 auto'}},
+      h('button',{'data-section':'desk-top--book-btn',onClick:function(){self.readerShowToast('Выбор книги — в полной версии');},style:{display:'flex',alignItems:'baseline',gap:8,background:'none',border:'none',cursor:'pointer',padding:0,color:C.ink,fontFamily:this.serif,whiteSpace:'nowrap',flex:'0 0 auto'}},
         h('span',{style:{fontSize:23,fontWeight:700,letterSpacing:'-0.01em',whiteSpace:'nowrap'}},'Иоанн,'),
         h('span',{style:{fontFamily:this.serif,fontSize:18,color:C.inkSoft,fontWeight:700,whiteSpace:'nowrap'}},'1'),
         h('span',{style:{transform:'translateY(2px)',flex:'0 0 auto'}},U.iconChev(C.muted))),
       h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('button',{onClick:function(e){e.stopPropagation();self.setState({dropdown:!st.dropdown});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState()))),
       h('div',{style:{display:'flex',gap:6,alignItems:'center',flex:'0 0 auto'}},
-        h('button',{onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:38,height:38,borderRadius:11,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
-        h('button',{onClick:function(){self.setState({intensityOpen:!st.intensityOpen});},title:'Настройки замены',style:{width:38,height:38,borderRadius:11,border:'1px solid '+C.line,background:U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
+        h('button',{'data-section':'desk-top--simple-view-btn',onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:TK.topBtnSize,height:TK.topBtnSize,borderRadius:TK.radius,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
+        h('button',{'data-section':'desk-top--intensity-btn',onClick:function(){self.setState({intensityOpen:!st.intensityOpen});},title:'Настройки замены',style:{width:TK.topBtnSize,height:TK.topBtnSize,borderRadius:TK.radius,border:'1px solid '+C.line,background:U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
           [0,1,2].map(function(i){ return h('span',{key:i,style:{width:3.5,height:3.5,borderRadius:'50%',background:C.inkSoft,display:'block'}}); }))));
-    return h('div',{style:{position:'sticky',top:0,zIndex:6,background:C.paper,borderBottom:'1px solid '+C.line,backdropFilter:'blur(6px)'}},bookRow);
+    return h('div',{'data-section':'phone-top-header',style:{position:'sticky',top:0,zIndex:6,background:C.paper,borderBottom:'1px solid '+C.line,backdropFilter:'blur(6px)'}},bookRow);
   };
 
   /* ---------- reading text ---------- */
@@ -126,7 +147,7 @@
     var verses = this.verses.map(function(v,i){ return self.readerRenderVerse(v,i); });
     var contNodes = this.cont.map(function(v,i){ return h('span',{key:i,style:{fontFamily:self.serif,fontSize:18.5,lineHeight:1.72,color:C.ink}},h('sup',{style:{color:C.muted2,fontSize:'0.6em',fontWeight:700,marginRight:5,fontFamily:self.sans,verticalAlign:'0.55em'}},v.n),v.ru+' '); });
     var cont = h('div',{style:{marginTop:8,maskImage:'linear-gradient(180deg,#000 0%,transparent 88%)',WebkitMaskImage:'linear-gradient(180deg,#000 0%,transparent 88%)'}},contNodes);
-    return h('div',{className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',position:'relative',background:C.read}},
+    return h('div',{'data-section':'phone-reading',className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',position:'relative',background:C.read}},
       this.readerRenderTopHeader(),
       h('div',{style:{padding:'18px 22px 60px'}},
         h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.18em',textTransform:'uppercase',color:C.muted2,marginBottom:14}},'Евангелие от Иоанна · глава 1'),
@@ -139,7 +160,7 @@
 
   R.readerRenderWordPhoneContent = function () {
     var C = this.CRW, h = React.createElement;
-    return h('div',{style:{flex:1,display:'flex',flexDirection:'column',minHeight:0,background:C.content}},
+    return h('div',{'data-section':'phone-dict',style:{flex:1,display:'flex',flexDirection:'column',minHeight:0,background:C.content}},
       h('div',{style:{flex:'0 0 auto',padding:'2px 18px 11px',background:C.card,borderBottom:'1px solid '+C.cardLine,boxShadow:'0 6px 18px -14px rgba(40,34,22,.45)',position:'relative',zIndex:5}},
         h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',height:44}},
           h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink}},'Словарь'),
@@ -155,7 +176,7 @@
   R.readerRenderWordPhoneSheet = function () {
     var C = this.CRW, h = React.createElement, st = this.state, self = this;
     if (!st.readerWordSheetOpen || !st.readerWordActiveKey) return null;
-    return h('div',{key:'rwsheet',style:{position:'absolute',inset:0,zIndex:30}},
+    return h('div',{'data-section':'phone-word-phone-sheet',key:'rwsheet',style:{position:'absolute',inset:0,zIndex:30}},
       h('div',{onClick:function(){self.readerWordCloseCard();},style:{position:'absolute',inset:0,background:U.alpha('#15140f',.28),animation:'scFade .2s ease'}}),
       h('div',{onClick:function(e){e.stopPropagation();},style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'84%',background:C.card,borderRadius:'24px 24px 0 0',boxShadow:'0 -14px 50px -10px rgba(40,34,22,.38)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
         h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:36,height:4,borderRadius:3,background:C.line2}})),
@@ -166,7 +187,7 @@
 
   R.readerRenderAbout = function () {
     var C = this.CR, h = React.createElement, self = this;
-    var lic = function(t,s){ return h('div',{style:{padding:'13px 0',borderBottom:'1px solid '+C.line}},h('div',{style:{fontFamily:self.serif,fontSize:16,color:C.ink,fontWeight:700}},t),h('div',{style:{fontFamily:self.sans,fontSize:13,color:C.muted,marginTop:2}},s)); };
+    var lic = function(t,s){ return h('div',{'data-section':'phone-about',style:{padding:'13px 0',borderBottom:'1px solid '+C.line}},h('div',{style:{fontFamily:self.serif,fontSize:16,color:C.ink,fontWeight:700}},t),h('div',{style:{fontFamily:self.sans,fontSize:13,color:C.muted,marginTop:2}},s)); };
     return h('div',{className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto'}},
       h('div',{style:{padding:'26px 22px 60px'}},
         h('div',{style:{fontFamily:this.serif,fontSize:26,fontWeight:700,color:C.ink}},'О приложении'),
@@ -192,7 +213,7 @@
     var themeChip = function(key){ var t = self.THEMES[key]; var on = st.readerTheme === key; return h('button',{key:key,onClick:function(){self.setState({readerTheme:key});},style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'10px 6px 12px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?U.alpha(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(33.333% - 8px)',minWidth:0}},
       h('div',{style:{width:'100%',height:32,borderRadius:7,background:t.paper,border:'1px solid '+U.alpha(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:self.serif,fontSize:18,color:t.ink,lineHeight:1}},'αβ')),
       h('span',{style:{fontFamily:self.sans,fontSize:11,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
-    return h('div',{className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',background:C.read}},
+    return h('div',{'data-section':'phone-settings',className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',background:C.read}},
       h('div',{style:{padding:'18px 20px 60px'}},
         h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginBottom:18}},'Настройки'),
         h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:10}},'Тема'),
@@ -207,16 +228,16 @@
     var themes = this.readerThemeList();
     var contrasts = this.readerContrastList();
     var themeChip = function(key){ var t = self.THEMES[key]; var on = st.readerTheme === key; return h('button',{key:key,onClick:function(){self.setState({readerTheme:key});},style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'12px 8px 14px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?U.alpha(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(25% - 9px)',minWidth:0}},
-      h('div',{style:{width:'100%',height:38,borderRadius:8,background:t.paper,border:'1px solid '+U.alpha(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:self.serif,fontSize:20,color:t.ink,lineHeight:1}},'αβ')),
+      h('div',{style:{width:'100%',height:TK.topBtnSize,borderRadius:8,background:t.paper,border:'1px solid '+U.alpha(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:self.serif,fontSize:20,color:t.ink,lineHeight:1}},'αβ')),
       h('span',{style:{fontFamily:self.sans,fontSize:12,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
-    return h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
+    return h('div',{'data-section':'desk-settings',style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
       h('div',{className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
-        h('div',{style:{maxWidth:700,margin:'0 auto',padding:'34px 44px 70px'}},
+        h('div',{style:{maxWidth:TK.deskContentWidth,margin:'0 auto',padding:TK.deskContentPad}},
           h('div',{style:{fontFamily:this.serif,fontSize:26,fontWeight:700,color:C.ink,marginBottom:22}},'Настройки'),
           h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Тема'),
           h('div',{style:{display:'flex',flexWrap:'wrap',gap:10,marginBottom:28}}, themes.map(themeChip)),
           h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Контраст'),
-          h('div',{style:{display:'inline-flex',background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:4}},
+          h('div',{style:{display:'inline-flex',background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:TK.radius,padding:4}},
             contrasts.map(function(ct){ var on = st.readerContrast === ct; return h('button',{key:ct,onClick:function(){self.setState({readerContrast:ct});},style:{padding:'9px 20px',borderRadius:8,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:self.sans,fontSize:14,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct); })))));
   };
 
@@ -225,7 +246,7 @@
   R.readerRenderBottomNav = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
     var items = [['read','Читать',U.iconRead.bind(null)],['dict','Слова',U.iconWords.bind(null)],['settings','Настр',U.iconGear.bind(null)],['about','О',U.iconInfo.bind(null)]];
-    return h('div',{style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.line,background:U.alpha(C.paper,0.96),paddingBottom:18,backdropFilter:'blur(8px)'}},
+    return h('div',{'data-section':'phone-bottom-nav',style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.line,background:U.alpha(C.paper,0.96),paddingBottom:18,backdropFilter:'blur(8px)'}},
       items.map(function(it){ var on = st.tab === it[0]; var col = on ? C.ink : C.muted2; return h('button',{key:it[0],onClick:function(){self.setState({tab:it[0],dropdown:false,intensityOpen:false});},style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}},it[2](col),h('span',{style:{fontFamily:self.sans,fontSize:11,fontWeight:on?700:500,color:col}},it[1])); }));
   };
 
@@ -234,11 +255,11 @@
   R.readerRenderModeMenu = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
     if (!st.dropdown) return null;
-    return h('div',{key:'dd',style:{position:'absolute',inset:0,zIndex:20}},
+    return h('div',{'data-section':'phone-mode-menu',key:'dd',style:{position:'absolute',inset:0,zIndex:20}},
       h('div',{onClick:function(){self.setState({dropdown:false});},style:{position:'absolute',inset:0,background:U.alpha('#15140f',0.18)}}),
-      h('div',{style:{position:'absolute',top:150,left:14,right:14,background:C.paper,border:'1px solid '+C.line2,borderRadius:18,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.5)',overflow:'hidden',animation:'scPop .16s ease'}},
+      h('div',{style:{position:'absolute',top:150,left:14,right:14,background:C.paper,border:'1px solid '+C.line2,borderRadius:TK.radiusLg,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.5)',overflow:'hidden',animation:'scPop .16s ease'}},
         this.modeNames.map(function(nm,i){ var n = i+1, on = st.mode === n; return h('button',{key:n,onClick:function(){self.readerSetMode(n);},style:{display:'flex',alignItems:'center',gap:13,width:'100%',textAlign:'left',padding:'13px 16px',background:on?U.alpha(C.terra,0.08):'transparent',border:'none',borderBottom:i<3?'1px solid '+C.line:'none',cursor:'pointer'}},
-          h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:9,background:on?C.ink:U.alpha(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:self.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
+          h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:TK.radius,background:on?C.ink:U.alpha(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:self.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
           h('span',{style:{flex:1}},h('div',{style:{fontFamily:self.sans,fontSize:14.5,fontWeight:600,color:C.ink}},nm),h('div',{style:{fontFamily:self.sans,fontSize:12,color:C.muted,marginTop:1,lineHeight:1.35}},self.modeDesc[i])),
           on ? h('span',null,h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))) : null); })));
   };
@@ -246,9 +267,9 @@
   R.readerRenderIntensity = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
     if (!st.intensityOpen) return null;
-    return h('div',{key:'int',style:{position:'absolute',inset:0,zIndex:20}},
+    return h('div',{'data-section':'phone-intensity',key:'int',style:{position:'absolute',inset:0,zIndex:20}},
       h('div',{onClick:function(){self.setState({intensityOpen:false});},style:{position:'absolute',inset:0}}),
-      h('div',{style:{position:'absolute',top:92,right:14,width:262,background:C.paper,border:'1px solid '+C.line2,borderRadius:16,boxShadow:'0 22px 46px -16px rgba(40,34,22,0.5)',padding:'15px 16px',animation:'scPop .16s ease'}},
+      h('div',{style:{position:'absolute',top:92,right:14,width:262,background:C.paper,border:'1px solid '+C.line2,borderRadius:TK.radiusLg,boxShadow:'0 22px 46px -16px rgba(40,34,22,0.5)',padding:'15px 16px',animation:'scPop .16s ease'}},
         h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}},
           h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:700,color:C.ink}},'Интенсивность букв'),
           h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:700,color:C.terra}},Math.round(st.intensity*100)+'%')),
@@ -260,7 +281,7 @@
   R.readerRenderToast = function () {
     var C = this.CR, h = React.createElement;
     if (!this.state.readerToast) return null;
-    return h('div',{key:'toast',style:{position:'absolute',left:'50%',bottom:96,transform:'translateX(-50%)',zIndex:40,background:U.alpha('#26221c',0.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13.5,fontWeight:500,padding:'11px 18px',borderRadius:13,maxWidth:320,textAlign:'center',boxShadow:'0 14px 34px -10px rgba(0,0,0,0.5)',animation:'scToast .25s ease'}},this.state.readerToast);
+    return h('div',{'data-section':'toast',key:'toast',style:{position:'absolute',left:'50%',bottom:96,transform:'translateX(-50%)',zIndex:40,background:U.alpha('#26221c',0.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13.5,fontWeight:500,padding:'11px 18px',borderRadius:13,maxWidth:320,textAlign:'center',boxShadow:'0 14px 34px -10px rgba(0,0,0,0.5)',animation:'scToast .25s ease'}},this.state.readerToast);
   };
 
   /* ---------- word sheet ---------- */
@@ -301,7 +322,7 @@
   R.readerRenderGearMenu = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
     if (!st.gearOpen) return null;
-    return h('div',{style:{position:'absolute',top:54,right:14,width:250,background:C.paper,border:'1px solid '+C.line2,borderRadius:14,boxShadow:'0 20px 44px -14px rgba(40,34,22,0.5)',padding:'10px 8px',zIndex:30,animation:'scPop .15s ease'}},
+    return h('div',{'data-section':'gear-menu',style:{position:'absolute',top:54,right:14,width:250,background:C.paper,border:'1px solid '+C.line2,borderRadius:14,boxShadow:'0 20px 44px -14px rgba(40,34,22,0.5)',padding:'10px 8px',zIndex:30,animation:'scPop .15s ease'}},
       h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,padding:'4px 8px 8px'}},'Разделы карточки'),
       st.cardOrder.map(function(k,i){ var hidden = st.cardHidden.indexOf(k) >= 0; return h('div',{key:k,style:{display:'flex',alignItems:'center',gap:6,padding:'6px 8px'}},
         h('button',{onClick:function(){self.readerToggleSection(k);},style:{flex:1,display:'flex',alignItems:'center',gap:8,background:'none',border:'none',cursor:'pointer',padding:0,textAlign:'left'}},
@@ -315,10 +336,10 @@
     var C = this.CR, h = React.createElement, st = this.state, cd = st.card, self = this;
     if (st.sheet !== 'word' || !cd) return null;
     var visible = st.cardOrder.filter(function(k){ return st.cardHidden.indexOf(k) < 0; });
-    return h('div',{key:'wsheet',style:{position:'absolute',inset:0,zIndex:35}},
+    return h('div',{'data-section':'phone-word-sheet',key:'wsheet',style:{position:'absolute',inset:0,zIndex:35}},
       h('div',{onClick:function(){self.readerCloseSheet();},style:{position:'absolute',inset:0,background:U.alpha('#15140f',0.34),animation:'scFade .2s ease'}}),
-      h('div',{onClick:function(e){e.stopPropagation();},style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'88%',background:C.paper,borderRadius:'26px 26px 0 0',boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
-        h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:38,height:4.5,borderRadius:3,background:C.line2}})),
+      h('div',{onClick:function(e){e.stopPropagation();},style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'88%',background:C.paper,borderRadius:TK.sheetTopRadius,boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
+        h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:TK.topBtnSize,height:4.5,borderRadius:3,background:C.line2}})),
         h('div',{className:'scScroll',style:{overflowY:'auto',padding:'8px 24px 30px',position:'relative'}},
           h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,marginTop:6}},
             h('div',null,
@@ -335,10 +356,10 @@
     var C = this.CR, h = React.createElement, st = this.state, cd = st.card, self = this;
     if (st.sheet !== 'letter' || !cd) return null;
     var known = st.knownLetters.indexOf(cd.letter) >= 0, L = cd.L;
-    return h('div',{key:'lsheet',style:{position:'absolute',inset:0,zIndex:35}},
+    return h('div',{'data-section':'phone-letter-sheet',key:'lsheet',style:{position:'absolute',inset:0,zIndex:35}},
       h('div',{onClick:function(){self.readerCloseSheet();},style:{position:'absolute',inset:0,background:U.alpha('#15140f',0.34),animation:'scFade .2s ease'}}),
-      h('div',{onClick:function(e){e.stopPropagation();},style:{position:'absolute',left:0,right:0,bottom:0,background:C.paper,borderRadius:'26px 26px 0 0',boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
-        h('div',{style:{display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:38,height:4.5,borderRadius:3,background:C.line2}})),
+      h('div',{onClick:function(e){e.stopPropagation();},style:{position:'absolute',left:0,right:0,bottom:0,background:C.paper,borderRadius:TK.sheetTopRadius,boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
+        h('div',{style:{display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:TK.topBtnSize,height:4.5,borderRadius:3,background:C.line2}})),
         h('div',{style:{padding:'14px 26px 32px',position:'relative'}},
           h('button',{onClick:function(){self.readerCloseSheet();},style:{position:'absolute',top:8,right:20,width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))),
           h('div',{style:{fontFamily:this.serif,fontSize:62,color:C.blue,lineHeight:1.05,fontWeight:400}},L.u+' '+L.l),
@@ -373,14 +394,14 @@
     var C = this.CR, h = React.createElement, cur = this.state.mode, self = this;
     var inits = ['Бкв','Лем','Фрм','Грч'];
     return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:10}},
-      h('div',{style:{display:'inline-flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:9,padding:2}},
+      h('div',{style:{display:'inline-flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:TK.radius,padding:2}},
         inits.map(function(s,i){ var on = cur === i+1; return h('button',{key:i,onClick:function(){self.readerSetMode(i+1);},title:self.modeNames[i],style:{padding:'4px 9px',height:26,borderRadius:7,border:'none',background:on?C.ink:'transparent',color:on?C.paper:C.muted,fontFamily:self.sans,fontSize:12,fontWeight:700,cursor:'pointer'}},s); })),
       h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'Шаг '+cur+' · '+this.modeNames[cur-1]));
   };
 
   R.readerGalModeA = function () {
     var C = this.CR, h = React.createElement;
-    var seg = h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:3,width:'max-content'}},
+    var seg = h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:TK.radius,padding:3,width:'max-content'}},
       [1,2,3,4].map(function(n){ return h('div',{key:n,style:{width:28,height:28,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:13,background:n===2?C.ink:'transparent',color:n===2?C.paper:C.muted}},n); },this));
     var menu = h('div',{style:{marginTop:12,border:'1px solid '+C.line2,borderRadius:12,overflow:'hidden'}},
       this.modeNames.map(function(nm,i){ return h('div',{key:i,style:{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',background:i===1?U.alpha(C.terra,0.08):'transparent',borderBottom:i<3?'1px solid '+C.line:'none'}},
@@ -393,7 +414,7 @@
     var C = this.CR, h = React.createElement, cur = this.state.mode, self = this;
     var labels = this.modeShort;
     return h('div',null,
-      h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.muted,marginBottom:14}},'Погружение'),
+      h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:TK.lsLabel,textTransform:'uppercase',color:C.muted,marginBottom:14}},'Погружение'),
       h('div',{style:{position:'relative',height:8,background:U.alpha(C.ink,0.07),borderRadius:8,margin:'0 6px'}},
         h('div',{style:{position:'absolute',left:0,top:0,bottom:0,width:((cur-1)/3*100)+'%',background:C.terra,borderRadius:8,transition:'width .25s'}}),
         [0,1,2,3].map(function(i){ return h('button',{key:i,onClick:function(){self.readerSetMode(i+1);},style:{position:'absolute',left:'calc('+(i/3*100)+'% - 9px)',top:-5,width:18,height:18,borderRadius:'50%',border:'2px solid '+(i+1<=cur?C.terra:C.muted2),background:i+1<=cur?C.terra:C.paper,cursor:'pointer',padding:0}}); })),
@@ -412,7 +433,7 @@
     return h('div',null,
       h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px 6px'}},
         h('div',{style:{display:'flex',alignItems:'baseline',gap:7}},h('span',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink}},'Иоанн'),h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'глава 1 ▾')),
-        h('div',{style:{display:'flex',gap:6}},h('div',{style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(C.inkSoft)),h('div',{style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center',gap:2.5}},[0,1,2].map(function(i){ return h('span',{key:i,style:{width:3,height:3,borderRadius:'50%',background:C.inkSoft}}); })))),
+        h('div',{style:{display:'flex',gap:6}},h('div',{style:{width:32,height:32,borderRadius:TK.radius,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(C.inkSoft)),h('div',{style:{width:32,height:32,borderRadius:TK.radius,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center',gap:2.5}},[0,1,2].map(function(i){ return h('span',{key:i,style:{width:3,height:3,borderRadius:'50%',background:C.inkSoft}}); })))),
       h('div',{style:{display:'flex',alignItems:'center',gap:9,padding:'6px 16px 14px',borderTop:'1px solid '+C.line,marginTop:4}},
         h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},[1,2,3,4].map(function(n){ return h('span',{key:n,style:{width:26,height:26,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:12.5,background:n===1?C.ink:'transparent',color:n===1?C.paper:C.muted}},n); },this)),
         h('div',{style:{flex:1}},h('div',{style:{fontFamily:this.sans,fontSize:10,fontWeight:700,letterSpacing:'0.1em',color:C.muted2,textTransform:'uppercase'}},'Шаг 1'),h('div',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:600,color:C.ink}},'Только греческие буквы')),
@@ -424,7 +445,7 @@
     return h('div',{style:{display:'flex',alignItems:'center',gap:10,padding:'16px 16px'}},
       h('div',{style:{display:'flex',alignItems:'baseline',gap:5}},h('span',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},'Иоанн'),U.iconChev(C.muted)),
       h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},[1,2,3,4].map(function(n){ return h('span',{key:n,style:{width:26,height:26,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:12.5,background:n===2?C.ink:'transparent',color:n===2?C.paper:C.muted}},n); },this))),
-      h('div',{style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(C.inkSoft)));
+      h('div',{style:{width:32,height:32,borderRadius:TK.radius,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(C.inkSoft)));
   };
 
   R.readerCardSections = function (cd) {
@@ -437,7 +458,7 @@
   R.readerModeMenuList = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
     return this.modeNames.map(function(nm,i){ var n = i+1, on = st.mode === n; return h('button',{key:n,onClick:function(){self.readerSetMode(n);},style:{display:'flex',alignItems:'center',gap:13,width:'100%',textAlign:'left',padding:'13px 16px',background:on?U.alpha(C.terra,0.08):'transparent',border:'none',borderBottom:i<3?'1px solid '+C.line:'none',cursor:'pointer'}},
-      h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:9,background:on?C.ink:U.alpha(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:self.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
+      h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:TK.radius,background:on?C.ink:U.alpha(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:self.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
       h('span',{style:{flex:1}},h('div',{style:{fontFamily:self.sans,fontSize:14.5,fontWeight:600,color:C.ink}},nm),h('div',{style:{fontFamily:self.sans,fontSize:12,color:C.muted,marginTop:1,lineHeight:1.35}},self.modeDesc[i])),
       on ? h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null); });
   };
@@ -447,12 +468,12 @@
     var items = [['read','Читать',U.iconRead.bind(null)],['dict','Слова',U.iconWords.bind(null)],['settings','Настройки',U.iconGear.bind(null)],['about','О приложении',U.iconInfo.bind(null)]];
     var themes = [['Светлая','Пергамент'],['Тёмная','Тёмная'],['Авто','Пергамент']];
     var activeTheme = st.readerTheme;
-    return h('div',{style:{width:236,flex:'0 0 auto',background:C.paper2,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
+    return h('div',{'data-section':'desk-nav',style:{width:TK.navWidth,flex:'0 0 auto',background:C.paper2,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
       h('div',{style:{padding:'0 8px 26px'}},
         h('div',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink,lineHeight:1.15}},'Читалка НЗ'),
         h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:2}},'греческий сквозь русский')),
       h('div',{style:{display:'flex',flexDirection:'column',gap:4}},
-        items.map(function(it){ var on = st.tab === it[0]; var col = on ? C.ink : C.inkSoft; return h('button',{key:it[0],onClick:function(){self.setState({tab:it[0],dropdown:false});},style:{display:'flex',alignItems:'center',gap:12,padding:'11px 12px',borderRadius:11,border:'none',cursor:'pointer',background:on?C.paper:'transparent',boxShadow:on?'0 1px 3px rgba(40,34,22,0.08)':'none',textAlign:'left'}},
+        items.map(function(it){ var on = st.tab === it[0]; var col = on ? C.ink : C.inkSoft; return h('button',{key:it[0],onClick:function(){self.setState({tab:it[0],dropdown:false});},style:{display:'flex',alignItems:'center',gap:12,padding:'11px 12px',borderRadius:TK.radius,border:'none',cursor:'pointer',background:on?C.paper:'transparent',boxShadow:on?'0 1px 3px rgba(40,34,22,0.08)':'none',textAlign:'left'}},
           it[2](col),h('span',{style:{fontFamily:self.sans,fontSize:14.5,fontWeight:on?700:500,color:col}},it[1])); })),
       h('div',{style:{flex:1}}),
       h('div',{style:{padding:'0 6px'}},
@@ -463,7 +484,7 @@
 
   R.readerRenderDeskTopPanel = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
-    return h('div',{style:{position:'relative',display:'flex',alignItems:'center',gap:18,padding:'15px 32px',borderBottom:'1px solid '+C.line,flex:'0 0 auto',zIndex:5}},
+    return h('div',{'data-section':'desk-top-panel',style:{position:'relative',display:'flex',alignItems:'center',gap:18,padding:'15px 32px',borderBottom:'1px solid '+C.line,flex:'0 0 auto',zIndex:5}},
       h('button',{onClick:function(){self.readerShowToast('Выбор книги — в полной версии');},style:{display:'flex',alignItems:'baseline',gap:8,background:'none',border:'none',cursor:'pointer',padding:0,whiteSpace:'nowrap'}},
         h('span',{style:{fontFamily:this.serif,fontSize:22,fontWeight:700,color:C.ink}},'Иоанн,'),
         h('span',{style:{fontFamily:this.sans,fontSize:18,fontWeight:700,color:C.inkSoft}},'1'),
@@ -471,8 +492,8 @@
       h('div',{style:{width:1,height:26,background:C.line}}),
       h('button',{onClick:function(){self.setState({dropdown:!st.dropdown});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState())),
       h('div',{style:{flex:1}}),
-      h('button',{onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:40,height:40,borderRadius:11,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
-      st.dropdown ? h('div',{style:{position:'absolute',top:64,left:258,width:336,background:C.paper,border:'1px solid '+C.line2,borderRadius:16,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.45)',overflow:'hidden',zIndex:30,animation:'scPop .16s ease'}},this.readerModeMenuList()) : null,
+      h('button',{onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:40,height:40,borderRadius:TK.radius,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
+      st.dropdown ? h('div',{style:{position:'absolute',top:64,left:258,width:336,background:C.paper,border:'1px solid '+C.line2,borderRadius:TK.radiusLg,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.45)',overflow:'hidden',zIndex:30,animation:'scPop .16s ease'}},this.readerModeMenuList()) : null,
       st.dropdown ? h('div',{onClick:function(){self.setState({dropdown:false});},style:{position:'fixed',inset:0,zIndex:20}}) : null);
   };
 
@@ -481,10 +502,10 @@
     var verses = this.verses.map(function(v,i){ return self.readerRenderVerse(v,i); });
     var contNodes = this.cont.map(function(v,i){ return h('span',{key:i,style:{fontFamily:self.serif,fontSize:19,lineHeight:1.75,color:C.ink}},h('sup',{style:{color:C.muted2,fontSize:'0.6em',fontWeight:700,marginRight:5,fontFamily:self.sans,verticalAlign:'0.55em'}},v.n),v.ru+' '); });
     var cont = h('div',{style:{marginTop:8,maskImage:'linear-gradient(180deg,#000 0%,transparent 88%)',WebkitMaskImage:'linear-gradient(180deg,#000 0%,transparent 88%)'}},contNodes);
-    return h('div',{style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
+    return h('div',{'data-section':'desk-reading-area',style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
       this.readerRenderDeskTopPanel(),
       h('div',{className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
-        h('div',{style:{maxWidth:700,margin:'0 auto',padding:'34px 44px 70px'}},
+        h('div',{style:{maxWidth:TK.deskContentWidth,margin:'0 auto',padding:TK.deskContentPad}},
           h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.18em',textTransform:'uppercase',color:C.muted2,marginBottom:18}},'Евангелие от Иоанна · глава 1'),
           h('div',{style:{fontSize:19,lineHeight:1.78}},verses),cont)));
   };
@@ -501,14 +522,14 @@
             h('div',{style:{fontFamily:this.serif,fontSize:44,color:C.blue,lineHeight:1}},cd.lemma),
             h('div',{style:{display:'flex',gap:8,marginTop:6,fontFamily:this.sans,fontSize:13,color:C.muted}},h('span',null,cd.rank||''),cd.freq?h('span',null,'· '+cd.freq):null)),
           h('div',{style:{display:'flex',gap:6,flex:'0 0 auto'}},
-            h('button',{onClick:function(){self.setState({gearOpen:!st.gearOpen});},style:{width:34,height:34,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?U.alpha(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconGear(C.inkSoft)),
-            h('button',{onClick:function(){self.readerCloseSheet();},style:{width:34,height:34,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
+            h('button',{onClick:function(){self.setState({gearOpen:!st.gearOpen});},style:{width:TK.inspBtnSize,height:TK.inspBtnSize,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?U.alpha(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconGear(C.inkSoft)),
+            h('button',{onClick:function(){self.readerCloseSheet();},style:{width:TK.inspBtnSize,height:TK.inspBtnSize,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
         this.readerRenderGearMenu(),
         this.readerCardSections(cd));
     } else if (st.sheet === 'letter' && cd) {
       var known = st.knownLetters.indexOf(cd.letter) >= 0, L = cd.L;
       body = h('div',{style:{padding:'22px 24px 32px',position:'relative'}},
-        h('button',{onClick:function(){self.readerCloseSheet();},style:{position:'absolute',top:18,right:20,width:34,height:34,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))),
+        h('button',{onClick:function(){self.readerCloseSheet();},style:{position:'absolute',top:18,right:20,width:TK.inspBtnSize,height:TK.inspBtnSize,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))),
         h('div',{style:{fontFamily:this.serif,fontSize:60,color:C.blue,lineHeight:1.05}},L.u+' '+L.l),
         h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginTop:8}},L.name),
         h('div',{style:{fontFamily:this.serif,fontSize:18,color:C.muted,marginTop:6}},L.sound),
@@ -520,7 +541,7 @@
         h('div',{style:{width:54,height:54,borderRadius:14,border:'1.5px dashed '+C.line2,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.serif,fontSize:26,color:C.muted2}},'α'),
         h('div',{style:{fontFamily:this.serif,fontSize:17,color:C.muted,lineHeight:1.5,maxWidth:230}},'Выберите греческое слово или букву в тексте — карточка появится здесь.'));
     }
-    return h('div',{style:{width:364,flex:'0 0 auto',borderLeft:'1px solid '+C.line,background:C.paper,position:'relative',display:'flex',flexDirection:'column'}},body);
+    return h('div',{'data-section':'desk-inspector',style:{width:TK.inspWidth,flex:'0 0 auto',borderLeft:'1px solid '+C.line,background:C.paper,position:'relative',display:'flex',flexDirection:'column'}},body);
   };
 
   R.readerRenderDesktop = function () {
@@ -535,9 +556,9 @@
       : st.tab === 'dict' ? this.readerRenderDeskDict()
       : st.tab === 'settings' ? this.readerRenderDeskSettings()
       : h('div',{style:{flex:1,minWidth:0,display:'flex',justifyContent:'center',overflow:'hidden'}},
-          h('div',{style:{width:700,display:'flex',flexDirection:'column'}},this.readerRenderAbout()));
-    return h('div',{style:{position:'relative',display:'flex',flexDirection:'column',height:768,background:C.paper,color:C.ink,fontFamily:this.serif}},
-      h('div',{style:{flex:'0 0 auto',height:38,background:C.titlebar,borderBottom:'1px solid '+C.line,display:'flex',alignItems:'center',gap:8,padding:'0 16px'}},
+          h('div',{style:{width:TK.deskContentWidth,display:'flex',flexDirection:'column'}},this.readerRenderAbout()));
+    return h('div',{'data-section':'desk-app',style:{position:'relative',display:'flex',flexDirection:'column',height:768,background:C.paper,color:C.ink,fontFamily:this.serif}},
+      h('div',{style:{flex:'0 0 auto',height:TK.topBtnSize,background:C.titlebar,borderBottom:'1px solid '+C.line,display:'flex',alignItems:'center',gap:8,padding:'0 16px'}},
         ['#d98b6e','#dcc06a','#9bbf73'].map(function(c,i){ return h('span',{key:i,style:{width:11,height:11,borderRadius:'50%',background:c}}); })),
       h('div',{style:{flex:1,display:'flex',minHeight:0}},
         this.readerRenderDeskNav(),
@@ -553,8 +574,8 @@
 
   R.readerChip1 = function (s) {
     var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'5px 11px',height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
+    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipPad,height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
+    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
     if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
     var alpha = h('span',{key:'a',style:{display:'inline-flex',alignItems:'baseline'}},
       h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
@@ -576,7 +597,7 @@
     var C = this.CR, h = React.createElement;
     var shell = function(kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',gap:4,fontFamily:this.sans,fontWeight:600,fontSize:13}},kids); };
     var zone = function(bg,bd,col,kids,key){ return h('div',{key:key,style:{display:'inline-flex',alignItems:'center',gap:5,background:bg,border:'1px solid '+bd,borderRadius:8,padding:'4px 10px',height:28,color:col,whiteSpace:'nowrap',lineHeight:1}},kids); };
-    if (s.id === 'rus') return shell([zone(U.alpha(C.ink,0.045),C.line2,C.muted,[h('span',{key:1,style:{letterSpacing:'0.03em'}},'Рус')],'z')]);
+    if (s.id === 'rus') return shell([zone(U.alpha(C.ink,0.045),C.line2,C.muted,[h('span',{key:1,style:{letterSpacing:TK.lsChip}},'Рус')],'z')]);
     if (s.id === 'greek') return shell([zone(C.blue,C.blue,C.paper,[h('span',{key:1,style:{fontFamily:this.serif,fontWeight:700,fontSize:14}},'Греческий')],'z')]);
     var lz = zone(C.blueBg,U.alpha(C.blue,0.28),C.blueTx,[
       h('span',{key:1,style:{fontFamily:this.serif,fontSize:15,color:C.blue}},'α'),
@@ -626,8 +647,8 @@
 
   R.readerChip4 = function (s) {
     var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'5px 11px',height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
+    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipPad,height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
+    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
     if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
     var fillGlyph = h('span',{key:'g',style:{position:'relative',display:'inline-block',width:14,height:18,marginRight:6}},
       h('span',{style:{position:'absolute',inset:0,fontFamily:this.serif,fontSize:18,color:U.alpha(C.blue,0.2),lineHeight:'18px',textAlign:'center'}},'α'),
@@ -648,8 +669,8 @@
 
   R.readerChip5 = function (s) {
     var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'5px 11px',height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
+    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipPad,height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
+    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
     if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
     var n = 5, active = Math.max(1,Math.round(s.pct/100*n));
     var bars = h('span',{key:'b',style:{display:'inline-flex',alignItems:'flex-end',gap:2,height:13,marginRight:7}},
@@ -686,8 +707,8 @@
 
   R.readerChipH1 = function (s) {
     var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'6px 11px',minHeight:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
+    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipHPad,minHeight:TK.chipMinHeight,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
+    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
     if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
     var row = h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
       h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
@@ -702,8 +723,8 @@
 
   R.readerChipH2 = function (s) {
     var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'6px 11px',minHeight:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
+    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipHPad,minHeight:TK.chipMinHeight,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
+    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
     if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
     var row = h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
       h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
@@ -719,8 +740,8 @@
 
   R.readerChipH3 = function (s) {
     var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:9,padding:'6px 11px',minHeight:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:'0.03em'}},'Рус')]);
+    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipHPad,minHeight:TK.chipMinHeight,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
+    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
     if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
     var row = h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
       h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
@@ -762,7 +783,7 @@
 
   R.readerRenderPhone = function () {
     var C = this.CR, h = React.createElement, st = this.state, isDict = st.tab === 'dict';
-    return h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:C.paper,color:C.ink}},
+    return h('div',{'data-section':'phone-app',style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:C.paper,color:C.ink}},
       this.readerRenderStatusBar(),
       this.readerRenderContent(),
       this.readerRenderBottomNav(),
@@ -817,7 +838,7 @@
     var C = this.CRW, h = React.createElement, self = this;
     if (!w.add) return h('div',{title:'Нет соответствия в русском тексте',style:{width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted2,fontSize:16,flexShrink:0}},'–');
     var on = this.state.readerAddedSet.has(w.k);
-    return h('button',{onClick:function(e){self.readerWordToggleAdded(w.k,e);},title:on?'Убрать из текста':'Показывать в тексте',style:{width:28,height:28,borderRadius:9,border:'1.5px solid '+(on?C.terra:C.line2),background:on?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, on ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null);
+    return h('button',{onClick:function(e){self.readerWordToggleAdded(w.k,e);},title:on?'Убрать из текста':'Показывать в тексте',style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+(on?C.terra:C.line2),background:on?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, on ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null);
   };
 
   R.readerWordWRow = function (w, isActive) {
@@ -834,7 +855,7 @@
   R.readerWordGDiv = function (g) {
     var C = this.CRW, h = React.createElement;
     return h('div',{key:'rw_gd_'+g.key,style:{display:'flex',alignItems:'center',gap:9,padding:'14px 10px 6px 0'}},
-      h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.terra,flexShrink:0}},g.label),
+      h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:TK.lsLabel,textTransform:'uppercase',color:C.terra,flexShrink:0}},g.label),
       h('span',{style:{flex:1,height:1,background:C.line2}}),
       h('span',{style:{fontFamily:this.sans,fontSize:11,color:C.muted2,flexShrink:0}},g.cov));
   };
@@ -867,7 +888,7 @@
     return h('div',{style:{padding:'20px 20px 26px'}},
       h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:14}},
         h('div',null, h('div',{style:{fontFamily:this.serif,fontSize:46,color:C.blue,lineHeight:1}},w.g), h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:17,color:C.muted,marginTop:3}},w.t)),
-        h('button',{onClick:function(){self.readerWordCloseCard();},style:{width:32,height:32,borderRadius:9,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:4}}, U.iconX(C.inkSoft))),
+        h('button',{onClick:function(){self.readerWordCloseCard();},style:{width:32,height:32,borderRadius:TK.radius,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:4}}, U.iconX(C.inkSoft))),
       h('div',{style:{background:U.alpha(C.ink,.03),border:'1px solid '+C.line,borderRadius:13,padding:'13px 15px',marginBottom:14}},
         h('div',{style:{fontFamily:this.serif,fontSize:17,fontWeight:700,color:C.ink,lineHeight:1.4,marginBottom:7}},w.ru),
         h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}},
@@ -885,7 +906,7 @@
 
   R.readerWordSearchBar = function (mobile) {
     var C = this.CRW, h = React.createElement, st = this.state, self = this;
-    return h('div',{style:{display:'flex',alignItems:'center',gap:8,background:C.card,border:'1px solid '+C.cardLine,borderRadius:11,padding:mobile?'8px 11px':'9px 13px',boxShadow:'0 1px 2px rgba(40,34,22,.05)'}},
+    return h('div',{style:{display:'flex',alignItems:'center',gap:8,background:C.card,border:'1px solid '+C.cardLine,borderRadius:TK.radius,padding:mobile?'8px 11px':'9px 13px',boxShadow:'0 1px 2px rgba(40,34,22,.05)'}},
       U.iconSearch(C.muted),
       h('input',{value:st.readerWordSearch,onChange:function(e){self.setState({readerWordSearch:e.target.value});},placeholder:'Поиск: λόγος или logos…',style:{flex:1,border:'none',background:'none',outline:'none',fontFamily:this.sans,fontSize:mobile?14:14.5,color:C.ink}}),
       st.readerWordSearch ? h('button',{onClick:function(){self.setState({readerWordSearch:''});},style:{background:'none',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center',color:C.muted2}},U.iconX(C.muted2,14)) : null);
@@ -953,7 +974,7 @@
   R.readerWordToastEl = function (mobile) {
     var C = this.CRW, h = React.createElement;
     if (!this.state.readerWordToast) return null;
-    return h('div',{key:'rwtoast',style:{position:'absolute',left:'50%',bottom:mobile?88:22,transform:'translateX(-50%)',zIndex:60,background:U.alpha('#26221c',.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13,fontWeight:500,padding:'10px 18px',borderRadius:12,maxWidth:290,textAlign:'center',boxShadow:'0 12px 32px -8px rgba(0,0,0,.42)',animation:'scToast .22s ease',whiteSpace:'nowrap'}},this.state.readerWordToast);
+    return h('div',{'data-section':'word-toast',key:'rwtoast',style:{position:'absolute',left:'50%',bottom:mobile?88:22,transform:'translateX(-50%)',zIndex:60,background:U.alpha('#26221c',.96),color:'#f3eee2',fontFamily:this.sans,fontSize:13,fontWeight:500,padding:'10px 18px',borderRadius:12,maxWidth:290,textAlign:'center',boxShadow:'0 12px 32px -8px rgba(0,0,0,.42)',animation:'scToast .22s ease',whiteSpace:'nowrap'}},this.state.readerWordToast);
   };
 
   R.readerWordDeskContent = function () {
@@ -970,7 +991,7 @@
         h('div',{style:{maxWidth:640,padding:'0 28px 60px'}}, this.readerWordWListBody(24))));
     var inspector = h('div',{style:{width:hasActive?316:0,flex:'0 0 auto',borderLeft:hasActive?'1px solid '+C.cardLine:'none',overflow:'hidden',background:C.card,boxShadow:hasActive?'-14px 0 30px -24px rgba(40,34,22,.5)':'none',transition:'width .18s'}},
       hasActive ? h('div',{className:'scScroll',style:{width:316,height:'100%',overflowY:'auto'}},this.readerWordWCard(st.readerWordActiveKey)) : null);
-    return h('div',{id:'readerDeskMain',style:{flex:1,minWidth:0,display:'flex',position:'relative',overflow:'hidden'}}, listPanel, inspector);
+    return h('div',{'data-section':'desk-word-content',id:'readerDeskMain',style:{flex:1,minWidth:0,display:'flex',position:'relative',overflow:'hidden'}}, listPanel, inspector);
   };
 
   R.readerWordSetupScroll = function (id) {

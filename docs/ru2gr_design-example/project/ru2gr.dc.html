@@ -16,7 +16,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;}
+  /* Дев-режим: ?dev=1 — лейблы и обводка по ховеру */
+  html.dev [data-section] { position:relative; }
+  html.dev [data-section]:hover { outline:1px dashed rgba(217,119,87,0.55); outline-offset:1px; cursor:copy; }
+  html.dev [data-section]:hover::before { content:attr(data-section); position:absolute; top:0; left:0; z-index:9999; background:rgba(217,119,87,0.92); color:#fff; font-family:'Source Sans 3',system-ui,sans-serif; font-size:10px; font-weight:600; letter-spacing:0.04em; padding:2px 7px; border-radius:0 0 5px 0; pointer-events:none; white-space:nowrap; max-width:320px; overflow:hidden; text-overflow:ellipsis; }  *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:#cfcabf;}
   .scScroll::-webkit-scrollbar,.scScreen::-webkit-scrollbar{width:0;height:0;}
   .scScroll{scrollbar-width:none;}
@@ -25,11 +28,62 @@
   @keyframes scToast{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
   @keyframes scPop{from{opacity:0;transform:translateY(-6px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
 </style>
-</helmet>
+	<script>
+	  if (location.search.includes('dev=1')) {
+	    document.documentElement.classList.add('dev');
+	    // Авто-разметка: data-section на каждый кликабельный элемент
+	    // Клик по элементу с лейблом — копировать название в буфер
+	    document.addEventListener('click', function (e) {
+	      var el = e.target.closest('[data-section]');
+	      if (!el) return;
+	      var name = el.getAttribute('data-section');
+	      if (!name) return;
+	      navigator.clipboard.writeText(name).then(function () {
+	        el.style.outline = '2px solid #7c9d5b';
+	        el.style.outlineOffset = '1px';
+	        setTimeout(function () { el.style.outline = ''; el.style.outlineOffset = ''; }, 400);
+	      }).catch(function () {});
+	    });
+	    window.__devLabel = function () {
+	      var seq = 0;
+	      function name(el) {
+	        var p = el.closest('[data-section]');
+	        var prefix = p ? p.getAttribute('data-section') + ' / ' : '';
+	        var txt = (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 30);
+	        var label = el.getAttribute('aria-label') || el.getAttribute('title') || el.getAttribute('placeholder') || '';
+	        if (label) return prefix + label.slice(0, 30);
+	        if (txt) return prefix + txt;
+	        var svg = el.querySelector('svg');
+	        if (svg) return prefix + 'icon-' + (svg.getAttribute('data-icon') || 'svg');
+	        return prefix + 'el-' + (++seq);
+	      }
+	      document.querySelectorAll('button:not([data-section])').forEach(function (btn) {
+	        btn.setAttribute('data-section', name(btn));
+	      });
+	      document.querySelectorAll('[role="button"]:not([data-section]), [tabindex="0"]:not([data-section])').forEach(function (el) {
+	        el.setAttribute('data-section', name(el));
+	      });
+	      document.querySelectorAll('input:not([data-section]), select:not([data-section]), textarea:not([data-section])').forEach(function (el) {
+	        el.setAttribute('data-section', name(el));
+	      });
+	      document.querySelectorAll('a:not([data-section])').forEach(function (el) {
+	        el.setAttribute('data-section', name(el));
+	      });
+	    };
+	    setTimeout(window.__devLabel, 1200);
+	    var __devObs = new MutationObserver(function () {
+	      window.__devLabel();
+	    });
+	    setTimeout(function () {
+	      var root = document.getElementById('dc-root') || document.body;
+	      __devObs.observe(root, {childList: true, subtree: true});
+	    }, 1500);
+	  }
+	</script></helmet>
 
 <div style="min-height:100vh;background:#cfcabf;">
 
-  <div style="position:sticky;top:0;z-index:500;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(207,202,191,0.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(40,34,22,0.10);">
+  <div data-section="canvas-header" style="position:sticky;top:0;z-index:500;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(207,202,191,0.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(40,34,22,0.10);">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span style="font-family:'Gentium Plus',serif;font-size:19px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">ru2gr</span>
       <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;color:#9a9488;font-weight:500;">Читалка Нового Завета · дизайн-система</span>
@@ -48,20 +102,20 @@
   </div>
 
 <div style="min-height:100vh;background:#cfcabf;font-family:'Source Sans 3',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:40px 20px 90px;gap:30px;">
-  <div style="text-align:center;max-width:580px;">
+  <div data-section="canvas-title" style="text-align:center;max-width:580px;">
     <div style="font-family:'Gentium Plus',serif;font-size:31px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">Греческая читалка Нового Завета</div>
     <div style="font-size:15px;color:#6f6a5f;margin-top:7px;line-height:1.5;">Кликабельный прототип · экран чтения, переключатель режимов 1–4, словарь, карточки буквы и слова. Нажимайте на греческие буквы и слова.</div>
   </div>
 
   <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:12px;">
-    <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Десктоп · ≥ 600px · боковая навигация + inspector справа</div>
-    <div style="width: 100%; border-radius: 18px; overflow: hidden; box-shadow: 0 36px 80px -34px rgba(40,34,22,0.55),0 0 0 1px rgba(40,34,22,0.1); background-color: #f4f2ec">
+    <div data-section="desktop-label" style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Десктоп · ≥ 600px · боковая навигация + inspector справа</div>
+    <div data-section="desktop-reader" style="width: 100%; border-radius: 18px; overflow: hidden; box-shadow: 0 36px 80px -34px rgba(40,34,22,0.55),0 0 0 1px rgba(40,34,22,0.1); background-color: #f4f2ec">
       {{ reader.desktop }}
     </div>
   </div>
 
-  <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;margin-top:10px;">Мобильный · &lt; 600px · нижняя навигация + bottom sheet</div>
-  <div style="width:402px;height:872px;background:#15140f;border-radius:54px;padding:11px;box-shadow:0 40px 90px -28px rgba(40,34,22,0.7),0 0 0 2px rgba(0,0,0,0.22);flex:0 0 auto;">
+  <div data-section="phone-label" style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;margin-top:10px;">Мобильный · &lt; 600px · нижняя навигация + bottom sheet</div>
+  <div data-section="phone-reader" style="width:402px;height:872px;background:#15140f;border-radius:54px;padding:11px;box-shadow:0 40px 90px -28px rgba(40,34,22,0.7),0 0 0 2px rgba(0,0,0,0.22);flex:0 0 auto;">
     <div class="scScreen" style="position:relative;width:100%;height:100%;background:#ECE7DD;border-radius:44px;overflow:hidden;">
       {{ reader.phone }}
     </div>

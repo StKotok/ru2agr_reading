@@ -56,6 +56,11 @@
     C.shadow  = dark
       ? '0 2px ' + (6 + LV.shadowAlpha * 22) + 'px -2px rgba(0,0,0,' + (0.25 + LV.shadowAlpha * 0.8) + ')'
       : '0 1px ' + (2 + LV.shadowAlpha * 8) + 'px rgba(40,34,22,' + (0.04 + LV.shadowAlpha * 0.35) + '),0 ' + (6 + LV.shadowAlpha * 24) + 'px ' + (14 + LV.shadowAlpha * 34) + 'px -12px rgba(40,34,22,' + (0.10 + LV.shadowAlpha * 0.5) + ')';
+    // Извлечено claude-design-adapter — производные теневые токены
+    C.overlayDim = function(a) { return alpha(C.overlayDimBase, a); };
+    C.shadowSheet = alpha(C.shadowBase, C.shadowAlphaSheet);
+    C.shadowNav   = alpha(C.shadowBase, C.shadowAlphaNav);
+    C.toastBg95   = alpha(C.toastBg, 0.96);
     return C;
   }
 
