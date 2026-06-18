@@ -326,6 +326,11 @@ class Component extends DCLogic {
   
   }
 
+
+  /* ================================================================
+   * 1. UTILITIES — общие хелперы, палитры, цветовая математика
+   *    (аналог lib/ + src/ui/)
+   * ================================================================ */
   a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
   buildThemes(){if(window.RU2GR)return window.RU2GR.THEMES;const mk=(o)=>({paper:o.paper,paper2:o.alt,sidebar:o.alt,read:o.read,titlebar:o.title,ink:o.ink,inkSoft:o.inkSoft,muted:o.muted,muted2:o.muted2,line:this.a(o.ink,0.10),line2:this.a(o.ink,0.18),blue:o.blue,blueHead:o.blue,blueBg:o.blueBg,blueTx:o.blueTx,terra:o.terra,terraSoft:o.terraSoft,green:o.green,greenDk:o.greenDk,greenBg:o.greenBg});return {'Пергамент':mk({paper:'#ECE7DD',alt:'#E3DDD0',read:'#F6F3EE',title:'#E2DBCB',ink:'#272320',inkSoft:'#4a463e',muted:'#9a9488',muted2:'#bdb6a7',blue:'#2f5d85',blueBg:'#cdd9e6',blueTx:'#345f82',terra:'#bb763c',terraSoft:'#e7d3bf',green:'#7c9d5b',greenDk:'#5f7d44',greenBg:'#d9e3c9'}),'Сепия':mk({paper:'#E9DFC8',alt:'#E2D6BB',read:'#F4ECD9',title:'#DBCEB0',ink:'#36291a',inkSoft:'#574630',muted:'#998966',muted2:'#c1b08d',blue:'#39627a',blueBg:'#d2dbdb',blueTx:'#39627a',terra:'#b3652b',terraSoft:'#e7cea9',green:'#7c8f46',greenDk:'#5e7033',greenBg:'#dedcb8'}),'Слоновая кость':mk({paper:'#FAF8F3',alt:'#F1EEE6',read:'#FFFFFF',title:'#EFEBE1',ink:'#2a2722',inkSoft:'#514c43',muted:'#9b9488',muted2:'#c7c0b2',blue:'#2f5d85',blueBg:'#d8e3ef',blueTx:'#2f5d85',terra:'#c0723a',terraSoft:'#f1dac2',green:'#6f9a4f',greenDk:'#547d35',greenBg:'#e1ead0'}),'Туман':mk({paper:'#E8E8EB',alt:'#DFDFE3',read:'#F4F4F7',title:'#DBDBDF',ink:'#25262b',inkSoft:'#45474e',muted:'#8a8c95',muted2:'#b6b8c0',blue:'#3a5f8a',blueBg:'#d4ddeb',blueTx:'#3a5f8a',terra:'#b06a45',terraSoft:'#e8d2c6',green:'#5f8f6a',greenDk:'#487553',greenBg:'#d4e4d8'}),'Море':mk({paper:'#E2ECF0',alt:'#D7E4EA',read:'#F0F7F9',title:'#D1E0E7',ink:'#1f2a30',inkSoft:'#3c4b53',muted:'#7f939c',muted2:'#aec0c8',blue:'#2c6e8f',blueBg:'#cadfe9',blueTx:'#2c6e8f',terra:'#c07a45',terraSoft:'#edd7c3',green:'#5e9080',greenDk:'#467467',greenBg:'#cee5dd'}),'Лес':mk({paper:'#E6EADD',alt:'#DCE2D0',read:'#F2F5EC',title:'#D7DEC8',ink:'#232a1f',inkSoft:'#424a39',muted:'#899078',muted2:'#b6bda6',blue:'#3a6079',blueBg:'#d2dde1',blueTx:'#3a6079',terra:'#b07239',terraSoft:'#e6d3b9',green:'#5f8240',greenDk:'#496630',greenBg:'#d8e2c2'}),'Роза':mk({paper:'#F1E4E1',alt:'#EBD8D5',read:'#FAF1EF',title:'#E7D1CD',ink:'#2e2422',inkSoft:'#54443f',muted:'#a08c87',muted2:'#cbb4ae',blue:'#5a5f93',blueBg:'#dedaed',blueTx:'#5a5f93',terra:'#bb5e54',terraSoft:'#edccc6',green:'#7e9a5e',greenDk:'#5f7a43',greenBg:'#dee5ca'}),'Лаванда':mk({paper:'#E9E5F0',alt:'#E1DBEC',read:'#F5F2FA',title:'#DDD6EB',ink:'#28242e',inkSoft:'#494456',muted:'#908aa0',muted2:'#bcb4cc',blue:'#5258a0',blueBg:'#dddaf1',blueTx:'#5258a0',terra:'#b06a8a',terraSoft:'#ebd1dc',green:'#6f9266',greenDk:'#547349',greenBg:'#dae7d4'}),'Закат':mk({paper:'#F0E2D4',alt:'#E9D6C3',read:'#FBEFE0',title:'#E5CEB5',ink:'#34261c',inkSoft:'#5a4632',muted:'#a4876c',muted2:'#ccb191',blue:'#44708a',blueBg:'#d5e0e5',blueTx:'#44708a',terra:'#c4622f',terraSoft:'#f0d0b1',green:'#8a934a',greenDk:'#6c7434',greenBg:'#e2e2bc'}),'Тёмная':mk({paper:'#26231d',alt:'#2e2a23',read:'#201d18',title:'#322d25',ink:'#ece6da',inkSoft:'#c4bdae',muted:'#8f897b',muted2:'#6c6659',blue:'#5a93cc',blueBg:'#2a3f50',blueTx:'#9cc3e2',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#33402a'}),'Ночь':mk({paper:'#1b2230',alt:'#222b3b',read:'#161c28',title:'#25303f',ink:'#e3e9f2',inkSoft:'#b3bdcd',muted:'#7e879a',muted2:'#5b6577',blue:'#5fa0d6',blueBg:'#26384f',blueTx:'#a6cdef',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#2a3a28'}),'Уголь':mk({paper:'#1f1f21',alt:'#28282b',read:'#19191b',title:'#2c2c2f',ink:'#ededee',inkSoft:'#c2c2c4',muted:'#8d8d90',muted2:'#66666a',blue:'#5aa0d0',blueBg:'#2b3a47',blueTx:'#9fcbe8',terra:'#d8924f',terraSoft:'#443323',green:'#84b25f',greenDk:'#aad187',greenBg:'#2c3a27'})};}
   readerPalette(){ return this.THEMES[(this.props && this.props.theme)] || this.THEMES['Пергамент']; 
@@ -354,10 +359,14 @@ class Component extends DCLogic {
   
   }
 
-  /* ===== READER methods ===== */
+
 
 
   /* ---------- utils ---------- */
+
+  /* ================================================================
+   * 2. SCREEN: reading — экран чтения (аналог src/ui/screens/reading.js)
+   * ================================================================ */
   readerRand(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return ((h>>>0)%10000)/10000;}
   readerBuildTokens(str){
     const out=[]; const re=/\{([^}]*)\}([^\s{]*)|([^\s{]+)/g; let m;
@@ -389,6 +398,8 @@ class Component extends DCLogic {
   readerMoveSection(key,dir){const o=this.state.cardOrder.slice();const i=o.indexOf(key);const j=i+dir;if(j<0||j>=o.length)return;const tmp=o[i];o[i]=o[j];o[j]=tmp;this.setState({cardOrder:o});}
 
   /* ---------- icons ---------- */
+
+  /*    2a — иконки (аналог src/ui/components/icons.js) */
   readerIc(d,c,sw){const h=React.createElement;return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:sw||1.7,strokeLinecap:'round',strokeLinejoin:'round'},...(Array.isArray(d)?d:[d]).map((p,i)=>h('path',{key:i,d:p})));}
   readerIconRead(c){const h=React.createElement;return h('svg',{width:23,height:23,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M12 6.5C10 5.2 7.6 5.2 5 6.2v12c2.6-1 5-1 7 .3'}),h('path',{d:'M12 6.5c2-1.3 4.4-1.3 7-.3v12c-2.6-1-5-1-7 .3'}),h('path',{d:'M12 6.5v12.3'}));}
   readerIconWords(c){const h=React.createElement;return h('svg',{width:23,height:23,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M9 7h11M9 12h11M9 17h11'}),h('circle',{cx:4.5,cy:7,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:12,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:17,r:1,fill:c,stroke:'none'}));}
@@ -399,6 +410,8 @@ class Component extends DCLogic {
   readerChevH(c,dir){const h=React.createElement;const d=dir==='left'?'M15 18l-6-6 6-6':'M9 6l6 6-6 6';return h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2.2,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:d}));}
 
   /* ---------- status bar ---------- */
+
+  /*    2b — статус-бар, тосты, шторки, оверлеи (аналог src/ui/components/) */
   readerRenderStatusBar(){
     const h=React.createElement,C=this.CR;
     const bars=[5,7,9,11].map((ht,i)=>h('rect',{key:i,x:i*4,y:11-ht,width:2.6,height:ht,rx:0.8,fill:C.ink}));
@@ -411,6 +424,8 @@ class Component extends DCLogic {
   }
 
   /* ---------- top header (read) ---------- */
+
+  /*    2c — rendering: текст, словарь, about, навигация */
   readerSegmentEl(small){
     const h=React.createElement,C=this.CR,m=this.state.mode;
     return h('div',{style:{display:'flex',gap:2,background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:3}},
@@ -670,6 +685,8 @@ class Component extends DCLogic {
   }
 
   /* ---------- gallery previews ---------- */
+
+  /*    2d — gallery previews (миниатюры для дизайн-системы) */
   readerGalModeD(){
     const C=this.CR,h=React.createElement,cur=this.state.mode;
     return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:11}},
@@ -770,6 +787,8 @@ class Component extends DCLogic {
   readerCardSections(cd){return this.state.cardOrder.filter(k=>this.state.cardHidden.indexOf(k)<0).map(k=>this.readerRenderSection(k,cd));}
 
   /* ---------- DESKTOP (>=600px) ---------- */
+
+  /*    2e — desktop layout (боковая навигация + инспектор) */
   readerModeMenuList(){
     const C=this.CR,h=React.createElement,st=this.state;
     return this.modeNames.map((nm,i)=>{const n=i+1,on=st.mode===n;return h('button',{key:n,onClick:()=>this.readerSetMode(n),style:{display:'flex',alignItems:'center',gap:13,width:'100%',textAlign:'left',padding:'13px 16px',background:on?this.a(C.terra,0.08):'transparent',border:'none',borderBottom:i<3?'1px solid '+C.line:'none',cursor:'pointer'}},
@@ -883,6 +902,8 @@ class Component extends DCLogic {
   }
 
   /* ---------- status chip variants ---------- */
+
+  /*    2f — status-chip variants (виджеты режимов) */
   readerChipStates(){
     return [
       {id:'rus',label:'«Рус» — всё выключено',desc:'интенсивность букв 0%, слой слов выкл. Греческого слоя нет.'},
@@ -1096,6 +1117,8 @@ class Component extends DCLogic {
   }
 
   /* ---------- compose ---------- */
+
+  /*    2g — phone composition */
   readerRenderContent(){const t=this.state.tab;if(t==='read')return this.readerRenderRead();if(t==='dict')return this.readerRenderDict();return this.readerRenderAbout();}
   readerRenderPhone(){
     const C=this.CR,h=React.createElement;
@@ -1110,10 +1133,14 @@ class Component extends DCLogic {
       this.readerRenderLetterSheet());
   }
 
-  /* ===== WORDS methods ===== */
+
 
 
   /* ---- utils ---- */
+
+  /* ================================================================
+   * 3. SCREEN: dictionary — экран словаря (аналог src/ui/screens/dictionary.js)
+   * ================================================================ */
   wordHexToRgb(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];}
   wordRgbToHex(a){const c=v=>('0'+Math.round(Math.max(0,Math.min(255,v))).toString(16)).slice(-2);return '#'+c(a[0])+c(a[1])+c(a[2]);}
   wordMix(x,y,t){const A=this.wordHexToRgb(x),B=this.wordHexToRgb(y);return this.wordRgbToHex([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]);}
@@ -1121,6 +1148,8 @@ class Component extends DCLogic {
 	  wordFmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+"×";}
 
   /* ---- icons ---- */
+
+  /*    3a — иконки */
   wordIconRead(c) {
     const h = React.createElement;
     return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},
@@ -1161,6 +1190,8 @@ class Component extends DCLogic {
   }
 
   /* ---- data ---- */
+
+  /*    3b — data queries + actions */
   wordGetFiltered() {
     const {wordSearch:search, statusFilter, posFilter, showInText, wordStatusMap:statusMap, wordAddedSet:addedSet} = this.state;
     const q = search.trim().toLowerCase();
@@ -1212,6 +1243,8 @@ class Component extends DCLogic {
   }
 
   /* ---- status pill ---- */
+
+  /*    3c — rendering: строки, группы, карточки, поиск, фильтры */
   wordSPill(k, sm) {
     const C=this.CW, h=React.createElement, s=this.state.wordStatusMap[k];
     if (!s) return null;
@@ -1391,6 +1424,8 @@ class Component extends DCLogic {
   }
 
   /* ---- POS data ---- */
+
+  /*    3d — POS-фильтр (сегменты / список / цвет / чипсы) */
   wordPosOpts() { return [['all','Все'],['noun','Сущ.'],['verb','Глаг.'],['adj','Прил.'],['func','Служ.']]; }
   wordPosCount(v) {
     const {wordSearch:search, statusFilter, showInText, wordStatusMap:statusMap, wordAddedSet:addedSet} = this.state;
@@ -1507,6 +1542,8 @@ class Component extends DCLogic {
   }
 
   /* ===== STATUS / «В тексте» — 5 компактных вариантов ===== */
+
+  /*    3e — статус-фильтр (V1–V5) */
   wordSOpts() { return [['all','Все'],['new','Новые'],['learning','Учу'],['known','Знаю']]; }
   wordSColorMap() { const C=this.CW; return {all:C.inkSoft, new:C.muted, learning:C.blueTx, known:C.greenDk}; }
   wordStatusCount(v) {
@@ -1632,6 +1669,8 @@ class Component extends DCLogic {
   }
 
   /* ---- status bar (phone) ---- */
+
+  /*    3f — phone/desktop layout + infinite scroll */
   wordStatusBar() {
     const C=this.CW, h=React.createElement;
     const bars=[5,7,9,11].map((ht,i)=>h('rect',{key:i,x:i*4,y:11-ht,width:2.6,height:ht,rx:0.8,fill:C.ink}));
@@ -1781,6 +1820,10 @@ class Component extends DCLogic {
 
 
 
+
+  /* ================================================================
+   * 4. LIFECYCLE
+   * ================================================================ */
   componentDidMount() {
     this._readerOnResize = () => {
       const w = Math.min(1180, (window.innerWidth || 1180) - 40);
@@ -1813,6 +1856,10 @@ class Component extends DCLogic {
     if (this._wordOnDocDown) document.removeEventListener('mousedown', this._wordOnDocDown);
   }
 
+
+  /* ================================================================
+   * 5. COMPOSITION — renderVals (аналог src/ui/render.js)
+   * ================================================================ */
   renderVals() {
     const theme = this.props.theme ?? 'Пергамент';
     this.CR = this.readerPalette();
