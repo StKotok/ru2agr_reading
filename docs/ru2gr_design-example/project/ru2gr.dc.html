@@ -106,7 +106,6 @@ class Component extends DCLogic {
     this.sans  = "'Source Sans 3', system-ui, sans-serif";
     this.THEMES = this.buildThemes();
 
-    this.sans  = "'Source Sans 3', system-ui, sans-serif";
     this.r2g = {'а':'α','б':'β','в':'β','г':'γ','д':'δ','е':'ε','з':'ζ','и':'ι','к':'κ','л':'λ','м':'μ','н':'ν','о':'ο','п':'π','р':'ρ','с':'σ','т':'τ','у':'υ','ф':'φ','х':'χ'};
     this.LET = {
       'α':{u:'Α',l:'α',name:'альфа',sound:'звучит примерно как «а»',eq:'Ближе всего к русской «а»'},
@@ -211,10 +210,6 @@ class Component extends DCLogic {
       cardHidden:[],
       readerToast:null, readerDeskScale:1
     };
-  
-
-
-    this.sans  = "'Source Sans 3', system-ui, sans-serif";
 
     this.WORDS = [
       {k:'ho',        r:1,   g:'ὁ',           t:'ho',          ru:'— (артикль)',              pos:'func', posL:'Арт.',     freq:19783, strong:'G3588', add:false},
@@ -332,7 +327,7 @@ class Component extends DCLogic {
    *    (аналог lib/ + src/ui/)
    * ================================================================ */
   a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
-  buildThemes(){if(window.RU2GR)return window.RU2GR.THEMES;const mk=(o)=>({paper:o.paper,paper2:o.alt,sidebar:o.alt,read:o.read,titlebar:o.title,ink:o.ink,inkSoft:o.inkSoft,muted:o.muted,muted2:o.muted2,line:this.a(o.ink,0.10),line2:this.a(o.ink,0.18),blue:o.blue,blueHead:o.blue,blueBg:o.blueBg,blueTx:o.blueTx,terra:o.terra,terraSoft:o.terraSoft,green:o.green,greenDk:o.greenDk,greenBg:o.greenBg});return {'Пергамент':mk({paper:'#ECE7DD',alt:'#E3DDD0',read:'#F6F3EE',title:'#E2DBCB',ink:'#272320',inkSoft:'#4a463e',muted:'#9a9488',muted2:'#bdb6a7',blue:'#2f5d85',blueBg:'#cdd9e6',blueTx:'#345f82',terra:'#bb763c',terraSoft:'#e7d3bf',green:'#7c9d5b',greenDk:'#5f7d44',greenBg:'#d9e3c9'}),'Сепия':mk({paper:'#E9DFC8',alt:'#E2D6BB',read:'#F4ECD9',title:'#DBCEB0',ink:'#36291a',inkSoft:'#574630',muted:'#998966',muted2:'#c1b08d',blue:'#39627a',blueBg:'#d2dbdb',blueTx:'#39627a',terra:'#b3652b',terraSoft:'#e7cea9',green:'#7c8f46',greenDk:'#5e7033',greenBg:'#dedcb8'}),'Слоновая кость':mk({paper:'#FAF8F3',alt:'#F1EEE6',read:'#FFFFFF',title:'#EFEBE1',ink:'#2a2722',inkSoft:'#514c43',muted:'#9b9488',muted2:'#c7c0b2',blue:'#2f5d85',blueBg:'#d8e3ef',blueTx:'#2f5d85',terra:'#c0723a',terraSoft:'#f1dac2',green:'#6f9a4f',greenDk:'#547d35',greenBg:'#e1ead0'}),'Туман':mk({paper:'#E8E8EB',alt:'#DFDFE3',read:'#F4F4F7',title:'#DBDBDF',ink:'#25262b',inkSoft:'#45474e',muted:'#8a8c95',muted2:'#b6b8c0',blue:'#3a5f8a',blueBg:'#d4ddeb',blueTx:'#3a5f8a',terra:'#b06a45',terraSoft:'#e8d2c6',green:'#5f8f6a',greenDk:'#487553',greenBg:'#d4e4d8'}),'Море':mk({paper:'#E2ECF0',alt:'#D7E4EA',read:'#F0F7F9',title:'#D1E0E7',ink:'#1f2a30',inkSoft:'#3c4b53',muted:'#7f939c',muted2:'#aec0c8',blue:'#2c6e8f',blueBg:'#cadfe9',blueTx:'#2c6e8f',terra:'#c07a45',terraSoft:'#edd7c3',green:'#5e9080',greenDk:'#467467',greenBg:'#cee5dd'}),'Лес':mk({paper:'#E6EADD',alt:'#DCE2D0',read:'#F2F5EC',title:'#D7DEC8',ink:'#232a1f',inkSoft:'#424a39',muted:'#899078',muted2:'#b6bda6',blue:'#3a6079',blueBg:'#d2dde1',blueTx:'#3a6079',terra:'#b07239',terraSoft:'#e6d3b9',green:'#5f8240',greenDk:'#496630',greenBg:'#d8e2c2'}),'Роза':mk({paper:'#F1E4E1',alt:'#EBD8D5',read:'#FAF1EF',title:'#E7D1CD',ink:'#2e2422',inkSoft:'#54443f',muted:'#a08c87',muted2:'#cbb4ae',blue:'#5a5f93',blueBg:'#dedaed',blueTx:'#5a5f93',terra:'#bb5e54',terraSoft:'#edccc6',green:'#7e9a5e',greenDk:'#5f7a43',greenBg:'#dee5ca'}),'Лаванда':mk({paper:'#E9E5F0',alt:'#E1DBEC',read:'#F5F2FA',title:'#DDD6EB',ink:'#28242e',inkSoft:'#494456',muted:'#908aa0',muted2:'#bcb4cc',blue:'#5258a0',blueBg:'#dddaf1',blueTx:'#5258a0',terra:'#b06a8a',terraSoft:'#ebd1dc',green:'#6f9266',greenDk:'#547349',greenBg:'#dae7d4'}),'Закат':mk({paper:'#F0E2D4',alt:'#E9D6C3',read:'#FBEFE0',title:'#E5CEB5',ink:'#34261c',inkSoft:'#5a4632',muted:'#a4876c',muted2:'#ccb191',blue:'#44708a',blueBg:'#d5e0e5',blueTx:'#44708a',terra:'#c4622f',terraSoft:'#f0d0b1',green:'#8a934a',greenDk:'#6c7434',greenBg:'#e2e2bc'}),'Тёмная':mk({paper:'#26231d',alt:'#2e2a23',read:'#201d18',title:'#322d25',ink:'#ece6da',inkSoft:'#c4bdae',muted:'#8f897b',muted2:'#6c6659',blue:'#5a93cc',blueBg:'#2a3f50',blueTx:'#9cc3e2',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#33402a'}),'Ночь':mk({paper:'#1b2230',alt:'#222b3b',read:'#161c28',title:'#25303f',ink:'#e3e9f2',inkSoft:'#b3bdcd',muted:'#7e879a',muted2:'#5b6577',blue:'#5fa0d6',blueBg:'#26384f',blueTx:'#a6cdef',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#2a3a28'}),'Уголь':mk({paper:'#1f1f21',alt:'#28282b',read:'#19191b',title:'#2c2c2f',ink:'#ededee',inkSoft:'#c2c2c4',muted:'#8d8d90',muted2:'#66666a',blue:'#5aa0d0',blueBg:'#2b3a47',blueTx:'#9fcbe8',terra:'#d8924f',terraSoft:'#443323',green:'#84b25f',greenDk:'#aad187',greenBg:'#2c3a27'})};}
+  buildThemes(){return window.RU2GR ? window.RU2GR.THEMES : null;}
   readerPalette(){ return this.THEMES[(this.props && this.props.theme)] || this.THEMES['Пергамент']; 
   }
   wordPalette(){
@@ -401,9 +396,9 @@ class Component extends DCLogic {
 
   /*    2a — иконки (аналог src/ui/components/icons.js) */
   readerIc(d,c,sw){const h=React.createElement;return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:sw||1.7,strokeLinecap:'round',strokeLinejoin:'round'},...(Array.isArray(d)?d:[d]).map((p,i)=>h('path',{key:i,d:p})));}
-  readerIconRead(c){const h=React.createElement;return h('svg',{width:23,height:23,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M12 6.5C10 5.2 7.6 5.2 5 6.2v12c2.6-1 5-1 7 .3'}),h('path',{d:'M12 6.5c2-1.3 4.4-1.3 7-.3v12c-2.6-1-5-1-7 .3'}),h('path',{d:'M12 6.5v12.3'}));}
-  readerIconWords(c){const h=React.createElement;return h('svg',{width:23,height:23,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M9 7h11M9 12h11M9 17h11'}),h('circle',{cx:4.5,cy:7,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:12,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:17,r:1,fill:c,stroke:'none'}));}
-  readerIconInfo(c){const h=React.createElement;return h('svg',{width:23,height:23,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('circle',{cx:12,cy:12,r:9}),h('path',{d:'M12 11v5'}),h('circle',{cx:12,cy:7.7,r:0.6,fill:c,stroke:'none'}));}
+  readerIconRead(c,sz){const s=sz||23;const h=React.createElement;return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M12 6.5C10 5.2 7.6 5.2 5 6.2v12c2.6-1 5-1 7 .3'}),h('path',{d:'M12 6.5c2-1.3 4.4-1.3 7-.3v12c-2.6-1-5-1-7 .3'}),h('path',{d:'M12 6.5v12.3'}));}
+  readerIconWords(c,sz){const s=sz||23;const h=React.createElement;return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M9 7h11M9 12h11M9 17h11'}),h('circle',{cx:4.5,cy:7,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:12,r:1,fill:c,stroke:'none'}),h('circle',{cx:4.5,cy:17,r:1,fill:c,stroke:'none'}));}
+  readerIconInfo(c,sz){const s=sz||23;const h=React.createElement;return h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('circle',{cx:12,cy:12,r:9}),h('path',{d:'M12 11v5'}),h('circle',{cx:12,cy:7.7,r:0.6,fill:c,stroke:'none'}));}
   readerIconEye(c,off){const h=React.createElement;if(off)return h('svg',{width:21,height:21,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M3 3l18 18'}),h('path',{d:'M10.6 6.2A9.7 9.7 0 0112 6c5 0 9 4.5 10 6-0.5 0.9-1.5 2.2-3 3.3M6.2 7.3C4.2 8.6 2.7 10.4 2 12c1 1.5 5 6 10 6 1.4 0 2.7-.3 3.9-.9'}),h('path',{d:'M9.8 9.9a3 3 0 004.2 4.2'}));return h('svg',{width:21,height:21,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z'}),h('circle',{cx:12,cy:12,r:3}));}
   readerIconGear(c){const h=React.createElement;return h('svg',{width:20,height:20,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.6,strokeLinecap:'round',strokeLinejoin:'round'},h('circle',{cx:12,cy:12,r:3}),h('path',{d:'M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z'}));}
   readerChev(c,dir){const h=React.createElement;const d=dir==='up'?'M6 15l6-6 6 6':'M6 9l6 6 6-6';return h('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:d}));}
@@ -412,8 +407,8 @@ class Component extends DCLogic {
   /* ---------- status bar ---------- */
 
   /*    2b — статус-бар, тосты, шторки, оверлеи (аналог src/ui/components/) */
-  readerRenderStatusBar(){
-    const h=React.createElement,C=this.CR;
+  renderStatusBar(C){
+    const h=React.createElement;
     const bars=[5,7,9,11].map((ht,i)=>h('rect',{key:i,x:i*4,y:11-ht,width:2.6,height:ht,rx:0.8,fill:C.ink}));
     const signal=h('svg',{width:17,height:11,viewBox:'0 0 17 11'},...bars);
     const wifi=h('svg',{width:16,height:11,viewBox:'0 0 16 11',fill:'none',stroke:C.ink,strokeWidth:1.4,strokeLinecap:'round'},h('path',{d:'M2 4.2C4 2.6 6 1.8 8 1.8s4 .8 6 2.4'}),h('path',{d:'M4 6.4C5.2 5.4 6.6 5 8 5s2.8.4 4 1.4'}),h('circle',{cx:8,cy:9,r:1,fill:C.ink,stroke:'none'}));
@@ -422,6 +417,7 @@ class Component extends DCLogic {
       h('div',null,'9:41'),
       h('div',{style:{display:'flex',gap:7,alignItems:'center'}},signal,wifi,batt));
   }
+  readerRenderStatusBar(){return this.renderStatusBar(this.CR);}
 
   /* ---------- top header (read) ---------- */
 
@@ -1141,37 +1137,18 @@ class Component extends DCLogic {
   /* ================================================================
    * 3. SCREEN: dictionary — экран словаря (аналог src/ui/screens/dictionary.js)
    * ================================================================ */
-  wordHexToRgb(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];}
-  wordRgbToHex(a){const c=v=>('0'+Math.round(Math.max(0,Math.min(255,v))).toString(16)).slice(-2);return '#'+c(a[0])+c(a[1])+c(a[2]);}
-  wordMix(x,y,t){const A=this.wordHexToRgb(x),B=this.wordHexToRgb(y);return this.wordRgbToHex([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]);}
-  wordLum(hex){const a=this.wordHexToRgb(hex);return (0.299*a[0]+0.587*a[1]+0.114*a[2])/255;}
+  _hexToRgb(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];}
+  _rgbToHex(a){const c=v=>('0'+Math.round(Math.max(0,Math.min(255,v))).toString(16)).slice(-2);return '#'+c(a[0])+c(a[1])+c(a[2]);}
+  wordMix(x,y,t){const A=this._hexToRgb(x),B=this._hexToRgb(y);return this._rgbToHex([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]);}
+  wordLum(hex){const a=this._hexToRgb(hex);return (0.299*a[0]+0.587*a[1]+0.114*a[2])/255;}
 	  wordFmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+"×";}
 
   /* ---- icons ---- */
 
   /*    3a — иконки */
-  wordIconRead(c) {
-    const h = React.createElement;
-    return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},
-      h('path',{d:'M12 6.5C10 5.2 7.6 5.2 5 6.2v12c2.6-1 5-1 7 .3'}),
-      h('path',{d:'M12 6.5c2-1.3 4.4-1.3 7-.3v12c-2.6-1-5-1-7 .3'}),
-      h('path',{d:'M12 6.5v12.3'}));
-  }
-  wordIconWords(c) {
-    const h = React.createElement;
-    return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},
-      h('path',{d:'M9 7h11M9 12h11M9 17h11'}),
-      h('circle',{cx:4.5,cy:7,r:1,fill:c,stroke:'none'}),
-      h('circle',{cx:4.5,cy:12,r:1,fill:c,stroke:'none'}),
-      h('circle',{cx:4.5,cy:17,r:1,fill:c,stroke:'none'}));
-  }
-  wordIconInfo(c) {
-    const h = React.createElement;
-    return h('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},
-      h('circle',{cx:12,cy:12,r:9}),
-      h('path',{d:'M12 11v5'}),
-      h('circle',{cx:12,cy:7.7,r:0.6,fill:c,stroke:'none'}));
-  }
+  wordIconRead(c){return this.readerIconRead(c,22);}
+  wordIconWords(c){return this.readerIconWords(c,22);}
+  wordIconInfo(c){return this.readerIconInfo(c,22);}
   wordIconSearch(c) {
     const h = React.createElement;
     return h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:c,strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round'},
@@ -1671,16 +1648,7 @@ class Component extends DCLogic {
   /* ---- status bar (phone) ---- */
 
   /*    3f — phone/desktop layout + infinite scroll */
-  wordStatusBar() {
-    const C=this.CW, h=React.createElement;
-    const bars=[5,7,9,11].map((ht,i)=>h('rect',{key:i,x:i*4,y:11-ht,width:2.6,height:ht,rx:0.8,fill:C.ink}));
-    const sig=h('svg',{width:17,height:11,viewBox:'0 0 17 11'},...bars);
-    const wifi=h('svg',{width:16,height:11,viewBox:'0 0 16 11',fill:'none',stroke:C.ink,strokeWidth:1.4,strokeLinecap:'round'},h('path',{d:'M2 4.2C4 2.6 6 1.8 8 1.8s4 .8 6 2.4'}),h('path',{d:'M4 6.4C5.2 5.4 6.6 5 8 5s2.8.4 4 1.4'}),h('circle',{cx:8,cy:9,r:1,fill:C.ink,stroke:'none'}));
-    const batt=h('svg',{width:26,height:12,viewBox:'0 0 26 12'},h('rect',{x:.6,y:.6,width:21,height:10.8,rx:3,fill:'none',stroke:this.a(C.ink,.45),strokeWidth:1.2}),h('rect',{x:2.4,y:2.4,width:16,height:7.2,rx:1.6,fill:C.ink}),h('rect',{x:23,y:3.6,width:2,height:4.8,rx:1,fill:this.a(C.ink,.5)}));
-    return h('div',{style:{flex:'0 0 auto',height:46,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 26px 7px',fontFamily:this.sans,fontSize:15,fontWeight:600,color:C.ink}},
-      h('div',null,'9:41'),
-      h('div',{style:{display:'flex',gap:7,alignItems:'center'}},sig,wifi,batt));
-  }
+  wordStatusBar(){return this.renderStatusBar(this.CW);}
 
   /* ---- toast ---- */
   wordToastEl(mobile) {
@@ -1825,35 +1793,28 @@ class Component extends DCLogic {
    * 4. LIFECYCLE
    * ================================================================ */
   componentDidMount() {
-    this._readerOnResize = () => {
+    this._onResize = () => {
       const w = Math.min(1180, (window.innerWidth || 1180) - 40);
-      this.setState({readerDeskScale: Math.min(1, w / 1180)});
+      const s = Math.min(1, w / 1180);
+      this.setState({readerDeskScale: s, wordDeskScale: s});
     };
-    this._readerOnResize();
-    window.addEventListener('resize', this._readerOnResize);
-
-    this._wordOnResize = () => {
-      const w = Math.min(1180, (window.innerWidth || 1180) - 40);
-      this.setState({wordDeskScale: Math.min(1, w / 1180)});
-    };
-    this._wordOnResize();
-    window.addEventListener('resize', this._wordOnResize);
-    this._wordOnDocDown = (e) => {
+    this._onResize();
+    window.addEventListener('resize', this._onResize);
+    this._onDocDown = (e) => {
       if (this.state.posMenuOpen && !(e.target.closest && e.target.closest('[data-posmenu]')))
         this.setState({posMenuOpen:false});
       if (this.state.sMenuOpen && !(e.target.closest && e.target.closest('[data-smenu]')))
         this.setState({sMenuOpen:false});
     };
-    document.addEventListener('mousedown', this._wordOnDocDown);
+    document.addEventListener('mousedown', this._onDocDown);
   }
   componentDidUpdate() {
     this.word_setupScroll('deskWordList');
     this.word_setupScroll('phoneWordList');
   }
   componentWillUnmount() {
-    if (this._readerOnResize) window.removeEventListener('resize', this._readerOnResize);
-    if (this._wordOnResize) window.removeEventListener('resize', this._wordOnResize);
-    if (this._wordOnDocDown) document.removeEventListener('mousedown', this._wordOnDocDown);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onDocDown) document.removeEventListener('mousedown', this._onDocDown);
   }
 
 
