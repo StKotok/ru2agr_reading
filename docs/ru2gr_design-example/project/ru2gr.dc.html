@@ -550,7 +550,7 @@ class Component extends DCLogic {
           h('div',{style:{display:'flex',flexWrap:'wrap',gap:10,marginBottom:28}}, themes.map(themeChip)),
           h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Контраст'),
           h('div',{style:{display:'inline-flex',background:this.a(C.ink,0.05),border:'1px solid '+C.line,borderRadius:11,padding:4}},
-            contrasts.map(ct=>{const on=st.readerContrast===ct;return h('button',{key:ct,onClick:()=>this.setState({readerContrast:ct}),style:{padding:'9px 20px',borderRadius:8,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:14,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct);}))))));
+            contrasts.map(ct=>{const on=st.readerContrast===ct;return h('button',{key:ct,onClick:()=>this.setState({readerContrast:ct}),style:{padding:'9px 20px',borderRadius:8,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:14,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct);})))));
   }
 
   /* ---------- bottom nav ---------- */
