@@ -302,14 +302,18 @@ class Component extends DCLogic {
   readerPalette(){
     const base = this.THEMES[this.state.readerTheme] || this.THEMES['Пергамент'];
     const ct = this.state.readerContrast || 'Чёткий';
-    const LV = {'Мягкий':{lineAlpha:0.06,line2Alpha:0.10,shadowAlpha:0.06},'Чёткий':{lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14},'Максимальный':{lineAlpha:0.15,line2Alpha:0.26,shadowAlpha:0.24}}[ct] || {lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14};
+    const LV = {'Мягкий':{elv:0.02,lineAlpha:0.06,line2Alpha:0.10,shadowAlpha:0.04},'Чёткий':{elv:0.06,lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14},'Максимальный':{elv:0.12,lineAlpha:0.16,line2Alpha:0.28,shadowAlpha:0.26}}[ct] || {elv:0.06,lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14};
     const dark = this.wordLum(base.paper) < 0.5;
     const C = Object.assign({}, base);
+    // Surface distinction: paper stays flat, read elevates
+    C.read     = dark ? this.wordMix(base.read, '#ffffff', LV.elv * 0.4) : this.wordMix(base.read, '#ffffff', LV.elv);
+    C.paper2   = dark ? this.wordMix(base.paper2, '#000000', LV.elv * 0.5) : this.wordMix(base.paper2, '#000000', LV.elv * 0.7);
+    C.sidebar  = dark ? this.wordMix(base.sidebar, '#000000', LV.elv * 0.5) : this.wordMix(base.sidebar, '#000000', LV.elv * 0.7);
     C.line     = this.a(base.ink, dark ? LV.lineAlpha * 0.8 : LV.lineAlpha);
     C.line2    = this.a(base.ink, dark ? LV.line2Alpha * 0.8 : LV.line2Alpha);
     C.shadow   = dark
-      ? `0 2px ${8 + LV.shadowAlpha * 20}px -2px rgba(0,0,0,${0.3 + LV.shadowAlpha * 0.7})`
-      : `0 1px ${2 + LV.shadowAlpha * 6}px rgba(40,34,22,${0.06 + LV.shadowAlpha * 0.3}),0 ${8 + LV.shadowAlpha * 20}px ${18 + LV.shadowAlpha * 28}px -14px rgba(40,34,22,${0.14 + LV.shadowAlpha * 0.4})`;
+      ? `0 2px ${6 + LV.shadowAlpha * 22}px -2px rgba(0,0,0,${0.25 + LV.shadowAlpha * 0.8})`
+      : `0 1px ${2 + LV.shadowAlpha * 8}px rgba(40,34,22,${0.04 + LV.shadowAlpha * 0.35}),0 ${6 + LV.shadowAlpha * 24}px ${14 + LV.shadowAlpha * 34}px -12px rgba(40,34,22,${0.10 + LV.shadowAlpha * 0.5})`;
     return C;
   }
   readerWordPalette(){
