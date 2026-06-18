@@ -70,6 +70,8 @@
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","default":"Пергамент","options":["Пергамент","Сепия","Слоновая кость","Туман","Море","Лес","Роза","Лаванда","Закат","Тёмная","Ночь","Уголь"],"tsType":"string"},"contrast":{"editor":"enum","default":"Чёткий","options":["Мягкий","Чёткий","Максимальный"],"tsType":"string"},"posStyle":{"editor":"enum","default":"Сегменты","options":["Сегменты","Список","Цвет","Чипсы"],"tsType":"string"}}'>
+const LV_TABLE = {'Мягкий':{elv:0.02,lineAlpha:0.06,line2Alpha:0.10,shadowAlpha:0.04},'Чёткий':{elv:0.06,lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14},'Максимальный':{elv:0.12,lineAlpha:0.16,line2Alpha:0.28,shadowAlpha:0.26}};
+const WORD_ELV_TABLE = {'Мягкий':0.03,'Чёткий':0.07,'Максимальный':0.12};
 class Component extends DCLogic {
   constructor(props) {
     super(props);
@@ -299,13 +301,14 @@ class Component extends DCLogic {
    * ================================================================ */
   a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
   buildThemes(){return window.RU2GR ? window.RU2GR.THEMES : null;}
+  readerCt() { return this.state.readerContrast || 'Чёткий'; }
   readerPalette(){
     const base = this.THEMES[this.state.readerTheme] || this.THEMES['Пергамент'];
-    const ct = this.state.readerContrast || 'Чёткий';
-    const LV = {'Мягкий':{elv:0.02,lineAlpha:0.06,line2Alpha:0.10,shadowAlpha:0.04},'Чёткий':{elv:0.06,lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14},'Максимальный':{elv:0.12,lineAlpha:0.16,line2Alpha:0.28,shadowAlpha:0.26}}[ct] || {elv:0.06,lineAlpha:0.10,line2Alpha:0.18,shadowAlpha:0.14};
+    const ct = this.readerCt();
+    const LV = LV_TABLE[ct] || LV_TABLE['Чёткий'];
     const dark = this.wordLum(base.paper) < 0.5;
     const C = Object.assign({}, base);
-    // Surface distinction: paper stays flat, read elevates
+    // Surface distinction: paper stays subtly lifted, read elevates more
     C.read     = dark ? this.wordMix(base.read, '#ffffff', LV.elv * 0.4) : this.wordMix(base.read, '#ffffff', LV.elv);
     C.paper    = dark ? this.wordMix(base.paper, '#ffffff', LV.elv * 0.15) : this.wordMix(base.paper, '#000000', LV.elv * 0.15);
     C.paper2   = dark ? this.wordMix(base.paper2, '#000000', LV.elv * 0.5) : this.wordMix(base.paper2, '#000000', LV.elv * 0.7);
@@ -321,8 +324,8 @@ class Component extends DCLogic {
     const C = Object.assign({}, this.CR);
     // Elevation relative to CR (contrast already applied to line/line2/shadow)
     const dark = this.wordLum(C.paper) < 0.5;
-    const ct = this.state.readerContrast || 'Чёткий';
-    const elv = {'Мягкий':0.03,'Чёткий':0.07,'Максимальный':0.12}[ct] || 0.07;
+    const ct = this.readerCt();
+    const elv = WORD_ELV_TABLE[ct] || 0.07;
     C.content  = dark ? this.wordMix(C.read, '#ffffff', elv * 0.25) : this.wordMix(C.read, '#ffffff', elv * 0.3);
     C.card     = dark ? this.wordMix(C.paper, '#ffffff', elv) : this.wordMix(C.paper, '#ffffff', elv);
     C.sidebar  = dark ? this.wordMix(C.sidebar || C.paper2, '#000000', elv * 0.4) : this.wordMix(C.sidebar || C.paper2, '#000000', elv * 0.6);
