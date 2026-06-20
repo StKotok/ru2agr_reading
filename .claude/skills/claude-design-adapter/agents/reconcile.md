@@ -32,20 +32,32 @@ For each token key (per theme/mode), compare the value across all copies and cla
   trimmed whitespace) → safe to canonicalise the representation; pick one canonical form
   (prefer the project's existing convention).
 - **CONFLICT** — genuinely different values (`#E7E1D3` vs `#E3DDD0`) → **a fork**. Do not
-  pick. List it with each candidate, its source, and any hint (most-referenced / newest).
+  pick. For each, give candidates + sources and a hint covering: most-referenced / newest;
+  **reachability** — does the copy execute, or is it dead code behind a "use shared if loaded"
+  guard? (a conflict in dead code is real but low-urgency); **blast radius** — follow the value
+  through any downstream derive/override to say which screen actually renders it (a key later
+  overridden by, say, a contrast pass means that screen is insensitive to the drift).
 
 **Never treat representation changes that may differ across engines as equal:** a named
 colour vs hex, or `%`-alpha vs decimal — keep distinct unless the project guarantees equality.
+**Token values only:** duplicated *code/logic* (an `alpha()`/`mix()` helper that is pretty-printed
+in one copy, minified but logically identical in another) is **out of scope** — it is not a
+FORM-VARIANT. Note it for a separate code-dedup pass; don't log it as a value conflict.
 
 ### Step 3 — Contract divergence
 Detect when the RESOLVED shape differs across screens — e.g. one screen derives extra
 surfaces (contrast-aware `card` / `shadow` / …) that another lacks. This is a structural
 conflict: is the richer contract canonical for all, or are the shapes intentionally
-per-screen? → **a fork** (don't decide).
+per-screen? → **a fork** (don't decide). For handoffs this is often the **dominant** decision —
+bigger than any single value drift — so surface it prominently, not buried among value forks.
 
 ### Step 4 — Hardcoded ↔ token links
 Find hardcoded literals that duplicate a token's value but aren't linked to it. Classify:
-- **LINKABLE** — equals a token value and plays that role → propose linking (`tidy` tokenises).
+- **LINKABLE (live)** — equals a token value, plays that role, and should track the active
+  theme → link to the live token (`tidy` tokenises).
+- **LINKABLE (pinned)** — equals a token value but sits in theme-frozen UI (e.g. canvas chrome
+  always rendered in one theme) → only a **constant** substitution is value-preserving, never a
+  live lookup; usually **AMBIGUOUS** — flag, default keep.
 - **SCAFFOLDING** — prototype chrome (canvas frame, section labels), arguably out of scope → flag, default keep.
 - **AMBIGUOUS** → a fork.
 
@@ -70,7 +82,8 @@ FORM-VARIANT: <count> — representation canonicalised (e.g. .18 -> 0.18); value
 
 CONFLICTS (forks — orchestrator must resolve):
   <theme>.<key>: '<v1>' (<source A>) vs '<v2>' (<source B>)
-     hint: <most-referenced / newest / none>
+     hint: <most-referenced / newest>; reachable: <live | dead-code behind guard>;
+           impact: <which screen actually renders it, after overrides>
 
 CONTRACT DIVERGENCE (forks):
   <screen X> derives <extra surfaces> that <screen Y> lacks — unify or keep per-screen?
@@ -90,6 +103,8 @@ CONSOLIDATION PLAN (for apply-token, AFTER conflicts resolved):
 - Value-preserving only: never change a value; canonicalise representation only when provably identical.
 - Never resolve a CONFLICT yourself — list it; the orchestrator forks it (GATE 4).
 - Never edit; never ask the user. You return a document.
+- Scale the report to the findings: when nearly everything AGREEs (e.g. a single CONFLICT),
+  keep RECONCILE.md short — don't pad empty sections.
 - Order the consolidation plan so the canonical source exists before fallbacks collapse.
 - Hand `RECONCILE.md` back; the orchestrator resolves forks, records chosen values, then
   dispatches `apply-token` per consolidation entry (each Tier-1 value-identity checked).
