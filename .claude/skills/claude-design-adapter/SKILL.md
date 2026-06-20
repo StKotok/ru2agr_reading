@@ -34,8 +34,8 @@ Wizard the same machinery.
 
 - `tidy` reuses the existing audit/apply machinery: `extract-*` → `name-tokens` →
   `apply-token` → `verify-visual` (Tier 1) → `cross-check`/`audit-coverage` → `report-summary`.
-- `reconcile`, `refine`, `port` each add **one** driver agent (planned — see Agents). No
-  parallel pipelines.
+- `reconcile` has its driver agent; `refine` and `port` add **one** each (planned — see
+  Agents). No parallel pipelines.
 
 ## Wizard flow (on activation)
 
