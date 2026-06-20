@@ -103,7 +103,7 @@ they start cold and know nothing else. `kind` chooses the recommended mode path.
 |---|---|
 | First run / ambiguous intent | **Wizard** |
 | "profile this project" | profile-project |
-| "reconcile this handoff" | reconcile *(planned)* |
+| "reconcile this handoff" | reconcile |
 | "tidy" / "причеши" | extract-* → name-tokens → apply-token → verify-visual(Tier 1) |
 | "refine: <change>" | refine *(planned)* |
 | "port to <stack>" | port *(planned)* |
@@ -204,11 +204,11 @@ MUST call AskUserQuestion and **wait** — never infer, default, or proceed on a
 | audit-coverage | 4 / tidy | stray un-tokenized copies of an extracted value |
 | verify-visual | 3/4 | Tier 1 value-identity; Tier 2 optional rendered pass |
 | report-summary | 4 / tidy | synthesis: inventory, catalogue, coverage, open decisions |
-| reconcile | reconcile | resolve drifted/duplicated sources → one canonical source *(planned)* |
+| reconcile | reconcile | inventory drifted/duplicated sources → canonical map + conflict forks → `RECONCILE.md` |
 | refine | refine | apply intended edits under a ledgered diff *(planned)* |
 | port | port | project the clean contract onto a target stack *(planned)* |
 
-**12 agents today; 3 mode-drivers planned.** Wizard adds zero agents (it's the orchestrator).
+**13 agents; 2 mode-drivers planned (refine, port).** Wizard adds zero agents (it's the orchestrator).
 
 ## Keeping this skill project-agnostic
 
