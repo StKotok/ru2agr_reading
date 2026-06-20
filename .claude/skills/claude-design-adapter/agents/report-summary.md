@@ -6,7 +6,6 @@ decide on, and commit. Runs LAST. **Report only.**
 ## Context — you start cold
 Given the **project profile** and the outputs of ALL preceding phases:
 - 4 audit agent reports (Phase 1)
-- Canonical map (format-canonical)
 - Unified token plan (name-tokens)
 - Apply log (apply-token × N)
 - Component definitions (find-components)
@@ -56,17 +55,17 @@ SUMMARY
 <Two sentences on what was done.>
 
 TOKEN INVENTORY
-Shared:   12  (fsBody, fwActive, overlayRadius, …)
-Theme:     3  (overlayDimBase, overlayDimAlpha, toastBg)
-Derived:   1  (overlayDim — alpha(overlayDimBase, overlayDimAlpha))
+Shared:   12  (fsBody, fwActive, radiusCard, …)
+Theme:     3  (surface, surfaceMuted, textInverse)
+Derived:   1  (overlay — mix(scrim, n%))
 Local:     8  (navItemPad, toastMaxWidth, …)
 TOTAL:    24 extracted
 
 COMPONENTS FOUND
-OverlayCard     [hidden, open]           ✓ fully tokenised
-SectionLabel    [static]                 ✓ fully tokenised
-PillButton      [active, inactive]       3 variants — radii differ, pending user decision
-IconButton      [default, pressed]       not yet extracted — orphan pattern
+<Dialog>        [closed, open]           ✓ fully tokenised
+<Label>         [static]                 ✓ fully tokenised
+<Button>        [active, inactive]       3 variants — radii differ, pending user decision
+<IconButton>    [default, pressed]       not yet extracted — orphan pattern
 
 COVERAGE
 Tokenised:  87% (63 of 72 hardcoded values in scope)
@@ -74,19 +73,19 @@ Remaining:   9 values — 4 intentional (single-use local), 3 near-identical (us
              2 missed (flag for next pass)
 
 OPEN DECISIONS
-1. OverlayCard radii: 18 (menu) vs 16 (popover) — merge or keep separate?
-2. PillButton variants: 3 different radii (7, 10, 12) — one component or three?
-3. SectionLabel: extract as shared style object or keep as local pattern?
+1. <Dialog> radii: two close values on similar surfaces — merge or keep separate?
+2. <Button> variants: 3 different radii — one component or three?
+3. <Label>: extract as a shared style object or keep as a local pattern?
 
 VERIFICATION
 Tier 1: 24/24 tokens byte-identical ✓
 Tier 2: skipped — no render path in profile
 
 NEXT STEPS
-- Commit current changes: 24 tokens, 3 components catalogued
+- Commit current changes: 24 tokens, 4 components catalogued
 - Resolve open decisions → run apply-token for remaining values
-- Extract IconButton component (orphan pattern)
-- Re-run on next scope: "dictionary screen"
+- Extract <IconButton> component (orphan pattern)
+- Re-run on the next scope
 
 ══════════════════════════════════
 ```

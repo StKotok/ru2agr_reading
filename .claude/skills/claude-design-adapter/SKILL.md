@@ -23,18 +23,12 @@ it to resolve scope; otherwise discover that in Step 0 too.
 
 ## Step 0 — Profile the project (always first)
 
-Before extracting anything, discover and write down a short profile. Don't assume — verify by reading.
-
-| Profile field | How to discover |
-|---|---|
-| **Styling mechanism** | grep for `.css`/`.scss`, `styled.`/`` css` `` (CSS-in-JS), `className=`/`class:`, `style={`/`:style`, Tailwind `class="…"`, SwiftUI `.foregroundColor`, Flutter `TextStyle(` |
-| **Existing token/theme system** | `:root{--…}` custom props, a tokens/theme file, Tailwind `theme` config, design-tokens JSON, theme objects, asset catalogs — and **how raw values flow to resolved ones** |
-| **Destination layers** | where new tokens belong: local → shared-constants module → theme/variant tokens → derived/computed layer |
-| **Build/test gate** | the project's own command (e.g. `npm test`, `npm run build`) — run it after edits |
-| **Render/verify path** | dev server + screenshot tool, Storybook, headless browser, simulator — or **none** (then rely on the Tier 1 static check) |
-| **Naming conventions** | how existing tokens are named (semantic vs descriptive, casing) |
-
-Pass this profile into every dispatched agent — they start cold and know nothing else.
+Dispatch `profile-project` before extracting anything. The profile it returns records,
+**from evidence not assumption**: the styling mechanism, any existing token/theme system
+(and how raw values flow to resolved ones), the destination layers, the build/test gate,
+the render/verify path (or none), and the naming conventions. See `agents/profile-project.md`
+for how each is discovered. Pass the profile into every dispatched agent — they start cold
+and know nothing else.
 
 ## When NOT to run the full pipeline
 
@@ -48,13 +42,13 @@ Pass this profile into every dispatched agent — they start cold and know nothi
 |---|---|
 | "profile this project" / first run | profile-project |
 | "scope: <description>" | scope-resolve |
-| Extract everything / "pull tokens" | profile → scope → 4 extract agents → format-canonical → name-tokens → apply-token(×N) → cross-check → audit-coverage → verify → report-summary |
+| Extract everything / "pull tokens" | profile → scope → 4 extract agents → name-tokens → apply-token(×N) → cross-check → audit-coverage → verify → report-summary |
 | Colours only | extract-colors |
 | Spacing / radii / sizing only | extract-spatial |
 | Fonts / typography only | extract-typography |
 | Find components / repeated patterns | find-components |
 | "check nothing broke" | verify-visual |
-| "did we miss anything?" | audit-coverage |
+| "did we miss anything?" | audit-coverage / cross-check |
 | "final report" | report-summary |
 
 ## Pipeline
@@ -66,12 +60,9 @@ Phase 0 — PROFILE + SCOPE:
 Phase 1 — AUDIT (parallel, independent), scoped to the profile's styling mechanism:
   extract-colors / extract-spatial / extract-typography / find-components
 
-Phase 1.5 — NORMALISE:
-  format-canonical → canonical form map (resolve .28/0.28, #fff/#ffffff, etc.)
-
 Phase 2 — NAME (sequential):
-  name-tokens → dedup, destination rule, naming, conflicts, ordered apply sequence
-  (uses canonical forms from Phase 1.5)
+  name-tokens → dedup (incl. literal-form variants), destination rule, naming,
+  conflicts, ordered apply sequence
 
 Phase 3 — APPLY (incremental, git-checkpointed):
   baseline commit/stash first; per token: apply-token → verify-visual(Tier 1) →
@@ -116,65 +107,34 @@ grepping the literal (the exact value string), not by `file:line`.
 
 Rules that must NEVER be violated. No exceptions, no "it worked for me", no spirit-vs-letter.
 
-### GATE 1 — URL Verification
+### GATE 1 — Verify URLs before reporting them
 
-**Never tell a user to open a URL you haven't confirmed with curl first.**
+**Never tell the user to open a URL you haven't confirmed.**
 
-1. Start the dev server per the project profile
-2. `curl -sI <url>` → must be HTTP 200 (follow redirects with `-L`)
-3. If 404 — the URL is wrong. Debug, don't guess.
-4. Record the exact working URL (with extension) in the profile
+1. Start the dev server per the project profile.
+2. `curl -sI <url>` → require HTTP 200 (follow redirects with `-L`; a 301/302 must land on 200).
+3. 404 → the URL is wrong. Debug against the real filename/port on disk — don't guess another.
+4. Record the exact working URL (with its full extension) in the profile.
 
-This gate exists because of a real 404 incident: the `serve` dev server stripped the
-`.html` extension from `ru2gr.dc.html` → redirected to `/ru2gr.dc` → 404. The
-double-extension `.dc.html` broke the clean-URL logic. The orchestrator reported
-`http://localhost:3456/ru2gr.dc` without verifying — user got a 404. This must
-never happen again in any project.
+Common traps: clean-URL dev servers strip extensions, so a double-extension file
+(`name.x.html`) can 301→404; wrong port; file in a subdirectory not root; case sensitivity
+(`Index.html` ≠ `index.html`). Confirm with curl, never assume.
 
-### GATE 2 — Syntax Validity
+### GATE 2 — Syntax validity
 
 After ANY file edit, run the project's syntax checker:
 - JS/TS: `node --check <file>` or `npx tsc --noEmit`
-- CSS/SCSS: `npx stylelint <file>` or build gate
+- CSS/SCSS: `npx stylelint <file>` or the build gate
 - Python: `python -m py_compile <file>`
 - Swift: `swift -parse <file>`
 
-If syntax check fails — revert immediately, don't proceed to next token.
+If the syntax check fails — revert immediately, don't proceed to the next token.
 
-### GATE 4 — Dev-Mode Label Coverage
+### GATE 3 — No guessing values
 
-**In `?dev=1` mode, every interactive element MUST have a visible `data-section` label
-on hover, with click-to-copy to clipboard.**
-
-Three mechanisms work together:
-
-1. **Static labels** — `'data-section'` attribute on render functions' outermost `h('div',...)`
-   and on key interactive `h('button',...)` / `h('span',{role:'button'},...)` calls.
-   Naming: `{section}--{element}`, e.g. `desk-nav--read-tab`, `phone-mode-menu--backdrop`.
-
-2. **Runtime auto-labeler** — a `MutationObserver`-backed script that finds all unlabeled
-   interactive elements and derives names from: closest parent `[data-section]` as prefix +
-   element's `textContent`, `aria-label`, `title`, or `placeholder`. Runs 1.2s after load
-   and on every DOM mutation (catches dynamically-opened sheets/popups).
-
-3. **Hover + click-to-copy**:
-   - CSS: `html.dev [data-section]:hover { outline:1px dashed orange; cursor:copy; }`
-   - CSS: `html.dev [data-section]:hover::before { content:attr(data-section); ... }`
-     — label appears at top-left of the hovered element
-   - JS: `document.addEventListener('click', ...)` — finds closest `[data-section]`,
-     calls `navigator.clipboard.writeText(name)`, flashes outline green for 400ms
-
-**The label stays HIDDEN until hover.** This keeps the canvas clean for visual review.
-Hover any element → orange dashed border + name label → click → name in clipboard.
-
-**Verification:** open `?dev=1`, hover over elements to see labels, click to copy,
-paste into chat. Every tappable element should respond.
-
-### GATE 3 — No Guessing Values
-
-When extracting a token, the value must be **copied verbatim** from the source —
-never typed from memory, never "looks like it's about 0.18". If unsure, grep
-the literal in the source to confirm.
+When extracting a token, the value must be **copied verbatim** from the source — never
+typed from memory, never "looks like it's about 0.18". If unsure, grep the literal in the
+source to confirm. (This is also enforced per-change by `apply-token` + Tier 1.)
 
 ## Agents
 
@@ -186,12 +146,24 @@ the literal in the source to confirm.
 | extract-spatial | 1 | radii, padding, gaps, sizing, offsets |
 | extract-typography | 1 | font size / weight / line-height / letter-spacing |
 | find-components | 1 | repeating visual patterns + states/variants |
-| format-canonical | 1.5 | normalise literal-form variants (.28/0.28, #fff/#ffffff) → canonical map |
 | name-tokens | 2 | merge, dedup, destination rule, naming, conflicts, ordered apply sequence |
 | apply-token | 3 | apply ONE change + static value-identity proof |
 | cross-check | 4 | verify components covered by tokens; find orphan tokens & patterns |
 | audit-coverage | 4 | find stray un-tokenized copies of an extracted value |
 | verify-visual | 3/4 | Tier 1 static value-identity; Tier 2 optional rendered pass |
-| report-summary | 4 | synthesis: token inventory, component catalogue, coverage %, open decisions |
+| report-summary | 4 | synthesis: token inventory, component catalogue, coverage, open decisions |
 
-**13 agents total.** 5 report-only (no edits), 1 edit-only (apply-token), 7 mixed.
+**12 agents.** 6 report-only, 1 edit-only (apply-token), the rest read + optionally edit.
+
+## Keeping this skill project-agnostic
+
+This skill must contain **zero project-specific identifiers**. Before committing any change
+to it, run the guard from the skill directory — it must print `clean`:
+
+```bash
+./check-universal.sh
+```
+
+It fails if any known project/runtime identifier leaks into a `*.md` file. Project-specific
+facts belong in that project's own skill/docs, never here; examples in agent specs must use
+neutral, stack-agnostic placeholders.

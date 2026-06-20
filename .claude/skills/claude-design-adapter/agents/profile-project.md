@@ -21,15 +21,15 @@ How are styles attached? Grep for signals:
 
 Record **the syntax for defining a token and referencing it**. Examples:
 ```
-CSS:       --color-surface: #fff;   →  var(--color-surface)
-React:     C.paper = '#fff';        →  C.paper  (JS object)
-Tailwind:  theme.colors.surface     →  bg-surface
+CSS custom props:  --color-surface: #fff;     →  var(--color-surface)
+CSS-in-JS object:  tokens.surface = '#fff';   →  tokens.surface
+Tailwind:          theme.colors.surface        →  bg-surface
 ```
 
 ### Existing token/theme system
 - Is there a tokens file? Theme config? `:root{--…}` custom props?
 - How many themes/variants? Where are they defined?
-- How do raw values flow to resolved ones? (e.g. `mk(theme) → palette → C.ink`)
+- How do raw values flow to resolved ones? (e.g. raw theme object → a builder function → a resolved palette value)
 
 ### Destination layers
 Where do new tokens go? Map:

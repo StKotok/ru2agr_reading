@@ -31,31 +31,31 @@ as components? These are candidates for further extraction.
 ```
 CROSS-CHECK:
 
-Component: OverlayCard
-  States covered:    hidden ✓  open ✓
+Component: <ComponentA>   (e.g. an overlay/dialog)
+  States covered:    closed ✓  open ✓
   Properties:
-    background       C.paper           COVERED (existing CR slot)
-    borderRadius     18                COVERED (TK.overlayRadius)
-    boxShadow        overlayShadow     COVERED (new CR slot)
-    backdrop         alpha(#15140f,0.18) MISSED — alpha 0.18 not tokenized
-    animation        scPop .16s        MISSED — duration .16s not tokenized
+    background       <surface token>        COVERED (existing token)
+    border-radius    <value>                COVERED (new shared token)
+    box-shadow       <value>                COVERED (new shared token)
+    backdrop         <colour> @ <alpha>     MISSED — alpha not tokenized
+    animation        <name> <duration>      MISSED — duration not tokenized
 
-Component: SectionLabel
+Component: <ComponentB>   (e.g. a section label)
   Properties:
-    fontSize         11                COVERED (TK.fsLabel)
-    fontWeight       700               COVERED (TK.fwActive)
-    letterSpacing    '0.13em'          COVERED (TK.lsLabel)
-    textTransform    'uppercase'       INTENTIONAL (semantic, not a token)
-    color            C.muted           COVERED (existing CR slot)
+    font-size        <value>                COVERED (shared token)
+    font-weight      <value>                COVERED (shared token)
+    letter-spacing   <value>                COVERED (shared token)
+    text-transform   uppercase              INTENTIONAL (semantic, not a token)
+    color            <muted token>          COVERED (existing token)
   COMPLETE ✓
 
 Orphan tokens:
-  TK.chipGap: 3 — defined but not referenced by any component; verify usage exists
+  <token> — defined but not referenced by any component; verify a use site exists
 
 Orphan patterns (not yet components):
-  "iconButton" — 38×38, borderRadius:11, border:C.line, centered icon
-    Appears in: top-bar (eye toggle, intensity), word-card (gear, close)
-    Not proposed as component — candidate for extraction
+  "<icon-button>" — same size + radius + border + centered icon
+    Appears in: <several places>
+    Not proposed as a component — candidate for extraction
 ```
 
 ## Rules

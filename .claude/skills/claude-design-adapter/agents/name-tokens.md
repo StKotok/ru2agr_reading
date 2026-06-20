@@ -9,9 +9,17 @@ and the raw outputs of the 4 audit agents. Run AFTER all 4 complete.
 
 ## Process
 
-### Step 1 — Cross-reference duplicates
-Same value found by multiple agents (e.g. a colour-with-alpha + a padding on the same
-element) → merge into one entry.
+### Step 1 — Cross-reference and de-duplicate
+- Same value found by multiple agents (e.g. a colour-with-alpha + a padding on the same
+  element) → merge into one entry.
+- Treat **literal-form variants of the same value** as one token: `.18` ≡ `0.18` ≡ `0.180`,
+  `#FFF` ≡ `#ffffff`, `'11px 12px'` ≡ a copy with a trailing space. Define the token in one
+  canonical form (prefer the project's existing convention) and let every site reference it —
+  Tier 1 then confirms each site still resolves identically.
+- **Do NOT merge representation changes that may not be value-identical across engines:**
+  a CSS named colour (`white`) vs hex, or `%`-alpha (`rgba(…,50%)`) vs decimal (`rgba(…,0.5)`),
+  are NOT automatically the same — keep them distinct unless the project guarantees equality.
+- Different *values* are never one token: `#1a1a1a` ≠ `#1a1a1b`. Flag as a conflict.
 
 ### Step 2 — Apply the destination rule
 | Value characteristic | Destination |

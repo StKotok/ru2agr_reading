@@ -11,7 +11,7 @@ line numbers** (source moves).
 
 ## What to extract
 Colour literals not already referencing a token, in whatever form the project uses:
-- hex (`#15140f`, `#fff`), `rgb()/rgba()`, `hsl()/hsla()`, named colours
+- hex (`#1a1a1a`, `#fff`), `rgb()/rgba()`, `hsl()/hsla()`, named colours
 - alpha/opacity applied to a base (an `alpha(base, n)` helper, `rgba(…, n)`, `opacity`,
   `/ 50%` in `color-mix`) — record BOTH the base and the alpha
 - `transparent` / `currentColor` used as a value
@@ -38,6 +38,6 @@ COLOR: <literal>   (constant | per-theme | derived)
 ```
 
 ## Naming rules
-- Name by **role**, not appearance: `overlayDimBase`, not `darkBrown`.
+- Name by **role**, not appearance: `scrim`, not `darkBrown`.
 - Follow the profile's existing naming convention.
 - Ask "what role does this colour play?" not "what does it look like?"
