@@ -1,27 +1,29 @@
 ---
 name: claude-design-adapter
-description: Use when asked to extract design tokens, consolidate repeated or hardcoded style values (colour, spacing, radius, typography, shadow), refactor inline or duplicated styles into a token/theme system, catalogue UI components and their states, or to reconcile, clean up, refine, and port a design-handoff bundle (e.g. a Claude Design export) to another stack (React, HTML, Angular, Flutter) — in any codebase, before changing visual appearance.
+description: Use when working with a Claude Design DC export (`.dc.html` bundle) — to reconcile its drifted or duplicated tokens, tidy and consolidate them into a clean single source, make the static export self-contained and interactive in the project (restore theme/variant controls), or refine its colours, spacing, typography, components and states, before changing visual appearance.
 ---
 
 # Claude Design Adapter
 
 ## Overview
 
-Universal, project-agnostic orchestrator that takes a **one-time** design export
-(e.g. from Claude Design), normalizes it to clean single-source code, makes it
-**self-contained and interactive in the project** (no authoring-tool round-trip), and
-optionally projects it to another stack. After `functionalize`, the design is edited
-**in the project**, not re-exported. It runs in **five modes** —
-`reconcile` → `tidy` → `functionalize` → `refine` → `port` — each invocable **standalone**
-or chained by a **conditional Wizard**. It works on any stack
-because it **discovers the project's conventions first (Step 0)** and ships **no project
-knowledge**; everything specific is learned and written to a **project profile**.
+Productionizes a **one-time Claude Design DC export** (`.dc.html` bundle): normalize it to clean
+single-source code and make it **self-contained and interactive in the project** — thereafter it
+is edited **in the project**, not re-exported (no authoring-tool round-trip).
+
+**Two layers.** A Claude Design DC **front-end** (what v1 ships) over a **stack-agnostic core**
+engine — the audit/extract/name/apply/verify agents, which **discover the project's conventions
+in Step 0** and ship **no project knowledge**. The core stays universal; v1 only front-ends it
+for DC. Exporting to other stacks (`port`) and non-DC inputs are **v2 — see `ROADMAP.md`**.
+
+v1 runs in four modes — `reconcile` → `tidy` → `functionalize` → `refine` (`port` is v2) — each
+invocable **standalone** or chained by a **conditional Wizard**.
 
 **The safety invariant is per-mode, not global:**
 - value-preserving modes (`reconcile`, `tidy`) gate on **byte-identical** output (Tier 1),
 - `functionalize` **preserves the default-state output** (Tier 1 at the default selection) and only ADDS switchable states,
 - `refine` gates on a **ledger of intended changes** (only declared changes may appear),
-- `port` gates on **element-parity** with the clean design contract (pixel-perfect, no guessing).
+- `port` (**v2 — see `ROADMAP.md`**) would gate on **element-parity** with the clean design contract.
 
 **State lives in on-disk artifacts** (see Artifacts & state), so any mode can run on its
 own and resume from what earlier modes wrote — that is what makes standalone use and the
@@ -35,12 +37,12 @@ Wizard the same machinery.
 | **tidy** | причесать | reconciled design → clean token system (`TOKENS.md`): forms normalised, dedup, fallback copies collapsed, hardcoded chrome linked to roles | **byte-identical** (Tier 1) — must not move a pixel |
 | **functionalize** | оживить | clean static export → self-contained interactive artifact (restored variant controls/states, driven by project state, detached from the authoring tool) | **default-state output preserved** (Tier 1 at default); interactivity is purely additive |
 | **refine** | исправления | clean design → edited design + `REFINE-LEDGER.md` | **ledgered diff**: every rendered change = exactly one declared entry; an unlisted diff is a bug (+ optional Tier 2) |
-| **port** | перенос | clean design (= the contract) → per-stack implementation + `IMPLEMENTATION.md` | **parity per element** vs the contract; pixel-perfect, no guessing |
+| **port** *(v2 — see ROADMAP)* | перенос | clean design (= the contract) → per-stack implementation + `IMPLEMENTATION.md` | **parity per element** vs the contract; pixel-perfect, no guessing |
 
 - `tidy` reuses the existing audit/apply machinery: `extract-*` → `name-tokens` →
   `apply-token` → `verify-visual` (Tier 1) → `cross-check`/`audit-coverage` → `report-summary`.
-- `reconcile` and `functionalize` have driver agents; `refine` and `port` add **one** each
-  (planned — see Agents). No parallel pipelines.
+- `reconcile`, `functionalize`, and `refine` have driver agents; `port` is **v2** (see `ROADMAP.md`).
+  No parallel pipelines.
 
 ## Wizard flow (on activation)
 
@@ -54,7 +56,7 @@ detected; a direct command takes the **express lane** straight to a mode.
   2. depth: read claude-design-adapter/config.json
        └─ missing → ask ONCE (Auto / Minimal / Balanced / Thorough), save to config
   3. present: detected kind + recommended path + branches
-       «Это <kind>. Рекомендую: reconcile → tidy → functionalize → refine → port.
+       «Это <kind>. Рекомендую: reconcile → tidy → functionalize → refine.   (port — v2)
         [Начать с reconcile] [Выбрать режим] [Прямая команда]»
   4. walk the path; at every fork honour GATE 4 + the chosen depth
 ```
@@ -111,8 +113,8 @@ they start cold and know nothing else. `kind` chooses the recommended mode path.
 | "reconcile this handoff" | reconcile |
 | "tidy" / "причеши" | extract-* → name-tokens → apply-token → verify-visual(Tier 1) |
 | "make it interactive" / "оживи" / functionalize | functionalize |
-| "refine: <change>" | refine *(planned)* |
-| "port to <stack>" | port *(planned)* |
+| "refine: <change>" | refine |
+| "port to <stack>" | port *(v2 — see ROADMAP)* |
 | Colours / spacing / fonts only | extract-colors / extract-spatial / extract-typography |
 | Find components / repeated patterns | find-components |
 | "check nothing broke" | verify-visual |
@@ -212,10 +214,10 @@ MUST call AskUserQuestion and **wait** — never infer, default, or proceed on a
 | report-summary | 4 / tidy | synthesis: inventory, catalogue, coverage, open decisions |
 | reconcile | reconcile | inventory drifted/duplicated sources → canonical map + conflict forks → `RECONCILE.md` |
 | functionalize | functionalize | restore lost variant controls/states; drive from project state; detach from the authoring tool |
-| refine | refine | apply intended edits under a ledgered diff *(planned)* |
-| port | port | project the clean contract onto a target stack *(planned)* |
+| refine | refine | apply intended edits under a ledgered diff |
+| port | port *(v2)* | project the clean contract onto a target stack — see `ROADMAP.md` |
 
-**14 agents; 2 mode-drivers planned (refine, port).** Wizard adds zero agents (it's the orchestrator).
+**15 agents; `port` deferred to v2 (see `ROADMAP.md`).** Wizard adds zero agents (it's the orchestrator).
 
 ## Keeping this skill project-agnostic
 
