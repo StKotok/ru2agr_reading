@@ -32,10 +32,16 @@
       <span style="font-family:'Gentium Plus',serif;font-size:19px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">ru2gr</span>
       <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;color:#9a9488;font-weight:500;">Читалка Нового Завета · дизайн-система</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10.5px;font-weight:700;color:#bdb6a7;letter-spacing:0.10em;text-transform:uppercase;">{{ theme }}</span>
-      <span style="width:1px;height:14px;background:rgba(40,34,22,0.15);display:inline-block;"></span>
-      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10.5px;font-weight:600;color:#c4beb0;letter-spacing:0.04em;">{{ contrast }}</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select onchange="{{ onTheme }}" value="{{ theme }}" style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:600;color:#5a5246;background:rgba(255,255,255,0.55);border:1px solid rgba(40,34,22,0.15);border-radius:6px;padding:3px 7px;cursor:pointer;">
+        <option>Пергамент</option><option>Сепия</option><option>Слоновая кость</option><option>Туман</option><option>Море</option><option>Лес</option><option>Роза</option><option>Лаванда</option><option>Закат</option><option>Тёмная</option><option>Ночь</option><option>Уголь</option>
+      </select>
+      <select onchange="{{ onContrast }}" value="{{ contrast }}" style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:600;color:#5a5246;background:rgba(255,255,255,0.55);border:1px solid rgba(40,34,22,0.15);border-radius:6px;padding:3px 7px;cursor:pointer;">
+        <option>Мягкий</option><option>Чёткий</option><option>Максимальный</option>
+      </select>
+      <select onchange="{{ onPosStyle }}" value="{{ posStyle }}" style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:600;color:#5a5246;background:rgba(255,255,255,0.55);border:1px solid rgba(40,34,22,0.15);border-radius:6px;padding:3px 7px;cursor:pointer;">
+        <option>Сегменты</option><option>Список</option><option>Цвет</option><option>Чипсы</option>
+      </select>
     </div>
   </div>
 
@@ -45,7 +51,7 @@
     <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7a7468;white-space:nowrap;flex:0 0 auto;">Греческая читалка</span>
     <div style="flex:1;height:1px;background:rgba(40,34,22,0.14);"></div>
   </div>
-  <dc-import name="Греческая читалка" theme="{{ theme }}" hint-size="100%,2400px"></dc-import>
+  <dc-import name="Греческая читалка" theme="{{ theme }}" contrast="{{ contrast }}" hint-size="100%,2400px"></dc-import>
 
   <!-- ── 02 · Слова ── -->
   <div style="display:flex;align-items:center;gap:12px;padding:12px 28px 0;">
@@ -64,10 +70,18 @@
 }">
 class Component extends DCLogic {
   renderVals() {
+    // Self-contained interactive prototype: theme/contrast/posStyle live in this
+    // component's own state (driven by the switcher in the canvas bar), so the
+    // prototype is functional standalone — no Claude Design prop editor needed.
+    // props/defaults are the initial value until the user picks something.
+    const s = this.state || {}, p = this.props || {}, self = this;
     return {
-      theme:    this.props.theme    ?? 'Пергамент',
-      contrast: this.props.contrast ?? 'Чёткий',
-      posStyle: this.props.posStyle ?? 'Сегменты',
+      theme:    s.theme    ?? p.theme    ?? 'Пергамент',
+      contrast: s.contrast ?? p.contrast ?? 'Чёткий',
+      posStyle: s.posStyle ?? p.posStyle ?? 'Сегменты',
+      onTheme:    function (e) { self.setState({ theme:    e.target.value }); },
+      onContrast: function (e) { self.setState({ contrast: e.target.value }); },
+      onPosStyle: function (e) { self.setState({ posStyle: e.target.value }); },
     };
   }
 }

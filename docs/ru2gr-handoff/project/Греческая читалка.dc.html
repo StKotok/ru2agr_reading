@@ -221,7 +221,7 @@ class Component extends DCLogic {
       'Уголь':mk({paper:'#1f1f21',alt:'#28282b',read:'#19191b',title:'#2c2c2f',ink:'#ededee',inkSoft:'#c2c2c4',muted:'#8d8d90',muted2:'#66666a',blue:'#5aa0d0',blueBg:'#2b3a47',blueTx:'#9fcbe8',terra:'#d8924f',terraSoft:'#443323',green:'#84b25f',greenDk:'#aad187',greenBg:'#2c3a27'})
     };
   }
-  palette(){ return this.THEMES[(this.props && this.props.theme)] || this.THEMES['Пергамент']; }
+  palette(){ var t=(this.props && this.props.theme), c=(this.props && this.props.contrast) || 'Чёткий'; if(window.RU2GR && window.RU2GR.buildPalette) return window.RU2GR.buildPalette(this.THEMES, t, c); return this.THEMES[t] || this.THEMES['Пергамент']; }
   rand(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return ((h>>>0)%10000)/10000;}
   buildTokens(str){
     const out=[]; const re=/\{([^}]*)\}([^\s{]*)|([^\s{]+)/g; let m;
@@ -645,7 +645,7 @@ class Component extends DCLogic {
     const C=this.C,h=React.createElement,st=this.state;
     const items=[['read','Читать',this.iconRead.bind(this)],['dict','Слова',this.iconWords.bind(this)],['about','О приложении',this.iconInfo.bind(this)]];
     const themes=['Светлая','Тёмная','Авто'];
-    return h('div',{style:{width:236,flex:'0 0 auto',background:C.paper2,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
+    return h('div',{style:{width:236,flex:'0 0 auto',background:C.sidebar,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
       h('div',{style:{padding:'0 8px 26px'}},
         h('div',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink,lineHeight:1.15}},'Читалка НЗ'),
         h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:2}},'греческий сквозь русский')),
