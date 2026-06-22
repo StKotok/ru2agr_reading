@@ -7,15 +7,19 @@ description: Use when asked to extract design tokens, consolidate repeated or ha
 
 ## Overview
 
-Universal, project-agnostic orchestrator that takes a design from a handoff bundle
-(e.g. a Claude Design export) to a clean, single-source design, and then to another
-stack. It runs in **four modes** — `reconcile` → `tidy` → `refine` → `port` — each
-invocable **standalone** or chained by a **conditional Wizard**. It works on any stack
+Universal, project-agnostic orchestrator that takes a **one-time** design export
+(e.g. from Claude Design), normalizes it to clean single-source code, makes it
+**self-contained and interactive in the project** (no authoring-tool round-trip), and
+optionally projects it to another stack. After `functionalize`, the design is edited
+**in the project**, not re-exported. It runs in **five modes** —
+`reconcile` → `tidy` → `functionalize` → `refine` → `port` — each invocable **standalone**
+or chained by a **conditional Wizard**. It works on any stack
 because it **discovers the project's conventions first (Step 0)** and ships **no project
 knowledge**; everything specific is learned and written to a **project profile**.
 
 **The safety invariant is per-mode, not global:**
 - value-preserving modes (`reconcile`, `tidy`) gate on **byte-identical** output (Tier 1),
+- `functionalize` **preserves the default-state output** (Tier 1 at the default selection) and only ADDS switchable states,
 - `refine` gates on a **ledger of intended changes** (only declared changes may appear),
 - `port` gates on **element-parity** with the clean design contract (pixel-perfect, no guessing).
 
@@ -29,13 +33,14 @@ Wizard the same machinery.
 |---|---|---|---|
 | **reconcile** | согласовать | handoff (multi-source, drifted) → single canonical source + `RECONCILE.md` | value-preserving where sources agree; every conflict is a **fork** (GATE 4), never auto-merged |
 | **tidy** | причесать | reconciled design → clean token system (`TOKENS.md`): forms normalised, dedup, fallback copies collapsed, hardcoded chrome linked to roles | **byte-identical** (Tier 1) — must not move a pixel |
+| **functionalize** | оживить | clean static export → self-contained interactive artifact (restored variant controls/states, driven by project state, detached from the authoring tool) | **default-state output preserved** (Tier 1 at default); interactivity is purely additive |
 | **refine** | исправления | clean design → edited design + `REFINE-LEDGER.md` | **ledgered diff**: every rendered change = exactly one declared entry; an unlisted diff is a bug (+ optional Tier 2) |
 | **port** | перенос | clean design (= the contract) → per-stack implementation + `IMPLEMENTATION.md` | **parity per element** vs the contract; pixel-perfect, no guessing |
 
 - `tidy` reuses the existing audit/apply machinery: `extract-*` → `name-tokens` →
   `apply-token` → `verify-visual` (Tier 1) → `cross-check`/`audit-coverage` → `report-summary`.
-- `reconcile` has its driver agent; `refine` and `port` add **one** each (planned — see
-  Agents). No parallel pipelines.
+- `reconcile` and `functionalize` have driver agents; `refine` and `port` add **one** each
+  (planned — see Agents). No parallel pipelines.
 
 ## Wizard flow (on activation)
 
@@ -49,7 +54,7 @@ detected; a direct command takes the **express lane** straight to a mode.
   2. depth: read claude-design-adapter/config.json
        └─ missing → ask ONCE (Auto / Minimal / Balanced / Thorough), save to config
   3. present: detected kind + recommended path + branches
-       «Это <kind>. Рекомендую: reconcile → tidy → refine → port.
+       «Это <kind>. Рекомендую: reconcile → tidy → functionalize → refine → port.
         [Начать с reconcile] [Выбрать режим] [Прямая команда]»
   4. walk the path; at every fork honour GATE 4 + the chosen depth
 ```
@@ -105,6 +110,7 @@ they start cold and know nothing else. `kind` chooses the recommended mode path.
 | "profile this project" | profile-project |
 | "reconcile this handoff" | reconcile |
 | "tidy" / "причеши" | extract-* → name-tokens → apply-token → verify-visual(Tier 1) |
+| "make it interactive" / "оживи" / functionalize | functionalize |
 | "refine: <change>" | refine *(planned)* |
 | "port to <stack>" | port *(planned)* |
 | Colours / spacing / fonts only | extract-colors / extract-spatial / extract-typography |
@@ -205,10 +211,11 @@ MUST call AskUserQuestion and **wait** — never infer, default, or proceed on a
 | verify-visual | 3/4 | Tier 1 value-identity; Tier 2 optional rendered pass |
 | report-summary | 4 / tidy | synthesis: inventory, catalogue, coverage, open decisions |
 | reconcile | reconcile | inventory drifted/duplicated sources → canonical map + conflict forks → `RECONCILE.md` |
+| functionalize | functionalize | restore lost variant controls/states; drive from project state; detach from the authoring tool |
 | refine | refine | apply intended edits under a ledgered diff *(planned)* |
 | port | port | project the clean contract onto a target stack *(planned)* |
 
-**13 agents; 2 mode-drivers planned (refine, port).** Wizard adds zero agents (it's the orchestrator).
+**14 agents; 2 mode-drivers planned (refine, port).** Wizard adds zero agents (it's the orchestrator).
 
 ## Keeping this skill project-agnostic
 
