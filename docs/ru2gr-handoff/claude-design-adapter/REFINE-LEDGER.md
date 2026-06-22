@@ -1,0 +1,15 @@
+# REFINE-LEDGER — docs/ru2gr-handoff
+
+Intended, value-CHANGING design edits. Each entry is a declared change; anything in the
+diff that is NOT listed here is a bug.
+
+## 2026-06-22 — Пергамент `alt` tint
+- **Token:** `THEMES.Пергамент.alt` (feeds `paper2` + `sidebar`)
+- **Change:** `#E3DDD0` → `#E7E1D3`
+- **Reason:** adopt the Greek-screen tint as the canonical Пергамент panel/sidebar surface (user decision).
+- **Where applied:** canonical `project/ru2gr-tokens.js`.
+- **Runtime effect:** Пергамент `paper2`/`sidebar` render warmer/lighter on screens that
+  consume `alt` directly (mainly «Греческая»). «Слова» overrides `paper2`/`sidebar` in its
+  contrast pass, so it is largely unaffected.
+- **Verification:** Tier-2 (rendered) NOT run — the bundle has no render path (README: don't
+  render). This change is intended and not value-preserving, so Tier-1 does not apply to it.
