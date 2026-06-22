@@ -60,6 +60,8 @@ UNIFIED TOKEN PLAN
 
 ## Rules
 - Never rename or round a value while planning.
+- **Don't tokenize behavioural enums.** A key whose value changes *markup/structure* (e.g. a
+  highlight-style enum `badge|underline|filled|dot`) is behaviour, not a visual token — leave it.
 - Prefer a shared constant over a theme token unless the value truly varies per theme.
 - Flag conflicts; don't resolve them silently.
 - Order: shared first, then theme, then derived, then locals.

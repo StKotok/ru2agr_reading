@@ -15,6 +15,8 @@ Colour literals not already referencing a token, in whatever form the project us
 - alpha/opacity applied to a base (an `alpha(base, n)` helper, `rgba(…, n)`, `opacity`,
   `/ 50%` in `color-mix`) — record BOTH the base and the alpha
 - `transparent` / `currentColor` used as a value
+- alpha applied by **string concatenation** (e.g. `base + '99'`, `base + '55'`) — record the base AND the suffix
+- when **multiple colour systems** coexist (e.g. a theme palette + per-entity ramps), keep them distinct
 
 Skip values that already point at a token/theme variable.
 

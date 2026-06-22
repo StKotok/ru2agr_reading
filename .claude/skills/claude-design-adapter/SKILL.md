@@ -1,23 +1,26 @@
 ---
 name: claude-design-adapter
-description: Use when working with a Claude Design DC export (`.dc.html` bundle) — to reconcile its drifted or duplicated tokens, tidy and consolidate them into a clean single source, make the static export self-contained and interactive in the project (restore theme/variant controls), or refine its colours, spacing, typography, components and states, before changing visual appearance.
+description: Use when working with a Claude Design export — a DC `.dc.html` bundle or a React/Babel HTML bundle — to reconcile its drifted or duplicated tokens, tidy and consolidate them into a clean single source, make the static export self-contained and interactive in the project (restore or activate theme/variant controls), or refine its colours, spacing, typography, components and states, before changing visual appearance.
 ---
 
 # Claude Design Adapter
 
 ## Overview
 
-Productionizes a **one-time Claude Design DC export** (`.dc.html` bundle): normalize it to clean
-single-source code and make it **self-contained and interactive in the project** — thereafter it
-is edited **in the project**, not re-exported (no authoring-tool round-trip).
+Productionizes a **one-time Claude Design export** — a DC `.dc.html` bundle **or** a React/Babel
+HTML bundle (**the format is detected in Step 0**): normalize it to clean single-source code and
+make it **self-contained and interactive in the project** — thereafter it is edited **in the
+project**, not re-exported (no authoring-tool round-trip).
 
-**Two layers.** A Claude Design DC **front-end** (what v1 ships) over a **stack-agnostic core**
-engine — the audit/extract/name/apply/verify agents, which **discover the project's conventions
-in Step 0** and ship **no project knowledge**. The core stays universal; v1 only front-ends it
-for DC. Exporting to other stacks (`port`) and non-DC inputs are **v2 — see `ROADMAP.md`**.
+**Two layers.** A **Claude Design front-end** — *format-aware*: it adapts to whichever export
+shape the profile reports — over a **stack-agnostic core** engine (the audit/extract/name/apply/
+verify agents, which **discover conventions in Step 0** and ship **no project knowledge**).
+Exporting to other stacks (`port`) and non-Claude-Design inputs are **v2 — see `ROADMAP.md`**.
 
 v1 runs in four modes — `reconcile` → `tidy` → `functionalize` → `refine` (`port` is v2) — each
-invocable **standalone** or chained by a **conditional Wizard**.
+invocable **standalone** or chained by a **conditional Wizard**. Agents adapt to the profile's
+format and **respect Claude Design's host-tool artifacts** (edit-mode sentinels, tweak panels,
+host chrome — GATE 5).
 
 **The safety invariant is per-mode, not global:**
 - value-preserving modes (`reconcile`, `tidy`) gate on **byte-identical** output (Tier 1),
@@ -195,6 +198,21 @@ MUST call AskUserQuestion and **wait** — never infer, default, or proceed on a
 | "Saves time" | A wrong silent default costs a full redo. Ask. |
 | "Recommended = safe" | Recommended ≠ chosen. Only the user's pick counts (unless Auto). |
 | "Non-interactive run" | Halt and report the pending fork; don't fabricate. |
+
+### GATE 5 — Respect host-tool artifacts
+
+Claude Design exports carry **host-tool instrumentation that is NOT product code** — and some of
+it is **load-bearing for persistence**. Never corrupt it:
+- **Edit-mode sentinels** (e.g. `/*EDITMODE-BEGIN*/{…}/*EDITMODE-END*/`) wrap a live default-state
+  block the host rewrites on disk. Do **not** reformat, move, or edit inside them except as a
+  declared `refine` value change; preserve the markers verbatim.
+- **Tweak/edit-mode panels + postMessage host protocol** (`__activate_edit_mode`, …) and
+  **design-tool chrome** (floating panels, `data-*-chrome`, zoom vars) are tool UI, not app UI.
+  Keep or drop them **deliberately** (see `functionalize`) — never half-edit them.
+- **Global-scope file contracts** (one script `Object.assign(window, …)` consumed by another as
+  bare globals) — don't split files or add module scoping without rewiring the references.
+
+`profile-project` inventories these; every editing agent must respect them.
 
 ## Agents
 

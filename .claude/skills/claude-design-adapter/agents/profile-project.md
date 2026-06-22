@@ -52,10 +52,20 @@ How are existing tokens named?
 - Casing: `camelCase`, `kebab-case`, `snake_case`, `PascalCase`?
 - Are there prefixes/namespaces?
 
+### Export format & host-tool artifacts
+Is this a Claude Design **DC `.dc.html` bundle** (DC runtime, `dc-import`, `data-dc-*`) or a
+**React/Babel HTML** bundle (`type="text/babel"`, in-browser transpile), or something else?
+Record the **format** — downstream agents branch on it. Also inventory **host-tool artifacts**
+that are NOT app code: edit-mode sentinels (e.g. `/*EDITMODE-BEGIN*/…/*EDITMODE-END*/`), a
+tweaks/edit-mode panel + its postMessage host protocol, design-tool chrome attributes. Editing
+agents must respect these (GATE 5).
+
 ## Output — the project profile
 ```
 PROFILE: <project name>
 
+Format:        <DC `.dc.html` bundle | React/Babel HTML | other — how detected>
+Host artifacts: <edit-mode sentinels / tweak panel + protocol / host chrome, or "none">
 Styling:       <mechanism + define/reference syntax>
 Tokens:        <existing system, themes, flow>
 Destinations:  local=<where> shared=<where> theme=<where> derived=<where>

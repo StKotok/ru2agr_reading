@@ -24,6 +24,15 @@ Design tools expose variant controls (theme / mode / brand / density / interacti
 controls vanish, so the artifact shows a single default and can't be reviewed or exercised.
 The job is to give it those controls in-project, once.
 
+## Two cases — detect first
+Some Claude Design exports **already ship** an edit-mode/tweaks system (a tweak panel + sentinel
+default-state + a postMessage host protocol). Check the profile's host-tool artifacts:
+- **Controls already exist** → **adapt, don't rebuild**: make the existing panel active standalone
+  (it's gated behind the host protocol), keep its sentinel default-state intact (GATE 5), and
+  **strip the host-tool chrome** (floating design-tool panel, `data-*-chrome`, zoom vars) that
+  isn't product UI.
+- **No controls** (e.g. a bare DC bundle) → **build** a minimal control surface as below.
+
 ## Process
 
 ### Step 1 — Discover the frozen interactivity (read-only)
