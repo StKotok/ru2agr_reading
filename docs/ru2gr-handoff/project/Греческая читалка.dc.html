@@ -645,7 +645,7 @@ class Component extends DCLogic {
     const C=this.C,h=React.createElement,st=this.state;
     const items=[['read','Читать',this.iconRead.bind(this)],['dict','Слова',this.iconWords.bind(this)],['about','О приложении',this.iconInfo.bind(this)]];
     const themes=['Светлая','Тёмная','Авто'];
-    return h('div',{style:{width:236,flex:'0 0 auto',background:C.paper2,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
+    return h('div',{style:{width:236,flex:'0 0 auto',background:C.sidebar,borderRight:'1px solid '+C.line,display:'flex',flexDirection:'column',padding:'26px 16px 20px'}},
       h('div',{style:{padding:'0 8px 26px'}},
         h('div',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink,lineHeight:1.15}},'Читалка НЗ'),
         h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:2}},'греческий сквозь русский')),

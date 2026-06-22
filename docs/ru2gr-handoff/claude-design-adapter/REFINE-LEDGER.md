@@ -23,3 +23,14 @@ diff that is NOT listed here is a bug.
 - **Verification:** Tier-2 (rendered) NOT possible (no render path). Shared builder
   smoke-tested in node (loads, produces sane surfaces). Offline fallback keeps the old plain lookup.
 
+## 2026-06-22 — «Греческая» desktop nav surface fix (post-review regression)
+- **Symptom (user):** «Греческая» desktop sidebar got the wrong (washed-out) colour after CONTRACT-1; «Слова» was correct.
+- **Root cause:** `renderDeskNav()` painted its background with `C.paper2`. Under the
+  unified contract `buildPalette` sets `paper2 = card = elevate(paper)` (≈ near-white),
+  whereas the old per-screen palette had `paper2 = alt` (warm tint). «Слова»'s sidebar reads
+  `C.sidebar` (recess), so it was unaffected; «Греческая» never used `C.sidebar`.
+- **Change:** `renderDeskNav` background `C.paper2` → `C.sidebar` (recess(paper); Пергамент
+  ≈ `#d2cec5`, matching «Слова»'s sidebar). Only `C.paper2` usage in the file.
+- **Verification:** source now reads `C.sidebar`; builder smoke-test gives a sane dark-ish
+  tone (not white). Visual confirm still pending (no render path).
+
