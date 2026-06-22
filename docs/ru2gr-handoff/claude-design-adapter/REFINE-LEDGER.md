@@ -13,3 +13,13 @@ diff that is NOT listed here is a bug.
   contrast pass, so it is largely unaffected.
 - **Verification:** Tier-2 (rendered) NOT run — the bundle has no render path (README: don't
   render). This change is intended and not value-preserving, so Tier-1 does not apply to it.
+
+## 2026-06-22 — «Греческая» gains contrast levels (CONTRACT-1)
+- **Change:** «Греческая»'s `palette()` switched from a plain theme lookup to the shared
+  contrast-aware `buildPalette()` (default level «Чёткий»; `contrast` prop now wired into its `dc-import`).
+- **Runtime effect:** «Греческая» now derives `content/card/sidebar/titlebar/read/line/line2/cardLine/shadow`
+  via elevate/recess (previously raw theme values). Visual change, **intended**.
+- **Reason:** unify both screens on one palette contract (user decision).
+- **Verification:** Tier-2 (rendered) NOT possible (no render path). Shared builder
+  smoke-tested in node (loads, produces sane surfaces). Offline fallback keeps the old plain lookup.
+

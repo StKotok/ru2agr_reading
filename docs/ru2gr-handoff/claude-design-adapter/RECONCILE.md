@@ -22,8 +22,11 @@ Claude Design handoff; `kind = design-handoff`. Produced by claude-design-adapte
   `#E3DDD0`→`#E7E1D3` [value-preserving on the happy path]; S2 already `#E7E1D3`.
   All three now agree; zero drift; `#E3DDD0` no longer present in the bundle.
 - **CONTRACT-1** (Слова's contrast `palette()`+helpers vs «Греческая»'s plain lookup)
-  → **DECISION: unify now** (user). **STATUS: pending** — multi-file, non-value-preserving,
-  no render verification; tracked as a separate structural step (see plan).
+  → **RESOLVED: unified** (user). Shared `buildPalette(THEMES, theme, contrast)` + helpers
+  (`hexToRgb/rgbToHex/mix/lum`) moved into `ru2gr-tokens.js` (`window.RU2GR.buildPalette`).
+  «Слова» now calls it (value-preserving — identical logic; offline fallback kept).
+  «Греческая» now calls it too and gains contrast levels (intended visual change —
+  see REFINE-LEDGER); `contrast` wired into its `dc-import`. node --check OK; builder smoke-tested.
 
 ## HARDCODED LINKS
 - `#9a9488` == Пергамент `muted`, `#bdb6a7` == `muted2` — but the canvas chrome is

@@ -199,6 +199,7 @@ class Component extends DCLogic {
     };
   }
   palette(){
+    if(window.RU2GR && window.RU2GR.buildPalette) return window.RU2GR.buildPalette(this.THEMES, (this.props && this.props.theme), (this.props && this.props.contrast) || 'Чёткий');
     const base = this.THEMES[(this.props && this.props.theme)] || this.THEMES['Пергамент'];
     const lvlName = (this.props && this.props.contrast) || 'Чёткий';
     const LV = {'Мягкий':{rec:0.05,elv:0.42},'Чёткий':{rec:0.11,elv:0.72},'Максимальный':{rec:0.185,elv:1.0}}[lvlName] || {rec:0.11,elv:0.72};
