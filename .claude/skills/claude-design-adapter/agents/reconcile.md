@@ -37,6 +37,10 @@ For each token key (per theme/mode), compare the value across all copies and cla
   guard? (a conflict in dead code is real but low-urgency); **blast radius** — follow the value
   through any downstream derive/override to say which screen actually renders it (a key later
   overridden by, say, a contrast pass means that screen is insensitive to the drift).
+- **VARIANT KEY-SET MISMATCH** — when tokens come as *parallel variant tables* (e.g. `_dark`/`_light`,
+  per-theme palettes), values legitimately differ but the **key sets must stay parallel**: a key
+  present in one variant and missing in another renders **empty/undefined** silently (an unresolved
+  `{{ t.x }}`). Diff the key sets across variants and flag any mismatch — a different defect from value drift.
 
 **Never treat representation changes that may differ across engines as equal:** a named
 colour vs hex, or `%`-alpha vs decimal — keep distinct unless the project guarantees equality.

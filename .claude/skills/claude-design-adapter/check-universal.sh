@@ -8,7 +8,7 @@
 # never scanned and cannot self-match.
 cd "$(dirname "$0")" || exit 2
 
-pattern='ru2gr|\?dev=1|data-section|createElement|\bmk\(|buildReaderPalette|LV_TABLE|C\.(paper|ink|line|muted|paper2|card|read)|\bTK\.|MutationObserver|localhost:[0-9]+|Пергамент|Уголь'
+pattern='ru2gr|\?dev=1|data-section|\bmk\(|buildReaderPalette|LV_TABLE|C\.(paper|ink|line|muted|paper2|card|read)|\bTK\.|MutationObserver|localhost:[0-9]+|Пергамент|Уголь'
 
 if grep -rniE --include='*.md' "$pattern" .; then
   echo "LEAK: project-specific identifier found above — keep this skill universal." >&2

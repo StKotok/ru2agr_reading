@@ -55,7 +55,10 @@ How are existing tokens named?
 ### Export format & host-tool artifacts
 Is this a Claude Design **DC `.dc.html` bundle** (DC runtime, `dc-import`, `data-dc-*`) or a
 **React/Babel HTML** bundle (`type="text/babel"`, in-browser transpile), or something else?
-Record the **format** — downstream agents branch on it. Also inventory **host-tool artifacts**
+Record the **format** — downstream agents branch on it. **Record the sub-shape too**, not just
+"DC": the render surface (createElement render fns / mustache `{{ }}` template / JSX), where tokens
+live (separate module / inline object literal / class field), and the interactivity mechanism
+(framework `onClick` / manual DOM delegation by `data-*` / host-set props). These differ even within "DC". Also inventory **host-tool artifacts**
 that are NOT app code: edit-mode sentinels (e.g. `/*EDITMODE-BEGIN*/…/*EDITMODE-END*/`), a
 tweaks/edit-mode panel + its postMessage host protocol, design-tool chrome attributes. Editing
 agents must respect these (GATE 5).

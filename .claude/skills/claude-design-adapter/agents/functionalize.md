@@ -47,6 +47,9 @@ Before editing, confirm **from the runtime/source** how this stack re-renders on
 change: React `setState`, Vue reactive refs, Svelte stores, signals, or a template runtime's
 own state/update + event mapping. Find the smallest proof (an existing interactive element, or
 the runtime lifecycle). If you cannot confirm the mechanism, **STOP and report** — don't guess.
+Events may be **manual DOM delegation** keyed by `data-*` (one root listener), not framework
+`onClick` — match the bundle's idiom. A host-only variant control (e.g. a `data-props` enum with
+no rendered UI) counts as **no controls** → build one.
 
 ### Step 3 — Re-home variant inputs into project state
 Move each variant value into the artifact's **own state**, initialized from the old
