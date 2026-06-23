@@ -17,6 +17,9 @@ grep literals, **never cite line numbers**. Work only within the project.
 **Preserve the default-state output; only ADD switchable states.** At the default selection
 the rendered result must be unchanged (value-preserving at the default). New = the ability to
 switch variants in-project. Verify the default is unchanged; everything else is additive.
+**Case (b):** the control lives **outside the product DOM** (on the canvas or a floating overlay),
+so the product's default-state output stays **byte-identical** — the only addition is dev chrome
+outside the product, never a change to the interface.
 
 ## Why exports arrive "dead"
 Design tools expose variant controls (theme / mode / brand / density / interactive states) via
@@ -54,11 +57,26 @@ no rendered UI) counts as **no controls** → build one.
 ### Step 3 — Re-home variant inputs into project state
 Move each variant value into the artifact's **own state**, initialized from the old
 default/prop as fallback, so it is functional standalone with no authoring-tool host.
+**State is the writable channel; props/metadata are seed-only.** Some runtimes re-sync props on
+every update (e.g. a DC `componentDidUpdate` resets `props`), so writing a variant back to props
+is **silently reverted** — drive it via state (`state.x ?? props.x ?? default`), with props / the
+authoring enum as the initial seed only.
 
-### Step 4 — Add a minimal control surface
-Add controls (selects / toggles / segmented) for the discovered variants, wired to state via
-the stack's own event idiom. Keep it minimal and unobtrusive — it's a dev/review surface.
-**Fork (GATE 4):** which variants to expose, and where to place the controls.
+### Step 4 — Add a minimal control surface (OUTSIDE the product UI)
+The control surface is a **dev/review affordance, NOT product UI** — never embed it into the
+product interface (toolbar, nav, action bar, …). Place it **outside** the product:
+- **On the canvas** — if the design renders inside a surrounding canvas/frame (a mockup centred on
+  a backdrop, a device frame), put the control on that canvas, outside the product viewport.
+- **Draggable overlay** — if the product fills the viewport (no canvas), float it above the screen
+  (fixed-position, draggable, unobtrusive, dismissible).
+Add controls (selects / toggles / segmented) for the discovered variants, wired to state via the
+stack's own event idiom. **Wire events from a root that contains the control** — a listener
+delegated only on the product root won't see a canvas/overlay control; attach to a parent that
+holds both, or give the control its own handler.
+**Fork (GATE 4):** which variants to expose.
+For template engines without ternaries/calls (mustache-style `{{ }}`), the template can only read
+**precomputed** values — compute every conditional label/colour/style in the render/state fn and
+expose it as a plain field.
 
 ### Step 5 — Detach from the authoring tool
 The artifact must be functional without the tool's editor/host. Remove or neutralize
@@ -69,7 +87,9 @@ risks the parser/build. Note what was left and why.
 - Default-state output unchanged (render-diff if a path exists; else inspect + reason).
 - If the profile has a render/screenshot path, exercise each variant; else **say so** and hand
   the visual check to the user — never claim a check you can't perform.
-- Syntax-check edited files per GATE 2.
+- Syntax-check per GATE 2. **Script embedded in HTML can't be `node --check`'d** — extract the
+  script body and run it through the runtime's own loader (`new Function(…)` / the DC `evalDcLogic`)
+  with state/framework stubs; this checks syntax AND exercises the render fn (default + each variant).
 
 ## Output
 ```
