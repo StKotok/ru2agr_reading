@@ -39,6 +39,11 @@
           <span style="width:6px; height:6px; border-radius:50%; background:{{ t.liveDot }}; flex-shrink:0; animation:timerPulse 1.5s infinite; display:inline-block;"></span>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="{{ t.moreIcon }}"><path d="M7 10l5 5 5-5z"/></svg>
         </div>
+        <!-- Theme switcher — in-page control (data-theme-toggle delegation) -->
+        <div data-theme-toggle="1" style="height:30px; border:1px solid {{ t.pillBorder }}; border-radius:999px; padding:0 9px; display:flex; align-items:center; gap:5px; cursor:pointer; background:{{ t.pillBg }}; margin-left:5px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="{{ t.accent }}"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
+          <span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.pillText }}; white-space:nowrap;">{{ themeToggleLabel }}</span>
+        </div>
         <div style="width:36px; height:36px; display:flex; align-items:center; justify-content:center; margin-left:2px; cursor:pointer; border-radius:8px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ t.moreIcon }}"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
         </div>
@@ -158,7 +163,7 @@
   }
 }">
 class Component extends DCLogic {
-  state = { activeRow: null, calcOpen: false, calcInput: '' };
+  state = { activeRow: null, calcOpen: false, calcInput: '', theme: null };
 
   _dark = {
     canvasBg: '#0D0E14', phoneBg: '#0A0A0E', screenBg: '#070A12',
@@ -200,6 +205,12 @@ class Component extends DCLogic {
 
   // ── event delegation ────────────────────────────────────────────
   _handler = (e) => {
+    // Theme toggle — re-homed variant control (state, with prop as fallback)
+    if (e.target.closest('[data-theme-toggle]')) {
+      const cur = this.state.theme ?? this.props.theme ?? 'dark';
+      this.setState({ theme: cur === 'dark' ? 'light' : 'dark' });
+      return;
+    }
     // Keypad key
     const keyEl = e.target.closest('[data-key]');
     if (keyEl) {
@@ -249,8 +260,12 @@ class Component extends DCLogic {
   // ────────────────────────────────────────────────────────────────
 
   renderVals() {
-    const dark = (this.props.theme ?? 'dark') === 'dark';
+    // Effective theme: project state wins; the data-props enum is the fallback
+    // default so the host editor's selection still seeds the initial render.
+    const theme = this.state.theme ?? this.props.theme ?? 'dark';
+    const dark = theme === 'dark';
     const t = dark ? this._dark : this._light;
+    const themeToggleLabel = dark ? 'LIGHT' : 'DARK';
     const { activeRow, calcOpen, calcInput } = this.state;
 
     const activeCur = this._currencies.find(c => c.code === activeRow) || this._currencies[0];
@@ -277,6 +292,7 @@ class Component extends DCLogic {
       calcDisplay,
       activeCurCode: activeCur.code,
       activeCurFlag: activeCur.flag,
+      themeToggleLabel,
     };
   }
 }
