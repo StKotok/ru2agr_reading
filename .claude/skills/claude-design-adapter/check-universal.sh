@@ -5,12 +5,13 @@
 # DC / .dc.html terms are ALLOWED; only host-project identifiers (theme names, helper/token
 # names, a specific app's runtime hooks) are banned. Add new leak vectors as they appear.
 # The grep uses --include='*.md', so this .sh file (which holds the patterns) is
-# never scanned and cannot self-match.
+# never scanned and cannot self-match. TASKS.md is excluded too — it's a repo-specific
+# work checklist that legitimately names the local test fixtures; it is not a portable spec.
 cd "$(dirname "$0")" || exit 2
 
 pattern='ru2gr|\?dev=1|data-section|\bmk\(|buildReaderPalette|LV_TABLE|C\.(paper|ink|line|muted|paper2|card|read)|\bTK\.|MutationObserver|localhost:[0-9]+|Пергамент|Уголь'
 
-if grep -rniE --include='*.md' "$pattern" .; then
+if grep -rniE --include='*.md' --exclude='TASKS.md' "$pattern" .; then
   echo "LEAK: project-specific identifier found above — keep this skill universal." >&2
   exit 1
 fi
