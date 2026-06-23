@@ -79,5 +79,5 @@
     return C;
   }
 
-  window.RU2GR = { THEMES: THEMES, a: a, buildPalette: buildPalette };
+  window.RU2GR = { THEMES: THEMES, a: a, buildPalette: buildPalette, hexToRgb: hexToRgb, rgbToHex: rgbToHex, mix: mix, lum: lum };
 })();

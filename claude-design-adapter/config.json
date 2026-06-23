@@ -1,0 +1,6 @@
+{
+  "depth": "auto",
+  "path": ["reconcile", "tidy", "functionalize", "refine"],
+  "targetStack": "html-css-js",
+  "profileKind": "design-handoff"
+}

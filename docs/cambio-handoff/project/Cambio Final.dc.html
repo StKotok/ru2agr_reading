@@ -15,16 +15,16 @@
 </style>
 </helmet>
 
-<div style="min-height:100vh; background:{{ t.canvasBg }}; display:flex; align-items:center; justify-content:center; padding:48px; font-family:'DM Sans',sans-serif; transition:background .35s ease;">
+<div style="min-height:100vh; background:{{ t.canvasBg }}; display:flex; align-items:center; justify-content:center; padding:48px; font-family:'DM Sans',sans-serif; transition:background .35s ease; position:relative;">
 
   <div style="background:{{ t.phoneBg }}; border-radius:46px; padding:10px; box-shadow:0 48px 96px rgba(0,0,0,0.55),0 8px 20px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1); transition:background .35s ease;">
 
-    <div data-cambio-root="1" style="background:{{ t.screenBg }}; border-radius:37px; overflow:hidden; width:340px; height:780px; display:flex; flex-direction:column; position:relative; transition:background .35s ease;">
+    <div data-cambio-root="1" style="background:{{ t.screenBg }}; border-radius:37px; overflow:hidden; width:{{ screenW }}; height:{{ screenH }}; display:flex; flex-direction:column; position:relative; transition:background .35s ease;">
 
       <!-- Status bar -->
       <div style="height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:12px 20px 0; background:{{ t.statusBar }};">
-        <span style="font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:{{ t.text }};">9:41</span>
-        <div style="display:flex; align-items:center; gap:5px;">
+        <span style="font-family:'DM Mono',monospace; font-size:{{ fsBody }}; font-weight:{{ fwMedium }}; color:{{ t.text }};">9:41</span>
+        <div style="display:flex; align-items:center; gap:{{ gapXs }};">
           <svg width="16" height="11" viewBox="0 0 16 11"><rect x="0" y="7" width="2.5" height="4" rx=".4" fill="{{ t.text }}"/><rect x="4" y="5" width="2.5" height="6" rx=".4" fill="{{ t.text }}"/><rect x="8" y="2.5" width="2.5" height="8.5" rx=".4" fill="{{ t.text }}"/><rect x="12" y="0" width="2.5" height="11" rx=".4" fill="{{ t.text }}"/></svg>
           <svg width="15" height="11" viewBox="0 0 15 11"><path d="M7.5 2.5c2.1 0 4 .9 5.4 2.3l1.1-1.1A8.5 8.5 0 007.5.5a8.5 8.5 0 00-6.5 3.2l1.1 1.1A6.5 6.5 0 017.5 2.5zm0 3a4 4 0 012.7 1.1L11.3 5.5A5.5 5.5 0 007.5 4a5.5 5.5 0 00-3.8 1.5l1.1 1.1A4 4 0 017.5 5.5zm0 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="{{ t.text }}"/></svg>
           <svg width="25" height="12" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="2.5" stroke="{{ t.text }}" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="1.5" width="16" height="9" rx="1.5" fill="{{ t.text }}"/><path d="M23 4v4c1-.4 1.5-1 1.5-2S24 4.4 23 4z" fill="{{ t.text }}" opacity=".4"/></svg>
@@ -33,14 +33,14 @@
 
       <!-- Action bar — V3 style -->
       <div style="height:50px; flex-shrink:0; display:flex; align-items:center; padding:0 18px; background:{{ t.headerBg }};">
-        <span style="font-family:'DM Sans',sans-serif; font-size:10px; font-weight:700; letter-spacing:.18em; color:{{ t.text }}; text-transform:uppercase; flex:1;">CAMBIO</span>
-        <div style="height:30px; border:1px solid {{ t.pillBorder }}; border-radius:999px; padding:0 10px; display:flex; align-items:center; gap:5px; cursor:pointer; background:{{ t.pillBg }};">
+        <span style="font-family:'DM Sans',sans-serif; font-size:10px; font-weight:{{ fwBold }}; letter-spacing:.18em; color:{{ t.text }}; text-transform:uppercase; flex:1;">CAMBIO</span>
+        <div style="height:{{ pillHeight }}; border:1px solid {{ t.pillBorder }}; border-radius:{{ pillRadius }}; padding:0 10px; display:flex; align-items:center; gap:{{ gapXs }}; cursor:pointer; background:{{ t.pillBg }};">
           <span style="font-family:'DM Mono',monospace; font-size:10.5px; color:{{ t.pillText }}; white-space:nowrap;">ExchangeRate-API</span>
-          <span style="width:6px; height:6px; border-radius:50%; background:{{ t.liveDot }}; flex-shrink:0; animation:timerPulse 1.5s infinite; display:inline-block;"></span>
+          <span style="width:{{ liveDotSize }}; height:{{ liveDotSize }}; border-radius:{{ dotRadius }}; background:{{ t.liveDot }}; flex-shrink:0; animation:timerPulse 1.5s infinite; display:inline-block;"></span>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="{{ t.moreIcon }}"><path d="M7 10l5 5 5-5z"/></svg>
         </div>
         <!-- Theme switcher — in-page control (data-theme-toggle delegation) -->
-        <div data-theme-toggle="1" style="height:30px; border:1px solid {{ t.pillBorder }}; border-radius:999px; padding:0 9px; display:flex; align-items:center; gap:5px; cursor:pointer; background:{{ t.pillBg }}; margin-left:5px;">
+        <div data-theme-toggle="1" style="height:{{ pillHeight }}; border:1px solid {{ t.pillBorder }}; border-radius:{{ pillRadius }}; padding:{{ chipHorizPad }}; display:flex; align-items:center; gap:{{ gapXs }}; cursor:pointer; background:{{ t.pillBg }}; margin-left:5px;">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="{{ t.accent }}"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
           <span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.pillText }}; white-space:nowrap;">{{ themeToggleLabel }}</span>
         </div>
@@ -51,15 +51,15 @@
 
       <!-- Ticker — V2 style -->
       <div style="height:24px; flex-shrink:0; display:flex; align-items:center; padding:0 14px; gap:7px; background:{{ t.tickerBg }}; border-top:1px solid {{ t.border }}; border-bottom:1px solid {{ t.border }};">
-        <span style="width:6px; height:6px; border-radius:50%; background:{{ t.liveDot }}; display:inline-block; flex-shrink:0; animation:timerPulse 1.5s infinite;"></span>
-        <span style="font-family:'DM Mono',monospace; font-size:8.5px; color:{{ t.textMuted }}; letter-spacing:.06em;">LIVE · LAST UPDATE 14:30:22 · NEXT IN 42s</span>
+        <span style="width:{{ liveDotSize }}; height:{{ liveDotSize }}; border-radius:{{ dotRadius }}; background:{{ t.liveDot }}; display:inline-block; flex-shrink:0; animation:timerPulse 1.5s infinite;"></span>
+        <span style="font-family:'DM Mono',monospace; font-size:8.5px; color:{{ t.textMuted }}; letter-spacing:{{ lsWide }};">LIVE · LAST UPDATE 14:30:22 · NEXT IN 42s</span>
       </div>
 
       <!-- Column headers -->
       <div style="display:flex; align-items:center; padding:6px 14px 4px 18px; flex-shrink:0; background:{{ t.headerBg }};">
-        <span style="font-family:'DM Mono',monospace; font-size:8px; font-weight:600; letter-spacing:.12em; color:{{ t.textDim }}; text-transform:uppercase; flex:1;">Currency</span>
-        <span style="font-family:'DM Mono',monospace; font-size:8px; font-weight:600; letter-spacing:.12em; color:{{ t.textDim }}; text-transform:uppercase; width:52px; text-align:right;">24H</span>
-        <span style="font-family:'DM Mono',monospace; font-size:8px; font-weight:600; letter-spacing:.12em; color:{{ t.textDim }}; text-transform:uppercase; width:96px; text-align:right;">Amount</span>
+        <span style="font-family:'DM Mono',monospace; font-size:{{ fsMicro }}; font-weight:{{ fwSemiBold }}; letter-spacing:{{ lsLabel }}; color:{{ t.textDim }}; text-transform:uppercase; flex:1;">Currency</span>
+        <span style="font-family:'DM Mono',monospace; font-size:{{ fsMicro }}; font-weight:{{ fwSemiBold }}; letter-spacing:{{ lsLabel }}; color:{{ t.textDim }}; text-transform:uppercase; width:{{ changeColW }}; text-align:right;">24H</span>
+        <span style="font-family:'DM Mono',monospace; font-size:{{ fsMicro }}; font-weight:{{ fwSemiBold }}; letter-spacing:{{ lsLabel }}; color:{{ t.textDim }}; text-transform:uppercase; width:{{ amountColW }}; text-align:right;">Amount</span>
       </div>
 
       <!-- Currency rows -->
@@ -67,22 +67,22 @@
         <sc-for list="{{ currencies }}" as="item" hint-placeholder-count="5">
           <div style="position:relative; flex-shrink:0;">
             <div style="position:absolute; left:0; top:4px; bottom:4px; width:3px; background:{{ t.accent }}; border-radius:0 2px 2px 0; display:{{ item.stripeDisplay }};"></div>
-            <div style="background:{{ item.rowBg }}; display:flex; align-items:center; padding:11px 14px 11px 18px; gap:8px; transition:background .2s;">
-              <span style="font-size:19px; line-height:1; flex-shrink:0;">{{ item.flag }}</span>
+            <div style="background:{{ item.rowBg }}; display:flex; align-items:center; padding:11px 14px 11px 18px; gap:{{ gapMd }}; transition:background .2s;">
+              <span style="font-size:19px; line-height:{{ lhTight }}; flex-shrink:0;">{{ item.flag }}</span>
               <div style="flex:1; min-width:0;">
-                <div style="display:flex; align-items:center; gap:5px;">
-                  <span style="font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:{{ t.text }}; letter-spacing:.03em;">{{ item.code }}</span>
-                  <span style="width:5px; height:5px; border-radius:50%; background:{{ t.accent }}; display:{{ item.dotDisplay }}; flex-shrink:0;"></span>
+                <div style="display:flex; align-items:center; gap:{{ gapXs }};">
+                  <span style="font-family:'DM Mono',monospace; font-size:{{ fsBody }}; font-weight:{{ fwMedium }}; color:{{ t.text }}; letter-spacing:{{ lsNarrow }};">{{ item.code }}</span>
+                  <span style="width:5px; height:5px; border-radius:{{ dotRadius }}; background:{{ t.accent }}; display:{{ item.dotDisplay }}; flex-shrink:0;"></span>
                 </div>
-                <div style="font-family:'DM Mono',monospace; font-size:9px; color:{{ t.textMuted }}; margin-top:2px; letter-spacing:.03em;">{{ item.name }}</div>
+                <div style="font-family:'DM Mono',monospace; font-size:9px; color:{{ t.textMuted }}; margin-top:2px; letter-spacing:{{ lsNarrow }};">{{ item.name }}</div>
               </div>
-              <div style="width:52px; text-align:right; flex-shrink:0;">
-                <span style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; color:{{ item.changeColor }};">{{ item.changeDisplay }}</span>
+              <div style="width:{{ changeColW }}; text-align:right; flex-shrink:0;">
+                <span style="font-family:'DM Mono',monospace; font-size:10px; font-weight:{{ fwSemiBold }}; color:{{ item.changeColor }};">{{ item.changeDisplay }}</span>
               </div>
               <!-- Tappable amount — uses data-tap-code for delegation -->
-              <div data-tap-code="{{ item.code }}" style="width:96px; text-align:right; flex-shrink:0; cursor:pointer; user-select:none;">
-                <div style="font-family:'DM Mono',monospace; font-size:{{ item.amountSize }}px; font-weight:400; color:{{ t.text }}; letter-spacing:-.5px; line-height:1;">{{ item.amount }}</div>
-                <div style="font-family:'DM Mono',monospace; font-size:11px; color:{{ t.textMuted }}; margin-top:1px;">{{ item.dec }}</div>
+              <div data-tap-code="{{ item.code }}" style="width:{{ amountColW }}; text-align:right; flex-shrink:0; cursor:pointer; user-select:none;">
+                <div style="font-family:'DM Mono',monospace; font-size:{{ item.amountSize }}px; font-weight:{{ fwRegular }}; color:{{ t.text }}; letter-spacing:{{ lsTight }}; line-height:{{ lhTight }};">{{ item.amount }}</div>
+                <div style="font-family:'DM Mono',monospace; font-size:{{ fsSmall }}; color:{{ t.textMuted }}; margin-top:1px;">{{ item.dec }}</div>
               </div>
             </div>
             <div style="height:1px; background:{{ t.border }}; margin:0 14px;"></div>
@@ -91,48 +91,48 @@
       </div>
 
       <!-- Quick amount chips -->
-      <div style="padding:5px 12px; flex-shrink:0; display:flex; gap:5px; overflow:hidden; background:{{ t.surfaceAlt }}; border-top:1px solid {{ t.border }};">
-        <div data-chip="100" style="height:26px; border:1px solid {{ t.chipBorder }}; border-radius:999px; padding:0 9px; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">100</span></div>
-        <div data-chip="500" style="height:26px; border:1px solid {{ t.chipBorder }}; border-radius:999px; padding:0 9px; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">500</span></div>
-        <div data-chip="1000" style="height:26px; border:1px solid {{ t.chipBorder }}; border-radius:999px; padding:0 9px; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">1 000</span></div>
-        <div data-chip="5000" style="height:26px; border:1px solid {{ t.chipBorder }}; border-radius:999px; padding:0 9px; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">5 000</span></div>
-        <div data-chip="10000" style="height:26px; border:1px solid {{ t.chipBorder }}; border-radius:999px; padding:0 9px; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">10 000</span></div>
+      <div style="padding:5px 12px; flex-shrink:0; display:flex; gap:{{ gapXs }}; overflow:hidden; background:{{ t.surfaceAlt }}; border-top:1px solid {{ t.border }};">
+        <div data-chip="100" style="height:{{ chipHeight }}; border:1px solid {{ t.chipBorder }}; border-radius:{{ pillRadius }}; padding:{{ chipHorizPad }}; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">100</span></div>
+        <div data-chip="500" style="height:{{ chipHeight }}; border:1px solid {{ t.chipBorder }}; border-radius:{{ pillRadius }}; padding:{{ chipHorizPad }}; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">500</span></div>
+        <div data-chip="1000" style="height:{{ chipHeight }}; border:1px solid {{ t.chipBorder }}; border-radius:{{ pillRadius }}; padding:{{ chipHorizPad }}; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">1 000</span></div>
+        <div data-chip="5000" style="height:{{ chipHeight }}; border:1px solid {{ t.chipBorder }}; border-radius:{{ pillRadius }}; padding:{{ chipHorizPad }}; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">5 000</span></div>
+        <div data-chip="10000" style="height:{{ chipHeight }}; border:1px solid {{ t.chipBorder }}; border-radius:{{ pillRadius }}; padding:{{ chipHorizPad }}; display:flex; align-items:center; flex-shrink:0; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:10px; color:{{ t.chipText }};">10 000</span></div>
       </div>
 
       <!-- Calculator panel -->
       <div style="flex-shrink:0; max-height:{{ calcH }}; overflow:hidden; transition:max-height .28s cubic-bezier(.4,0,.2,1); background:{{ t.calcBg }}; border-top:1px solid {{ t.borderMid }};">
         <!-- Active currency + display -->
-        <div style="display:flex; align-items:center; padding:8px 14px 4px; gap:8px; border-bottom:1px solid {{ t.border }};">
-          <span style="font-size:15px; line-height:1; flex-shrink:0;">{{ activeCurFlag }}</span>
-          <span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500; color:{{ t.accent }}; letter-spacing:.06em;">{{ activeCurCode }}</span>
+        <div style="display:flex; align-items:center; padding:8px 14px 4px; gap:{{ gapMd }}; border-bottom:1px solid {{ t.border }};">
+          <span style="font-size:15px; line-height:{{ lhTight }}; flex-shrink:0;">{{ activeCurFlag }}</span>
+          <span style="font-family:'DM Mono',monospace; font-size:{{ fsSmall }}; font-weight:{{ fwMedium }}; color:{{ t.accent }}; letter-spacing:{{ lsWide }};">{{ activeCurCode }}</span>
           <div style="flex:1; text-align:right; overflow:hidden;">
-            <span style="font-family:'DM Mono',monospace; font-size:20px; font-weight:400; color:{{ t.text }}; letter-spacing:-.5px; white-space:nowrap;">{{ calcDisplay }}</span>
+            <span style="font-family:'DM Mono',monospace; font-size:{{ fsDisplay }}; font-weight:{{ fwRegular }}; color:{{ t.text }}; letter-spacing:{{ lsTight }}; white-space:nowrap;">{{ calcDisplay }}</span>
           </div>
         </div>
         <!-- Keypad — data-key used for delegation -->
         <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:4px; padding:5px 10px 9px;">
-          <div data-key="7" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">7</span></div>
-          <div data-key="8" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">8</span></div>
-          <div data-key="9" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">9</span></div>
-          <div data-key="AC" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:13px; color:{{ t.accent }};">AC</span></div>
-          <div data-key="⌫" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:15px; color:{{ t.accent }};">⌫</span></div>
+          <div data-key="7" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">7</span></div>
+          <div data-key="8" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">8</span></div>
+          <div data-key="9" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">9</span></div>
+          <div data-key="AC" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:13px; color:{{ t.accent }};">AC</span></div>
+          <div data-key="⌫" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:15px; color:{{ t.accent }};">⌫</span></div>
 
-          <div data-key="4" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">4</span></div>
-          <div data-key="5" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">5</span></div>
-          <div data-key="6" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">6</span></div>
-          <div data-key="÷" style="height:44px; background:{{ t.calcOp }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.accent }};">÷</span></div>
-          <div data-key="×" style="height:44px; background:{{ t.calcOp }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.accent }};">×</span></div>
+          <div data-key="4" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">4</span></div>
+          <div data-key="5" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">5</span></div>
+          <div data-key="6" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">6</span></div>
+          <div data-key="÷" style="height:44px; background:{{ t.calcOp }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.accent }};">÷</span></div>
+          <div data-key="×" style="height:44px; background:{{ t.calcOp }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.accent }};">×</span></div>
 
-          <div data-key="1" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">1</span></div>
-          <div data-key="2" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">2</span></div>
-          <div data-key="3" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">3</span></div>
-          <div data-key="−" style="height:44px; background:{{ t.calcOp }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.accent }};">−</span></div>
-          <div data-key="+" style="height:44px; background:{{ t.calcOp }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.accent }};">+</span></div>
+          <div data-key="1" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">1</span></div>
+          <div data-key="2" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">2</span></div>
+          <div data-key="3" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">3</span></div>
+          <div data-key="−" style="height:44px; background:{{ t.calcOp }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.accent }};">−</span></div>
+          <div data-key="+" style="height:44px; background:{{ t.calcOp }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.accent }};">+</span></div>
 
-          <div data-key="0" style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">0</span></div>
-          <div data-key="," style="height:44px; background:{{ t.calcKey }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:17px; color:{{ t.text }};">,</span></div>
-          <div style="height:44px; background:{{ t.calcKey }}; border-radius:7px; opacity:.25;"></div>
-          <div data-done="1" style="height:44px; background:{{ t.calcDone }}; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer; grid-column:span 2;"><span style="font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:{{ t.calcDoneText }}; letter-spacing:.04em;">Done</span></div>
+          <div data-key="0" style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">0</span></div>
+          <div data-key="," style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'DM Mono',monospace; font-size:{{ fsKeypad }}; color:{{ t.text }};">,</span></div>
+          <div style="height:44px; background:{{ t.calcKey }}; border-radius:{{ calcKeyRadius }}; opacity:.25;"></div>
+          <div data-done="1" style="height:44px; background:{{ t.calcDone }}; border-radius:{{ calcKeyRadius }}; display:flex; align-items:center; justify-content:center; cursor:pointer; grid-column:span 2;"><span style="font-family:'DM Sans',sans-serif; font-size:13px; font-weight:{{ fwSemiBold }}; color:{{ t.calcDoneText }}; letter-spacing:.04em;">Done</span></div>
         </div>
       </div>
 
@@ -151,6 +151,12 @@
 
     </div>
   </div>
+
+  <!-- Canvas-level theme switcher (dev control, outside product UI) -->
+  <div data-func-theme-container style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:8px; opacity:.55; user-select:none;">
+    <span data-func-theme="dark" style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; color:{{ t.text }}; cursor:pointer; padding:3px 10px; border-radius:999px; border:1px solid {{ t.border }}; background:{{ t.surfaceAlt }}; transition:opacity .15s;">Dark</span>
+    <span data-func-theme="light" style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; color:{{ t.text }}; cursor:pointer; padding:3px 10px; border-radius:999px; border:1px solid {{ t.border }}; background:{{ t.surfaceAlt }}; transition:opacity .15s;">Light</span>
+  </div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{
@@ -162,17 +168,46 @@
     &quot;tsType&quot;: &quot;'dark'|'light'&quot;
   }
 }">
+// ── shared constants ──────────────────────────────────────────
+const WHITE = '#FFFFFF';
+const calcKeyRadius = '7px';
+const pillRadius = '999px';
+const dotRadius = '50%';
+const gapXs = '5px';
+const gapMd = '8px';
+const pillHeight = '30px';
+const liveDotSize = '6px';
+const changeColW = '52px';
+const amountColW = '96px';
+const chipHeight = '26px';
+const chipHorizPad = '0 9px';
+const screenW = '340px';
+const screenH = '780px';
+const fsMicro = '8px';
+const fsBody = '14px';
+const fsSmall = '11px';
+const fsKeypad = '17px';
+const fsDisplay = '20px';
+const fwRegular = '400';
+const fwMedium = '500';
+const fwSemiBold = '600';
+const fwBold = '700';
+const lhTight = '1';
+const lsTight = '-.5px';
+const lsNarrow = '.03em';
+const lsWide = '.06em';
+const lsLabel = '.12em';
+
 class Component extends DCLogic {
   state = { activeRow: null, calcOpen: false, calcInput: '', theme: null };
 
   _dark = {
     canvasBg: '#0D0E14', phoneBg: '#0A0A0E', screenBg: '#070A12',
-    surface: '#0D1524', surfaceAlt: '#0A0F1C',
-    border: '#0F1A2E', borderMid: '#1A2840', borderLight: '#1E2E48',
-    text: '#E0E8FF', textSub: '#8AA4CC', textMuted: '#3D5070', textDim: '#243348',
+    surfaceAlt: '#0A0F1C',
+    border: '#0F1A2E', borderMid: '#1A2840',     text: '#E0E8FF', textMuted: '#3D5070', textDim: '#243348',
     accent: '#4B7CF8', green: '#10B981', red: '#EF4444',
     calcBg: '#0A0F1C', calcKey: '#111D30', calcOp: '#192540',
-    calcDone: '#4B7CF8', calcDoneText: '#FFFFFF',
+    calcDone: '#4B7CF8', calcDoneText: WHITE,
     navBg: '#070A12', tickerBg: '#0A0F1C', statusBar: '#070A12',
     activeRowBg: '#0D1524', headerBg: '#070A12',
     pillBg: '#0D1524', pillBorder: '#1E2E48', pillText: '#8AA4CC',
@@ -182,12 +217,11 @@ class Component extends DCLogic {
 
   _light = {
     canvasBg: '#E5E1D8', phoneBg: '#D8D4CC', screenBg: '#FFFFFF',
-    surface: '#FAFBFF', surfaceAlt: '#F8F9FC',
-    border: '#EFEFEF', borderMid: '#E4E8F0', borderLight: '#E4E8F0',
-    text: '#0A0A14', textSub: '#4B5563', textMuted: '#9BA3AE', textDim: '#C8D0DC',
+    surfaceAlt: '#F8F9FC',
+    border: '#EFEFEF', borderMid: '#E4E8F0',     text: '#0A0A14', textMuted: '#9BA3AE', textDim: '#C8D0DC',
     accent: '#1E50D8', green: '#059669', red: '#DC2626',
     calcBg: '#F4F6FA', calcKey: '#FFFFFF', calcOp: '#EBF0FF',
-    calcDone: '#1E50D8', calcDoneText: '#FFFFFF',
+    calcDone: '#1E50D8', calcDoneText: WHITE,
     navBg: '#FFFFFF', tickerBg: '#F8F9FC', statusBar: '#FFFFFF',
     activeRowBg: '#F5F7FF', headerBg: '#FFFFFF',
     pillBg: '#FFFFFF', pillBorder: '#E4E8F0', pillText: '#6B7280',
@@ -249,13 +283,24 @@ class Component extends DCLogic {
     this.setState({ calcInput: raw });
   }
 
+  // Canvas-level theme control (outside phone frame, no product logic coupling)
+  _canvasHandler = (e) => {
+    const btn = e.target.closest('[data-func-theme]');
+    if (btn) {
+      this.setState({ theme: btn.getAttribute('data-func-theme') });
+    }
+  };
+
   componentDidMount() {
     this._root = document.querySelector('[data-cambio-root]');
     if (this._root) this._root.addEventListener('click', this._handler);
+    this._funcEl = document.querySelector('[data-func-theme-container]');
+    if (this._funcEl) this._funcEl.addEventListener('click', this._canvasHandler);
   }
 
   componentWillUnmount() {
     if (this._root) this._root.removeEventListener('click', this._handler);
+    if (this._funcEl) this._funcEl.removeEventListener('click', this._canvasHandler);
   }
   // ────────────────────────────────────────────────────────────────
 
@@ -293,6 +338,34 @@ class Component extends DCLogic {
       activeCurCode: activeCur.code,
       activeCurFlag: activeCur.flag,
       themeToggleLabel,
+      // shared constants
+      calcKeyRadius,
+      pillRadius,
+      dotRadius,
+      gapXs,
+      gapMd,
+      pillHeight,
+      liveDotSize,
+      changeColW,
+      amountColW,
+      chipHeight,
+      chipHorizPad,
+      screenW,
+      screenH,
+      fsMicro,
+      fsBody,
+      fsSmall,
+      fsKeypad,
+      fsDisplay,
+      fwRegular,
+      fwMedium,
+      fwSemiBold,
+      fwBold,
+      lhTight,
+      lsTight,
+      lsNarrow,
+      lsWide,
+      lsLabel,
     };
   }
 }

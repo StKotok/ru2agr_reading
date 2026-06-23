@@ -201,28 +201,11 @@ class Component extends DCLogic {
     };
   }
 
-  /* ---------- utils ---------- */
-  a(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+al+')';}
-  buildThemes(){
-    if(window.RU2GR)return window.RU2GR.THEMES;
-    const mk=(o)=>({paper:o.paper,paper2:o.alt,sidebar:o.alt,read:o.read,titlebar:o.title,ink:o.ink,inkSoft:o.inkSoft,muted:o.muted,muted2:o.muted2,line:this.a(o.ink,0.10),line2:this.a(o.ink,0.18),blue:o.blue,blueHead:o.blue,blueBg:o.blueBg,blueTx:o.blueTx,terra:o.terra,terraSoft:o.terraSoft,green:o.green,greenDk:o.greenDk,greenBg:o.greenBg});
-    return {
-      'Пергамент':mk({paper:'#ECE7DD',alt:'#E7E1D3',read:'#F6F3EE',title:'#E2DBCB',ink:'#272320',inkSoft:'#4a463e',muted:'#9a9488',muted2:'#bdb6a7',blue:'#2f5d85',blueBg:'#cdd9e6',blueTx:'#345f82',terra:'#bb763c',terraSoft:'#e7d3bf',green:'#7c9d5b',greenDk:'#5f7d44',greenBg:'#d9e3c9'}),
-      'Сепия':mk({paper:'#E9DFC8',alt:'#E2D6BB',read:'#F4ECD9',title:'#DBCEB0',ink:'#36291a',inkSoft:'#574630',muted:'#998966',muted2:'#c1b08d',blue:'#39627a',blueBg:'#d2dbdb',blueTx:'#39627a',terra:'#b3652b',terraSoft:'#e7cea9',green:'#7c8f46',greenDk:'#5e7033',greenBg:'#dedcb8'}),
-      'Слоновая кость':mk({paper:'#FAF8F3',alt:'#F1EEE6',read:'#FFFFFF',title:'#EFEBE1',ink:'#2a2722',inkSoft:'#514c43',muted:'#9b9488',muted2:'#c7c0b2',blue:'#2f5d85',blueBg:'#d8e3ef',blueTx:'#2f5d85',terra:'#c0723a',terraSoft:'#f1dac2',green:'#6f9a4f',greenDk:'#547d35',greenBg:'#e1ead0'}),
-      'Туман':mk({paper:'#E8E8EB',alt:'#DFDFE3',read:'#F4F4F7',title:'#DBDBDF',ink:'#25262b',inkSoft:'#45474e',muted:'#8a8c95',muted2:'#b6b8c0',blue:'#3a5f8a',blueBg:'#d4ddeb',blueTx:'#3a5f8a',terra:'#b06a45',terraSoft:'#e8d2c6',green:'#5f8f6a',greenDk:'#487553',greenBg:'#d4e4d8'}),
-      'Море':mk({paper:'#E2ECF0',alt:'#D7E4EA',read:'#F0F7F9',title:'#D1E0E7',ink:'#1f2a30',inkSoft:'#3c4b53',muted:'#7f939c',muted2:'#aec0c8',blue:'#2c6e8f',blueBg:'#cadfe9',blueTx:'#2c6e8f',terra:'#c07a45',terraSoft:'#edd7c3',green:'#5e9080',greenDk:'#467467',greenBg:'#cee5dd'}),
-      'Лес':mk({paper:'#E6EADD',alt:'#DCE2D0',read:'#F2F5EC',title:'#D7DEC8',ink:'#232a1f',inkSoft:'#424a39',muted:'#899078',muted2:'#b6bda6',blue:'#3a6079',blueBg:'#d2dde1',blueTx:'#3a6079',terra:'#b07239',terraSoft:'#e6d3b9',green:'#5f8240',greenDk:'#496630',greenBg:'#d8e2c2'}),
-      'Роза':mk({paper:'#F1E4E1',alt:'#EBD8D5',read:'#FAF1EF',title:'#E7D1CD',ink:'#2e2422',inkSoft:'#54443f',muted:'#a08c87',muted2:'#cbb4ae',blue:'#5a5f93',blueBg:'#dedaed',blueTx:'#5a5f93',terra:'#bb5e54',terraSoft:'#edccc6',green:'#7e9a5e',greenDk:'#5f7a43',greenBg:'#dee5ca'}),
-      'Лаванда':mk({paper:'#E9E5F0',alt:'#E1DBEC',read:'#F5F2FA',title:'#DDD6EB',ink:'#28242e',inkSoft:'#494456',muted:'#908aa0',muted2:'#bcb4cc',blue:'#5258a0',blueBg:'#dddaf1',blueTx:'#5258a0',terra:'#b06a8a',terraSoft:'#ebd1dc',green:'#6f9266',greenDk:'#547349',greenBg:'#dae7d4'}),
-      'Закат':mk({paper:'#F0E2D4',alt:'#E9D6C3',read:'#FBEFE0',title:'#E5CEB5',ink:'#34261c',inkSoft:'#5a4632',muted:'#a4876c',muted2:'#ccb191',blue:'#44708a',blueBg:'#d5e0e5',blueTx:'#44708a',terra:'#c4622f',terraSoft:'#f0d0b1',green:'#8a934a',greenDk:'#6c7434',greenBg:'#e2e2bc'}),
-      'Тёмная':mk({paper:'#26231d',alt:'#2e2a23',read:'#201d18',title:'#322d25',ink:'#ece6da',inkSoft:'#c4bdae',muted:'#8f897b',muted2:'#6c6659',blue:'#5a93cc',blueBg:'#2a3f50',blueTx:'#9cc3e2',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#33402a'}),
-      'Ночь':mk({paper:'#1b2230',alt:'#222b3b',read:'#161c28',title:'#25303f',ink:'#e3e9f2',inkSoft:'#b3bdcd',muted:'#7e879a',muted2:'#5b6577',blue:'#5fa0d6',blueBg:'#26384f',blueTx:'#a6cdef',terra:'#d99a5f',terraSoft:'#463524',green:'#84b25f',greenDk:'#a9cf86',greenBg:'#2a3a28'}),
-      'Уголь':mk({paper:'#1f1f21',alt:'#28282b',read:'#19191b',title:'#2c2c2f',ink:'#ededee',inkSoft:'#c2c2c4',muted:'#8d8d90',muted2:'#66666a',blue:'#5aa0d0',blueBg:'#2b3a47',blueTx:'#9fcbe8',terra:'#d8924f',terraSoft:'#443323',green:'#84b25f',greenDk:'#aad187',greenBg:'#2c3a27'})
-    };
-  }
-  palette(){ var t=(this.props && this.props.theme), c=(this.props && this.props.contrast) || 'Чёткий'; if(window.RU2GR && window.RU2GR.buildPalette) return window.RU2GR.buildPalette(this.THEMES, t, c); return this.THEMES[t] || this.THEMES['Пергамент']; }
-  rand(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return ((h>>>0)%10000)/10000;}
+  /* ---------- utils (canonical: ru2gr-tokens.js) ---------- */
+	  a(hex,al){ return window.RU2GR.a(hex,al); }
+	  buildThemes(){ return window.RU2GR ? window.RU2GR.THEMES : null; }
+	  palette(){ var t=(this.props && this.props.theme), c=(this.props && this.props.contrast) || 'Чёткий'; return window.RU2GR.buildPalette(this.THEMES, t, c); }
+	  rand(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return ((h>>>0)%10000)/10000;}
   buildTokens(str){
     const out=[]; const re=/\{([^}]*)\}([^\s{]*)|([^\s{]+)/g; let m;
     while((m=re.exec(str))){
@@ -297,8 +280,8 @@ class Component extends DCLogic {
         h('span',{style:{transform:'translateY(2px)',flex:'0 0 auto'}},this.chev(C.muted))),
       h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('button',{onClick:(e)=>{e.stopPropagation();this.setState({dropdown:!st.dropdown});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.chipH1(this.liveChipState()))),
       h('div',{style:{display:'flex',gap:6,alignItems:'center',flex:'0 0 auto'}},
-        h('button',{onClick:()=>this.toggleSimple(),title:'Простой вид',style:{width:38,height:38,borderRadius:11,border:'1px solid '+(st.simpleView?this.a(C.terra,0.4):C.line),background:st.simpleView?this.a(C.terra,0.12):this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},this.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
-        h('button',{onClick:()=>this.setState({intensityOpen:!st.intensityOpen}),title:'Настройки замены',style:{width:38,height:38,borderRadius:11,border:'1px solid '+C.line,background:this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
+        h('button',{onClick:()=>this.toggleSimple(),title:'Простой вид',style:{width:38,height:38,borderRadius:11,border:'1px solid '+(st.simpleView?this.a(C.terra,0.4):C.line),background:st.simpleView?this.a(C.terra,0.12):this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('span',{title:st.simpleView?'Обычный вид':'Простой вид','aria-label':st.simpleView?'Обычный вид':'Простой вид'},this.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView))),
+        h('button',{onClick:()=>this.setState({intensityOpen:!st.intensityOpen}),'aria-label':'Настройки интенсивности',title:'Настройки замены',style:{width:38,height:38,borderRadius:11,border:'1px solid '+C.line,background:this.a(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
           [0,1,2].map(i=>h('span',{key:i,style:{width:3.5,height:3.5,borderRadius:'50%',background:C.inkSoft,display:'block'}})))));
     return h('div',{style:{position:'sticky',top:0,zIndex:6,background:C.paper,borderBottom:'1px solid '+C.line,backdropFilter:'blur(6px)'}},bookRow);
   }
@@ -511,7 +494,7 @@ class Component extends DCLogic {
               h('div',{style:{display:'flex',gap:8,marginTop:6,fontFamily:this.sans,fontSize:13,color:C.muted}},h('span',null,cd.rank||''),cd.freq?h('span',null,'· '+cd.freq):null)),
             h('div',{style:{display:'flex',gap:6,flex:'0 0 auto'}},
               h('button',{onClick:()=>this.setState({gearOpen:!st.gearOpen}),style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?this.a(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},this.iconGear(C.inkSoft)),
-              h('button',{onClick:()=>this.closeSheet(),style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
+              h('button',{onClick:()=>this.closeSheet(),'aria-label':'Закрыть',style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
           this.renderGearMenu(),
           visible.map(k=>this.renderSection(k,cd)))));
   }
@@ -524,7 +507,7 @@ class Component extends DCLogic {
       h('div',{onClick:(e)=>e.stopPropagation(),style:{position:'absolute',left:0,right:0,bottom:0,background:C.paper,borderRadius:'26px 26px 0 0',boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
         h('div',{style:{display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:38,height:4.5,borderRadius:3,background:C.line2}})),
         h('div',{style:{padding:'14px 26px 32px',position:'relative'}},
-          h('button',{onClick:()=>this.closeSheet(),style:{position:'absolute',top:8,right:20,width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))),
+          h('button',{onClick:()=>this.closeSheet(),'aria-label':'Закрыть',style:{position:'absolute',top:8,right:20,width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))),
           h('div',{style:{fontFamily:this.serif,fontSize:62,color:C.blue,lineHeight:1.05,fontWeight:400}},L.u+' '+L.l),
           h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginTop:8}},L.name),
           h('div',{style:{fontFamily:this.serif,fontSize:18,color:C.muted,marginTop:6}},L.sound),
