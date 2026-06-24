@@ -20,6 +20,14 @@ switch variants in-project. Verify the default is unchanged; everything else is 
 **Case (b):** the control lives **outside the product DOM** (on the canvas or a floating overlay),
 so the product's default-state output stays **byte-identical** — the only addition is dev chrome
 outside the product, never a change to the interface.
+**Additive means additive — never subtractive.** You may only ADD controls *outside* the product
+DOM; you must NEVER remove, move, or restyle a node *inside* it. At the default selection the
+product-DOM diff must be **empty**. A variant control the export already renders **inside** the
+product UI is **product design, not host-tool chrome** — preserve it. If it looks misplaced and
+ought to move out to the canvas, that is a destructive/structural change: raise it as a **HALT-fork
+(GATE 4)** and leave the edit to `refine` — deleting it here is a bug, even if you add a
+replacement elsewhere. Removing a default-rendered product node is never "restoring" — it is a
+default-state change, i.e. a FAIL.
 
 ## Why exports arrive "dead"
 Design tools expose variant controls (theme / mode / brand / density / interactive states) via
@@ -32,8 +40,13 @@ Some Claude Design exports **already ship** an edit-mode/tweaks system (a tweak 
 default-state + a postMessage host protocol). Check the profile's host-tool artifacts:
 - **Controls already exist** → **adapt, don't rebuild**: make the existing panel active standalone
   (it's gated behind the host protocol), keep its sentinel default-state intact (GATE 5), and
-  **strip the host-tool chrome** (floating design-tool panel, `data-*-chrome`, zoom vars) that
-  isn't product UI.
+  **strip only the host-tool chrome** (floating design-tool panel, `data-*-chrome`, zoom vars).
+  **Strip host chrome, not product controls** — a control already rendered *inside* the product UI
+  is product design (see Invariant), never chrome to remove.
+  - **Already functional** → if the existing controls already operate standalone (driven by the
+    project's own state/events, **not** gated behind a host protocol), there is nothing to
+    activate: report **"already functional — no edit"**. Don't invent changes. A redundant or
+    seemingly-misplaced in-product control is a **fork to raise**, not something to delete.
 - **No controls** (e.g. a bare DC bundle) → **build** a minimal control surface as below.
 
 ## Process
@@ -84,7 +97,10 @@ tool-only coupling — but only when removal is safe; keep harmless metadata if 
 risks the parser/build. Note what was left and why.
 
 ### Step 6 — Verify
-- Default-state output unchanged (render-diff if a path exists; else inspect + reason).
+- Default-state output unchanged: the **product-DOM diff at the default selection must be empty**.
+  Any node *removed, moved, or restyled* inside the product is a **FAIL** (a deletion is never
+  "restoring" — it changes the default output); only additions *outside* the product DOM are OK.
+  Render-diff if a path exists; else inspect + reason.
 - If the profile has a render/screenshot path, exercise each variant; else **say so** and hand
   the visual check to the user — never claim a check you can't perform.
 - Syntax-check per GATE 2. **Script embedded in HTML can't be `node --check`'d** — extract the

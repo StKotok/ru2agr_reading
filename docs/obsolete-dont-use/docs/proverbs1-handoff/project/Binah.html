@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binah — Исследуй книгу Притч</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito+Sans:wght@300;400;500;600&family=Noto+Serif+Hebrew:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.13); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
+    @keyframes slideInRight { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .anim-slide { animation: slideInRight .24s cubic-bezier(.22,1,.36,1); }
+    .anim-up    { animation: fadeUp .2s ease; }
+    .anim-fade  { animation: fadeIn .18s ease; }
+    select { appearance: none; -webkit-appearance: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+/* ═══════════════════════════ CHARACTER DATA ═══════════════════════════ */
+
+const CHARS = {
+  peti:  { id:'peti',  ord:1, he:'פֶּתִי',  tr:'пэти',   lat:'peti',
+    ru:'Простодушный', full:'Глупец-простодушный',
+    short:'Наивный и доверчивый, без внутреннего фильтра',
+    desc:'Наивный и доверчивый человек без внутреннего фильтра — открытая дверь, через которую может войти что угодно, но которую ещё можно запереть.',
+    cnt:14, c:{ bg:'#fdf5c0', lgt:'#fffae6', mid:'#c89012', drk:'#7a5a00' } },
+  kesil: { id:'kesil', ord:2, he:'כְּסִיל', tr:'кесиль', lat:'kesil',
+    ru:'Твердолобый', full:'Глупец-твердолобый',
+    short:'Самоуверенный, непроницаемый для наставления',
+    desc:'Самоуверенный глупец, чья проблема не в интеллекте, а в непроницаемой закрытости к мудрости и наставлению.',
+    cnt:49, c:{ bg:'#fde8c0', lgt:'#fff4e6', mid:'#c86814', drk:'#7a3800' } },
+  evil:  { id:'evil',  ord:3, he:'אֱוִיל',  tr:'эвиль',  lat:'ewil',
+    ru:'Развращённый', full:'Глупец-развращённый',
+    short:'Морально испорченный, любящий свою глупость',
+    desc:'Морально испорченный глупец, который не просто ошибается — он любит свою глупость и активно выбирает зло.',
+    cnt:19, c:{ bg:'#fcd8d4', lgt:'#fff0ee', mid:'#cc3030', drk:'#7a0808' } },
+  lets:  { id:'lets',  ord:4, he:'לֵץ',     tr:'лец',    lat:'lets',
+    ru:'Насмешник', full:'Насмешник',
+    short:'Циничный, для которого нет ничего святого',
+    desc:'Циничный насмешник, для которого нет ничего святого — самый опасный и безнадёжный из всех глупцов Притч.',
+    cnt:16, c:{ bg:'#dce8fc', lgt:'#edf4ff', mid:'#3858c8', drk:'#0a1e60' } },
+  naval: { id:'naval', ord:5, he:'נָבָל',    tr:'навал',  lat:'naval',
+    ru:'Подлый', full:'Подлый глупец',
+    short:'Морально омертвевший, утративший стыд',
+    desc:'Морально омертвевший человек, утративший стыд и базовое человеческое достоинство — подлый глупец без совести.',
+    cnt:5,  c:{ bg:'#e4dcd0', lgt:'#f0ece6', mid:'#7a6050', drk:'#3a2010' } },
+};
+const CHARS_ARR = Object.values(CHARS).sort((a,b)=>a.ord-b.ord);
+
+const TRAITS = {
+  peti:  [['Наивность','Верит всему без проверки — его легко обмануть и направить.'],['Обучаемость','Ещё не закрыт — наставление может изменить его.'],['Открытость','Как незапертая дверь — открыт и добру, и злу.']],
+  kesil: [['Самоуверенность','Считает себя правым — зачем слушать других?'],['Закрытость','Наставление не проходит сквозь его самомнение.'],['Цикличность','Снова и снова возвращается к той же глупости.']],
+  evil:  [['Моральная испорченность','Его глупость — не промах, а моральная категория.'],['Презрение к наставлению','Мудрость ниже его достоинства.'],['Любовь к глупости','Глупость — не ошибка, а образ жизни.']],
+  lets:  [['Цинизм','Высмеивает любую истину — насмешка его оружие.'],['Безнадёжность','Самый неисправимый тип — обличение бесполезно.'],['Заражение','Отравляет окружающих духом насмешки.']],
+  naval: [['Омертвение совести','Стыд угас — совесть больше не работает.'],['Подлость','Действует против базовых норм человечности.'],['Утрата достоинства','Потерял то, что делает человека человеком.']],
+};
+
+/* ═══════════════════════════ CHAPTER DATA ═══════════════════════════ */
+
+const CH1 = [
+  { title:'Цель книги', id:'goal', vv:[
+    {n:1, ss:[{t:'Притчи Соломона, сына Давидова, царя Израильского, '}]},
+    {n:2, ss:[{t:'чтобы познать мудрость и наставление, понять изречения разума; '}]},
+    {n:3, ss:[{t:'усвоить правила благоразумия, правосудия, суда и правоты; '}]},
+    {n:4, ss:[{t:''},{t:'простым',ch:'peti',tr:'пэти'},{t:' дать смышленость, юноше — знание и рассудительность; '}]},
+    {n:5, ss:[{t:'послушает мудрый — и умножит познания, и разумный найдет мудрые советы; '}]},
+    {n:6, ss:[{t:'чтобы разуметь притчу и замысловатую речь, слова мудрецов и загадки их. '}]},
+    {n:7, ss:[{t:'Начало мудрости — страх Господень; '},{t:'глупцы',ch:'evil',tr:'эвили'},{t:' только презирают мудрость и наставление.'}]},
+  ]},
+  { title:'Наставление отца', id:'father', vv:[
+    {n:8,  ss:[{t:'Слушай, сын мой, наставление отца твоего и не отвергай завета матери твоей, '}]},
+    {n:9,  ss:[{t:'потому что это — прекрасный венок для головы твоей и украшение для шеи твоей. '}]},
+    {n:10, ss:[{t:'Сын мой! если будут склонять тебя грешники, не соглашайся; '}]},
+    {n:11, ss:[{t:'если будут говорить: «иди с нами, сделаем засаду для убийства, подстережем непорочного без вины, '}]},
+    {n:12, ss:[{t:'живых проглотим их, как преисподняя, и — целых, как нисходящих в могилу; '}]},
+    {n:15, ss:[{t:'сын мой! не ходи в путь с ними, удержи ногу твою от стези их, '}]},
+    {n:16, ss:[{t:'потому что ноги их бегут ко злу и спешат на пролитие крови.'}]},
+  ]},
+  { title:'Призыв Премудрости', id:'wisdom', vv:[
+    {n:20, ss:[{t:'Премудрость возглашает на улице, на площадях возвышает голос свой, '}]},
+    {n:21, ss:[{t:'в главных местах собраний проповедует, при входах в городские ворота говорит речь свою: '}]},
+    {n:22, ss:[{t:'«доколе, '},{t:'простодушные',ch:'peti',tr:'пэти'},{t:', будете любить простоту? доколе '},{t:'кощунники',ch:'lets',tr:'лецим'},{t:' будут услаждаться кощунством, а '},{t:'глупые',ch:'kesil',tr:'кесилим'},{t:' ненавидеть знание? '}]},
+    {n:23, ss:[{t:'Обратитесь к моему обличению: вот, я изолью на вас дух мой, возвещу вам слова мои. '}]},
+    {n:29, ss:[{t:'За то, что они возненавидели знание и не избрали страха Господня, '}]},
+    {n:32, ss:[{t:'потому что упрямство '},{t:'простодушных',ch:'peti',tr:'пэти'},{t:' убьёт их, и беспечность '},{t:'глупых',ch:'kesil',tr:'кесиль'},{t:' погубит их, '}]},
+    {n:33, ss:[{t:'а слушающий меня будет жить безопасно и спокойно, не страшась зла».'}]},
+  ]},
+];
+
+/* ═══════════════════════════ THEMES ═══════════════════════════ */
+
+const THEMES = {
+  svitok: {
+    id:'svitok', name:'Свиток', desc:'Тёплый · книжный',
+    bg:'#f5f0e4', bgCard:'#ede8da', bgSurf:'#f9f5ec', bdr:'#d8cfba',
+    txt:'#2d2416', mut:'#8a7a60', fnt:'#bfad90',
+    acc:'#8B6914', accBg:'#f0e5b8',
+    hBg:'#f5f0e4', barBg:'#eee8d6', barBdr:'#d0c8b0',
+    fBody:"'Lora', Georgia, serif",
+    fUI:"'Manrope', system-ui, sans-serif",
+    fHe:"'Noto Serif Hebrew', serif",
+    hl:'badge', r:'7px', sz:17, lh:1.9,
+  },
+  kodeks: {
+    id:'kodeks', name:'Кодекс', desc:'Академический · чёткий',
+    bg:'#f9f7f4', bgCard:'#f0ece4', bgSurf:'#fdfcfa', bdr:'#e0d8cc',
+    txt:'#1a1810', mut:'#787268', fnt:'#b0a898',
+    acc:'#8B5E14', accBg:'#ece4d0',
+    hBg:'#f9f7f4', barBg:'#ede9e0', barBdr:'#dcd8d0',
+    fBody:"'Playfair Display', 'Times New Roman', serif",
+    fUI:"'Manrope', system-ui, sans-serif",
+    fHe:"'Noto Serif Hebrew', serif",
+    hl:'underline', r:'3px', sz:16, lh:1.85,
+  },
+  rukopis: {
+    id:'rukopis', name:'Рукопись', desc:'Глубокий · атмосферный',
+    bg:'#ebe5d5', bgCard:'#e0dac8', bgSurf:'#f2edd8', bdr:'#c8c0a8',
+    txt:'#261e10', mut:'#7a6e5a', fnt:'#a89e8a',
+    acc:'#7a5810', accBg:'#e4d8b8',
+    hBg:'#ebe5d5', barBg:'#ddd8c4', barBdr:'#c0b8a0',
+    fBody:"'EB Garamond', Georgia, serif",
+    fUI:"'Manrope', system-ui, sans-serif",
+    fHe:"'Noto Serif Hebrew', serif",
+    hl:'filled', r:'5px', sz:19, lh:1.95,
+  },
+  chtets: {
+    id:'chtets', name:'Чтец', desc:'Чистый · современный',
+    bg:'#fafaf8', bgCard:'#f2f0ec', bgSurf:'#fdfdfb', bdr:'#e4e2dc',
+    txt:'#2c2c28', mut:'#888880', fnt:'#bfbfb6',
+    acc:'#6a5c30', accBg:'#f0ecd8',
+    hBg:'#fafaf8', barBg:'#eeece8', barBdr:'#e0ddd6',
+    fBody:"'Nunito Sans', 'Helvetica Neue', sans-serif",
+    fUI:"'Nunito Sans', system-ui, sans-serif",
+    fHe:"'Noto Serif Hebrew', serif",
+    hl:'dot', r:'10px', sz:16, lh:1.85,
+  },
+};
+const THEMES_ARR = Object.values(THEMES);
+
+/* ═══════════════════════════ TWEAK DEFAULTS ═══════════════════════════ */
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "chtets",
+  "fontSize": 17,
+  "showRu": true,
+  "showTr": true,
+  "showHe": true
+}/*EDITMODE-END*/;
+
+/* ═══════════════════════════ APP ═══════════════════════════ */
+
+function App() {
+  const [tw, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [chapter, setChapter] = useState(1);
+  const [view, setView] = useState('gallery');
+  const [activeChar, setActiveChar] = useState(null);
+  const [mobileTab, setMobileTab] = useState('text');
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 680);
+
+  const t = THEMES[tw.theme] || THEMES.svitok;
+  const fontSize = tw.fontSize;
+
+  useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth < 680);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+
+  const openChar = id => {
+    setActiveChar(id);
+    setView('detail');
+    if (isMobile) setMobileTab('chars');
+  };
+  const openGallery = () => { setView('gallery'); setActiveChar(null); };
+
+  const vars = {
+    '--bg': t.bg, '--bg-card': t.bgCard, '--bg-surf': t.bgSurf,
+    '--bdr': t.bdr, '--txt': t.txt, '--mut': t.mut,
+    '--acc': t.acc, '--acc-bg': t.accBg,
+    '--f-body': t.fBody, '--f-ui': t.fUI, '--f-he': t.fHe,
+    '--r': t.r,
+  };
+
+  const mainContent = (
+    <>
+      <TextPane t={t} paras={CH1} showRu={tw.showRu} showTr={tw.showTr} showHe={tw.showHe}
+        activeChar={activeChar} onWord={openChar} fontSize={fontSize} />
+      <CharPanel t={t} view={view} activeChar={activeChar}
+        onGallery={openGallery} onChar={openChar} />
+    </>
+  );
+
+  const mobileContent = (
+    <>
+      <div style={{ flex:1, overflow:'hidden', display: mobileTab==='text'?'flex':'none', flexDirection:'column' }}>
+        <TextPane t={t} paras={CH1} showRu={tw.showRu} showTr={tw.showTr} showHe={tw.showHe}
+          activeChar={activeChar} onWord={id => { openChar(id); setMobileTab('chars'); }} fontSize={fontSize} />
+      </div>
+      <div style={{ flex:1, overflow:'hidden', display: mobileTab==='chars'?'flex':'none', flexDirection:'column' }}>
+        <CharPanel t={t} view={view} activeChar={activeChar}
+          onGallery={openGallery} onChar={openChar} mobile />
+      </div>
+      <MobileTabs t={t} tab={mobileTab} setTab={setMobileTab} />
+    </>
+  );
+
+  return (
+    <div style={{ ...vars, background:t.bg, color:t.txt, fontFamily:t.fUI,
+      height:'100dvh', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <Header t={t} />
+      <Toolbar t={t} chapter={chapter} setChapter={setChapter}
+        showRu={tw.showRu} setShowRu={v => setTweak('showRu', v)}
+        showTr={tw.showTr} setShowTr={v => setTweak('showTr', v)}
+        showHe={tw.showHe} setShowHe={v => setTweak('showHe', v)} />
+      <div style={{ flex:1, display:'flex', overflow:'hidden',
+        flexDirection: isMobile ? 'column' : 'row',
+        borderTop:`1px solid ${t.bdr}` }}>
+        {isMobile ? mobileContent : mainContent}
+      </div>
+
+      <TweaksPanel>
+        <TweakSection label="Тема дизайна" />
+        <ThemePicker t={t} value={tw.theme} onChange={v => setTweak('theme', v)} />
+        <TweakSection label="Текст" />
+        <TweakSlider label="Размер шрифта" value={fontSize} min={14} max={21} unit="px"
+          onChange={v => setTweak('fontSize', v)} />
+        <TweakSection label="Разметка" />
+        <TweakToggle label="Русские метки (Ру)" value={tw.showRu}
+          onChange={v => setTweak('showRu', v)} />
+        <TweakToggle label="Транслитерация (Tr)" value={tw.showTr}
+          onChange={v => setTweak('showTr', v)} />
+        <TweakToggle label="Иврит (+א)" value={tw.showHe}
+          onChange={v => setTweak('showHe', v)} />
+      </TweaksPanel>
+    </div>
+  );
+}
+
+/* ═══ THEME PICKER (custom control for TweaksPanel) ═══ */
+function ThemePicker({ t, value, onChange }) {
+  return (
+    <div style={{ padding:'4px 14px 10px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'6px' }}>
+      {THEMES_ARR.map(th => (
+        <button key={th.id} onClick={() => onChange(th.id)} style={{
+          padding:'8px 10px', borderRadius:'8px', border:`1.5px solid ${value===th.id ? t.acc : 'rgba(0,0,0,0.1)'}`,
+          background: value===th.id ? t.accBg : th.bg,
+          cursor:'pointer', textAlign:'left', transition:'all .15s',
+        }}>
+          <div style={{ fontFamily:t.fUI, fontSize:'12px', fontWeight:600,
+            color: value===th.id ? t.acc : '#2d2416' }}>{th.name}</div>
+          <div style={{ fontFamily:t.fUI, fontSize:'10px', color:'#888', marginTop:'1px' }}>{th.desc}</div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ═══ HEADER ═══ */
+function Header({ t }) {
+  return (
+    <header style={{ background:t.hBg, borderBottom:`1px solid ${t.barBdr}`,
+      padding:'0 20px', height:'52px', display:'flex', alignItems:'center', gap:'10px', flexShrink:0 }}>
+      <span style={{ fontFamily:t.fBody, fontWeight:700, fontSize:'22px',
+        letterSpacing:'-0.5px', color:t.txt }}>Binah</span>
+      <span style={{ color:t.mut, fontSize:'13px', fontFamily:t.fUI }}>
+        Исследуй сокровища книги Притч
+      </span>
+      <div style={{ marginLeft:'auto' }}>
+        <button style={{ background:'none', border:`1px solid ${t.bdr}`, borderRadius:'50%',
+          width:'30px', height:'30px', cursor:'pointer', color:t.mut, fontSize:'15px',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontFamily:'serif', transition:'all .15s' }}>ⓘ</button>
+      </div>
+    </header>
+  );
+}
+
+/* ═══ TOOLBAR ═══ */
+function Toolbar({ t, chapter, setChapter, showRu, setShowRu, showTr, setShowTr, showHe, setShowHe }) {
+  const selectStyle = {
+    fontFamily:t.fUI, fontSize:'13px', fontWeight:500,
+    height:'32px', padding:'0 26px 0 12px', border:`1px solid ${t.bdr}`,
+    cursor:'pointer', transition:'all .15s', borderRadius:t.r,
+    background:t.bgCard, color:t.mut,
+  };
+
+  const segs = [
+    { label:'Ру',  active:showRu, toggle:() => setShowRu(!showRu),  title:'Русское слово' },
+    { label:'Tr',  active:showTr, toggle:() => setShowTr(!showTr),  title:'Транслитерация' },
+    { label:'+א', active:showHe, toggle:() => setShowHe(!showHe), title:'Иврит' },
+  ];
+
+  return (
+    <div style={{ background:t.barBg, borderBottom:`1px solid ${t.barBdr}`,
+      padding:'0 20px', height:'50px', display:'flex', alignItems:'center',
+      gap:'10px', flexShrink:0 }}>
+      <div style={{ position:'relative' }}>
+        <select value={chapter} onChange={e => setChapter(+e.target.value)} style={selectStyle}>
+          {Array.from({length:31},(_,i) =>
+            <option key={i+1} value={i+1}>Гл. {i+1}</option>)}
+        </select>
+        <span style={{ position:'absolute', right:'8px', top:'50%', transform:'translateY(-50%)',
+          pointerEvents:'none', fontSize:'9px', color:t.mut }}>▼</span>
+      </div>
+      <div style={{ width:'1px', height:'20px', background:t.bdr }} />
+      {/* Connected 3-part toggle */}
+      <div style={{ display:'flex', border:`1px solid ${t.bdr}`, borderRadius:t.r, overflow:'hidden' }}>
+        {segs.map(({ label, active, toggle, title }, i) => (
+          <button key={label} onClick={toggle} title={title} style={{
+            padding:'0 13px', height:'32px', border:'none',
+            borderLeft: i > 0 ? `1px solid ${t.bdr}` : 'none',
+            background: active ? t.acc : t.bgCard,
+            color: active ? '#fff' : t.mut,
+            cursor:'pointer', fontSize:'13px', fontWeight:500,
+            fontFamily:t.fUI, transition:'all .15s',
+          }}>{label}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══ TEXT PANE ═══ */
+function TextPane({ t, paras, showRu, showTr, showHe, activeChar, onWord, fontSize }) {
+  return (
+    <div style={{ flex:1, overflowY:'auto', padding:'28px 36px 40px',
+      fontFamily:t.fBody, fontSize:fontSize+'px', lineHeight:t.lh, color:t.txt }}>
+      {paras.map(para => (
+        <div key={para.id} style={{ marginBottom:'36px' }}>
+          <div style={{ fontFamily:t.fUI, fontSize:'10.5px', fontWeight:600,
+            letterSpacing:'0.09em', textTransform:'uppercase', color:t.mut,
+            marginBottom:'14px', paddingBottom:'7px', borderBottom:`1px solid ${t.bdr}` }}>
+            {para.title}
+          </div>
+          <p style={{ margin:0 }}>
+            {para.vv.map(v => (
+              <span key={v.n}>
+                <sup style={{ fontSize:'0.55em', color:t.fnt, marginRight:'2px',
+                  lineHeight:1, verticalAlign:'super' }}>{v.n}</sup>
+                {v.ss.map((seg,si) =>
+                  seg.ch
+                    ? <Word key={si} t={t} seg={seg} showRu={showRu} showTr={showTr} showHe={showHe}
+                        active={activeChar===seg.ch} onClick={() => onWord(seg.ch)} />
+                    : <span key={si}>{seg.t}</span>
+                )}
+              </span>
+            ))}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ═══ HIGHLIGHTED WORD ═══ */
+function Word({ t, seg, showRu, showTr, showHe, active, onClick }) {
+  const [hover, setHover] = useState(false);
+  const ch = CHARS[seg.ch];
+  const c = ch.c;
+  const hot = hover || active;
+
+  let wStyle = { cursor:'pointer', transition:'all .15s', display:'inline', borderRadius:'3px' };
+  if (showRu) {
+    if (t.hl==='badge') {
+      wStyle = { ...wStyle, background: hot ? c.bg : c.bg+'99',
+        padding:'1px 3px', borderRadius:'3px' };
+    } else if (t.hl==='underline') {
+      wStyle = { ...wStyle, borderBottom:`2.5px solid ${hot ? c.mid : c.mid+'88'}`, paddingBottom:'1px' };
+    } else if (t.hl==='filled') {
+      wStyle = { ...wStyle, background: c.bg,
+        padding:'2px 5px', borderRadius:'2px',
+        boxShadow: hot ? `0 0 0 1.5px ${c.mid}55` : 'none' };
+    } else if (t.hl==='dot') {
+      wStyle = { ...wStyle, background: hot ? c.bg+'88' : 'transparent',
+        padding: hot ? '1px 3px' : '0', borderRadius:'3px' };
+    }
+  } else {
+    wStyle = { ...wStyle, color: hot ? c.mid : t.txt };
+  }
+
+  const badge = (
+    <span style={{ display:'inline-block', fontSize:'0.66em', fontFamily:t.fUI, fontWeight:600,
+      color:c.drk, background:c.bg, border:`1px solid ${c.mid}55`,
+      padding:'0 5px', borderRadius:'9px', marginLeft:'3px',
+      lineHeight:'1.6', verticalAlign:'1px', transition:'all .15s',
+      opacity: hot ? 1 : 0.82 }}>{seg.tr}</span>
+  );
+
+  return (
+    <span onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      onClick={onClick} style={{ display:'inline' }}>
+      <span style={wStyle}>{seg.t}</span>
+      {showTr && (t.hl==='badge' || t.hl==='filled') && badge}
+      {showTr && t.hl==='underline' && (hover || active) && badge}
+      {showTr && t.hl==='dot' && (
+        <span style={{ display:'inline-block', width:'6px', height:'6px',
+          borderRadius:'50%', background:c.mid, marginLeft:'3px',
+          verticalAlign:'middle', opacity:0.85, flexShrink:0 }} />
+      )}
+      {showHe && (
+        <span style={{ fontFamily:t.fHe, fontSize:'0.78em', color:c.drk,
+          marginLeft:'4px', direction:'rtl', display:'inline-block' }}>{ch.he}</span>
+      )}
+    </span>
+  );
+}
+
+/* ═══ CHARACTER PANEL ═══ */
+function CharPanel({ t, view, activeChar, onGallery, onChar, mobile }) {
+  return (
+    <aside style={{ width: mobile?'100%':'340px', borderLeft: mobile?'none':`1px solid ${t.bdr}`,
+      borderTop: mobile?`1px solid ${t.bdr}`:'none',
+      background:t.bgSurf, display:'flex', flexDirection:'column',
+      overflow:'hidden', flexShrink:0 }}>
+      <div key={view+activeChar} className="anim-slide" style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+        {view==='gallery'
+          ? <Gallery t={t} activeChar={activeChar} onChar={onChar} />
+          : <Detail t={t} char={CHARS[activeChar]} onGallery={onGallery} />}
+      </div>
+    </aside>
+  );
+}
+
+/* ═══ GALLERY ═══ */
+function Gallery({ t, activeChar, onChar }) {
+  return (
+    <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+      <div style={{ marginBottom:'16px' }}>
+        <div style={{ fontFamily:t.fBody, fontWeight:600, fontSize:'17px', color:t.txt }}>
+          Галерея персонажей
+        </div>
+        <div style={{ fontFamily:t.fUI, fontSize:'12px', color:t.mut, marginTop:'3px' }}>
+          Нажмите на карточку, чтобы узнать больше
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:'9px' }}>
+        {CHARS_ARR.map(ch => (
+          <GalleryCard key={ch.id} t={t} ch={ch}
+            active={activeChar===ch.id} onClick={() => onChar(ch.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══ GALLERY CARD ═══ */
+function GalleryCard({ t, ch, active, onClick }) {
+  const [hover, setHover] = useState(false);
+  const hot = hover || active;
+  return (
+    <div onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} onClick={onClick}
+      style={{ display:'flex', alignItems:'center', gap:'12px',
+        background: hot ? ch.c.lgt : t.bgCard,
+        border:`1px solid ${hot ? ch.c.mid+'66' : t.bdr}`,
+        borderRadius:t.r, padding:'12px 13px',
+        cursor:'pointer', transition:'all .18s ease',
+        boxShadow: hot ? `0 2px 10px ${ch.c.mid}20` : 'none' }}>
+      <div style={{ width:'50px', height:'50px', background:ch.c.bg,
+        borderRadius:t.r, display:'flex', alignItems:'center', justifyContent:'center',
+        flexShrink:0, transition:'all .18s' }}>
+        <span style={{ fontFamily:t.fHe, fontSize:'25px', color:ch.c.drk, direction:'rtl' }}>{ch.he}</span>
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:'flex', alignItems:'baseline', gap:'6px', marginBottom:'2px' }}>
+          <span style={{ fontFamily:t.fUI, fontWeight:600, fontSize:'13.5px', color:t.txt }}>{ch.ru}</span>
+          <span style={{ fontFamily:t.fUI, fontSize:'11px', color:t.mut, fontStyle:'italic' }}>{ch.lat}</span>
+        </div>
+        <div style={{ fontFamily:t.fBody, fontSize:'12px', color:t.mut, lineHeight:1.4,
+          overflow:'hidden', display:'-webkit-box',
+          WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{ch.short}</div>
+        <div style={{ marginTop:'5px', display:'flex', alignItems:'center', gap:'5px' }}>
+          <span style={{ width:'7px', height:'7px', borderRadius:'50%',
+            background:ch.c.mid, display:'inline-block', flexShrink:0 }} />
+          <span style={{ fontFamily:t.fUI, fontSize:'11px', color:t.mut }}>{ch.cnt} упоминаний</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ DETAIL PANEL ═══ */
+function Detail({ t, char, onGallery }) {
+  if (!char) return null;
+  const ch = char;
+  const traits = TRAITS[ch.id] || [];
+
+  const bannerStyle = t.hl==='underline'
+    ? { background:t.bgCard, border:`1px solid ${ch.c.mid}55`, margin:'12px', borderRadius:t.r,
+        padding:'24px 16px', display:'flex', alignItems:'center', justifyContent:'center',
+        flexDirection:'column', gap:'8px' }
+    : { background:ch.c.bg, padding:'30px 20px',
+        display:'flex', alignItems:'center', justifyContent:'center' };
+
+  return (
+    <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column' }}>
+      <div style={{ padding:'12px 16px', borderBottom:`1px solid ${t.bdr}`,
+        display:'flex', alignItems:'center', flexShrink:0 }}>
+        <button onClick={onGallery} style={{ background:t.bgCard, border:`1px solid ${t.bdr}`,
+          borderRadius:t.r, padding:'5px 13px', fontSize:'13px', fontFamily:t.fUI,
+          color:t.mut, cursor:'pointer', display:'flex', alignItems:'center',
+          gap:'5px', transition:'all .15s' }}>← Галерея</button>
+      </div>
+
+      <div style={bannerStyle}>
+        <span style={{ fontFamily:t.fHe, fontSize:'72px', color:ch.c.drk,
+          direction:'rtl', lineHeight:1.15 }}>{ch.he}</span>
+        {t.hl==='underline' && (
+          <div style={{ width:'40px', height:'3px', background:ch.c.mid, borderRadius:'2px' }} />
+        )}
+      </div>
+
+      <div style={{ padding:'20px', flex:1 }}>
+        <div style={{ marginBottom:'16px' }}>
+          <div style={{ fontFamily:t.fUI, fontWeight:700, fontSize:'19px',
+            letterSpacing:'-0.2px', color:t.txt, textTransform:'uppercase' }}>
+            {ch.ru}
+            <span style={{ fontWeight:400, color:t.mut, fontSize:'13px',
+              textTransform:'none', marginLeft:'8px' }}>{ch.lat}</span>
+          </div>
+          <div style={{ display:'flex', alignItems:'baseline', gap:'8px', marginTop:'6px' }}>
+            <span style={{ fontFamily:t.fHe, fontSize:'19px', color:ch.c.drk, direction:'rtl' }}>{ch.he}</span>
+            <span style={{ fontFamily:t.fUI, fontSize:'14px', color:t.mut }}>{ch.tr}</span>
+          </div>
+        </div>
+
+        <p style={{ fontFamily:t.fBody, fontSize:'14px', lineHeight:1.72, color:t.txt, marginBottom:'22px' }}>
+          {ch.desc}
+        </p>
+
+        <div>
+          <div style={{ fontFamily:t.fUI, fontSize:'10.5px', fontWeight:600,
+            letterSpacing:'0.08em', textTransform:'uppercase', color:t.mut, marginBottom:'10px' }}>
+            Ключевые черты
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:'9px' }}>
+            {traits.map(([name, desc]) => (
+              <div key={name} style={{ display:'flex', gap:'9px', alignItems:'flex-start' }}>
+                <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:ch.c.mid,
+                  flexShrink:0, marginTop:'5px' }} />
+                <div style={{ fontSize:'13px', lineHeight:1.55 }}>
+                  <span style={{ fontFamily:t.fUI, fontWeight:600, color:t.txt }}>{name}</span>
+                  <span style={{ fontFamily:t.fBody, color:t.mut }}> — {desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ MOBILE TABS ═══ */
+function MobileTabs({ t, tab, setTab }) {
+  const s = active => ({
+    flex:1, padding:'10px 0', fontFamily:t.fUI, fontSize:'13px', fontWeight:500,
+    background:'none', border:'none', cursor:'pointer', transition:'all .15s',
+    color: active ? t.acc : t.mut,
+    borderTop: active ? `2px solid ${t.acc}` : `2px solid transparent`,
+  });
+  return (
+    <div style={{ display:'flex', borderTop:`1px solid ${t.bdr}`, background:t.barBg, flexShrink:0 }}>
+      <button style={s(tab==='text')} onClick={() => setTab('text')}>Текст</button>
+      <button style={s(tab==='chars')} onClick={() => setTab('chars')}>Персонажи</button>
+    </div>
+  );
+}
+
+/* ═══ MOUNT ═══ */
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

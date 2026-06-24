@@ -1,0 +1,8 @@
+{
+  "schema": "certified-manifest-v1",
+  "alignmentId": "syn--sblgnt-macula",
+  "path": "certified.jsonl",
+  "count": 15740,
+  "sha256": "af9fe9e502e3c57a73933f6f5d273facbefe871207090df7634a656691f45ab6",
+  "generatedAt": "2026-06-18T06:37:35.046Z"
+}

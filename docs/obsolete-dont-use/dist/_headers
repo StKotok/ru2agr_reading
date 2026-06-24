@@ -1,0 +1,5 @@
+# Force browser to always re-fetch the service worker from the network.
+# Without this header, the browser may HTTP-cache sw.js and never detect
+# a new deployment — the PWA stays on the old version forever.
+/sw.js
+  Cache-Control: no-store

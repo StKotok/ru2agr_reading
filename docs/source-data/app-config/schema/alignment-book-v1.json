@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "alignment-book-v1",
+  "title": "Alignment Book Pack (v1)",
+  "description": "Alignment between Synodal and MACULA Greek per book.",
+  "type": "object",
+  "required": ["schema", "alignmentId", "translationId", "originalId", "bookId", "verses", "pairsByRef"],
+  "properties": {
+    "schema": { "const": "alignment-book-v1" },
+    "alignmentId": { "type": "string", "const": "syn--sblgnt-macula" },
+    "translationId": { "type": "string", "const": "syn" },
+    "originalId": { "type": "string", "const": "sblgnt-macula" },
+    "bookId": { "type": "string" },
+    "verses": {
+      "type": "object",
+      "description": "Verse-level correspondence map keyed by ref",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["syn", "grc", "status"],
+        "properties": {
+          "syn": { "type": ["string", "null"], "description": "Synodal verse (or null if grcOnly)" },
+          "grc": { "type": ["string", "null"], "description": "Greek verse (or null if synOnly)" },
+          "status": {
+            "type": "string",
+            "enum": ["paired", "synOnly", "grcOnly", "merged"]
+          },
+          "variant": { "type": "string", "description": "For merged: e.g. {syn:'11:32b', grc:'11:33'}" }
+        }
+      }
+    },
+    "pairsByRef": {
+      "type": "object",
+      "description": "Alignment pairs keyed by ref",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["span", "tokenId", "lexemeKey", "q"],
+          "properties": {
+            "span": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": { "type": "integer", "minimum": 0 },
+              "description": "[start, end] character offsets in translation verse.text"
+            },
+            "tokenId": { "type": "string", "description": "MACULA tokenId (Greek anchor)" },
+            "lexemeKey": { "type": "string", "description": "App-level lexeme key" },
+            "q": { "type": "string", "enum": ["e", "f", "u"], "description": "Quality: e=exact, f=functional, u=uncertain (hidden)" },
+            "src": { "type": "string", "description": "Source of match (e.g. strong, strong+morph, ruMatch)" }
+          }
+        }
+      }
+    },
+    "phraseVariantsByRef": {
+      "type": "object",
+      "description": "Phrase-level variants (e.g. Comma Johanneum)",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["span", "variant", "status"],
+          "properties": {
+            "span": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer" } },
+            "variant": { "type": "string" },
+            "status": { "type": "string", "enum": ["synOnlyPhrase", "grcOnlyPhrase"] }
+          }
+        }
+      }
+    }
+  }
+}

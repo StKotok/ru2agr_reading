@@ -1,0 +1,41 @@
+{
+  "schema": "audit-report-v1",
+  "alignmentId": "syn--sblgnt-macula",
+  "releaseStatus": "blocked:llm-audit-missing",
+  "blockers": [
+    {
+      "code": "blocked:llm-audit-missing",
+      "message": "LLM audit outputs have not been imported. This is expected for initial data prototype."
+    },
+    {
+      "code": "blocked:flagged-pairs-pending-audit",
+      "message": "124 visible C2 pairs are flagged (ambiguous source + uncorroborated) and must be confirmed by LLM audit/adjudication before release. See audit-queue.jsonl."
+    }
+  ],
+  "counts": {
+    "candidatePairs": 123235,
+    "certifiedPairs": 15740,
+    "runtimeVisiblePairs": 15652,
+    "runtimeHiddenPairs": 0,
+    "orphans": 42542,
+    "unknownOrphans": 0,
+    "flaggedForAudit": 124
+  },
+  "coverageSummary": {
+    "heldoutVersesAudited": 0,
+    "c2VersesAudited": 0,
+    "topLexemeKeysAudited": [],
+    "variantVersesAudited": 0,
+    "randomSampleCount": 0
+  },
+  "llm": {
+    "outputsValidated": 0,
+    "outputsInvalid": 0,
+    "importReportSha256": null
+  },
+  "adjudication": {
+    "reportSha256": null,
+    "pendingManualReview": 0,
+    "releaseBlockers": 0
+  }
+}

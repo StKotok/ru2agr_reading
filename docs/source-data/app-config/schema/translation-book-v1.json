@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "translation-book-v1",
+  "title": "Translation Book Pack (v1)",
+  "description": "Synodal translation text with frozen word offsets.",
+  "type": "object",
+  "required": ["schema", "translationId", "bookId", "title", "short", "chapters"],
+  "properties": {
+    "schema": { "const": "translation-book-v1" },
+    "translationId": { "type": "string", "const": "syn" },
+    "bookId": { "type": "string" },
+    "title": { "type": "string" },
+    "short": { "type": "string", "description": "Short name, e.g. Ин" },
+    "chapters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/chapter" }
+    }
+  },
+  "$defs": {
+    "chapter": {
+      "type": "object",
+      "required": ["n", "verses"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1 },
+        "verses": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/verse" }
+        }
+      }
+    },
+    "verse": {
+      "type": "object",
+      "required": ["ref", "n", "text", "words"],
+      "properties": {
+        "ref": { "type": "string" },
+        "n": { "type": "integer" },
+        "text": { "type": "string", "description": "Russian verse text" },
+        "words": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/word" }
+        }
+      }
+    },
+    "word": {
+      "type": "object",
+      "required": ["i", "text", "start", "end"],
+      "properties": {
+        "i": { "type": "integer", "minimum": 0, "description": "Word index (0-based)" },
+        "text": { "type": "string", "description": "Word text (preserving case)" },
+        "start": { "type": "integer", "minimum": 0, "description": "Character offset start in verse.text" },
+        "end": { "type": "integer", "minimum": 0, "description": "Character offset end in verse.text" }
+      }
+    }
+  }
+}

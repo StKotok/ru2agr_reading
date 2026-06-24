@@ -1,0 +1,129 @@
+{
+  "generatedAt": "2026-06-17T22:33:13.272Z",
+  "summary": {
+    "totalTsvRows": 137740,
+    "totalTokens": 137740,
+    "totalVerses": 7939,
+    "totalBooks": 27,
+    "totalLemmas": 5468,
+    "uniqueSurfaceForms": 19361,
+    "breakpoints": {
+      "p50": {
+        "lemmasNeeded": 28,
+        "cumulativeCoverage": 0.5035719471467983
+      },
+      "p80": {
+        "lemmasNeeded": 317,
+        "cumulativeCoverage": 0.8002032815449389
+      },
+      "p90": {
+        "lemmasNeeded": 892,
+        "cumulativeCoverage": 0.9000217801655259
+      },
+      "p95": {
+        "lemmasNeeded": 1756,
+        "cumulativeCoverage": 0.9500217801655312
+      }
+    }
+  },
+  "coverage": {
+    "fields": [
+      {
+        "name": "surface",
+        "count": 137740,
+        "total": 137740,
+        "pct": 100
+      },
+      {
+        "name": "lemma",
+        "count": 137740,
+        "total": 137740,
+        "pct": "100.0"
+      },
+      {
+        "name": "strong",
+        "count": 137740,
+        "total": 137740,
+        "pct": "100.0"
+      },
+      {
+        "name": "morph",
+        "count": 137740,
+        "total": 137740,
+        "pct": "100.0"
+      },
+      {
+        "name": "gloss",
+        "count": 136910,
+        "total": 137740,
+        "pct": "99.4"
+      },
+      {
+        "name": "english",
+        "count": 133103,
+        "total": 137740,
+        "pct": "96.6"
+      },
+      {
+        "name": "louwNida",
+        "count": 128492,
+        "total": 137740,
+        "pct": "93.3"
+      },
+      {
+        "name": "domain",
+        "count": 128493,
+        "total": 137740,
+        "pct": "93.3"
+      },
+      {
+        "name": "pos",
+        "count": 137740,
+        "total": 137740,
+        "pct": "100.0"
+      }
+    ],
+    "bookTokenCounts": {
+      "matthew": 18329,
+      "mark": 11286,
+      "luke": 19446,
+      "john": 15625,
+      "acts": 18412,
+      "romans": 7055,
+      "1corinthians": 6812,
+      "2corinthians": 4473,
+      "galatians": 2226,
+      "ephesians": 2416,
+      "philippians": 1626,
+      "colossians": 1580,
+      "1thessalonians": 1473,
+      "2thessalonians": 820,
+      "1timothy": 1591,
+      "2timothy": 1235,
+      "titus": 659,
+      "philemon": 334,
+      "hebrews": 4935,
+      "james": 1739,
+      "1peter": 1678,
+      "2peter": 1098,
+      "1john": 2137,
+      "2john": 245,
+      "3john": 219,
+      "jude": 459,
+      "revelation": 9832
+    }
+  },
+  "unknownValues": {
+    "morphCodes": [],
+    "posValues": [],
+    "unknownMorphCodeCount": 0,
+    "unknownPosCount": 0
+  },
+  "problems": [],
+  "sourceFiles": {
+    "tsv": "docs/macula-greek/SBLGNT/tsv/macula-greek-SBLGNT.tsv",
+    "tsvSha256": "7f71504fdee8659bdd9f85342e4103d645864c2851b8205915bb298f0c004cc5",
+    "teiDir": "docs/macula-greek/SBLGNT/tei/",
+    "domainLabels": "docs/macula-greek/sources/MARBLE/SDBG/marble-domain-label-mapping.json"
+  }
+}

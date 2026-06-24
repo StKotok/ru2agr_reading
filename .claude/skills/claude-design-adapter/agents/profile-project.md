@@ -9,6 +9,13 @@ profile from evidence, not assumptions.
 
 ## What to discover
 
+### Project kind
+Classify from evidence — it drives the recommended mode path and the Wizard's first branch:
+- **design-handoff** — a one-time Claude Design export brought in to be productionised (a handoff
+  README, a `.dc.html` / React-Babel bundle, host-tool artifacts).
+- **refactor-existing** — an established project codebase whose styles are consolidated in place.
+Cite the signal (the handoff README / export markers vs an existing app's build + source tree).
+
 ### Styling mechanism
 How are styles attached? Grep for signals:
 - `.css` / `.scss` / `.less` files → CSS/SCSS
@@ -67,9 +74,12 @@ agents must respect these (GATE 5).
 ```
 PROFILE: <project name>
 
+Kind:          <design-handoff | refactor-existing — the signal>
 Format:        <DC `.dc.html` bundle | React/Babel HTML | other — how detected>
+Sub-shape:     <render surface (createElement / mustache `{{ }}` / JSX) · where tokens live · interactivity (framework onClick / data-* delegation / host-set props)>
 Host artifacts: <edit-mode sentinels / tweak panel + protocol / host chrome, or "none">
 Styling:       <mechanism + define/reference syntax>
+Drift/dup:     <duplicated/drifted token sources for reconcile to target, or "none — single source">
 Tokens:        <existing system, themes, flow>
 Destinations:  local=<where> shared=<where> theme=<where> derived=<where>
 Gate:          <command or "none">
