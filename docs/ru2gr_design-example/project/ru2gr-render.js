@@ -166,10 +166,10 @@
           h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink}},'Словарь'),
           h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.readerWordGetFiltered().length+' слов')),
         h('div',{style:{marginBottom:9}},this.readerWordSearchBar(true)),
-        this.readerWordSV3(),
-        h('div',{style:{height:8}}),
-        this.readerWordPosDropdown(true),
-        h('button',{onClick:function(){self.setState({readerWordShowInText:!st.readerWordShowInText});},title:st.readerWordShowInText?'Показывать все слова':'Только слова в тексте',style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+(st.readerWordShowInText?C.terra:C.line2),background:st.readerWordShowInText?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, st.readerWordShowInText ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null)),
+        h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
+          this.readerWordSV3(),
+          this.readerWordPosDropdown(true),
+          h('button',{onClick:function(){self.setState({readerWordShowInText:!st.readerWordShowInText});},title:st.readerWordShowInText?'Показывать все слова':'Только слова в тексте',style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+(st.readerWordShowInText?C.terra:C.line2),background:st.readerWordShowInText?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, st.readerWordShowInText ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null))),
       h('div',{id:'readerPhoneWordList',className:'scScroll',style:{flex:1,overflowY:'auto',padding:'0 18px'}},
         this.readerWordWListBody(80)));
   };
