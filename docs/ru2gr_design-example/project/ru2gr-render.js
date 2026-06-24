@@ -966,7 +966,7 @@
     var bd = on ? C.terra : partial ? U.alpha(C.terra, 0.45) : C.line2;
     var icon = on ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))
       : partial ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:3,strokeLinecap:'round'},h('path',{d:'M6 12h12'})) : null;
-    var title = on ? 'Показывать все слова' : partial ? 'Часть слов отмечена — показать только слова в тексте' : 'Только слова в тексте';
+    var title = 'Слова для отображения в тексте. '+(wordChecked===0?'Ничего не выбрано.':wordChecked>=wordTotal?'Выбрано все '+wordTotal+' слов.':'Выбрано '+wordChecked+' из '+wordTotal+'. Желаете сбросить выбор слов?');
     var menu = st.readerWordCbxMenuOpen ? h('div',{style:{position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:50,minWidth:210,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}},
       h('button',{onClick:function(){self.readerWordSelectAll();},style:{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'9px 11px',borderRadius:8,border:'none',background:'transparent',color:C.ink,fontFamily:self.sans,fontSize:13.5,fontWeight:500,cursor:'pointer',textAlign:'left'}},
         h('span',{style:{width:20,height:20,borderRadius:5,border:'1.5px solid '+C.terra,background:C.terra,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h('svg',{width:12,height:12,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))),
