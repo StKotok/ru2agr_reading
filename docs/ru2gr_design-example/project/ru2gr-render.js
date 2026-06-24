@@ -353,7 +353,7 @@
               h('button',{onClick:function(){self.setState({gearOpen:!st.gearOpen});},style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?U.alpha(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconGear(C.inkSoft)),
               h('button',{onClick:function(){self.readerCloseSheet();},style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
           this.readerRenderGearMenu(),
-          visible.map(function(k){ return self.readerRenderSection(k, cd); }))));
+          visible.map(function(k){ return self.readerRenderSection(k, cd); })))));
   };
 
   R.readerRenderLetterSheet = function () {
