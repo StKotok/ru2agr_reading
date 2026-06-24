@@ -131,23 +131,24 @@
 | `asv.json` | American Standard Version (1901) | Public domain | 66 | 31,102 | 4.5 MB |
 | `oeb.json` | Open English Bible | CC0 | 42 (NT) | 23,444 | 0.5 MB |
 | `web.json` | World English Bible | Public domain | 84 (с апокрифами) | 37,654 | 1.8 MB |
+| `ult.json` | unfoldingWord Literal Text | CC BY-SA 4.0 | 66 | 31,103 | 4.6 MB |
 | `oeb.osis.xml` | Open English Bible (исходник) | CC0 | — | — | 2.6 MB |
 | `web.usfx.xml` | World English Bible (исходник) | Public domain | — | — | 5.9 MB |
 
 **Источники:**
 - BSB — Free Use Bible API (bible.helloao.org)
-- ASV — wldeh/bible-api (GitHub)
+- ASV — wldeh/bible-api (GitHub, jsDelivr)
 - OEB — Freely-Given-org/seven1m--open-bibles (GitHub)
 - WEB — Freely-Given-org/seven1m--open-bibles (GitHub)
+- ULT — git.door43.org/unfoldingWord/en_ult (USFM → JSON)
 
 ---
 
 ## Чего ещё недостаёт
 
-| Данные | Лицензия | Приоритет | Статус |
-|---|---|---|---|
-| **ULT** — unfoldingWord Literal Text | CC-BY-SA 4.0 | Технический (для alignment) | ❌ нужно скачать |
-| **Доп. русские переводы** (РБО, Десницкий, Кассиан) | Требуют разрешений | Дополнительные | ❌ нужны разрешения |
+| Данные | Лицензия | Статус |
+|---|---|---|
+| **Доп. русские переводы** (РБО, Десницкий, Кассиан) | Требуют разрешений | ❌ нужны разрешения |
 
 ### Дополнительные русские переводы (требуют разрешений)
 
