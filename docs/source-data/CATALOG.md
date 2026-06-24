@@ -105,26 +105,49 @@
 
 ---
 
-## Чего недостаёт (на следующие шаги)
+## 6. Обогащённые данные (enriched)
 
-Нижеперечисленные данные **отсутствуют** в `source-data/` и должны быть получены из внешних источников с чистыми лицензиями:
+### `enriched/` — по-токеновые данные с глоссами
 
-### Английские переводы
+Извлечено из `canonical/sblgnt-macula/` с удалением UBS-поля `semantic`.
 
-| Перевод | Лицензия | Приоритет | Статус |
+| Файл | Лицензия | Описание | Размер |
 |---|---|---|---|
-| **BSB** — Berean Standard Bible | Public domain | Основной (англ) | ❌ нужно скачать |
-| **OEB** — Open English Bible | CC0 | Дополнительный | ❌ нужно скачать |
-| **ASV 1901** — American Standard Version | Public domain | Дополнительный буквальный | ❌ нужно скачать |
-| **WEB** — World English Bible | Public domain | Опциональный | ❌ нужно скачать |
+| `books/*.json` (27 книг) | CC-BY 4.0 + PD | Токены с Cherith (`english`) и Berean (`glossEn`) глоссами, морфологией, транслитерацией | ~152 MB |
+| `frequency.json` | CC-BY 4.0 | 5468 лемм с рангами, покрытием, частотностью | ~500 KB |
+| `lexemes.json` | CC-BY 4.0 + PD | 5468 лемм: все формы, все ссылки, частотность, глоссы (Cherith + Berean), транслитерация | ~6 MB |
+
+**Поля каждого токена:** `surface`, `lemma`, `transliteration`, `morphology` (с русскими метками), `pos` (с русскими метками), `strong`, `english` (Cherith, CC-BY 4.0), `glossEn` (Berean, Public domain), `accent`, `isFunctionWord`.
+
+**Поля каждой леммы:** `allRefs` (все места в НЗ), `attestedForms` (все словоформы с частотностью), `englishGlosses` (Cherith), `glossesEn` (Berean), `frequency`, `transliteration`.
+
+## 7. Английские переводы
+
+### `translations/`
+
+| Файл | Перевод | Лицензия | Книг | Стихов | Размер |
+|---|---|---|---|---|---|
+| `bsb-complete.json` | Berean Standard Bible | Public domain | 66 | 31,086 | 7.0 MB |
+| `asv.json` | American Standard Version (1901) | Public domain | 66 | 31,102 | 4.5 MB |
+| `oeb.json` | Open English Bible | CC0 | 42 (NT) | 23,444 | 0.5 MB |
+| `web.json` | World English Bible | Public domain | 84 (с апокрифами) | 37,654 | 1.8 MB |
+| `oeb.osis.xml` | Open English Bible (исходник) | CC0 | — | — | 2.6 MB |
+| `web.usfx.xml` | World English Bible (исходник) | Public domain | — | — | 5.9 MB |
+
+**Источники:**
+- BSB — Free Use Bible API (bible.helloao.org)
+- ASV — wldeh/bible-api (GitHub)
+- OEB — Freely-Given-org/seven1m--open-bibles (GitHub)
+- WEB — Freely-Given-org/seven1m--open-bibles (GitHub)
+
+---
+
+## Чего ещё недостаёт
+
+| Данные | Лицензия | Приоритет | Статус |
+|---|---|---|---|
 | **ULT** — unfoldingWord Literal Text | CC-BY-SA 4.0 | Технический (для alignment) | ❌ нужно скачать |
-
-### Семантические/словарные данные (взамен UBS)
-
-| Данные | Лицензия | Статус |
-|---|---|---|
-| **Cherith Glosses** (English + Chinese) | CC BY 4.0 | Есть в MACULA-источнике, но нужна чистая выгрузка |
-| **Berean Interlinear glosses** | Public domain | Есть в MACULA-источнике, но нужна чистая выгрузка |
+| **Доп. русские переводы** (РБО, Десницкий, Кассиан) | Требуют разрешений | Дополнительные | ❌ нужны разрешения |
 
 ### Дополнительные русские переводы (требуют разрешений)
 
