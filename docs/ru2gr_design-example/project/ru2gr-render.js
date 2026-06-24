@@ -76,7 +76,7 @@
         h('span',{style:{fontSize:23,fontWeight:700,letterSpacing:'-0.01em',whiteSpace:'nowrap'}},'Иоанн,'),
         h('span',{style:{fontFamily:this.serif,fontSize:18,color:C.inkSoft,fontWeight:700,whiteSpace:'nowrap'}},'1'),
         h('span',{style:{transform:'translateY(2px)',flex:'0 0 auto'}},U.iconChev(C.muted))),
-      h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('button',{onClick:function(e){e.stopPropagation();self.setState({dropdown:!st.dropdown});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState()))),
+      h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('button',{onClick:function(e){e.stopPropagation();var wl=st.mode===1?'off':st.mode===2?'lemma':'form';self.setState({dropdown:!st.dropdown,readerWordLayer:wl});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState()))),
       h('div',{style:{display:'flex',gap:6,alignItems:'center',flex:'0 0 auto'}},
         h('button',{'data-section':'desk-top--simple-view-btn',onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:TK.topBtnSize,height:TK.topBtnSize,borderRadius:TK.radius,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
         h('button',{'data-section':'desk-top--intensity-btn',onClick:function(){self.setState({intensityOpen:!st.intensityOpen});},title:'Настройки замены',style:{width:TK.topBtnSize,height:TK.topBtnSize,borderRadius:TK.radius,border:'1px solid '+C.line,background:U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
@@ -258,11 +258,7 @@
     if (!st.dropdown) return null;
     return h('div',{'data-section':'phone-mode-menu',key:'dd',style:{position:'absolute',inset:0,zIndex:20}},
       h('div',{onClick:function(){self.setState({dropdown:false});},style:{position:'absolute',inset:0,background:U.alpha('#15140f',0.18)}}),
-      h('div',{style:{position:'absolute',top:150,left:14,right:14,background:C.paper,border:'1px solid '+C.line2,borderRadius:TK.radiusLg,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.5)',overflow:'hidden',animation:'scPop .16s ease'}},
-        this.modeNames.map(function(nm,i){ var n = i+1, on = st.mode === n; return h('button',{key:n,onClick:function(){self.readerSetMode(n);},style:{display:'flex',alignItems:'center',gap:13,width:'100%',textAlign:'left',padding:'13px 16px',background:on?U.alpha(C.terra,0.08):'transparent',border:'none',borderBottom:i<3?'1px solid '+C.line:'none',cursor:'pointer'}},
-          h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:TK.radius,background:on?C.ink:U.alpha(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:self.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
-          h('span',{style:{flex:1}},h('div',{style:{fontFamily:self.sans,fontSize:14.5,fontWeight:600,color:C.ink}},nm),h('div',{style:{fontFamily:self.sans,fontSize:12,color:C.muted,marginTop:1,lineHeight:1.35}},self.modeDesc[i])),
-          on ? h('span',null,h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))) : null); })));
+      h('div',{style:{position:'absolute',top:150,left:14,right:14,animation:'scPop .16s ease'}},this.readerModeMenuList()));
   };
 
   R.readerRenderIntensity = function () {
@@ -461,10 +457,46 @@
 
   R.readerModeMenuList = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
-    return this.modeNames.map(function(nm,i){ var n = i+1, on = st.mode === n; return h('button',{key:n,onClick:function(){self.readerSetMode(n);},style:{display:'flex',alignItems:'center',gap:13,width:'100%',textAlign:'left',padding:'13px 16px',background:on?U.alpha(C.terra,0.08):'transparent',border:'none',borderBottom:i<3?'1px solid '+C.line:'none',cursor:'pointer'}},
-      h('span',{style:{flex:'0 0 auto',width:28,height:28,borderRadius:TK.radius,background:on?C.ink:U.alpha(C.ink,0.07),color:on?C.paper:C.muted,fontFamily:self.sans,fontWeight:700,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}},n),
-      h('span',{style:{flex:1}},h('div',{style:{fontFamily:self.sans,fontSize:14.5,fontWeight:600,color:C.ink}},nm),h('div',{style:{fontFamily:self.sans,fontSize:12,color:C.muted,marginTop:1,lineHeight:1.35}},self.modeDesc[i])),
-      on ? h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null); });
+    var dictCount = st.readerAddedSet ? st.readerAddedSet.size : 0;
+    var intensityPct = Math.round(st.intensity * 100);
+    var wordLayer = st.readerWordLayer || 'off';
+    var activeTab = st.readerPopupTab || 'mixed';
+    // Tab buttons
+    var tabBtn = function(label, key){ var on = activeTab === key; return h('button',{key:key,onClick:function(){self.setState({readerPopupTab:key});},style:{flex:1,padding:'10px 0',border:'none',borderBottom:'2px solid '+(on?C.terra:'transparent'),background:'transparent',fontFamily:self.sans,fontSize:14,fontWeight:500,color:on?C.ink:C.muted,cursor:'pointer',transition:'color .15s,border-color .15s'}},label); };
+    // Mixed panel
+    var mixedPanel = h('div',{style:{padding:16}},
+      // Slider header
+      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}},
+        h('span',{style:{fontFamily:self.sans,fontSize:14,color:C.ink}},'Замена букв'),
+        h('span',{style:{fontFamily:self.serif,fontSize:18,color:C.blue}},'α'+intensityPct+'%')),
+      // Slider
+      h('input',{type:'range',min:0,max:100,step:5,value:intensityPct,onChange:function(e){self.readerSetIntensity(e.target.value);},style:{width:'100%',accentColor:C.terra,margin:'0 0 4px 0',cursor:'pointer'}}),
+      // Slider labels
+      h('div',{style:{display:'flex',justifyContent:'space-between',fontFamily:self.sans,fontSize:12,color:C.muted,marginBottom:4}},h('span',null,'0% — чистый русский'),h('span',null,'100% — все буквы')),
+      // Divider
+      h('div',{style:{borderTop:'1px solid '+C.line,margin:'16px 0'}}),
+      // Toggle label
+      h('div',{style:{fontFamily:self.sans,fontSize:14,color:C.ink,marginBottom:8}},'Замена слов'),
+      // Toggle buttons
+      h('div',{style:{display:'flex',background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:8,padding:2}},
+        [{v:'off',l:'Выкл'},{v:'lemma',l:'Леммы'},{v:'form',l:'Формы'}].map(function(o){ var on = wordLayer === o.v; return h('button',{key:o.v,onClick:function(){self.readerSetWordLayer(o.v);},style:{flex:1,padding:'8px 0',border:'none',borderRadius:6,background:on?C.read:'transparent',color:on?C.ink:C.muted,fontFamily:self.sans,fontSize:13,fontWeight:on?600:400,cursor:'pointer',boxShadow:on?'0 1px 2px rgba(40,34,22,0.1)':'none',transition:'background .15s,color .15s,box-shadow .15s'}},o.l); })),
+      // Hint
+      h('div',{style:{fontFamily:self.sans,fontSize:12,color:C.muted,margin:'8px 0 0 0',lineHeight:1.5}},
+        wordLayer==='off' ? h('span',{style:{fontWeight:600,color:C.ink}},'Выкл — только буквы, без загрузки греческих слов')
+        : wordLayer==='lemma' ? h('span',{style:{fontWeight:600,color:C.ink}},'Леммы — как в словаре: λέγω  исходная форма, «говорить»')
+        : h('span',{style:{fontWeight:600,color:C.ink}},'Формы — как в тексте: λέγει  с окончанием, «говорит»')),
+      // Dict button
+      h('button',{onClick:function(){self.setState({tab:'dict',dropdown:false});},style:{width:'100%',marginTop:16,padding:'10px',fontFamily:self.sans,fontSize:14,textAlign:'left',background:U.alpha(C.ink,0.04),border:'1px solid '+C.line,borderRadius:8,color:C.ink,cursor:'pointer'}},h('span',null,'📖 Словарь — выбрано '+dictCount+' слов →')));
+    // Greek panel — disabled in demo
+    var greekPanel = h('div',{style:{padding:16}},
+      h('div',{style:{fontFamily:self.sans,fontSize:13,color:C.ink,marginBottom:12}},'Греческий текст Нового Завета как основной. Под каждым стихом — русский перевод мелким шрифтом.'),
+      h('label',{style:{display:'flex',alignItems:'center',gap:8,fontFamily:self.sans,fontSize:14,color:C.ink,cursor:'pointer',opacity:0.5}},
+        h('input',{type:'checkbox',disabled:true,style:{accentColor:C.terra}}),
+        h('span',null,'Показывать русский перевод под стихом')),
+      h('div',{style:{fontFamily:self.sans,fontSize:12,color:C.muted,marginTop:8,lineHeight:1.5}},'Нажмите на любое греческое слово — увидите перевод и разбор.'));
+    return h('div',{'data-section':'mode-popup',style:{width:320,background:C.paper,border:'1px solid '+C.line2,borderRadius:TK.radiusLg,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.45)',overflow:'hidden',animation:'scPop .16s ease'}},
+      h('div',{style:{display:'flex',borderBottom:'1px solid '+C.line}}, tabBtn('Смешанный','mixed'), tabBtn('Греческий','greek')),
+      activeTab === 'mixed' ? mixedPanel : greekPanel);
   };
 
   R.readerRenderDeskNav = function () {
@@ -494,10 +526,10 @@
         h('span',{style:{fontFamily:this.sans,fontSize:18,fontWeight:700,color:C.inkSoft}},'1'),
         h('span',{style:{flex:'0 0 auto'}},U.iconChev(C.muted))),
       h('div',{style:{width:1,height:26,background:C.line}}),
-      h('button',{onClick:function(){self.setState({dropdown:!st.dropdown});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState())),
+      h('button',{onClick:function(){var wl=st.mode===1?'off':st.mode===2?'lemma':'form';self.setState({dropdown:!st.dropdown,readerWordLayer:wl});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState())),
       h('div',{style:{flex:1}}),
       h('button',{onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:40,height:40,borderRadius:TK.radius,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
-      st.dropdown ? h('div',{style:{position:'absolute',top:64,left:258,width:336,background:C.paper,border:'1px solid '+C.line2,borderRadius:TK.radiusLg,boxShadow:'0 24px 50px -16px rgba(40,34,22,0.45)',overflow:'hidden',zIndex:30,animation:'scPop .16s ease'}},this.readerModeMenuList()) : null,
+      st.dropdown ? h('div',{style:{position:'absolute',top:64,left:258,zIndex:30,animation:'scPop .16s ease'}},this.readerModeMenuList()) : null,
       st.dropdown ? h('div',{onClick:function(){self.setState({dropdown:false});},style:{position:'fixed',inset:0,zIndex:20}}) : null);
   };
 

@@ -215,6 +215,7 @@ class Component extends DCLogic {
     this.state = {
       tab:'read', mode:1, intensity:0.5, simpleView:false,
       dropdown:false, intensityOpen:false, gearOpen:false,
+      readerPopupTab:'mixed', readerWordLayer:'off',
       sheet:null, card:null,
       readerSearch:'', dictFilter:'all',
       readerAddedSet: D.computeReaderAddedSet(D.WORDS),
@@ -252,6 +253,8 @@ class Component extends DCLogic {
   /* ---------- экшены ---------- */
   readerIsAdded(id)       { return this.state.readerAddedSet.has(id); }
   readerSetMode(m)        { this.setState({ mode: m, dropdown: false }); }
+  readerSetWordLayer(l)   { var m = l==='off'?1:l==='lemma'?2:3; this.setState({ readerWordLayer:l, mode:m, dropdown:false }); }
+  readerSetIntensity(v)   { this.setState({ intensity:(+v)/100, mode:this.state.mode===1?1:this.state.mode }); }
   readerToggleSimple()    { this.setState({ simpleView: !this.state.simpleView }); }
   readerShowToast(msg)    { const id = Date.now(); this._t = id; this.setState({ readerToast: msg }); setTimeout(() => { if (this._mounted && this._t === id) this.setState({ readerToast: null }); }, 3400); }
   readerOpenWordById(id, form) {
