@@ -851,6 +851,8 @@
   };
 
   R.readerWordToggleAdded = function (k, e) { e.stopPropagation(); var s = new Set(this.state.readerAddedSet); if (s.has(k)) { s.delete(k); } else { s.add(k); this.readerWordShowToast('Слово будет показываться в тексте чтения'); } this.setState({readerAddedSet:s}); };
+  R.readerWordSelectAll = function () { var self = this; var s = new Set(); this.WORDS.filter(function(w){ return w.add; }).forEach(function(w){ s.add(w.k); }); this.setState({readerAddedSet:s,readerWordShowInText:true,readerWordCbxMenuOpen:false}); this.readerWordShowToast('Все слова отмечены'); };
+  R.readerWordDeselectAll = function () { this.setState({readerAddedSet:new Set(),readerWordShowInText:false,readerWordCbxMenuOpen:false}); this.readerWordShowToast('Выделение снято'); };
 
   R.readerWordSetStatus = function (k, s) { this.readerSetStatus(k, s); };
 
@@ -965,7 +967,19 @@
     var icon = on ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))
       : partial ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:3,strokeLinecap:'round'},h('path',{d:'M6 12h12'})) : null;
     var title = on ? 'Показывать все слова' : partial ? 'Часть слов отмечена — показать только слова в тексте' : 'Только слова в тексте';
-    return h('button',{onClick:function(){self.setState({readerWordShowInText:!st.readerWordShowInText});},title:title,style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+bd,background:bg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, icon);
+    var menu = st.readerWordCbxMenuOpen ? h('div',{style:{position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:50,minWidth:210,background:C.card,border:'1px solid '+C.cardLine,borderRadius:12,boxShadow:'0 16px 38px -12px rgba(40,34,22,.42)',padding:6,animation:'scPop .14s ease'}},
+      h('button',{onClick:function(){self.readerWordSelectAll();},style:{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'9px 11px',borderRadius:8,border:'none',background:'transparent',color:C.ink,fontFamily:self.sans,fontSize:13.5,fontWeight:500,cursor:'pointer',textAlign:'left'}},
+        h('span',{style:{width:20,height:20,borderRadius:5,border:'1.5px solid '+C.terra,background:C.terra,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h('svg',{width:12,height:12,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))),
+        h('span',null,'Выбрать все')),
+      h('button',{onClick:function(){self.setState({readerWordShowInText:true,readerWordCbxMenuOpen:false});},style:{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'9px 11px',borderRadius:8,border:'none',background:wordChecked>0&&wordChecked<wordTotal?U.alpha(C.ink,.05):'transparent',color:C.ink,fontFamily:self.sans,fontSize:13.5,fontWeight:wordChecked>0&&wordChecked<wordTotal?600:500,cursor:'pointer',textAlign:'left'}},
+        h('span',{style:{width:20,height:20,borderRadius:5,border:'1.5px solid '+U.alpha(C.terra,.45),background:U.alpha(C.terra,.12),display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h('svg',{width:12,height:12,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:3,strokeLinecap:'round'},h('path',{d:'M6 12h12'}))),
+        h('span',null,'Частично'),h('span',{style:{fontFamily:self.sans,fontSize:11.5,color:C.muted2,marginLeft:'auto'}},wordChecked+' из '+wordTotal)),
+      h('button',{onClick:function(){self.readerWordDeselectAll();},style:{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'9px 11px',borderRadius:8,border:'none',background:'transparent',color:C.ink,fontFamily:self.sans,fontSize:13.5,fontWeight:500,cursor:'pointer',textAlign:'left'}},
+        h('span',{style:{width:20,height:20,borderRadius:5,border:'1.5px solid '+C.line2,background:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}),
+        h('span',null,'Снять выделение'))): null;
+    return h('div',{style:{position:'relative',flexShrink:0}},
+      h('button',{onClick:function(){self.setState({readerWordCbxMenuOpen:!st.readerWordCbxMenuOpen});},title:title,style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+bd,background:bg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, icon),
+      menu);
   };
 
   R.readerWordPosOpts = function () { return [['all','Все'],['noun','Сущ.'],['verb','Глаг.'],['adj','Прил.'],['func','Служ.']]; };
