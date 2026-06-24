@@ -16,13 +16,6 @@
     <div style="font-size:15px;color:#6f6a5f;margin-top:7px;line-height:1.5;">Личный словарь · частотные леммы НЗ · поиск, фильтры, статусы, замены в тексте. Нажимайте на строки слов.</div>
   </div>
 
-  <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:14px;">
-    <div>
-      <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Статус + «В тексте» · 5 кардинально разных компактных вариантов</div>
-      <div style="font-size:13.5px;color:#6f6a5f;margin-top:6px;line-height:1.5;max-width:680px;">Замена для строки «Все · В тексте · Новые · Учу · Знаю». Виджет совмещает две функции — фильтр по статусу изучения и тоггл «показывать только слова, заменённые в тексте». Все варианты живые и общим состоянием связаны с макетами ниже.</div>
-    </div>
-    {{ sCompare }}
-  </div>
 
   <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:12px;">
     <div style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Десктоп · ≥ 600px · боковая навигация + инспектор справа</div>
@@ -555,9 +548,8 @@ class Component extends DCLogic {
     );
   }
 
-  /* ===== STATUS / «В тексте» — 5 компактных вариантов ===== */
+  /* ---- status filter ---- */
   sOpts() { return [['all','Все'],['new','Новые'],['learning','Учу'],['known','Знаю']]; }
-  sColorMap() { const C=this.C; return {all:C.inkSoft, new:C.muted, learning:C.blueTx, known:C.greenDk}; }
   statusCount(v) {
     const {search, posFilter, showInText, statusMap, addedSet} = this.state;
     const q = search.trim().toLowerCase();
@@ -576,43 +568,6 @@ class Component extends DCLogic {
       style:{display:'flex',alignItems:'center',gap:6,padding:'8px 13px',borderRadius:10,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
       this.iconEye(st.showInText?C.terra:C.muted),'В тексте');
   }
-  eyeIconBtn() {
-    const C=this.C, h=React.createElement, st=this.state;
-    return h('button',{onClick:()=>this.setState({showInText:!st.showInText}),'aria-label':st.showInText?'Показаны только слова в тексте':'Только слова в тексте',title:st.showInText?'Показаны только слова в тексте':'Только слова в тексте',
-      style:{display:'flex',alignItems:'center',justifyContent:'center',width:34,height:34,borderRadius:9,border:'1px solid '+(st.showInText?this.a(C.terra,.45):C.line),background:st.showInText?C.terraSoft:'transparent',color:st.showInText?C.terra:C.muted,cursor:'pointer',flexShrink:0}},
-      this.iconEye(st.showInText?C.terra:C.muted));
-  }
-  sDivider() { const C=this.C; return React.createElement('span',{style:{width:1,height:20,background:C.line2,flexShrink:0}}); }
-
-  /* ---- V1: связанный сегмент-контрол + отдельный тоггл ---- */
-  sV1() {
-    const C=this.C, h=React.createElement, st=this.state;
-    const seg = h('div',{style:{display:'inline-flex',background:this.a(C.ink,.05),border:'1px solid '+C.line,borderRadius:10,padding:3,flexShrink:0}},
-      this.sOpts().map(([v,l]) => {
-        const on = st.statusFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{padding:'7px 14px',borderRadius:7,border:'none',background:on?C.card:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:this.sans,fontSize:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},l);
-      }));
-    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, seg, this.eyePill());
-  }
-
-  /* ---- V2: цветной ключ-легенда со счётчиками + иконка ---- */
-  sV2() {
-    const C=this.C, h=React.createElement, st=this.state;
-    const cmap = this.sColorMap();
-    const dots = h('div',{style:{display:'flex',gap:3,alignItems:'center'}},
-      this.sOpts().map(([v,l]) => {
-        const on = st.statusFilter === v, col = cmap[v];
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{display:'flex',alignItems:'center',gap:6,padding:'6px 10px',borderRadius:8,border:'none',background:on?this.a(col,.12):'transparent',cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s'}},
-          h('span',{style:{width:8,height:8,borderRadius:'50%',background:col,opacity:v==='all'?.4:1,flexShrink:0}}),
-          h('span',{style:{fontFamily:this.sans,fontSize:12.5,fontWeight:on?700:500,color:on?C.ink:C.muted}},l),
-          h('span',{style:{fontFamily:this.sans,fontSize:11,fontWeight:600,color:C.muted2}},this.statusCount(v))
-        );
-      }));
-    return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dots, this.sDivider(), this.eyeIconBtn());
-  }
-
   /* ---- V3: выпадающий список статусов + чип (самый компактный) ---- */
   sV3() {
     const C=this.C, h=React.createElement, st=this.state;
@@ -642,60 +597,6 @@ class Component extends DCLogic {
     return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dd, this.eyePill());
   }
 
-  /* ---- V4: счётчик-пилюли (данные на первом плане) ---- */
-  sV4() {
-    const C=this.C, h=React.createElement, st=this.state;
-    const cmap = this.sColorMap();
-    const pills = h('div',{style:{display:'flex',gap:6}},
-      this.sOpts().map(([v,l]) => {
-        const on = st.statusFilter === v, col = cmap[v];
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{display:'flex',flexDirection:'column',alignItems:'center',gap:2,minWidth:54,padding:'7px 10px',borderRadius:11,border:'1px solid '+(on?this.a(col,.45):C.line),background:on?this.a(col,.1):'transparent',cursor:'pointer',transition:'all .12s'}},
-          h('span',{style:{fontFamily:this.sans,fontSize:17,fontWeight:700,color:on?col:C.inkSoft,lineHeight:1}},this.statusCount(v)),
-          h('span',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:600,color:on?col:C.muted,lineHeight:1}},l)
-        );
-      }));
-    return h('div',{style:{display:'flex',gap:10,alignItems:'stretch',flexWrap:'wrap'}}, pills, this.eyeIconBtn());
-  }
-
-  /* ---- V5: подчёркнутые вкладки + отдельный свитч (явно два виджета) ---- */
-  sV5() {
-    const C=this.C, h=React.createElement, st=this.state;
-    const tabs = h('div',{style:{display:'flex',gap:18,borderBottom:'1px solid '+C.line}},
-      this.sOpts().map(([v,l]) => {
-        const on = st.statusFilter === v;
-        return h('button',{key:v,onClick:()=>this.setState({statusFilter:v}),
-          style:{padding:'2px 1px 9px',background:'none',border:'none',borderBottom:'2px solid '+(on?C.ink:'transparent'),marginBottom:-1,cursor:'pointer',fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap'}},l);
-      }));
-    const sw = h('div',{style:{display:'flex',alignItems:'center',gap:9}},
-      h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:600,color:st.showInText?C.terra:C.muted}},'Только слова в тексте'),
-      h('button',{onClick:()=>this.setState({showInText:!st.showInText}),style:{width:42,height:24,borderRadius:12,border:'none',background:st.showInText?C.terra:this.a(C.ink,.12),position:'relative',cursor:'pointer',flexShrink:0,transition:'background .2s'}},
-        h('span',{style:{position:'absolute',top:3,left:st.showInText?21:3,width:18,height:18,borderRadius:9,background:'#fff',transition:'left .18s',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}))
-    );
-    return h('div',{style:{display:'flex',flexDirection:'column',gap:15,width:'100%'}}, tabs, sw);
-  }
-
-  /* ---- compare frame for the 5 status variants ---- */
-  sCompareEl() {
-    const C=this.C, h=React.createElement;
-    const frame=(n,title,split,desc,node)=>h('div',{style:{flex:'1 1 332px',minWidth:300,background:C.card,border:'1px solid '+C.cardLine,borderRadius:16,padding:'18px 18px 22px',boxShadow:C.shadow,display:'flex',flexDirection:'column',gap:14}},
-      h('div',null,
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}},
-          h('div',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},n+' · '+title),
-          h('span',{style:{fontFamily:this.sans,fontSize:10.5,fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase',color:split==='два'?C.terra:C.muted,background:split==='два'?C.terraSoft:this.a(C.ink,.05),padding:'2px 8px',borderRadius:20}},split==='два'?'два виджета':'один виджет')
-        ),
-        h('div',{style:{fontFamily:this.sans,fontSize:12.5,color:C.muted,marginTop:5,lineHeight:1.45}},desc)
-      ),
-      h('div',{style:{display:'flex',alignItems:'flex-start',minHeight:50}},node)
-    );
-    return h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},
-      frame('1','Сегмент + тоггл','два','Связанный сегмент-контрол для статуса и отдельная пилюля «В тексте». Понятная иерархия, фиксированная ширина.',this.sV1()),
-      frame('2','Цветной ключ','два','Точки-легенда со счётчиками: цвет статуса = легенда подсветки в тексте. Иконка-глаз вместо подписи экономит ширину.',this.sV2()),
-      frame('3','Список + чип','два','Статус свёрнут в одну кнопку со счётчиками — самый узкий. Масштабируется, если статусов станет больше.',this.sV3()),
-      frame('4','Счётчик-пилюли','два','Число на первом плане: видно объём каждой группы до клика. Двойная роль — фильтр и мини-статистика словаря.',this.sV4()),
-      frame('5','Вкладки + свитч','два','Лёгкие подчёркнутые вкладки статуса и явно отделённый переключатель «В тексте». Минимум рамок, максимум воздуха.',this.sV5())
-    );
-  }
 
   /* ---- status bar (phone) ---- */
   statusBar() {
@@ -876,7 +777,7 @@ class Component extends DCLogic {
         this.deskApp()
       )
     );
-    return {desktop, phone: this.phoneApp(), posCompare: this.posCompareEl(), sCompare: this.sCompareEl()};
+    return {desktop, phone: this.phoneApp(), posCompare: this.posCompareEl()};
   }
 }
 </script>

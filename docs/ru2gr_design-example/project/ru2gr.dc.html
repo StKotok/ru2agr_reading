@@ -16,17 +16,63 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&amp;family=Source+Sans+3:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <style>
-  /* Дев-режим: ?dev=1 — лейблы и обводка по ховеру */
-  html.dev [data-section] { position:relative; }
-  html.dev [data-section]:hover { outline:1px dashed rgba(217,119,87,0.55); outline-offset:1px; cursor:copy; }
-  html.dev [data-section]:hover::before { content:attr(data-section); position:absolute; top:0; left:0; z-index:9999; background:rgba(217,119,87,0.92); color:#fff; font-family:'Source Sans 3',system-ui,sans-serif; font-size:10px; font-weight:600; letter-spacing:0.04em; padding:2px 7px; border-radius:0 0 5px 0; pointer-events:none; white-space:nowrap; max-width:320px; overflow:hidden; text-overflow:ellipsis; }  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:#cfcabf;}
+  /* ── Design tokens: canvas chrome (neutral frame around themed content) ── */
+  :root {
+    --canvas-bg:        #cfcabf;
+    --canvas-bar-bg:    rgba(207,202,191,0.92);
+    --canvas-bar-border:rgba(40,34,22,0.10);
+    --canvas-ink:       #2b2620;
+    --canvas-ink-soft:  #5a5246;
+    --canvas-muted:     #9a9488;
+    --canvas-muted2:    #7a7468;
+    --canvas-line:      rgba(40,34,22,0.14);
+    --canvas-line-light:rgba(40,34,22,0.10);
+    --canvas-select-bg: rgba(255,255,255,0.55);
+    --canvas-select-border: rgba(40,34,22,0.15);
+    --canvas-card-bg:   #f4f2ec;
+    --canvas-phone-bezel:#15140f;
+  }
+
+  /* ── Base reset ── */
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--canvas-bg);}
+
+  /* ── Scrollbar ── */
   .scScroll::-webkit-scrollbar,.scScreen::-webkit-scrollbar{width:0;height:0;}
   .scScroll{scrollbar-width:none;}
+
+  /* ── Keyframes ── */
   @keyframes scSheetUp{from{transform:translateY(101%);}to{transform:translateY(0);}}
   @keyframes scFade{from{opacity:0;}to{opacity:1;}}
   @keyframes scToast{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
   @keyframes scPop{from{opacity:0;transform:translateY(-6px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+  /* ── Accessibility ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ── Keyboard focus ── */
+  :focus-visible {
+    outline: 2px solid var(--canvas-ink-soft);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* ── Selection ── */
+  ::selection {
+    background: rgba(47,93,133,0.18);
+    color: inherit;
+  }
+
+  /* ── Dev mode ── */
+  html.dev [data-section] { position:relative; }
+  html.dev [data-section]:hover { outline:1px dashed rgba(217,119,87,0.55); outline-offset:1px; cursor:copy; }
+  html.dev [data-section]:hover::before { content:attr(data-section); position:absolute; top:0; left:0; z-index:9999; background:rgba(217,119,87,0.92); color:#fff; font-family:'Source Sans 3',system-ui,sans-serif; font-size:10px; font-weight:600; letter-spacing:0.04em; padding:2px 7px; border-radius:0 0 5px 0; pointer-events:none; white-space:nowrap; max-width:320px; overflow:hidden; text-overflow:ellipsis; }
 </style>
 	<script>
 	  if (location.search.includes('dev=1')) {
@@ -81,40 +127,46 @@
 	  }
 	</script></helmet>
 
-<div style="min-height:100vh;background:#cfcabf;">
+<div style="min-height:100vh;background:var(--canvas-bg);">
 
-  <div data-section="canvas-header" style="position:sticky;top:0;z-index:500;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(207,202,191,0.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(40,34,22,0.10);">
+  <div data-section="canvas-header" style="position:sticky;top:0;z-index:500;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--canvas-bar-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--canvas-bar-border);">
     <div style="display:flex;align-items:baseline;gap:11px;">
-      <span style="font-family:'Gentium Plus',serif;font-size:19px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">ru2gr</span>
-      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;color:#9a9488;font-weight:500;">Читалка Нового Завета · дизайн-система</span>
+      <span style="font-family:'Gentium Plus',serif;font-size:19px;font-weight:700;color:var(--canvas-ink);letter-spacing:-0.01em;">ru2gr</span>
+      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;color:var(--canvas-muted);font-weight:500;">Читалка Нового Завета · дизайн-система</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10.5px;font-weight:700;color:#bdb6a7;letter-spacing:0.10em;text-transform:uppercase;">{{ theme }}</span>
-      <span style="width:1px;height:14px;background:rgba(40,34,22,0.15);display:inline-block;"></span>
-      <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10.5px;font-weight:600;color:#c4beb0;letter-spacing:0.04em;">{{ contrast }}</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select aria-label="Тема оформления" onchange="{{ onTheme }}" value="{{ theme }}" style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;font-weight:600;color:var(--canvas-ink-soft);background:var(--canvas-select-bg);border:1px solid var(--canvas-select-border);border-radius:6px;padding:5px 9px;cursor:pointer;min-height:30px;">
+        <option>Пергамент</option><option>Сепия</option><option>Слоновая кость</option><option>Туман</option><option>Море</option><option>Лес</option><option>Роза</option><option>Лаванда</option><option>Закат</option><option>Тёмная</option><option>Ночь</option><option>Уголь</option>
+      </select>
+      <select aria-label="Контрастность" onchange="{{ onContrast }}" value="{{ contrast }}" style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;font-weight:600;color:var(--canvas-ink-soft);background:var(--canvas-select-bg);border:1px solid var(--canvas-select-border);border-radius:6px;padding:5px 9px;cursor:pointer;min-height:30px;">
+        <option>Мягкий</option><option>Чёткий</option><option>Максимальный</option>
+      </select>
+      <select aria-label="Стиль фильтра частей речи" onchange="{{ onPosStyle }}" value="{{ posStyle }}" style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:12px;font-weight:600;color:var(--canvas-ink-soft);background:var(--canvas-select-bg);border:1px solid var(--canvas-select-border);border-radius:6px;padding:5px 9px;cursor:pointer;min-height:30px;">
+        <option>Сегменты</option><option>Список</option><option>Цвет</option><option>Чипсы</option>
+      </select>
     </div>
   </div>
 
   <div style="display:flex;align-items:center;gap:12px;padding:28px 28px 0;">
-    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#9a9488;white-space:nowrap;flex:0 0 auto;">01</span>
-    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7a7468;white-space:nowrap;flex:0 0 auto;">Греческая читалка</span>
-    <div style="flex:1;height:1px;background:rgba(40,34,22,0.14);"></div>
+    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--canvas-muted);white-space:nowrap;flex:0 0 auto;">01</span>
+    <span style="font-family:'Source Sans 3',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--canvas-muted2);white-space:nowrap;flex:0 0 auto;">Греческая читалка</span>
+    <div style="flex:1;height:1px;background:var(--canvas-line);"></div>
   </div>
 
-<div style="min-height:100vh;background:#cfcabf;font-family:'Source Sans 3',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:40px 20px 90px;gap:30px;">
+<div style="min-height:100vh;background:var(--canvas-bg);font-family:'Source Sans 3',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:40px 20px 90px;gap:30px;">
   <div data-section="canvas-title" style="text-align:center;max-width:580px;">
-    <div style="font-family:'Gentium Plus',serif;font-size:31px;font-weight:700;color:#2b2620;letter-spacing:-0.01em;">Греческая читалка Нового Завета</div>
-    <div style="font-size:15px;color:#6f6a5f;margin-top:7px;line-height:1.5;">Кликабельный прототип · экран чтения, переключатель режимов 1–4, словарь, карточки буквы и слова. Нажимайте на греческие буквы и слова.</div>
+    <div style="font-family:'Gentium Plus',serif;font-size:31px;font-weight:700;color:var(--canvas-ink);letter-spacing:-0.01em;">Греческая читалка Нового Завета</div>
+    <div style="font-size:15px;color:var(--canvas-ink-soft);margin-top:7px;line-height:1.5;">Кликабельный прототип · экран чтения, переключатель режимов 1–4, словарь, карточки буквы и слова. Нажимайте на греческие буквы и слова.</div>
   </div>
 
   <div style="width:100%;max-width:1180px;display:flex;flex-direction:column;gap:12px;">
-    <div data-section="desktop-label" style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;">Десктоп · ≥ 600px · боковая навигация + inspector справа</div>
+    <div data-section="desktop-label" style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--canvas-muted2);">Десктоп · ≥ 600px · боковая навигация + inspector справа</div>
     <div data-section="desktop-reader" style="width: 100%; border-radius: 18px; overflow: hidden; box-shadow: 0 36px 80px -34px rgba(40,34,22,0.55),0 0 0 1px rgba(40,34,22,0.1); background-color: #f4f2ec">
       {{ reader.desktop }}
     </div>
   </div>
 
-  <div data-section="phone-label" style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7a7468;margin-top:10px;">Мобильный · &lt; 600px · нижняя навигация + bottom sheet</div>
+  <div data-section="phone-label" style="font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--canvas-muted2);margin-top:10px;">Мобильный · &lt; 600px · нижняя навигация + bottom sheet</div>
   <div data-section="phone-reader" style="width:402px;height:872px;background:#15140f;border-radius:54px;padding:11px;box-shadow:0 40px 90px -28px rgba(40,34,22,0.7),0 0 0 2px rgba(0,0,0,0.22);flex:0 0 auto;">
     <div class="scScreen" style="position:relative;width:100%;height:100%;background:#ECE7DD;border-radius:44px;overflow:hidden;">
       {{ reader.phone }}
@@ -172,7 +224,8 @@ class Component extends DCLogic {
       cardHidden:[],
       readerToast:null, readerDeskScale:1,
       readerTheme: this.props.theme || 'Пергамент',
-      readerContrast: this.props.contrast || 'Чёткий'
+      readerContrast: this.props.contrast || 'Чёткий',
+      posStyle: this.props.posStyle || 'Сегменты'
     };
 
     Object.assign(this.state, {
@@ -274,12 +327,16 @@ class Component extends DCLogic {
    * 5. COMPOSITION — renderVals
    * ================================================================ */
   renderVals() {
+    const s = this.state || {}, p = this.props || {}, self = this;
     this.CR  = this.readerPalette();
     this.CRW = this.readerWordPalette();
     return {
-      theme: this.state.readerTheme,
-      contrast: this.state.readerContrast,
-      posStyle: this.props.posStyle ?? 'Сегменты',
+      theme:    s.readerTheme    ?? p.theme    ?? 'Пергамент',
+      contrast: s.readerContrast ?? p.contrast ?? 'Чёткий',
+      posStyle: s.posStyle ?? p.posStyle ?? 'Сегменты',
+      onTheme:    function (e) { self.setState({ readerTheme: e.target.value }); },
+      onContrast: function (e) { self.setState({ readerContrast: e.target.value }); },
+      onPosStyle: function (e) { self.setState({ posStyle: e.target.value }); },
       reader: {
         phone:    this.readerRenderPhone(),
         desktop:  this.readerRenderDesktop(),
