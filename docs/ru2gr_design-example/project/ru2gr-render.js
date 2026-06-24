@@ -169,7 +169,7 @@
         h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
           this.readerWordSV3(),
           this.readerWordPosDropdown(true),
-          h('button',{onClick:function(){self.setState({readerWordShowInText:!st.readerWordShowInText});},title:st.readerWordShowInText?'Показывать все слова':'Только слова в тексте',style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+(st.readerWordShowInText?C.terra:C.line2),background:st.readerWordShowInText?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, st.readerWordShowInText ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null))),
+          this.readerWordShowInTextCbx())),
       h('div',{id:'readerPhoneWordList',className:'scScroll',style:{flex:1,overflowY:'auto',padding:'0 18px'}},
         this.readerWordWListBody(80)));
   };
@@ -907,7 +907,7 @@
 
   R.readerWordSearchBar = function (mobile) {
     var C = this.CRW, h = React.createElement, st = this.state, self = this;
-    return h('div',{style:{display:'flex',alignItems:'center',gap:8,background:C.card,border:'1px solid '+C.cardLine,borderRadius:TK.radius,padding:mobile?'8px 11px':'9px 13px',boxShadow:'0 1px 2px rgba(40,34,22,.05)'}},
+    return h('div',{style:{display:'flex',alignItems:'center',gap:8,background:C.read,border:'1px solid '+C.line2,borderRadius:TK.radius,padding:mobile?'8px 11px':'9px 13px',boxShadow:'0 1px 2px rgba(40,34,22,.05)'}},
       U.iconSearch(C.muted),
       h('input',{value:st.readerWordSearch,onChange:function(e){self.setState({readerWordSearch:e.target.value});},placeholder:'Поиск: λόγος или logos…',style:{flex:1,border:'none',background:'none',outline:'none',fontFamily:this.sans,fontSize:mobile?14:14.5,color:C.ink}}),
       st.readerWordSearch ? h('button',{onClick:function(){self.setState({readerWordSearch:''});},style:{background:'none',border:'none',cursor:'pointer',padding:2,display:'flex',alignItems:'center',color:C.muted2}},U.iconX(C.muted2,14)) : null);
@@ -916,6 +916,20 @@
   R.readerWordEyePill = function () {
     var C = this.CRW, h = React.createElement, st = this.state;
     return h('button',{onClick:function(){this.setState({readerWordShowInText:!st.readerWordShowInText});}.bind(this),style:{display:'flex',alignItems:'center',gap:6,padding:'8px 13px',borderRadius:10,border:'1px solid '+(st.readerWordShowInText?U.alpha(C.terra,.45):C.line),background:st.readerWordShowInText?C.terraSoft:'transparent',color:st.readerWordShowInText?C.terra:C.muted,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}, U.iconEyeSmall(st.readerWordShowInText?C.terra:C.muted),'В тексте');
+  };
+
+  R.readerWordShowInTextCbx = function () {
+    var C = this.CRW, h = React.createElement, st = this.state, self = this;
+    var wordTotal = this.WORDS.filter(function(w){ return w.add; }).length;
+    var wordChecked = st.readerAddedSet ? st.readerAddedSet.size : 0;
+    var partial = !st.readerWordShowInText && wordChecked > 0 && wordChecked < wordTotal;
+    var on = st.readerWordShowInText;
+    var bg = on ? C.terra : partial ? U.alpha(C.terra, 0.15) : 'transparent';
+    var bd = on ? C.terra : partial ? U.alpha(C.terra, 0.45) : C.line2;
+    var icon = on ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'}))
+      : partial ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:C.terra,strokeWidth:3,strokeLinecap:'round'},h('path',{d:'M6 12h12'})) : null;
+    var title = on ? 'Показывать все слова' : partial ? 'Часть слов отмечена — показать только слова в тексте' : 'Только слова в тексте';
+    return h('button',{onClick:function(){self.setState({readerWordShowInText:!st.readerWordShowInText});},title:title,style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+bd,background:bg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, icon);
   };
 
   R.readerWordPosOpts = function () { return [['all','Все'],['noun','Сущ.'],['verb','Глаг.'],['adj','Прил.'],['func','Служ.']]; };
@@ -939,7 +953,7 @@
       opts.map(function(pair){ var v = pair[0], l = pair[1]; var on = st.readerWordPosFilter === v; return h('button',{key:v,onClick:function(){self.setState({readerWordPosFilter:v,readerWordPosMenuOpen:false});},style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?U.alpha(C.blue,.1):'transparent',color:on?C.blueTx:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}},
         h('span',null,l), h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:on?C.blueTx:C.muted2}},self.readerWordPosCount(v))); })) : null;
     return h('div',{'data-rwposmenu':'1',style:{position:'relative',flexShrink:0}},
-      h('button',{onClick:function(){self.setState({readerWordPosMenuOpen:!open});},style:{display:'flex',alignItems:'center',gap:8,padding:mobile?'7px 11px':'8px 13px',borderRadius:10,border:'1px solid '+(open?U.alpha(C.blue,.4):C.line),background:open?C.blueBg:C.card,color:C.ink,fontFamily:this.sans,fontSize:mobile?12.5:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
+      h('button',{onClick:function(){self.setState({readerWordPosMenuOpen:!open});},style:{display:'flex',alignItems:'center',gap:8,padding:mobile?'7px 11px':'8px 13px',borderRadius:10,border:'1px solid '+(open?U.alpha(C.blue,.4):C.line2),background:open?C.blueBg:C.read,color:C.ink,fontFamily:this.sans,fontSize:mobile?12.5:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
         h('span',{style:{color:C.muted,fontWeight:600}},'Часть речи:'), h('span',{style:{color:st.readerWordPosFilter==='all'?C.inkSoft:C.blueTx,fontWeight:700}},cur[1]), U.iconCaret(C.muted,open)), menu);
   };
 
@@ -964,7 +978,7 @@
       opts.map(function(pair){ var v = pair[0], l = pair[1]; var on = st.readerWordStatusFilter === v; return h('button',{key:v,onClick:function(){self.setState({readerWordStatusFilter:v,readerWordSMenuOpen:false});},style:{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',gap:12,padding:'9px 11px',borderRadius:8,border:'none',background:on?U.alpha(C.ink,.07):'transparent',color:on?C.ink:C.inkSoft,fontFamily:this.sans,fontSize:13.5,fontWeight:on?700:500,cursor:'pointer',textAlign:'left'}},
         h('span',null,l), h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},self.readerWordStatusCount(v))); })) : null;
     var dd = h('div',{'data-rwsmenu':'1',style:{position:'relative',flexShrink:0}},
-      h('button',{onClick:function(){self.setState({readerWordSMenuOpen:!open});},style:{display:'flex',alignItems:'center',gap:8,padding:'8px 13px',borderRadius:10,border:'1px solid '+(open?C.line2:C.line),background:C.card,color:C.ink,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
+      h('button',{onClick:function(){self.setState({readerWordSMenuOpen:!open});},style:{display:'flex',alignItems:'center',gap:8,padding:'8px 13px',borderRadius:10,border:'1px solid '+(open?C.line2:C.line2),background:C.read,color:C.ink,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}},
         h('span',{style:{color:C.muted}},'Статус:'), h('span',{style:{fontWeight:700}},cur[1]),
         h('span',{style:{fontFamily:this.sans,fontSize:11.5,fontWeight:600,color:C.muted2}},self.readerWordStatusCount(st.readerWordStatusFilter)), U.iconCaret(C.muted,open)), menu);
     return h('div',{style:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}, dd);
@@ -988,7 +1002,7 @@
         h('div',{style:{marginBottom:11}},this.readerWordSearchBar(false)),
         h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
           this.readerWordSV3(), h('div',{style:{width:1,height:18,background:C.line2}}), this.readerWordPosDropdown(false),
-          h('button',{onClick:function(){self.setState({readerWordShowInText:!st.readerWordShowInText});},title:st.readerWordShowInText?'Показывать все слова':'Только слова в тексте',style:{width:28,height:28,borderRadius:TK.radius,border:'1.5px solid '+(st.readerWordShowInText?C.terra:C.line2),background:st.readerWordShowInText?C.terra:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'background .14s,border-color .14s'}}, st.readerWordShowInText ? h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:3,strokeLinecap:'round',strokeLinejoin:'round'},h('path',{d:'M5 12l5 5L20 6'})) : null))),
+          this.readerWordShowInTextCbx())),
       h('div',{id:'readerDeskWordList',className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
         h('div',{style:{maxWidth:640,padding:'0 28px 60px'}}, this.readerWordWListBody(24))));
     var inspector = h('div',{style:{width:hasActive?316:0,flex:'0 0 auto',borderLeft:hasActive?'1px solid '+C.cardLine:'none',overflow:'hidden',background:C.card,boxShadow:hasActive?'-14px 0 30px -24px rgba(40,34,22,.5)':'none',transition:'width .18s'}},
