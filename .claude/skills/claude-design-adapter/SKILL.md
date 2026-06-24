@@ -32,6 +32,10 @@ host chrome — GATE 5).
 own and resume from what earlier modes wrote — that is what makes standalone use and the
 Wizard the same machinery.
 
+**Status — v1 (released).** Cold-agent–validated so far: `profile-project` across the export
+shapes, `reconcile` value-parity, `functionalize` build-path, GATE 4 under pressure. Remaining
+validation and polish are tracked in `TASKS.md` (with a dated Validation log).
+
 ## Modes
 
 | Mode | Stage | Input → Output | Safety gate |
