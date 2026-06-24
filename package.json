@@ -24,6 +24,7 @@
     "release:align": "npm run build:data && npm run audit:align:import && npm run check:adjudication"
   },
   "devDependencies": {
+    "jsdom": "^29.1.1",
     "vite": "^5.4.0",
     "vite-plugin-pwa": "^0.20.0",
     "vitest": "^2.0.0",

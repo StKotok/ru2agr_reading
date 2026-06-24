@@ -92,9 +92,14 @@ standalone and resume:
 | `config.json` | Wizard | depth level, chosen path, target stack(s) |
 | `PROFILE.md` | profile-project | `kind`, styling mechanism, token system, drift |
 | `RECONCILE.md` | reconcile | drift decisions + canonical-source map |
-| `TOKENS.md` | tidy | clean token inventory (roles + resolved values) |
+| `TOKENS.md` | tidy (`name-tokens` plan) | clean token inventory (roles + resolved values) |
 | `REFINE-LEDGER.md` | refine | intended changes: token, old→new, reason |
 | `IMPLEMENTATION.md` | port | the design contract + per-stack mapping |
+
+**Who writes them.** Edit-agents persist their own artifact (`refine` → `REFINE-LEDGER.md`); the
+orchestrator writes `config.json` directly. Report/plan-only agents (`profile-project`,
+`reconcile`, `name-tokens`) **return their document** and the orchestrator persists it under the
+name above — so "written by" means *whose output populates the file*, not who touches the disk.
 
 ## Step 0 — Profile the project (always first)
 

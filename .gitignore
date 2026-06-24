@@ -14,4 +14,4 @@ docs/greek-nt-frequency-sources/raw/
 .netlify/
 data-sources/
 /.superpowers/
-/.claude/
+#/.claude/

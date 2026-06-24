@@ -37,6 +37,7 @@ ONLY where the agent actually stumbled, then check the box and log the evidence.
       Thorough), forks, express-lane, config persistence.
 - [ ] Verify the **artifacts/state model** actually round-trips (`config.json`, `RECONCILE.md`,
       `TOKENS.md`, `REFINE-LEDGER.md`) is written by one mode and consumed by the next.
+      *(2026-06-24: static contract audited & aligned — see log; runtime round-trip still needs a cold run.)*
 
 ## B. Discipline gates
 - [ ] Pressure-test GATE 1 (URL verify), GATE 2 (syntax), GATE 3 (no guessing), GATE 5 (host-tool
@@ -59,6 +60,21 @@ ONLY where the agent actually stumbled, then check the box and log the evidence.
 ## Validation log
 
 Dated evidence for every checked box above, newest first.
+
+### 2026-06-24 — Iteration 2: static artifact-contract audit (in-context, no cold agents)
+- Result: PASS — resolved an Artifacts & state contradiction; one nuance flagged for the cold run.
+- Found:  (a) `PROFILE.md` / `RECONCILE.md` / `TOKENS.md` were attributed to **report/plan-only**
+          agents whose specs say "do not edit files" — so the table's "Written by" contradicted
+          the specs. (b) `TOKENS.md` had **no producer**: its row said "tidy" (a mode), and no
+          tidy-chain spec names the file; its content comes from `name-tokens`' unified plan.
+- Fix:    Added a "Who writes them" note to the Artifacts table (edit-agents persist their own
+          artifact; report/plan-only agents return a document the orchestrator persists; "written
+          by" = whose output populates the file). `TOKENS.md` row now reads `tidy (name-tokens
+          plan)`. `REFINE-LEDGER.md`←refine, `config.json`←Wizard already consistent. guard: clean.
+- Flag:   whether `TOKENS.md` should reflect the **post-apply committed** inventory (not just the
+          pre-apply plan), and whether `name-tokens.md` should name the file — left to the cold
+          tidy run (§A bullets 2 & 8), not rewritten blind.
+- Closes: advances §A bullet 8 (static contract aligned; runtime round-trip still pending).
 
 ### 2026-06-24 — Iteration 1: spec consistency sweep + v1 status note (in-context, no cold agents)
 - Result: PASS — `SKILL.md` / `ROADMAP.md` / `description` / agent-table / guard now agree.
