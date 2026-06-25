@@ -9,6 +9,32 @@
 **Tech Stack:** Vanilla JS (ES modules), CSS custom properties, Vite, Vitest, IndexedDB.
 
 **Дата согласования:** 2026-06-25
+**Последняя ревизия:** 2026-06-26 (учтены подготовительные работы)
+
+## Текущее состояние (аудит 2026-06-26)
+
+Подготовительные работы (коммиты `d108812e..HEAD`) затронули **engine и data-слои**, но не UI/дизайн:
+
+| Область | Что сделано | Влияние на план |
+|---|---|---|
+| Engine (`compose.js`, `letter-layer.js`, `rules.js`) | Добавлен параметр `script: 'cyrillic'|'latin'` для поддержки латинского исходного текста (BSB) | Не влияет на дизайн-задачи |
+| Данные (`lexicon-loader.js`) | `l.strong` → `l.strongs?.[0]` (массив), `gloss` → `ruGloss \|\| glossesBerean?.[0]` | Учесть в Task 10 (словарь) |
+| Словарь (`dictionary.js`) | Миграция legacy-ключей → lexemeId, обновлены ссылки на strongs/gloss | Фундамент для Task 10 готов |
+| Чтение (`reading.js`) | Вызов `migrateDictionaryData`, `script: 'latin'` в compose-контексте | Не влияет на дизайн-задачи |
+| Документация | Консолидация 8→4 файла (PROJECT, PIPELINE, RUNTIME, ALIGNMENT) | Не влияет |
+
+**UI/дизайн-слой НЕ изменился — все задачи плана актуальны:**
+
+| Файл | Строк | Что есть | Что нужно (по плану) |
+|---|---|---|---|
+| `tokens.css` | 139 | 2 темы (light/dark) | 12 тем + 3 контраста (Tasks 1-3) |
+| `settings.js` | 128 | `theme: 'auto'`, `applyTheme()` | 12 тем + `applyContrast()` (Task 4) |
+| `mode-widget.js` | 613 | Чип + попап | Чип `readerChipH1` + выпадашка с кружками (Task 7) |
+| `word-card.js` | 591 | `CARD_SECTIONS` (фундамент), упрощённая карточка | 8 секций + gear-меню + верт. стек + letter-card (Task 8) |
+| `dictionary.js` | 673 | Поиск, вкладки, `coreById()` | 3 дропдауна фильтрации (Task 10) |
+| `app.css` | 2032 | Стили компонентов | Анимации, редизайн (Tasks 5-13) |
+
+**Вывод:** все 15 задач плана по-прежнему актуальны. Фаза 0 (верификация baseline) — начать с неё.
 
 ## Глобальные ограничения
 
@@ -205,6 +231,8 @@ grep -E "(paper|alt|read|title|ink|inkSoft|muted|muted2|blue|blueBg|blueTx|terra
 
 **Files:** Modify: `src/ui/components/word-card.js`, `src/ui/components/bottom-sheet.js`, Create: `src/ui/components/letter-card.js`, Modify: `assets/styles/app.css`
 
+**Уже есть в production:** `CARD_SECTIONS` + `card-settings.js` (`order`, `hidden`, `labelMap`) — фундамент для gear-меню.
+
 **Ориентир:**
 - Мобильный: `readerRenderWordSheet` (bottom-sheet с 8 секциями, вертикальный стек слово+частотность, gear-меню)
 - Десктоп: `readerRenderDeskInspector` (инспектор 364px справа)
@@ -242,6 +270,8 @@ grep -E "(paper|alt|read|title|ink|inkSoft|muted|muted2|blue|blueBg|blueTx|terra
 ### Task 10: Редизайн dictionary.js — экран словаря
 
 **Files:** Modify: `src/ui/screens/dictionary.js`, `assets/styles/app.css`
+
+**Уже есть в production:** `coreById()` (lookup lexeme по Strong's), `buildWordCard()` (карточка слова с `innerHTML`), виртуальный скролл, группировка по частотности. Поля данных: `lexeme.ruGloss || lexeme.glossesBerean?.[0]` (русский глосс), `lexeme.strongs?.[0]` (массив Стронгов).
 
 **Ориентир:** `readerWordDeskContent` — поисковая строка, 3 дропдауна фильтрации (Статус, Часть речи, Чекбокс «показывать в тексте»), список слов с группировкой по частотности, карточка слова справа (desktop) / bottom-sheet (mobile).
 
