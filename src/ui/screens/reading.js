@@ -525,8 +525,9 @@ function renderWindowed() {
     chapterEl.setAttribute('data-chapter', String(ch.n));
     chapterEl.id = `ch-${ch.n}`;
 
-    const heading = document.createElement('h2');
-    heading.textContent = `Глава ${ch.n}`;
+    const heading = document.createElement('div');
+    heading.className = 'chapter-label';
+    heading.textContent = `${bookData.short || bookData.title} · глава ${ch.n}`;
     chapterEl.appendChild(heading);
 
     for (const verse of ch.verses) {
