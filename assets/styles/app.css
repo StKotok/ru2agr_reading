@@ -2394,137 +2394,175 @@ section[data-chapter] {
   background: var(--hover-bg, rgba(0,0,0,0.05));
 }
 
-/* === Theme Picker === */
-.theme-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+/* === Settings screen (прототип: readerRenderSettings) === */
 
-.tp-slots {
-  display: flex;
-  gap: 12px;
-}
-
-.tp-slot {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.875rem;
+.settings-title {
+  font-family: 'Gentium Plus', serif;
+  font-size: 1.5rem;              /* 24px mobile */
+  font-weight: 700;
   color: var(--text);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  margin-bottom: 18px;
 }
 
-.tp-slot:hover {
-  border-color: var(--border-accent);
+.settings-section-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.6875rem;           /* 11px */
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  margin-top: 18px;
+}
+
+.settings-section-label:first-child {
+  margin-top: 0;
+}
+
+/* Segmented control (mode + contrast) */
+.settings-segmented {
+  display: inline-flex;
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+
+.settings-seg-btn {
+  padding: 8px 16px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+.settings-seg-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
   box-shadow: var(--shadow-raised);
 }
 
-.tp-slot.active {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--greek-bg);
+.settings-seg-btn:hover:not(.active) {
+  color: var(--text-soft);
 }
 
-.tp-slot-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-
-.tp-slot-swatch {
+/* Theme slots */
+.settings-slots {
   display: flex;
-  gap: 2px;
-  border-radius: 4px;
-  overflow: hidden;
-  flex: 1;
-  min-width: 40px;
-  height: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.tp-strip {
-  flex: 1;
-  height: 100%;
-}
-
-.tp-slot-name {
-  font-weight: 600;
+.settings-slot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-soft);
   white-space: nowrap;
+  transition: border-color 0.12s, background 0.12s;
 }
 
-.tp-slot-chevron {
-  color: var(--muted2);
+.settings-slot:hover {
+  border-color: var(--border-accent);
+}
+
+.settings-slot-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+.settings-slot-name {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-slot-chevron {
+  flex-shrink: 0;
+  color: var(--muted);
   font-size: 0.75rem;
 }
 
-.tp-popover {
-  position: relative;
+/* Theme gallery (popover) */
+.settings-gallery {
   background: var(--surface);
   border: 1px solid var(--border-accent);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   box-shadow: var(--shadow-elevated);
   padding: 12px;
+  margin-bottom: 12px;
   animation: popover-in 0.15s ease;
 }
 
-.tp-gallery-grid {
+.settings-gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.tp-card {
+.settings-gallery-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   padding: 10px 8px;
   border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   background: transparent;
   cursor: pointer;
   font-family: inherit;
   font-size: 0.75rem;
   color: var(--text);
-  transition: border-color 0.15s, box-shadow 0.15s;
   position: relative;
+  transition: border-color 0.15s;
 }
 
-.tp-card:hover {
+.settings-gallery-card:hover {
   border-color: var(--border-accent);
-  box-shadow: var(--shadow-raised);
 }
 
-.tp-card.active {
+.settings-gallery-card.active {
   border-color: var(--primary);
   background: var(--greek-bg);
 }
 
-.tp-card-strips {
+.settings-gallery-strips {
   display: flex;
   gap: 3px;
   width: 100%;
   height: 10px;
 }
 
-.tp-card-strip {
+.settings-gallery-strip {
   flex: 1;
   border-radius: 2px;
 }
 
-.tp-card-name {
+.settings-gallery-name {
   font-weight: 500;
 }
 
-.tp-card-check {
+.settings-gallery-check {
   position: absolute;
   top: 4px;
   right: 6px;
@@ -2533,44 +2571,44 @@ section[data-chapter] {
   font-weight: 700;
 }
 
-.tp-contrast {
+/* Checkboxes */
+.settings-check-label {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
-}
-
-.tp-contrast-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  padding: 4px 0;
+  font-size: 0.875rem;
   color: var(--text);
-}
-
-.tp-contrast-row {
-  display: flex;
-  gap: 6px;
-}
-
-.tp-contrast-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  background: transparent;
-  font-family: inherit;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.tp-contrast-btn:hover {
-  background: var(--surface-card);
-  color: var(--text);
+.settings-check-label input[type="checkbox"] {
+  min-width: auto;
+  min-height: auto;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
 }
 
-    flex: 0 0 auto;
-    border-left: 1px solid var(--border);
-    background: var(--surface-card);
+/* Desktop settings */
+@media (min-width: 900px) {
+  .settings-title {
+    font-size: 1.625rem;          /* 26px */
+    margin-bottom: 22px;
+  }
+
+  .settings-section-label {
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+  }
+
+  .settings-segmented {
+    padding: 4px;
+  }
+
+  .settings-seg-btn {
+    padding: 9px 20px;
+    font-size: 0.875rem;
+    border-radius: 8px;
   }
 }
