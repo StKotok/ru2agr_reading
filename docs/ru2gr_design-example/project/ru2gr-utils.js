@@ -245,16 +245,6 @@
    * 6. СОСТОЯНИЯ ЧИПОВ РЕЖИМА
    * ================================================================ */
 
-  function getChipStates() {
-    return [
-      { id: 'rus',     label: '«Рус» — всё выключено',        desc: 'интенсивность букв 0%, слой слов выкл. Греческого слоя нет.' },
-      { id: 'alpha',   label: '«α35%» — только буквы',        desc: 'включена замена букв с указанной интенсивностью.', pct: 35 },
-      { id: 'lemma',   label: '«α35% · λέγω 137» — оба слоя', desc: 'буквы 35% + словарь; λέγω = словарная форма (леммы). 137 слов в словаре.', pct: 35, words: 'lemma', count: 137 },
-      { id: 'forms',   label: '«α35% · λέγει 137» — оба слоя, формы', desc: 'то же, но слой слов в режиме реальных форм оригинала (λέγει вместо λέγω).', pct: 35, words: 'forms', count: 137 },
-      { id: 'offline', label: '«α35% · —» — словарь без данных', desc: 'слой слов включён, но греческий текст недоступен (нет сети/данных). Словарные замены не работают.', pct: 35, words: 'offline' },
-      { id: 'greek',   label: '«Греч» — вкладка «Греческий»', desc: 'греческий текст как основной.' },
-    ];
-  }
 
   function getLiveChipState(state) {
     const pct = Math.round(state.intensity * 100);
@@ -301,8 +291,6 @@
     iconSun: iconSun,
     iconMoon: iconMoon,
     iconMonitor: iconMonitor,
-    // Чипы
-    getChipStates: getChipStates,
     getLiveChipState: getLiveChipState,
     // Константы
     THEME_LIST: THEME_LIST,

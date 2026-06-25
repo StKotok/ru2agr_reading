@@ -294,10 +294,10 @@
         h('button',{onClick:function(){this.readerShowToast('Аудио-произношение — в следующей версии');}.bind(this),style:{width:30,height:30,borderRadius:'50%',border:'1px solid '+C.line2,background:'none',cursor:'pointer',opacity:0.5,display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:C.inkSoft},h('path',{d:'M8 5v14l11-7z'})))),
       h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:13.5,color:C.muted2,marginTop:6}},'Произношение — учебное приближение, не научная реконструкция.')); }
     if (key === 'dict') { if (!cd.lemma || !cd.form || cd.form === cd.lemma) return null; return h('div',{key:key},this.readerSecLabel('Словарная форма'),
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'end',gap:'0 14px'}},
-        h('span',{style:{fontFamily:this.serif,fontSize:26,color:C.terra,textAlign:'right'}},cd.form),
+      h('div',{style:{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto minmax(0,1fr)',alignItems:'end',gap:'0 14px',minWidth:0}},
+        h('span',{style:{fontFamily:this.serif,fontSize:26,color:C.terra,textAlign:'right',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},cd.form),
         h('span',{style:{fontFamily:this.sans,fontSize:18,color:C.muted2,lineHeight:'26px'}},'→'),
-        h('span',{style:{fontFamily:this.serif,fontSize:26,color:C.blue}},cd.lemma),
+        h('span',{style:{fontFamily:this.serif,fontSize:26,color:C.blue,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},cd.lemma),
         h('span',{style:{fontFamily:this.sans,fontSize:11,color:C.muted2,textAlign:'right'}},'в тексте'),
         h('span'),
         h('span',{style:{fontFamily:this.sans,fontSize:11,color:C.muted2}},'словарная форма'))); }
@@ -333,17 +333,17 @@
       h('div',{onClick:function(){self.readerCloseSheet();},style:{position:'absolute',inset:0,background:U.alpha('#15140f',0.34),animation:'scFade .2s ease'}}),
       h('div',{onClick:function(e){e.stopPropagation();},style:{position:'absolute',left:0,right:0,bottom:0,maxHeight:'88%',background:C.paper,borderRadius:TK.sheetTopRadius,boxShadow:'0 -16px 50px -10px rgba(40,34,22,0.4)',display:'flex',flexDirection:'column',animation:'scSheetUp .3s cubic-bezier(.22,1,.36,1)'}},
         h('div',{style:{flex:'0 0 auto',display:'flex',justifyContent:'center',paddingTop:10}},h('div',{style:{width:TK.topBtnSize,height:4.5,borderRadius:3,background:C.line2}})),
-        h('div',{className:'scScroll',style:{overflowY:'auto',padding:'8px 24px 30px',position:'relative'}},
-          h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,marginTop:6}},
-            h('div',null,
-              h('div',{style:{display:'flex',alignItems:'baseline',gap:10}},
-                h('span',{style:{fontFamily:this.serif,fontSize:46,fontWeight:400,color:C.blue,lineHeight:1}},cd.form||cd.lemma),
-                (cd.rank||cd.freq) ? h('span',{style:{fontFamily:this.sans,fontSize:14,fontWeight:600,color:C.muted,whiteSpace:'nowrap'}},(cd.rank||'')+(cd.rank&&cd.freq?' · ':'')+(cd.freq?cd.freq+'×':'')+(cd.rank?'':' в НЗ')) : null),
+        h('div',{className:'scScroll',style:{overflowY:'auto',overflowX:'hidden',padding:'8px 24px 30px',position:'relative',minWidth:0,overflowWrap:'break-word'}},
+          h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,marginTop:6,minWidth:0}},
+            h('div',{style:{minWidth:0,flex:'1 1 auto'}},
+              h('div',{style:{display:'flex',flexDirection:'column',gap:2,minWidth:0}},
+                h('span',{style:{fontFamily:this.serif,fontSize:36,fontWeight:400,color:C.blue,lineHeight:1.1,maxWidth:'100%',overflow:'hidden',textOverflow:'ellipsis'}},cd.form||cd.lemma),
+                (cd.rank||cd.freq) ? h('span',{style:{fontFamily:this.sans,fontSize:12,fontWeight:600,color:C.muted,whiteSpace:'nowrap'}},(cd.rank||'')+(cd.rank&&cd.freq?' · ':'')+(cd.freq?cd.freq+'×':'')+(cd.rank?'':' в НЗ')) : null)),
             h('div',{style:{display:'flex',gap:6,flex:'0 0 auto'}},
               h('button',{onClick:function(){self.setState({gearOpen:!st.gearOpen});},style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?U.alpha(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconGear(C.inkSoft)),
               h('button',{onClick:function(){self.readerCloseSheet();},style:{width:36,height:36,borderRadius:10,border:'1px solid '+C.line,background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},h('svg',{width:17,height:17,viewBox:'0 0 24 24',fill:'none',stroke:C.inkSoft,strokeWidth:2,strokeLinecap:'round'},h('path',{d:'M6 6l12 12M18 6L6 18'}))))),
           this.readerRenderGearMenu(),
-          visible.map(function(k){ return self.readerRenderSection(k, cd); })))));
+          visible.map(function(k){ return self.readerRenderSection(k, cd); }))));
   };
 
   R.readerRenderLetterSheet = function () {
@@ -362,84 +362,6 @@
           h('div',{style:{fontFamily:this.serif,fontSize:18,color:C.ink,marginTop:4}},L.eq),
           h('button',{onClick:function(){self.readerToggleLetterKnown(cd.letter);},style:{marginTop:18,padding:'13px 22px',borderRadius:13,border:'none',cursor:'pointer',fontFamily:this.sans,fontSize:15,fontWeight:600,background:known?C.green:U.alpha(C.ink,0.06),color:known?'#fff':C.ink,display:'inline-flex',alignItems:'center',gap:8}},known?'Освоена ✓':'Я знаю эту букву'),
           h('div',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:14,color:C.muted2,marginTop:18,lineHeight:1.5}},'Произношение — учебное приближение, не научная реконструкция.'))));
-  };
-
-  /* ---------- gallery previews ---------- */
-
-  R.readerGalModeD = function () {
-    var C = this.CR, h = React.createElement, cur = this.state.mode, self = this;
-    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:11}},
-      h('div',{style:{display:'flex',alignItems:'center'}},[1,2,3,4].map(function(n,i){ var on = n <= cur; return h(React.Fragment,{key:n},i>0?h('span',{style:{width:18,height:2,background:on?C.terra:U.alpha(C.ink,0.12)}}):null,h('button',{onClick:function(){self.readerSetMode(n);},title:self.modeNames[n-1],style:{width:n===cur?15:11,height:n===cur?15:11,borderRadius:'50%',border:'none',background:on?C.terra:U.alpha(C.ink,0.18),cursor:'pointer',padding:0,transition:'all .2s'}})); })),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'Шаг '+cur+' · '+this.modeShort[cur-1]));
-  };
-
-  R.readerGalModeE = function () {
-    var C = this.CR, h = React.createElement, cur = this.state.mode, self = this;
-    var arrow = function(dir,to,dis){ return h('button',{onClick:function(){if(!dis)self.readerSetMode(to);},disabled:dis,style:{width:26,height:26,borderRadius:'50%',border:'none',background:C.paper,boxShadow:'0 1px 2px rgba(40,34,22,0.12)',cursor:dis?'default':'pointer',opacity:dis?0.35:1,display:'flex',alignItems:'center',justifyContent:'center',padding:0}},U.iconChevH(C.inkSoft,dir)); };
-    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:10}},
-      h('div',{style:{display:'inline-flex',alignItems:'center',gap:8,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:22,padding:'5px 7px'}},
-        arrow('left',Math.max(1,cur-1),cur===1),
-        h('span',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:700,color:C.ink,minWidth:46,textAlign:'center'}},'Шаг '+cur+'/4'),
-        arrow('right',Math.min(4,cur+1),cur===4)),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},this.modeNames[cur-1]));
-  };
-
-  R.readerGalModeF = function () {
-    var C = this.CR, h = React.createElement, cur = this.state.mode, self = this;
-    var inits = ['Бкв','Лем','Фрм','Грч'];
-    return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:10}},
-      h('div',{style:{display:'inline-flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:TK.radius,padding:2}},
-        inits.map(function(s,i){ var on = cur === i+1; return h('button',{key:i,onClick:function(){self.readerSetMode(i+1);},title:self.modeNames[i],style:{padding:'4px 9px',height:26,borderRadius:7,border:'none',background:on?C.ink:'transparent',color:on?C.paper:C.muted,fontFamily:self.sans,fontSize:12,fontWeight:700,cursor:'pointer'}},s); })),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'Шаг '+cur+' · '+this.modeNames[cur-1]));
-  };
-
-  R.readerGalModeA = function () {
-    var C = this.CR, h = React.createElement;
-    var seg = h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:TK.radius,padding:3,width:'max-content'}},
-      [1,2,3,4].map(function(n){ return h('div',{key:n,style:{width:28,height:28,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:13,background:n===2?C.ink:'transparent',color:n===2?C.paper:C.muted}},n); },this));
-    var menu = h('div',{style:{marginTop:12,border:'1px solid '+C.line2,borderRadius:12,overflow:'hidden'}},
-      this.modeNames.map(function(nm,i){ return h('div',{key:i,style:{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',background:i===1?U.alpha(C.terra,0.08):'transparent',borderBottom:i<3?'1px solid '+C.line:'none'}},
-        h('span',{style:{width:22,height:22,borderRadius:7,background:i===1?C.ink:U.alpha(C.ink,0.07),color:i===1?C.paper:C.muted,fontFamily:this.sans,fontWeight:700,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center'}},i+1),
-        h('span',{style:{fontFamily:this.sans,fontSize:12.5,color:C.ink,fontWeight:i===1?600:400}},nm)); },this));
-    return h('div',null,h('div',{style:{display:'flex',alignItems:'center',gap:10}},seg,h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'Шаг 2 ▾')),menu);
-  };
-
-  R.readerGalModeB = function () {
-    var C = this.CR, h = React.createElement, cur = this.state.mode, self = this;
-    var labels = this.modeShort;
-    return h('div',null,
-      h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:TK.lsLabel,textTransform:'uppercase',color:C.muted,marginBottom:14}},'Погружение'),
-      h('div',{style:{position:'relative',height:8,background:U.alpha(C.ink,0.07),borderRadius:8,margin:'0 6px'}},
-        h('div',{style:{position:'absolute',left:0,top:0,bottom:0,width:((cur-1)/3*100)+'%',background:C.terra,borderRadius:8,transition:'width .25s'}}),
-        [0,1,2,3].map(function(i){ return h('button',{key:i,onClick:function(){self.readerSetMode(i+1);},style:{position:'absolute',left:'calc('+(i/3*100)+'% - 9px)',top:-5,width:18,height:18,borderRadius:'50%',border:'2px solid '+(i+1<=cur?C.terra:C.muted2),background:i+1<=cur?C.terra:C.paper,cursor:'pointer',padding:0}}); })),
-      h('div',{style:{display:'flex',justifyContent:'space-between',marginTop:10}},labels.map(function(l,i){ return h('button',{key:i,onClick:function(){self.readerSetMode(i+1);},style:{background:'none',border:'none',cursor:'pointer',fontFamily:self.sans,fontSize:11.5,fontWeight:cur===i+1?700:500,color:cur===i+1?C.terra:C.muted,padding:0}},l); })));
-  };
-
-  R.readerGalModeC = function () {
-    var C = this.CR, h = React.createElement, cur = this.state.mode;
-    return h('div',null,
-      h('div',{style:{display:'flex',gap:7,flexWrap:'wrap'}},this.modeShort.map(function(l,i){ var on = cur === i+1; return h('button',{key:i,onClick:function(){this.readerSetMode(i+1);}.bind(this),style:{padding:'8px 14px',borderRadius:20,border:'1px solid '+(on?'transparent':C.line2),background:on?C.ink:'transparent',color:on?C.paper:C.inkSoft,fontFamily:this.sans,fontSize:13,fontWeight:600,cursor:'pointer'}},l); },this)),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,marginTop:14,lineHeight:1.4}},this.modeDesc[cur-1]));
-  };
-
-  R.readerGalTop1 = function () {
-    var C = this.CR, h = React.createElement;
-    return h('div',null,
-      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px 6px'}},
-        h('div',{style:{display:'flex',alignItems:'baseline',gap:7}},h('span',{style:{fontFamily:this.serif,fontSize:20,fontWeight:700,color:C.ink}},'Иоанн'),h('span',{style:{fontFamily:this.sans,fontSize:12,color:C.muted}},'глава 1 ▾')),
-        h('div',{style:{display:'flex',gap:6}},h('div',{style:{width:32,height:32,borderRadius:TK.radius,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(C.inkSoft)),h('div',{style:{width:32,height:32,borderRadius:TK.radius,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center',gap:2.5}},[0,1,2].map(function(i){ return h('span',{key:i,style:{width:3,height:3,borderRadius:'50%',background:C.inkSoft}}); })))),
-      h('div',{style:{display:'flex',alignItems:'center',gap:9,padding:'6px 16px 14px',borderTop:'1px solid '+C.line,marginTop:4}},
-        h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},[1,2,3,4].map(function(n){ return h('span',{key:n,style:{width:26,height:26,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:12.5,background:n===1?C.ink:'transparent',color:n===1?C.paper:C.muted}},n); },this)),
-        h('div',{style:{flex:1}},h('div',{style:{fontFamily:this.sans,fontSize:10,fontWeight:700,letterSpacing:'0.1em',color:C.muted2,textTransform:'uppercase'}},'Шаг 1'),h('div',{style:{fontFamily:this.sans,fontSize:13.5,fontWeight:600,color:C.ink}},'Только греческие буквы')),
-        U.iconChev(C.muted)));
-  };
-
-  R.readerGalTop2 = function () {
-    var C = this.CR, h = React.createElement;
-    return h('div',{style:{display:'flex',alignItems:'center',gap:10,padding:'16px 16px'}},
-      h('div',{style:{display:'flex',alignItems:'baseline',gap:5}},h('span',{style:{fontFamily:this.serif,fontSize:18,fontWeight:700,color:C.ink}},'Иоанн'),U.iconChev(C.muted)),
-      h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('div',{style:{display:'flex',gap:2,background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},[1,2,3,4].map(function(n){ return h('span',{key:n,style:{width:26,height:26,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:this.sans,fontWeight:700,fontSize:12.5,background:n===2?C.ink:'transparent',color:n===2?C.paper:C.muted}},n); },this))),
-      h('div',{style:{width:32,height:32,borderRadius:TK.radius,border:'1px solid '+C.line,display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(C.inkSoft)));
   };
 
   R.readerCardSections = function (cd) {
@@ -546,11 +468,11 @@
     var C = this.CR, h = React.createElement, st = this.state, cd = st.card, self = this;
     var body;
     if (st.sheet === 'word' && cd) {
-      body = h('div',{className:'scScroll',style:{overflowY:'auto',padding:'22px 24px 32px',position:'relative'}},
-        h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}},
-          h('div',null,
-            h('div',{style:{display:'flex',alignItems:'baseline',gap:10}},
-              h('span',{style:{fontFamily:this.serif,fontSize:44,color:C.blue,lineHeight:1}},cd.form||cd.lemma),
+      body = h('div',{className:'scScroll',style:{overflowY:'auto',overflowX:'hidden',padding:'22px 24px 32px',position:'relative',minWidth:0,overflowWrap:'break-word'}},
+        h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,minWidth:0}},
+          h('div',{style:{minWidth:0,flex:'1 1 auto'}},
+            h('div',{style:{display:'flex',flexDirection:'column',gap:2,minWidth:0}},
+              h('span',{style:{fontFamily:this.serif,fontSize:44,color:C.blue,lineHeight:1,maxWidth:'100%',overflow:'hidden',textOverflow:'ellipsis'}},cd.form||cd.lemma),
               (cd.rank||cd.freq) ? h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:600,color:C.muted,whiteSpace:'nowrap'}},(cd.rank||'')+(cd.rank&&cd.freq?' · ':'')+(cd.freq?cd.freq+'×':'')+(cd.rank?'':' в НЗ')) : null)),
           h('div',{style:{display:'flex',gap:6,flex:'0 0 auto'}},
             h('button',{onClick:function(){self.setState({gearOpen:!st.gearOpen});},style:{width:TK.inspBtnSize,height:TK.inspBtnSize,borderRadius:10,border:'1px solid '+C.line,background:st.gearOpen?U.alpha(C.ink,0.06):'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconGear(C.inkSoft)),
@@ -598,130 +520,7 @@
       st.tab === 'dict' ? this.readerWordToastEl(false) : this.readerRenderToast());
   };
 
-  /* ---------- status chip variants ---------- */
-
-  R.readerChipStates = function () { return U.getChipStates(); };
   R.readerLiveChipState = function () { return U.getLiveChipState(this.state); };
-
-  R.readerChip1 = function (s) {
-    var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipPad,height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
-    if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    var alpha = h('span',{key:'a',style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
-      h('span',{style:{color:C.ink,marginLeft:1}},s.pct+'%'));
-    if (s.id === 'alpha') return wrap(false,[alpha]);
-    var sep = h('span',{key:'s',style:{color:C.muted2,margin:'0 8px'}},'·');
-    var words;
-    if (s.words === 'offline') {
-      words = h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:U.alpha(C.terra,0.55)}},'—');
-    } else {
-      words = h('span',{key:'w',style:{display:'inline-flex',alignItems:'baseline'}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
-    }
-    return wrap(false,[alpha,sep,words]);
-  };
-
-  R.readerChip2 = function (s) {
-    var C = this.CR, h = React.createElement;
-    var shell = function(kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',gap:4,fontFamily:this.sans,fontWeight:600,fontSize:13}},kids); };
-    var zone = function(bg,bd,col,kids,key){ return h('div',{key:key,style:{display:'inline-flex',alignItems:'center',gap:5,background:bg,border:'1px solid '+bd,borderRadius:8,padding:'4px 10px',height:28,color:col,whiteSpace:'nowrap',lineHeight:1}},kids); };
-    if (s.id === 'rus') return shell([zone(U.alpha(C.ink,0.045),C.line2,C.muted,[h('span',{key:1,style:{letterSpacing:TK.lsChip}},'Рус')],'z')]);
-    if (s.id === 'greek') return shell([zone(C.blue,C.blue,C.paper,[h('span',{key:1,style:{fontFamily:this.serif,fontWeight:700,fontSize:14}},'Греческий')],'z')]);
-    var lz = zone(C.blueBg,U.alpha(C.blue,0.28),C.blueTx,[
-      h('span',{key:1,style:{fontFamily:this.serif,fontSize:15,color:C.blue}},'α'),
-      h('span',{key:2},s.pct+'%')],'l');
-    if (s.id === 'alpha') return shell([lz]);
-    var wz;
-    if (s.words === 'offline') {
-      wz = h('div',{key:'w',style:{display:'inline-flex',alignItems:'center',gap:5,background:'transparent',border:'1px dashed '+U.alpha(C.terra,0.45),borderRadius:8,padding:'4px 10px',height:28,color:U.alpha(C.terra,0.85),whiteSpace:'nowrap',fontSize:12.5,lineHeight:1}},
-        h('span',{style:{fontFamily:this.serif,fontSize:15}},'—'),h('span',null,'нет данных'));
-    } else {
-      wz = zone(C.terraSoft,U.alpha(C.terra,0.32),C.terra,[
-        h('span',{key:1,style:{fontFamily:this.serif,fontStyle:'italic',fontSize:14}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{key:2,style:{opacity:0.65}},s.count)],'w');
-    }
-    return shell([lz,wz]);
-  };
-
-  R.readerChip3 = function (s) {
-    var C = this.CR, h = React.createElement;
-    var ring = function(pct){ var r = 7.5, c = 2*Math.PI*r; return h('svg',{width:19,height:19,viewBox:'0 0 19 19'},
-      h('circle',{cx:9.5,cy:9.5,r:r,fill:'none',stroke:U.alpha(C.blue,0.16),strokeWidth:2.6}),
-      h('circle',{cx:9.5,cy:9.5,r:r,fill:'none',stroke:C.blue,strokeWidth:2.6,strokeLinecap:'round',strokeDasharray:c,strokeDashoffset:c*(1-pct/100),transform:'rotate(-90 9.5 9.5)'})); };
-    var wrap = function(kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',gap:7,background:U.alpha(C.ink,0.045),border:'1px solid '+C.line2,borderRadius:20,padding:'4px 13px 4px 6px',height:30,fontFamily:this.sans,fontSize:13,fontWeight:600,whiteSpace:'nowrap'}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap([
-      h('span',{key:1,style:{width:17,height:17,marginLeft:1,borderRadius:'50%',border:'2px solid '+C.muted2,display:'inline-block'}}),
-      h('span',{key:2,style:{color:C.muted}},'Рус')]);
-    if (s.id === 'greek') return wrap([
-      h('span',{key:1,style:{width:18,height:18,marginLeft:1,borderRadius:'50%',background:C.blue,display:'inline-flex',alignItems:'center',justifyContent:'center',color:C.paper,fontFamily:this.serif,fontSize:12,fontWeight:700}},'Γ'),
-      h('span',{key:2,style:{color:C.ink}},'Греческий')]);
-    var ringEl = h('span',{key:'r',style:{position:'relative',display:'inline-flex',alignItems:'center',justifyContent:'center',marginLeft:1}},ring(s.pct),
-      h('span',{style:{position:'absolute',fontFamily:this.serif,fontSize:9,color:C.blue,lineHeight:1}},'α'));
-    var pctEl = h('span',{key:'p',style:{color:C.ink}},s.pct+'%');
-    if (s.id === 'alpha') return wrap([ringEl,pctEl]);
-    var div = h('span',{key:'d',style:{width:1,height:14,background:C.line2,margin:'0 1px'}});
-    var badge;
-    if (s.words === 'offline') {
-      badge = h('span',{key:'b',style:{display:'inline-flex',alignItems:'center',gap:5,color:U.alpha(C.terra,0.8)}},
-        h('span',{style:{width:7,height:7,borderRadius:'50%',border:'1.5px dashed '+C.terra,display:'inline-block'}}),
-        h('span',{style:{fontFamily:this.serif,fontSize:15}},'—'));
-    } else {
-      badge = h('span',{key:'b',style:{display:'inline-flex',alignItems:'center',gap:5}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:14,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12}},s.count));
-    }
-    return wrap([ringEl,pctEl,div,badge]);
-  };
-
-  R.readerChip4 = function (s) {
-    var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipPad,height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
-    if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    var fillGlyph = h('span',{key:'g',style:{position:'relative',display:'inline-block',width:14,height:18,marginRight:6}},
-      h('span',{style:{position:'absolute',inset:0,fontFamily:this.serif,fontSize:18,color:U.alpha(C.blue,0.2),lineHeight:'18px',textAlign:'center'}},'α'),
-      h('span',{style:{position:'absolute',inset:0,fontFamily:this.serif,fontSize:18,color:C.blue,lineHeight:'18px',textAlign:'center',clipPath:'inset('+(100-s.pct)+'% 0 0 0)',WebkitClipPath:'inset('+(100-s.pct)+'% 0 0 0)'}},'α'));
-    var alpha = h('span',{key:'a',style:{display:'inline-flex',alignItems:'center'}},fillGlyph,h('span',{style:{color:C.ink}},s.pct+'%'));
-    if (s.id === 'alpha') return wrap(false,[alpha]);
-    var sep = h('span',{key:'s',style:{color:C.muted2,margin:'0 8px'}},'·');
-    var words;
-    if (s.words === 'offline') {
-      words = h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:U.alpha(C.terra,0.55)}},'—');
-    } else {
-      words = h('span',{key:'w',style:{display:'inline-flex',alignItems:'baseline'}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
-    }
-    return wrap(false,[alpha,sep,words]);
-  };
-
-  R.readerChip5 = function (s) {
-    var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipPad,height:30,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
-    if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    var n = 5, active = Math.max(1,Math.round(s.pct/100*n));
-    var bars = h('span',{key:'b',style:{display:'inline-flex',alignItems:'flex-end',gap:2,height:13,marginRight:7}},
-      [0,1,2,3,4].map(function(i){ return h('span',{key:i,style:{width:2.5,height:5+i*2,borderRadius:1.2,background:i<active?C.blue:U.alpha(C.ink,0.14)}}); }));
-    var alpha = h('span',{key:'a',style:{display:'inline-flex',alignItems:'center'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue,marginRight:6}},'α'),
-      bars, h('span',{style:{color:C.ink}},s.pct+'%'));
-    if (s.id === 'alpha') return wrap(false,[alpha]);
-    var sep = h('span',{key:'s',style:{color:C.muted2,margin:'0 8px'}},'·');
-    var words;
-    if (s.words === 'offline') {
-      words = h('span',{key:'w',style:{fontFamily:this.serif,fontSize:16,color:U.alpha(C.terra,0.55)}},'—');
-    } else {
-      words = h('span',{key:'w',style:{display:'inline-flex',alignItems:'baseline'}},
-        h('span',{style:{fontFamily:this.serif,fontStyle:'italic',fontSize:15,color:C.terra}},s.words==='forms'?'λέγει':'λέγω'),
-        h('span',{style:{color:C.muted,fontSize:12.5,marginLeft:5}},s.count));
-    }
-    return wrap(false,[alpha,sep,words]);
-  };
-
   /* ---- horizontal-bar indicator variants ---- */
 
   R.reader_hbarWord = function (s) {
@@ -751,57 +550,6 @@
     var sep = h('span',{key:'s',style:{color:C.muted2,margin:'0 9px'}},'·');
     return wrap(false,[left,sep,this.reader_hbarWord(s)]);
   };
-
-  R.readerChipH2 = function (s) {
-    var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipHPad,minHeight:TK.chipMinHeight,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
-    if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    var row = h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
-      h('span',{style:{color:C.ink,marginLeft:1}},s.pct+'%'));
-    var n = 8, active = Math.max(1,Math.round(s.pct/100*n));
-    var bar = h('span',{key:'bar',style:{display:'flex',gap:2,marginTop:4}},
-      [0,1,2,3,4,5,6,7].map(function(i){ return h('span',{key:i,style:{flex:1,height:3.5,borderRadius:1.5,background:i<active?C.blue:U.alpha(C.ink,0.13)}}); }));
-    var left = h('span',{key:'l',style:{display:'inline-flex',flexDirection:'column',alignItems:'stretch'}},row,bar);
-    if (s.id === 'alpha') return wrap(false,[left]);
-    var sep = h('span',{key:'s',style:{color:C.muted2,margin:'0 9px'}},'·');
-    return wrap(false,[left,sep,this.reader_hbarWord(s)]);
-  };
-
-  R.readerChipH3 = function (s) {
-    var C = this.CR, h = React.createElement;
-    var wrap = function(filled,kids){ return h('div',{style:{display:'inline-flex',alignItems:'center',background:filled?C.ink:U.alpha(C.ink,0.045),border:'1px solid '+(filled?C.ink:C.line2),borderRadius:TK.radius,padding:TK.chipHPad,minHeight:TK.chipMinHeight,fontFamily:this.sans,fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',lineHeight:1}},kids); }.bind(this);
-    if (s.id === 'rus') return wrap(false,[h('span',{key:1,style:{color:C.muted,letterSpacing:TK.lsChip}},'Рус')]);
-    if (s.id === 'greek') return wrap(true,[h('span',{key:1,style:{color:C.paper,fontFamily:this.serif,fontSize:15,fontWeight:700}},'Греч')]);
-    var row = h('span',{key:'ar',style:{display:'inline-flex',alignItems:'baseline'}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,color:C.blue}},'α'),
-      h('span',{style:{color:C.ink,marginLeft:1}},s.pct+'%'));
-    var bar = h('span',{key:'bar',style:{display:'block',height:5,borderRadius:5,background:U.alpha(C.blue,0.14),marginTop:4,position:'relative'}},
-      h('span',{style:{position:'absolute',left:0,top:0,bottom:0,width:s.pct+'%',background:C.blue,borderRadius:5}}),
-      h('span',{style:{position:'absolute',left:'calc('+s.pct+'% - 3px)',top:'50%',transform:'translateY(-50%)',width:7,height:7,borderRadius:'50%',background:C.paper,border:'1.5px solid '+C.blue}}));
-    var left = h('span',{key:'l',style:{display:'inline-flex',flexDirection:'column',alignItems:'stretch'}},row,bar);
-    if (s.id === 'alpha') return wrap(false,[left]);
-    var sep = h('span',{key:'s',style:{color:C.muted2,margin:'0 9px'}},'·');
-    return wrap(false,[left,sep,this.reader_hbarWord(s)]);
-  };
-
-  R.readerChipGallery = function (fn) {
-    var C = this.CR, h = React.createElement, self = this;
-    var states = this.readerChipStates();
-    var lemma = states[2];
-    var bar = h('div',{style:{display:'flex',alignItems:'center',gap:9,padding:'9px 13px',background:C.read,border:'1px solid '+C.line,borderRadius:12,marginBottom:16}},
-      h('span',{style:{fontFamily:this.serif,fontSize:16,fontWeight:700,color:C.ink}},'Иоанн 1'),
-      h('span',{style:{transform:'translateY(1px)',flex:'0 0 auto'}},U.iconChev(C.muted2)),
-      h('span',{style:{flex:1}}),
-      fn.call(self,lemma));
-    var rows = states.map(function(s,i){ return h('div',{key:i,style:{padding:'13px 0',borderBottom:i<states.length-1?'1px solid '+C.line:'none'}},
-      h('div',{style:{marginBottom:8}},fn.call(self,s)),
-      h('div',{style:{fontFamily:this.sans,fontSize:12,color:C.muted,lineHeight:1.45}},
-        h('b',{style:{color:C.inkSoft,fontWeight:700}},s.label),h('br'),s.desc)); },self);
-    return h('div',null,bar,h('div',null,rows));
-  };
-
   /* ---------- compose ---------- */
 
   R.readerRenderContent = function () {
@@ -1050,7 +798,7 @@
       h('div',{id:'readerDeskWordList',className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
         h('div',{style:{maxWidth:640,padding:'0 28px 60px'}}, this.readerWordWListBody(24))));
     var inspector = h('div',{style:{width:hasActive?316:0,flex:'0 0 auto',borderLeft:hasActive?'1px solid '+C.cardLine:'none',overflow:'hidden',background:C.card,boxShadow:hasActive?'-14px 0 30px -24px rgba(40,34,22,.5)':'none',transition:'width .18s'}},
-      hasActive ? h('div',{className:'scScroll',style:{width:316,height:'100%',overflowY:'auto'}},this.readerWordWCard(st.readerWordActiveKey)) : null);
+      hasActive ? h('div',{className:'scScroll',style:{width:316,height:'100%',overflowY:'auto',overflowX:'hidden'}},this.readerWordWCard(st.readerWordActiveKey)) : null);
     return h('div',{'data-section':'desk-word-content',id:'readerDeskMain',style:{flex:1,minWidth:0,display:'flex',position:'relative',overflow:'hidden'}}, listPanel, inspector);
   };
 
