@@ -1,9 +1,11 @@
 # CLAUDE.md
 
 Этот файл — мостик. Все правила ИИ-кодинга живут в [AGENTS.md](AGENTS.md) —
-прочитай и соблюдай его до любого изменения кода. Продукт и архитектура — в
-[docs/development/DEVELOPMENT_1.md](docs/development/DEVELOPMENT_1.md)
-(разделы 3–4; roadmap'ы выполнены и лежат в `docs/development/` как архив).
+прочитай и соблюдай его до любого изменения кода. Продукт, архитектура и текущее
+состояние — в [docs/PROJECT.md](docs/PROJECT.md) (точка входа). Технические
+справочники: [docs/PIPELINE.md](docs/PIPELINE.md) (сборка данных),
+[docs/RUNTIME.md](docs/RUNTIME.md) (приложение),
+[docs/ALIGNMENT.md](docs/ALIGNMENT.md) (выравнивание: план + история + шпаргалка).
 
 Быстрый гейт после каждого изменения:
 
