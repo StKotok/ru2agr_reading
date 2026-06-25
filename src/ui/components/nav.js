@@ -1,12 +1,12 @@
 import { navigate } from '../../router.js';
-import { iconSettings } from './icons.js';
+import { iconRead, iconWords, iconProgress, iconGear, iconInfo } from './icons.js';
 
 const TABS = [
-  { id: 'reading', label: 'Читать', hash: '#/read/john' },
-  { id: 'dictionary', label: 'Слова', hash: '#/dictionary' },
-  { id: 'progress', label: 'Прогресс', hash: '#/progress' },
-  { id: 'settings', label: iconSettings(20), ariaLabel: 'Настройки', hash: '#/settings' },
-  { id: 'about', label: 'О', hash: '#/about' },
+  { id: 'reading',    label: 'Читать',    icon: iconRead,     hash: '#/read/john' },
+  { id: 'dictionary', label: 'Слова',     icon: iconWords,    hash: '#/dictionary' },
+  { id: 'progress',   label: 'Прогресс',  icon: iconProgress, hash: '#/progress' },
+  { id: 'settings',   label: 'Настр',     icon: iconGear,     hash: '#/settings' },
+  { id: 'about',      label: 'О',         icon: iconInfo,     hash: '#/about' },
 ];
 
 export function createNav(store) {
@@ -17,8 +17,11 @@ export function createNav(store) {
   function render(screen) {
     nav.innerHTML = TABS.map(t =>
       `<button class="nav-tab ${t.id === screen ? 'active' : ''}"
-               data-screen="${t.id}" aria-current="${t.id === screen ? 'page' : 'false'}"${t.ariaLabel ? ` aria-label="${t.ariaLabel}"` : ''}>
-         ${t.label}
+               data-screen="${t.id}"
+               aria-current="${t.id === screen ? 'page' : 'false'}"
+               aria-label="${t.label}">
+         <span class="nav-tab-icon">${t.icon(20)}</span>
+         <span class="nav-tab-label">${t.label}</span>
        </button>`
     ).join('');
   }

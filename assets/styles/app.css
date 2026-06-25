@@ -102,12 +102,16 @@ h3 {
   align-items: center;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 4px 8px;
+  padding: 6px 8px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
   position: sticky;
   bottom: 0;
   z-index: 100;
+  height: 56px;
+  box-sizing: content-box;
 }
 
+/* Desktop: sidebar */
 @media (min-width: 900px) {
   .app-nav {
     flex-direction: column;
@@ -117,35 +121,47 @@ h3 {
     position: sticky;
     top: 0;
     bottom: auto;
-    min-width: 200px;
-    max-width: 240px;
+    width: 236px;
+    min-width: 236px;
+    max-width: 236px;
     height: 100dvh;
     padding: 16px 12px;
     gap: 4px;
+    background: var(--surface-sidebar);
   }
 }
 
 .nav-tab {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   min-width: 44px;
   min-height: 44px;
-  padding: 8px 16px;
+  padding: 6px 10px;
   border: none;
   background: transparent;
   color: var(--muted);
   font-family: inherit;
-  font-size: 0.9375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: background-color 0.15s, color 0.15s, transform 0.1s ease;
   touch-action: manipulation;
+  flex: 1;
 }
 
-.nav-tab svg {
+.nav-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  vertical-align: middle;
+}
+
+.nav-tab-label {
+  white-space: nowrap;
 }
 
 .nav-tab:hover {
@@ -155,9 +171,13 @@ h3 {
 
 .nav-tab.active,
 .nav-tab[aria-current="page"] {
-  background-color: var(--selection);
   color: var(--primary);
   font-weight: 600;
+}
+
+.nav-tab.active .nav-tab-icon,
+.nav-tab[aria-current="page"] .nav-tab-icon {
+  color: var(--primary);
 }
 
 .nav-tab:active {
@@ -170,11 +190,23 @@ h3 {
   outline-offset: -2px;
 }
 
+/* Desktop: horizontal tab layout */
 @media (min-width: 900px) {
   .nav-tab {
+    flex-direction: row;
     justify-content: flex-start;
+    gap: 10px;
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    flex: 0 0 auto;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .nav-tab.active,
+  .nav-tab[aria-current="page"] {
+    background: var(--greek-bg);
   }
 }
 
@@ -526,34 +558,94 @@ p, h2, h3, span {
 .top-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 0;
+  gap: 10px;
+  height: 52px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
-  flex-wrap: wrap;
   position: sticky;
   top: 0;
-  background: var(--surface);
+  background: var(--surface-titlebar);
   z-index: 20;
 }
 
 .top-bar-btn {
   min-width: 44px;
-  min-height: 44px;
+  min-height: 36px;
   padding: 6px 12px;
   font-size: 0.8125rem;
+  border-radius: var(--radius-md);
 }
 
+/* Book selector */
+.book-selector {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-greek);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+/* Simple-view (eye) button */
 .top-bar-btn[aria-pressed="true"] {
-  background: var(--primary);
-  color: var(--on-primary);
-  border-color: var(--primary);
+  background: var(--greek-word-bg);
+  color: var(--greek-word);
+  border-color: var(--greek-word);
 }
 
 .top-bar-placeholder {
   font-size: 0.8125rem;
   color: var(--muted);
   padding: 6px 4px;
+}
+
+/* Book dropdown */
+.book-dropdown {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+  z-index: 30;
+  padding: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.book-dropdown-group {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted2);
+  padding: 8px 10px 4px;
+}
+
+.book-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.book-dropdown-item:hover {
+  background: var(--surface-card);
 }
 
 /* Book dropdown */
@@ -837,13 +929,13 @@ section[data-chapter] {
   position: relative;
 }
 
-/* --- Строка 1: греческая форма + частотность --- */
+/* --- Строка 1: греческая форма + частотность (вертикальный стек) --- */
 .word-card-form-row {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 2px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-bottom: 4px;
 }
 
 .word-card-form-row .word-card-form {
@@ -852,16 +944,19 @@ section[data-chapter] {
 
 .word-card-form-row .word-card-freq {
   flex-shrink: 0;
-  margin-left: auto;
+  font-size: 0.8125rem;
 }
 
 .word-card-form {
   font-family: 'Gentium Plus', serif;
-  font-size: 2.25rem;        /* 36px */
+  font-size: 2.25rem;        /* 36px — mobile */
   color: var(--greek);
-  line-height: 1.2;
+  line-height: 1.1;
   overflow-wrap: anywhere;
   hyphens: auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 380px) {
@@ -872,7 +967,7 @@ section[data-chapter] {
 
 @media (min-width: 900px) {
   .word-card-form {
-    font-size: 2.5rem;        /* 40px на десктопе */
+    font-size: 2.75rem;        /* 44px на десктопе */
   }
 }
 
@@ -1081,29 +1176,45 @@ section[data-chapter] {
   flex: 1;
   min-width: 0;
   min-height: 40px;
-  padding: 8px 4px;
-  border-radius: 8px;
+  padding: 9px 4px;
+  border-radius: 10px;
   font-family: inherit;
   font-size: 0.8125rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
   text-align: center;
   white-space: nowrap;
-}
-
-.status-btn.status-new {
-  background: var(--surface);
+  background: transparent;
   color: var(--muted);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
 }
 
-.status-btn.status-new:hover {
-  background: var(--selection);
+.status-btn:hover {
+  background: var(--surface-card);
   color: var(--text);
 }
 
+.status-btn.active {
+  color: #fff;
+  border-color: transparent;
+}
+
 .status-btn.status-new.active {
-  background: var(--selection);
+  background: var(--text);
+  color: var(--surface);
+  border-color: var(--text);
+}
+
+.status-btn.status-learning.active {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.status-btn.status-known.active {
+  background: var(--status-known);
+  border-color: var(--status-known);
+}
 
 /* --- Скрытие секций карточки --- */
 .word-card > [data-section].is-hidden {
@@ -1327,19 +1438,21 @@ section[data-chapter] {
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 5px 11px;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
   background: var(--surface-card);
   cursor: pointer;
   font-family: system-ui, sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1;
   user-select: none;
-  min-height: 32px;
-  transition: transform 0.1s ease;
+  min-height: 30px;
+  color: var(--text-soft);
+  transition: transform 0.1s ease, box-shadow 0.15s;
   touch-action: manipulation;
+  white-space: nowrap;
 }
 
 .mode-widget-chip:hover {
