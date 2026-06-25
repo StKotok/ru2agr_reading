@@ -119,12 +119,7 @@ function renderThemeSection() {
       card.className = 'settings-gallery-card' + (slug === currentTheme ? ' active' : '');
       const label = themeLabel(slug);
       card.innerHTML = `
-        <span class="settings-gallery-strips">
-          <span class="settings-gallery-strip" style="background:var(--paper-${slug},#ece7dd)"></span>
-          <span class="settings-gallery-strip" style="background:var(--ink-${slug},#272320)"></span>
-          <span class="settings-gallery-strip" style="background:var(--blue-${slug},#2f5d85)"></span>
-          <span class="settings-gallery-strip" style="background:var(--terra-${slug},#bb763c)"></span>
-        </span>
+        <span class="settings-gallery-strips">${themeStrips(slug)}</span>
         <span class="settings-gallery-name">${label}</span>
         ${slug === currentTheme ? '<span class="settings-gallery-check">✓</span>' : ''}
       `;
@@ -256,6 +251,27 @@ const THEME_LABELS = {
   dark: 'Тёмная', night: 'Ночь', coal: 'Уголь'
 };
 
+// Жёсткие цвета для превью тем (не зависят от текущей темы)
+const THEME_COLORS = {
+  pergament: ['#ECE7DD','#272320','#2f5d85','#bb763c'],
+  sepia:     ['#E9DFC8','#36291a','#39627a','#b3652b'],
+  ivory:     ['#FAF8F3','#2a2722','#2f5d85','#c0723a'],
+  fog:       ['#E8E8EB','#25262b','#3a5f8a','#b06a45'],
+  sea:       ['#E2ECF0','#1f2a30','#2c6e8f','#c07a45'],
+  forest:    ['#E6EADD','#232a1f','#3a6079','#b07239'],
+  rose:      ['#F1E4E1','#2e2422','#5a5f93','#bb5e54'],
+  lavender:  ['#E9E5F0','#28242e','#5258a0','#b06a8a'],
+  sunset:    ['#F0E2D4','#34261c','#44708a','#c4622f'],
+  dark:      ['#26231d','#ece6da','#5a93cc','#d99a5f'],
+  night:     ['#1b2230','#e3e9f2','#5fa0d6','#d99a5f'],
+  coal:      ['#1f1f21','#ededee','#5aa0d0','#d8924f'],
+};
+
+function themeStrips(slug) {
+  const colors = THEME_COLORS[slug] || THEME_COLORS.pergament;
+  return colors.map(c => `<span class="settings-gallery-strip" style="background:${c}"></span>`).join('');
+}
+
 function themeLabel(slug) {
   return THEME_LABELS[slug] || slug;
 }
@@ -266,8 +282,9 @@ function buildThemeSlot(type, currentTheme, themeList) {
   slot.dataset.type = type;
   const label = type === 'light' ? 'Светлая' : 'Тёмная';
 
+  const swatchColor = (THEME_COLORS[currentTheme] || THEME_COLORS.pergament)[0];
   slot.innerHTML = `
-    <span class="settings-slot-swatch" style="background:var(--paper-${currentTheme},${type === 'light' ? '#ECE7DD' : '#26231d'})"></span>
+    <span class="settings-slot-swatch" style="background:${swatchColor}"></span>
     <span class="settings-slot-name">${themeLabel(currentTheme)}</span>
     <span class="settings-slot-chevron">▾</span>
   `;
