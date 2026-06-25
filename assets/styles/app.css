@@ -83,7 +83,7 @@ h3 {
   background: var(--surface-read);
 }
 
-/* Desktop: контент между сайдбаром и инспектором */
+/* Desktop: сайдбар + контент */
 @media (min-width: 900px) {
   #app {
     flex-direction: row;
@@ -92,7 +92,6 @@ h3 {
   .screen-container {
     max-width: none;
     margin: 0;
-    display: flex;
     flex: 1;
     min-width: 0;
   }
