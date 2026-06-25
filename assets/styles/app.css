@@ -2325,3 +2325,66 @@ section[data-chapter] {
   border-color: var(--text);
   font-weight: 600;
 }
+
+/* === Reading screen — стилизация под прототип === */
+.scripture-text {
+  font-family: var(--font-greek, 'Gentium Plus', serif);
+  font-size: 1rem;
+  line-height: 1.72;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .scripture-text {
+    padding: 34px 44px 70px;
+  }
+}
+
+.verse {
+  padding: 6px 0;
+}
+
+.verse-number {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.gr { color: var(--greek); }
+.gr-word { color: var(--greek-word); }
+
+/* === Toast — прототипное позиционирование === */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 300;
+  box-shadow: var(--shadow-elevated);
+  pointer-events: none;
+}
+
+/* === Desktop reader layout === */
+@media (min-width: 900px) {
+  .reading-layout {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+  .reading-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .reading-inspector {
+    width: 364px;
+    flex: 0 0 auto;
+    border-left: 1px solid var(--border);
+    background: var(--surface-card);
+  }
+}
