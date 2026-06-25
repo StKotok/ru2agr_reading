@@ -2406,7 +2406,12 @@ section[data-chapter] {
   font-size: 1.5rem;              /* 24px mobile */
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 18px;
+  margin: 0;
+  padding: 18px 0 14px;
+  position: sticky;
+  top: 0;
+  background: var(--surface-read);
+  z-index: 10;
 }
 
 .settings-section-label {
@@ -2599,7 +2604,7 @@ section[data-chapter] {
 @media (min-width: 900px) {
   .settings-title {
     font-size: 1.625rem;          /* 26px */
-    margin-bottom: 22px;
+    padding-bottom: 22px;
   }
 
   .settings-section-label {
