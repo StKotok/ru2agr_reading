@@ -3,7 +3,7 @@ import { loadProgress, saveProgress, markLetterKnown, trackNewWord } from '../..
 import { loadSettings, saveSettings, deriveComposeMode, shouldLoadGreek } from '../../state/settings.js';
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadAlphabet } from '../../data/bible-loader.js';
-import { loadDictionary, setWordStatus, saveDictionary, addWord, countActiveWords, isDictionaryEntry } from '../../state/dictionary.js';
+import { loadDictionary, setWordStatus, saveDictionary, addWord, countActiveWords, isDictionaryEntry, migrateDictionaryData, saveMigrationResults } from '../../state/dictionary.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
 import { createTopBar } from '../components/top-bar.js';
@@ -130,6 +130,21 @@ export async function mount(container, ctx) {
     loadCoreLexicon(),
     loadFrequency()
   ]);
+
+  // Миграция словаря: перенос legacy-ключей → lexemeId (идемпотентно).
+  if (dictionary && coreLexicon && Object.keys(dictionary).length > 0) {
+    try {
+      const migrated = migrateDictionaryData(dictionary, progress, coreLexicon);
+      if (migrated.warnings.length > 0) {
+        console.warn('dictionary migration warnings:', migrated.warnings);
+      }
+      dictionary = migrated.dictionary;
+      progress = migrated.progress;
+      await saveMigrationResults(migrated);
+    } catch (e) {
+      console.warn('dictionary migration error:', e);
+    }
+  }
 
   // Строим карту имён букв для aria-label
   letterNames = new Map();

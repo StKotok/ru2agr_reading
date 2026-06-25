@@ -112,7 +112,7 @@ export async function mount(cnt, ctx) {
     loadDictionary(), loadCoreLexicon(), loadFrequency(), loadProgress()
   ]);
   // Обогащаем частотный список POS-категориями из core-словаря
-  const coreByStrong = new Map((lexicon || []).map(l => [l.strong, l]));
+  const coreByStrong = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
   for (const item of frequencyList) {
     const core = coreByStrong.get(item.strong);
     item.posGroup = core ? classifyPOS(core.pos) : null;
@@ -128,7 +128,7 @@ export async function mount(cnt, ctx) {
 function getFilteredList() {
   if (!frequencyList || frequencyList.length === 0) return [];
 
-  const coreById = new Map((lexicon || []).map(l => [l.strong, l]));
+  const coreById = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
   let filtered = frequencyList;
 
   // Поиск по лемме или транслитерации
@@ -195,7 +195,7 @@ function renderPersonalDictionaryFallback() {
       lemma = core.lemma;
       translit = core.translit;
       gloss = core.gloss;
-      strongNum = core.strong;
+      strongNum = core.strongs?.[0];
     } else {
       // freq-* запись без frequencyList — показываем id
       const strongSuffix = dictId.startsWith('freq-') ? dictId.replace('freq-', '') : null;
@@ -385,7 +385,7 @@ function render() {
 }
 
 function renderBatch(list, filtered) {
-  const coreById = new Map((lexicon || []).map(l => [l.strong, l]));
+  const coreById = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
   const end = Math.min(renderedCount + PAGE_SIZE, filtered.length);
   const showDividers = !searchQuery.trim();
 
@@ -472,7 +472,7 @@ function updateRow(item) {
   if (!container) return;
   const row = container.querySelector(`.dict-row[data-strong="${item.strong}"]`);
   if (!row) return; // строка может быть не отрендерена (DOM-окно)
-  const coreById = new Map((lexicon || []).map(l => [l.strong, l]));
+  const coreById = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
   const lex = coreById.get(item.strong);
   const dictId = lex ? lex.id : `freq-${item.strong}`;
   const entry = dict[dictId];
@@ -503,7 +503,7 @@ function refreshCard(card, item, dictEntry, dictId) {
 }
 
 function coreById() {
-  return new Map((lexicon || []).map(l => [l.strong, l]));
+  return new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
 }
 
 function rankBucket(rank) {
@@ -542,10 +542,10 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
   card.innerHTML = `
     <div class="word-card-lemma">${item.lemma}</div>
     <div class="word-card-translit">${item.translit}</div>
-    ${lexeme ? `<div class="word-card-gloss">${lexeme.gloss}</div>` : ''}
+    ${lexeme ? `<div class="word-card-gloss">${lexeme.ruGloss || lexeme.glossesBerean?.[0] || ''}</div>` : ''}
     ${lexeme ? `<div class="word-card-pos">${lexeme.pos || ''}</div>` : ''}
     <div class="word-card-freq">Частота: ${item.count} (ранг ${item.rank} в НЗ)</div>
-    ${lexeme && lexeme.strong ? `<div class="word-card-strong">Strong G${lexeme.strong}</div>` : ''}
+    ${lexeme && lexeme.strongs?.[0] ? `<div class="word-card-strong">Strong G${lexeme.strongs[0]}</div>` : ''}
     ${!item.hasAlignment ? '<p class="word-card-warning">⚠️ Нет проверенного соответствия в тексте — слово пока не участвует в подстановках</p>' : ''}
     <div class="word-card-actions"></div>
   `;

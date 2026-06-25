@@ -6,6 +6,7 @@ import { readSourceJson, readDataJson, writeDataJson, DATA_ROOT, existsSync } fr
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { normalizeWord, normalizeBerean, fuzzyNormalize, tokenizeGloss, WORD_PATTERN, ALIGN_METHODS } from './lib/align-normalize.mjs';
+import { SOURCE_DATA_VERSION, NORMALIZATION_VERSION } from './lib/versions.mjs';
 
 // Positional disambiguation — ВЫКЛЮЧЕН по умолчанию.
 // При включении требует 100% ручного аудита всех positional пар (см. план T2.3/T4.2).
@@ -788,6 +789,16 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
   }
   const totalExcluded = manualExclusionCount + noBsbVerseCount + noGlossCount + autoDeferredCount;
 
+  // Collect aligned lexemeIds for the aligned-lexemes index (used by dictionary UI).
+  const alignedLexemeIds = new Set();
+  for (const pairs of Object.values(pairsByRef)) {
+    for (const p of pairs) {
+      if ((p.q === 'a' || p.q === 'f') && p.lexemeId) {
+        alignedLexemeIds.add(p.lexemeId);
+      }
+    }
+  }
+
   const stats = {
     tokenCount: totalTokenCount,
     nonFunctionTokenCount: totalNonFunctionTokens,
@@ -823,7 +834,7 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
     exclusionsByRef
   });
 
-  return stats;
+  return { stats, alignedLexemeIds };
 }
 
 // =============================================================================
@@ -1004,13 +1015,31 @@ try {
 }
 
 for (const bookId of NT_BOOKS) {
-  const stats = buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap);
+  const { stats, alignedLexemeIds } = buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap);
   stats.bookId = bookId;
+  stats._alignedLexemeIds = alignedLexemeIds;
   allStats.push(stats);
   console.log(`  ${bookId}: ${stats.alignedNonFunctionTokens}/${stats.nonFunctionTokenCount} NF aligned (${stats.nonFunctionCoveragePercent}%), ${stats.versesWithZeroPairs} empty verses`);
 }
 
 const report = buildReport(allStats, manualPairCount);
+
+// Build aligned-lexemes index (all lexemeIds with ≥1 pair q=a|f across all books).
+const allAlignedLexemes = new Set();
+for (const st of allStats) {
+  for (const lid of (st._alignedLexemeIds || [])) {
+    allAlignedLexemes.add(lid);
+  }
+}
+writeDataJson('align/grc-eng/aligned-lexemes.json', {
+  schema: 'aligned-lexemes-v1',
+  alignmentId: 'grc-eng',
+  grcSourceDataVersion: SOURCE_DATA_VERSION,
+  normalizationVersion: NORMALIZATION_VERSION,
+  totalAlignedLexemeCount: allAlignedLexemes.size,
+  lexemeIds: [...allAlignedLexemes].sort()
+});
+console.log(`  aligned-lexemes index: ${allAlignedLexemes.size} lexemes`);
 
 console.log(`\n=== Build Report ===`);
 console.log(`Total tokens: ${report.totalTokens}`);
