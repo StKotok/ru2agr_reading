@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BSB text integrity — snapshots of previously-broken verses > 1corinthians 11:21 1`] = `"For as you eat, each of you goes ahead without sharing his meal. While one remains hungry, another gets drunk."`;
+
+exports[`BSB text integrity — snapshots of previously-broken verses > 1peter 2:23 1`] = `"When they heaped abuse on Him, He did not retaliate; when He suffered, He made no threats, but entrusted Himself to Him who judges justly."`;
+
+exports[`BSB text integrity — snapshots of previously-broken verses > 2corinthians 9:9 1`] = `"As it is written: “He has scattered abroad His gifts to the poor; His righteousness endures forever.”"`;
+
+exports[`BSB text integrity — snapshots of previously-broken verses > acts 27:37 1`] = `"In all, there were 276 of us on board."`;
+
+exports[`BSB text integrity — snapshots of previously-broken verses > john 1:5 1`] = `"The Light shines in the darkness, and the darkness has not overcome it."`;
+
+exports[`BSB text integrity — snapshots of previously-broken verses > john 1:26 1`] = `"“I baptize with water,” John replied, “but among you stands One you do not know."`;

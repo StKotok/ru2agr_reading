@@ -39,7 +39,7 @@ function fuzzyNormalize(w) {
 }
 
 // Word pattern (same as build-bibles.mjs tokenizeWords)
-const WORD_PATTERN = /[\p{L}\p{N}']+/gu;
+const WORD_PATTERN = /[\p{L}\p{N}'’]+/gu;
 
 function tokenizeGloss(text) {
   const words = [];

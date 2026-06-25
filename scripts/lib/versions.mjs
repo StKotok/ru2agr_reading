@@ -2,7 +2,7 @@
 // Правки здесь обновляют ВСЕ паки и manifest (через build-app-config.mjs)
 
 export const SOURCE_DATA_VERSION = 'sblgnt-macula-clean-v1';
-export const NORMALIZATION_VERSION = 'bsb-text-v1';
+export const NORMALIZATION_VERSION = 'bsb-text-v2';
 
 // Ожидаемый хеш enriched-снимка (из enriched/source-manifest.json).
 // verify check #21 сверяет его; при регенерации enriched обновить ОБА: версию и этот хеш.

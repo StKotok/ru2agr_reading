@@ -169,7 +169,7 @@ function tokenizeWords(text) {
   // Разбить текст на слова, сохраняя UTF-16 code unit offsets.
   // Слово = последовательность букв (Unicode letter), цифр или апострофа.
   const words = [];
-  const wordPattern = /[\p{L}\p{N}']+/gu;
+  const wordPattern = /[\p{L}\p{N}'’]+/gu;
   let match;
   while ((match = wordPattern.exec(text)) !== null) {
     words.push({
@@ -182,25 +182,49 @@ function tokenizeWords(text) {
   return words;
 }
 
+// Символы, перед которыми пробел НЕ ставится (закрывающая/срединная пунктуация)
+const STICKY_PUNCT = /^[,.;:!?'’"”)\]}–—]/;
+// Символы, после которых пробел НЕ ставится (открывающая скобка/кавычка)
+const OPENING_PUNCT = /[(\[{"“]$/;
+
 function collectVerseContentText(contentArray) {
   // Собирает текст стиха из content-массива BSB typed-content формата.
-  const parts = [];
+  // Использует аккумулятор с умной вставкой пробелов, чтобы избежать склеек
+  // типа "overcomeit", "poor;His", "276of".
+  let acc = '';
   for (const el of contentArray) {
+    let s = null;
     if (typeof el === 'string') {
-      parts.push(el);
+      s = el;
     } else if (el && typeof el === 'object') {
       if ('text' in el && el.text != null) {
-        parts.push(String(el.text));
+        s = String(el.text);
       } else if ('lineBreak' in el) {
-        parts.push(' ');
+        s = ' ';
       } else if ('noteId' in el) {
         // сноски — пропустить
       } else {
         // неизвестный тип разметки — пропустить (защита)
       }
     }
+    if (s != null && s.length > 0) {
+      // Вставляем пробел тогда и только тогда, когда:
+      // - аккумулятор не пуст
+      // - аккумулятор не заканчивается пробелом
+      // - аккумулятор не заканчивается открывающей скобкой/кавычкой
+      // - следующий фрагмент не начинается с пробела
+      // - следующий фрагмент не начинается с закрывающей/срединной пунктуации
+      if (acc !== '' &&
+          !/\s$/.test(acc) &&
+          !OPENING_PUNCT.test(acc) &&
+          !/^\s/.test(s) &&
+          !STICKY_PUNCT.test(s)) {
+        acc += ' ';
+      }
+      acc += s;
+    }
   }
-  return parts.join('');
+  return acc.replace(/\s{2,}/g, ' ').trim();
 }
 
 function buildBsbBooks() {
