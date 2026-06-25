@@ -157,7 +157,7 @@ export function createModeWidget(ctx) {
     // Подписи под слайдером
     const sliderLabels = document.createElement('div');
     sliderLabels.className = 'mode-widget-slider-labels';
-    sliderLabels.innerHTML = '<span>0% — чистый русский</span><span>100% — все буквы</span>';
+    sliderLabels.innerHTML = '<span>0% — чистый BSB</span><span>100% — все буквы</span>';
     panel.appendChild(sliderLabels);
 
     // Разделитель
@@ -244,7 +244,7 @@ export function createModeWidget(ctx) {
   function buildGreekPanel(panel, s) {
     const desc = document.createElement('p');
     desc.className = 'mode-widget-greek-desc';
-    desc.textContent = 'Греческий текст Нового Завета как основной. Под каждым стихом — русский перевод мелким шрифтом.';
+    desc.textContent = 'Греческий текст Нового Завета как основной. Под каждым стихом — английский текст BSB мелким шрифтом.';
     panel.appendChild(desc);
 
     const label = document.createElement('label');
@@ -260,7 +260,7 @@ export function createModeWidget(ctx) {
       persistSetting({ show: { ...st.settings.show, ruHint: cb.checked } });
     });
     label.appendChild(cb);
-    label.appendChild(document.createTextNode('Показывать русский перевод под стихом'));
+    label.appendChild(document.createTextNode('Показывать английский текст BSB под стихом'));
     panel.appendChild(label);
 
     const hint = document.createElement('p');

@@ -44,7 +44,8 @@ const DEFAULTS = {
     ruHint: true
   },
   theme: 'auto',
-  onboarded: false
+  onboarded: false,
+  dismissedNotices: []
 };
 
 /**

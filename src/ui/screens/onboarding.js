@@ -1,6 +1,6 @@
 import { loadSettings, saveSettings } from '../../state/settings.js';
 import { loadProgress, saveProgress, introduceLetters } from '../../state/progress.js';
-import { loadAlphabet } from '../../data/lexicon-loader.js';
+import { loadAlphabet } from '../../data/bible-loader.js';
 import { navigate } from '../../router.js';
 
 const STRIPE_COLORS = ['var(--greek)', 'var(--greek-word)', 'var(--progress)'];

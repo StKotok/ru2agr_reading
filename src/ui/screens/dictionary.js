@@ -420,7 +420,7 @@ function renderBatch(list, filtered) {
       <span class="dict-translit">${item.translit}</span>
       <span class="dict-freq">${item.count}</span>
       ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${{ new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое'}</span>` : '<span class="dict-badge-placeholder"></span>'}
-      <label class="dict-check" title="${available ? 'Показывать в тексте' : 'Нет проверенного русско-греческого соответствия — слово пока не участвует в подстановках'}">
+      <label class="dict-check" title="${available ? 'Показывать в тексте' : 'Нет проверенного соответствия в тексте — слово пока не участвует в подстановках'}">
         <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} ${!available ? 'disabled' : ''} aria-label="Показывать ${item.lemma} в тексте">
       </label>
     `;
@@ -546,7 +546,7 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
     ${lexeme ? `<div class="word-card-pos">${lexeme.pos || ''}</div>` : ''}
     <div class="word-card-freq">Частота: ${item.count} (ранг ${item.rank} в НЗ)</div>
     ${lexeme && lexeme.strong ? `<div class="word-card-strong">Strong G${lexeme.strong}</div>` : ''}
-    ${!item.hasAlignment ? '<p class="word-card-warning">⚠️ Нет проверенного русско-греческого соответствия — слово пока не участвует в подстановках</p>' : ''}
+    ${!item.hasAlignment ? '<p class="word-card-warning">⚠️ Нет проверенного соответствия в тексте — слово пока не участвует в подстановках</p>' : ''}
     <div class="word-card-actions"></div>
   `;
 

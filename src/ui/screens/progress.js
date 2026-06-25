@@ -1,5 +1,5 @@
 import { loadProgress, saveProgress, introduceLetters, markLetterKnown } from '../../state/progress.js';
-import { loadAlphabet } from '../../data/lexicon-loader.js';
+import { loadAlphabet } from '../../data/bible-loader.js';
 import { loadBooks } from '../../data/bible-loader.js';
 import { isDictionaryEntry } from '../../state/dictionary.js';
 import { renderLetterCard } from '../components/word-card.js';

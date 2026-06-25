@@ -117,7 +117,7 @@ export function renderLetterCard(letter, progressEntry, onMarkKnown) {
  *   — dictEntry: object|null    ({ status } из словаря пользователя)
  *   — lexemeId: string|null
  *   — strong: number|null
- *   — original: string|null     (исходное русское слово)
+ *   — original: string|null     (исходное слово перевода)
  * @param {object} callbacks
  *   — onMarkStatus: (lexemeId, newStatus) => void
  *   — onShowDetails: (lexemeId) => void
@@ -262,7 +262,7 @@ export function renderWordCard(data, callbacks = {}) {
 
   card.appendChild(pronRow);
 
-  // --- Значение в этом стихе (из Синодального перевода) ---
+  // --- Исходное слово в этом стихе ---
   if (original) {
     const inlineSection = document.createElement('div');
     inlineSection.className = 'word-card-inline';

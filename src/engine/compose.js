@@ -1,20 +1,20 @@
 import { applyLetterLayer } from './letter-layer.js';
-import { applyFormLayer, buildDictByLexemeKey } from './form-layer.js';
+import { applyFormLayer, buildDictByLexemeId } from './form-layer.js';
 import { stripDiacritics } from './rules.js';
 
 /**
- * Compose all layers for a Synodal verse.
+ * Compose all layers for a BSB source verse.
  *
- * MACULA v3: alignment comes from a separate pack (loadAlignment),
- * not embedded in syn JSON. Words come from translation pack with frozen offsets.
+ * v2: alignment comes from a separate pack (loadAlignment),
+ * not embedded in translation JSON. Words come from translation pack with frozen offsets.
  *
- * @param {string} verseText — Synodal verse text
+ * @param {string} verseText — BSB source verse text
  * @param {object} ctx
  *   mode, intensity, progressLetters, seedPrefix, showDiacritics
  *   words — frozen word tokens [{i, text, start, end}] from translation pack
- *   grcTokens — Greek tokens [{id, i, s, lemma, lexemeKey, morph, strongs, fw}]
- *   alignment — alignment pairs [{span, tokenId, lexemeKey, q}]
- *   wordEntries — dict entries with lexemeKey
+ *   grcTokens — Greek tokens [{id, i, s, lemma, lexemeId, lexemeSlug, morph, strongs, fw}]
+ *   alignment — alignment pairs [{span, tokenId, lexemeId, q, method}]
+ *   wordEntries — dict entries with lexemeId
  */
 export function composeVerse(verseText, ctx = {}) {
   const {
@@ -38,8 +38,8 @@ export function composeVerse(verseText, ctx = {}) {
   // Modes 2–5: word/form layer with alignment
   if (mode >= 2 && mode <= 5) {
     if (grcTokens && alignment && words) {
-      const dictByLexemeKey = buildDictByLexemeKey(wordEntries);
-      const segs = applyFormLayer(verseText, words, grcTokens, alignment, dictByLexemeKey, {
+      const dictByLexemeId = buildDictByLexemeId(wordEntries);
+      const segs = applyFormLayer(verseText, words, grcTokens, alignment, dictByLexemeId, {
         seedPrefix, mode,
       });
 

@@ -79,8 +79,23 @@ if ('serviceWorker' in navigator) {
   // wb.register() — асинхронный. Цепляем первый вызов checkForUpdate() в .then(),
   // чтобы не вызвать wb.update() до того, как registration завершится (иначе no-op).
   wb.register({ immediate: true })
-    .then(() => checkForUpdate())
+    .then(() => { checkForUpdate(); cleanupOldDataCaches(); })
     .catch(() => { wb = null; }); // без SW приложение работает, просто без PWA
+}
+
+// Cleanup старых runtime data caches.
+// KEEP IN SYNC with vite.config.js runtimeCaching cacheNames.
+async function cleanupOldDataCaches() {
+  if (!('caches' in window)) return;
+  const keep = new Set(['book-packs-v2', 'lexicon-data-v2']);
+  const oldPrefixes = ['book-packs', 'lexicon-data'];
+  try {
+    const names = await caches.keys();
+    await Promise.all(names.map(name => {
+      const isOldDataCache = oldPrefixes.some(prefix => name === prefix || name.startsWith(`${prefix}-`));
+      return isOldDataCache && !keep.has(name) ? caches.delete(name) : false;
+    }));
+  } catch (_) { /* fail-soft */ }
 }
 
 // Принудительная проверка обновления SW: каждые 5 минут и при возврате в фокус.

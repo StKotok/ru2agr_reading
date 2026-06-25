@@ -27,16 +27,16 @@ export function createTopBar(ctx) {
   const eyeBtn = document.createElement('button');
   eyeBtn.className = 'btn top-bar-btn';
   eyeBtn.innerHTML = iconEye(18);
-  eyeBtn.setAttribute('aria-label', 'Показать обычный русский текст');
-  eyeBtn.title = 'Показать обычный русский текст';
+  eyeBtn.setAttribute('aria-label', 'Показать обычный текст BSB');
+  eyeBtn.title = 'Показать обычный текст BSB';
   eyeBtn.setAttribute('aria-pressed', 'false');
   eyeBtn.addEventListener('click', () => {
     const pressed = eyeBtn.getAttribute('aria-pressed') === 'true';
     const newPressed = !pressed;
     eyeBtn.setAttribute('aria-pressed', String(newPressed));
     eyeBtn.innerHTML = newPressed ? iconEyeOff(18) : iconEye(18);
-    eyeBtn.setAttribute('aria-label', newPressed ? 'Вернуть греческий слой' : 'Показать обычный русский текст');
-    eyeBtn.title = newPressed ? 'Вернуть греческий слой' : 'Показать обычный русский текст';
+    eyeBtn.setAttribute('aria-label', newPressed ? 'Вернуть греческий слой' : 'Показать обычный текст BSB');
+    eyeBtn.title = newPressed ? 'Вернуть греческий слой' : 'Показать обычный текст BSB';
     if (onEyeToggle) onEyeToggle(newPressed);
   });
   bar.appendChild(eyeBtn);

@@ -24,9 +24,10 @@ export function segmentsToFragment(segments, ctx = {}) {
       if (seg.letter) {
         span.setAttribute('data-letter', seg.letter);
       }
-      if (seg.lexemeKey || seg.lexemeId) {
-        span.setAttribute('data-lexeme-key', seg.lexemeKey || seg.lexemeId);
-        span.setAttribute('data-lexeme', seg.lexemeKey || seg.lexemeId);
+      if (seg.lexemeId || seg.lexemeKey) {
+        span.setAttribute('data-lexeme-id', seg.lexemeId || '');
+        span.setAttribute('data-lexeme', seg.lexemeId || seg.lexemeKey || '');
+        span.setAttribute('data-lexeme-key', seg.lexemeKey || seg.lexemeSlug || seg.lexemeId || '');
       }
       if (seg.morph) {
         span.setAttribute('data-morph', seg.morph);

@@ -41,23 +41,25 @@ export default defineConfig({
         globIgnores: [
           '**/data/originals/**',
           '**/data/translations/**',
-          '**/data/align/**'
+          '**/data/align/**',
+          '**/data/bibles/**',
+          '**/data/lexicon/**'
         ],
         runtimeCaching: [
           {
-            // Book packs: originals (Greek), translations (Synodal), alignment
-            urlPattern: /\/data\/(originals|translations|align)\/.*/,
+            // Book packs and alignments — content-addressed by manifest version
+            urlPattern: /\/data\/(bibles|align)\/.*\.json(?:\?.*)?$/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'book-packs',
+              cacheName: 'book-packs-v2',  // KEEP IN SYNC with app.js
               expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 }
             }
           },
           {
-            urlPattern: /\/data\/lexicon\/.*/,
+            urlPattern: /\/data\/lexicon\/.*\.json(?:\?.*)?$/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'lexicon-data',
+              cacheName: 'lexicon-data-v2',  // KEEP IN SYNC with app.js
               expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 }
             }
           }

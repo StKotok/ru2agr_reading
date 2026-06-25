@@ -16,3 +16,6 @@ data-sources/
 /.superpowers/
 #/.claude/
 docs/obsolete-dont-use/canonical/sblgnt-macula/tokens.jsonl
+# Временные директории сборки данных
+assets/.data-tmp-*
+assets/data.backup-*

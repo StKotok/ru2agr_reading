@@ -1,6 +1,7 @@
 import { db } from '../storage/db.js';
 
 const KEY = 'dictionary';
+const WARNINGS_KEY = 'dictionary_migration_warnings';
 
 /**
  * Загружает словарь пользователя (без миграций — пользователей нет).
@@ -15,6 +16,114 @@ export async function loadDictionary() {
   } catch (e) {
     console.warn('loadDictionary error:', e);
     return {};
+  }
+}
+
+/**
+ * Build legacy key map from core lexicon.
+ * Returns Map<legacyKey, lexemeId> (only unambiguous keys).
+ */
+function buildLegacyKeyMap(coreLexicon) {
+  const map = new Map();
+  const conflicts = new Set();
+  for (const item of coreLexicon) {
+    const keys = [
+      ...(item.legacyKeys || []),
+      item.lexemeSlug,
+      item.lexemeKey
+    ].filter(Boolean);
+    for (const k of keys) {
+      if (map.has(k) && map.get(k) !== item.lexemeId) {
+        conflicts.add(k);
+      } else {
+        map.set(k, item.lexemeId);
+      }
+    }
+  }
+  for (const k of conflicts) map.delete(k);
+  return map;
+}
+
+function parseStoredTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && /^\d+$/.test(value)) return Number(value);
+  const parsed = Date.parse(value || '');
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function mergeDictionaryEntry(existing, incoming) {
+  const statusOrder = { known: 3, learning: 2, new: 1 };
+  const existingTime = parseStoredTimestamp(existing.updatedAt || existing.addedAt);
+  const incomingTime = parseStoredTimestamp(incoming.updatedAt || incoming.addedAt);
+
+  const fresher = incomingTime > existingTime ? incoming : existing;
+  const strongerStatus = (statusOrder[incoming.status] || 0) > (statusOrder[existing.status] || 0)
+    ? incoming.status
+    : existing.status;
+
+  return {
+    ...existing,
+    ...incoming,
+    ...fresher,
+    status: incomingTime !== existingTime ? fresher.status : strongerStatus,
+    showInText: existing.showInText === false || incoming.showInText === false ? false : fresher.showInText,
+    addedAt: [existing.addedAt, incoming.addedAt]
+      .filter(Boolean)
+      .sort((a, b) => parseStoredTimestamp(a) - parseStoredTimestamp(b))[0] || fresher.addedAt
+  };
+}
+
+/**
+ * Migrate dictionary keys from legacy (slug, freq-*) to canonical lexemeId.
+ * Idempotent — safe to call multiple times.
+ * @param {object} dict — current dictionary
+ * @param {object} progress — current progress
+ * @param {Array} coreLexicon — core lexicon items
+ * @returns {{ dictionary: object, progress: object, warnings: Array }}
+ */
+export function migrateDictionaryData(dict, progress, coreLexicon) {
+  const legacyKeyMap = buildLegacyKeyMap(coreLexicon);
+  const knownLexemeIds = new Set(coreLexicon.map(i => i.lexemeId).filter(Boolean));
+  const nextDict = {};
+  const warnings = [];
+
+  for (const [key, entry] of Object.entries(dict)) {
+    if (!isDictionaryEntry(entry)) continue;
+    const newKey = knownLexemeIds.has(key) ? key : legacyKeyMap.get(key);
+    if (newKey) {
+      nextDict[newKey] = nextDict[newKey]
+        ? mergeDictionaryEntry(nextDict[newKey], entry)
+        : { ...entry };
+    } else {
+      nextDict[key] = { ...entry, _legacy: true };
+      warnings.push({ key, reason: 'no-safe-mapping' });
+    }
+  }
+
+  const wordsToday = progress.wordsToday || { date: '', added: [] };
+  const added = (wordsToday.added || []).map(key => legacyKeyMap.get(key) || key);
+  const nextProgress = {
+    ...progress,
+    wordsToday: { ...wordsToday, added: [...new Set(added)] }
+  };
+
+  return { dictionary: nextDict, progress: nextProgress, warnings };
+}
+
+/**
+ * Persist migration results fail-soft.
+ * @param {object} migrated — result from migrateDictionaryData
+ */
+export async function saveMigrationResults(migrated) {
+  try {
+    await db.set(KEY, sanitizeDictionary(migrated.dictionary));
+    await db.set('progress', migrated.progress);
+    if (migrated.warnings.length > 0) {
+      await db.set(WARNINGS_KEY, migrated.warnings);
+      console.warn('dictionary migration warnings:', migrated.warnings.length);
+    }
+  } catch (e) {
+    console.warn('saveMigrationResults error:', e);
   }
 }
 
@@ -121,20 +230,28 @@ export function getActive(dict) {
  */
 export function countActiveWords(dict, coreLexicon, frequencyList) {
   if (!dict || !coreLexicon) return 0;
-  const coreById = new Map(coreLexicon.map(l => [l.id, l]));
-  const freqByStrong = new Map();
-  if (frequencyList) {
-    for (const item of frequencyList) freqByStrong.set(String(item.strong), item);
-  }
+  const coreById = new Map(coreLexicon
+    .map(l => [l.lexemeId || l.id, l])
+    .filter(([key]) => key));
+  const coreByLegacyKey = new Map(coreLexicon.flatMap(l =>
+    [l.lexemeKey, l.lexemeSlug, ...(l.legacyKeys || [])]
+      .filter(Boolean)
+      .map(k => [k, l])
+  ));
   let c = 0;
   for (const [id, entry] of Object.entries(dict)) {
     if (!isDictionaryEntry(entry)) continue;
     if (entry.showInText === false) continue;
     if (entry.status !== 'new' && entry.status !== 'learning' && entry.status !== 'known') continue;
-    const coreEntry = coreById.get(id);
-    if (coreEntry) { c++; continue; }
+    if (coreById.get(id) || coreByLegacyKey.get(id)) { c++; continue; }
+    // freq-* fallback
     const strongKey = id.startsWith('freq-') ? id.replace('freq-', '') : null;
-    if (strongKey && freqByStrong.get(strongKey)) { c++; }
+    if (strongKey) {
+      const freqItem = (frequencyList || []).find(f =>
+        (f.strong && String(f.strong) === strongKey) || String(f.lexemeKey) === strongKey
+      );
+      if (freqItem) { c++; }
+    }
   }
   return c;
 }

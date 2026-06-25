@@ -1,5 +1,5 @@
 /**
- * Экран «О приложении» — лицензии и атрибуция.
+ * Экран «О приложении» — лицензии и атрибуция (v2 с BSB и CC-BY).
  */
 export async function mount(container, _ctx) {
   container.innerHTML = `
@@ -8,34 +8,31 @@ export async function mount(container, _ctx) {
 
       <section class="progress-section">
         <h3>Греческая читалка Нового Завета</h3>
-        <p>Спокойная читалка с регулируемым греческим слоем: от знакомого
-        Синодального текста — к оригиналу.</p>
+        <p>Спокойная читалка с регулируемым греческим слоем: от английского текста BSB — к оригиналу.</p>
         <p>Версия: ${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}</p>
       </section>
 
       <section class="progress-section">
         <h3>Лицензии и атрибуция</h3>
 
-        <h4>Греческий текст (SBLGNT)</h4>
-        <p>Scripture quotations marked SBLGNT are from the SBL Greek New Testament.
-        Copyright © 2010 Society of Biblical Literature and Logos Bible Software.
-        Лицензия CC-BY 4.0. Метаданные токенов (леммы, номера Стронга) —
-        © 2023 Clear Bible, Inc., CC-BY 4.0,
-        <a href="https://github.com/Clear-Bible/Alignments" target="_blank" rel="noopener">источник на GitHub</a>.</p>
+        <h4>Греческий текст (SBLGNT + MACULA)</h4>
+        <p>SBLGNT + MACULA Greek morphology — CC BY 4.0.
+           MACULA Greek Linguistic Datasets, available at
+           <a href="https://github.com/Clear-Bible/macula-greek/" target="_blank" rel="noopener">github.com/Clear-Bible/macula-greek/</a></p>
 
-        <h4>Синодальный перевод</h4>
-        <p>Русский Синодальный перевод Библии — общественное достояние (public domain).</p>
+        <h4>Cherith Glosses</h4>
+        <p>Cherith Glosses for the Greek New Testament, © 2023 Cherith Analytics — CC BY 4.0.</p>
 
-        <h4>Выравнивание русский ↔ греческий</h4>
-        <p>Строится автоматически по номерам Стронга и словарю приложения;
-        каждая пара проверяется при сборке данных.</p>
+        <h4>Berean Standard Bible (BSB)</h4>
+        <p>Berean Standard Bible — public domain.
+           <a href="https://berean.bible/" target="_blank" rel="noopener">berean.bible</a></p>
+
+        <h4>Выравнивание греческий ↔ английский</h4>
+        <p>Строится алгоритмически по подстрочным глоссам (Berean, Cherith) при сборке данных.</p>
 
         <h4>Шрифт Gentium Plus</h4>
         <p>Шрифт Gentium Plus распространяется под лицензией SIL Open Font License (OFL).
         Copyright © 2003–2022 SIL International.</p>
-
-        <h4>Данные bolls.life</h4>
-        <p>Данные Синодального перевода получены через открытый API bolls.life.</p>
       </section>
 
       <section class="progress-section">

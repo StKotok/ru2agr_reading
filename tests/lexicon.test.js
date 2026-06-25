@@ -7,41 +7,51 @@ function loadJSON(relativePath) {
   return JSON.parse(readFileSync(fullPath, 'utf-8'));
 }
 
-describe('top1000 lexicon', () => {
-  it('exists and has 1000 entries', () => {
-    const data = loadJSON('assets/data/lexicon/top1000.core.json');
-    expect(data.items).toHaveLength(1000);
-    expect(data.schema).toBe('top1000-lexicon-core-v1');
+describe('core lexicon', () => {
+  it('exists and has 5468 entries', () => {
+    const data = loadJSON('assets/data/lexicon/core.json');
+    expect(data.items.length).toBe(5468);
+    expect(data.schema).toBe('lexicon-core-v2');
   });
 
-  it('each entry has a unique lexemeKey', () => {
-    const data = loadJSON('assets/data/lexicon/top1000.core.json');
-    const keys = data.items.map(i => i.lexemeKey);
-    expect(new Set(keys).size).toBe(1000);
+  it('each entry has a unique lexemeId', () => {
+    const data = loadJSON('assets/data/lexicon/core.json');
+    const ids = data.items.map(i => i.lexemeId);
+    expect(new Set(ids).size).toBe(5468);
+  });
+
+  it('each entry has a unique lexemeSlug', () => {
+    const data = loadJSON('assets/data/lexicon/core.json');
+    const slugs = data.items.map(i => i.lexemeSlug).filter(Boolean);
+    expect(new Set(slugs).size).toBe(slugs.length);
   });
 
   it('key lemmas are present', () => {
-    const data = loadJSON('assets/data/lexicon/top1000.core.json');
+    const data = loadJSON('assets/data/lexicon/core.json');
     const lemmas = new Set(data.items.map(i => i.lemma));
     expect(lemmas.has('λόγος')).toBe(true);
     expect(lemmas.has('θεός')).toBe(true);
     expect(lemmas.has('κύριος')).toBe(true);
   });
-});
 
-describe('locale ru', () => {
-  it('top1000 overlay exists', () => {
-    const data = loadJSON('assets/data/lexicon/locales/ru/top1000.json');
-    expect(data.schema).toBe('top1000-locale-overlay-v1');
-    expect(data.items.length).toBeGreaterThan(0);
+  it('has legacyKeys without conflicts', () => {
+    const data = loadJSON('assets/data/lexicon/core.json');
+    const legacyMap = new Map();
+    const conflicts = new Set();
+    for (const item of data.items) {
+      for (const lk of item.legacyKeys || []) {
+        if (legacyMap.has(lk) && legacyMap.get(lk) !== item.lexemeId) {
+          conflicts.add(lk);
+        } else {
+          legacyMap.set(lk, item.lexemeId);
+        }
+      }
+    }
+    expect(conflicts.size).toBe(0);
   });
 
-  it('core overlay exists and has key entries', () => {
-    const data = loadJSON('assets/data/lexicon/locales/ru/core.json');
-    expect(data.schema).toBe('core-locale-overlay-v1');
-    const keys = new Set(data.items.map(i => i.lexemeKey));
-    expect(keys.has('logos')).toBe(true);
-    expect(keys.has('theos')).toBe(true);
-    expect(keys.has('kurios')).toBe(true);
+  it('has dictionary.json with entries', () => {
+    const data = loadJSON('assets/data/lexicon/dictionary.json');
+    expect(Object.keys(data).length).toBeGreaterThan(5000);
   });
 });
