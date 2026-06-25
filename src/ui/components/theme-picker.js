@@ -2,7 +2,7 @@
  * Theme Picker — визуальный выборщик тем (Variant B: слоты + поповер-галерея).
  * Соответствует readerRenderSettingsThemePicker из дизайн-прототипа.
  */
-import { THEMES, LIGHT_THEMES, DARK_THEMES, applyTheme, applyContrast, CONTRAST_LEVELS } from '../../state/settings.js';
+import { THEMES, LIGHT_THEMES, DARK_THEMES, applyTheme, applyContrast, CONTRAST_LEVELS, CONTRAST_LABELS, THEME_LABELS } from '../../state/settings.js';
 
 // Мини-превью: полоски цветов темы
 function colorStrips(themeSlug) {
@@ -20,14 +20,6 @@ function colorStrips(themeSlug) {
   `;
   return el;
 }
-
-// Название темы по слагу
-const THEME_LABELS = {
-  pergament: 'Пергамент', sepia: 'Сепия', ivory: 'Слоновая кость',
-  fog: 'Туман', sea: 'Море', forest: 'Лес', rose: 'Роза',
-  lavender: 'Лаванда', sunset: 'Закат',
-  dark: 'Тёмная', night: 'Ночь', coal: 'Уголь'
-};
 
 /**
  * Создаёт слот-превью текущей темы (светлая / тёмная).
@@ -104,11 +96,10 @@ function buildContrastPanel(currentContrast, onChange) {
   const row = document.createElement('div');
   row.className = 'tp-contrast-row';
 
-  const labels = { soft: 'Мягкий', sharp: 'Чёткий', maximum: 'Максимальный' };
   for (const level of CONTRAST_LEVELS) {
     const btn = document.createElement('button');
     btn.className = 'tp-contrast-btn' + (level === currentContrast ? ' active' : '');
-    btn.textContent = labels[level];
+    btn.textContent = CONTRAST_LABELS[level];
     btn.addEventListener('click', () => {
       row.querySelectorAll('.tp-contrast-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');

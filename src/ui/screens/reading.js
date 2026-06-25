@@ -8,6 +8,7 @@ import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
 import { createTopBar } from '../components/top-bar.js';
 import { createModeWidget } from '../components/mode-widget.js';
+import { getInspectorPanel } from '../components/inspector.js';
 import { renderLetterCard, renderWordCard } from '../components/word-card.js';
 import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
 import { showToast } from '../components/toast.js';
@@ -224,16 +225,7 @@ export async function mount(container, ctx) {
   readingLayout.appendChild(textArea);
 
   // Инспектор (desktop: панель справа 364px, mobile: скрыт)
-  const inspector = document.createElement('div');
-  inspector.className = 'reading-inspector';
-  inspector.id = 'reading-inspector';
-  inspector.innerHTML = `
-    <div class="inspector-empty">
-      <div class="inspector-empty-icon">α</div>
-      <div class="inspector-empty-text">Выберите греческое слово или букву в тексте — карточка появится здесь.</div>
-    </div>
-  `;
-  readingLayout.appendChild(inspector);
+  getInspectorPanel(readingLayout);
 
   // Загружаем книгу (и греческий текст + alignment если нужен для словарного слоя)
   try {

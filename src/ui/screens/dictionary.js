@@ -112,7 +112,7 @@ export async function mount(cnt, ctx) {
     loadDictionary(), loadCoreLexicon(), loadFrequency(), loadProgress()
   ]);
   // Обогащаем частотный список POS-категориями из core-словаря
-  const coreByStrong = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
+  const coreByStrong = coreById();
   for (const item of frequencyList) {
     const core = coreByStrong.get(item.strong);
     item.posGroup = core ? classifyPOS(core.pos) : null;
@@ -128,7 +128,7 @@ export async function mount(cnt, ctx) {
 function getFilteredList() {
   if (!frequencyList || frequencyList.length === 0) return [];
 
-  const coreById = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
+  const coreByIdMap = coreById();
   let filtered = frequencyList;
 
   // Поиск по лемме или транслитерации
@@ -148,7 +148,7 @@ function getFilteredList() {
   // Фильтр «Отмеченные»: слова, включённые для показа в тексте
   if (filterStatus === 'checked') {
     return filtered.filter(item => {
-      const lex = coreById.get(item.strong);
+      const lex = coreByIdMap.get(item.strong);
       const entry = lex ? dict[lex.id] : dict[`freq-${item.strong}`];
       return entry && entry.showInText !== false;
     });
@@ -157,7 +157,7 @@ function getFilteredList() {
   // Фильтр по статусу
   if (filterStatus !== 'all') {
     return filtered.filter(item => {
-      const lex = coreById.get(item.strong);
+      const lex = coreByIdMap.get(item.strong);
       const entry = lex ? dict[lex.id] : dict[`freq-${item.strong}`];
       return entry && entry.status === filterStatus;
     });
@@ -168,7 +168,7 @@ function getFilteredList() {
 
 function renderPersonalDictionaryFallback() {
   const entries = Object.entries(dict).filter(([_, e]) => isDictionaryEntry(e));
-  const coreById = new Map((lexicon || []).map(l => [l.id, l]));
+  const coreByIdMap = new Map((lexicon || []).map(l => [l.id, l]));
 
   // Заголовок
   const info = document.createElement('div');
@@ -189,12 +189,12 @@ function renderPersonalDictionaryFallback() {
   container.appendChild(list);
 
   for (const [dictId, entry] of entries) {
-    const core = coreById.get(dictId);
+    const core = coreByIdMap.get(dictId);
     let lemma, translit, gloss, strongNum;
     if (core) {
       lemma = core.lemma;
       translit = core.translit;
-      gloss = core.gloss;
+      gloss = core.ruGloss || core.glossesBerean?.[0] || '';
       strongNum = core.strongs?.[0];
     } else {
       // freq-* запись без frequencyList — показываем id
@@ -409,13 +409,13 @@ function render() {
 }
 
 function renderBatch(list, filtered) {
-  const coreById = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
+  const coreByIdMap = coreById();
   const end = Math.min(renderedCount + PAGE_SIZE, filtered.length);
   const showDividers = !searchQuery.trim();
 
   for (let i = renderedCount; i < end; i++) {
     const item = filtered[i];
-    const lex = coreById.get(item.strong);
+    const lex = coreByIdMap.get(item.strong);
     const dictId = lex ? lex.id : `freq-${item.strong}`;
     const entry = dict[dictId];
     const available = item.hasAlignment;
@@ -496,8 +496,8 @@ function updateRow(item) {
   if (!container) return;
   const row = container.querySelector(`.dict-row[data-strong="${item.strong}"]`);
   if (!row) return; // строка может быть не отрендерена (DOM-окно)
-  const coreById = new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
-  const lex = coreById.get(item.strong);
+  const coreByIdMap = coreById();
+  const lex = coreByIdMap.get(item.strong);
   const dictId = lex ? lex.id : `freq-${item.strong}`;
   const entry = dict[dictId];
 

@@ -53,6 +53,7 @@ export const DEFAULT_THEME = 'pergament';
 // === Контраст ===
 
 export const CONTRAST_LEVELS = ['soft', 'sharp', 'maximum'];
+export const CONTRAST_LABELS = { soft: 'Мягкий', sharp: 'Чёткий', maximum: 'Максимальный' };
 export const DEFAULT_CONTRAST = 'sharp'; // прототип по умолчанию: Чёткий
 
 // === Настройки по умолчанию ===

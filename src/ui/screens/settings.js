@@ -1,4 +1,4 @@
-import { loadSettings, saveSettings, applyTheme, applyContrast, THEMES, LIGHT_THEMES, DARK_THEMES, CONTRAST_LEVELS } from '../../state/settings.js';
+import { loadSettings, saveSettings, applyTheme, applyContrast, THEMES, LIGHT_THEMES, DARK_THEMES, CONTRAST_LEVELS, CONTRAST_LABELS } from '../../state/settings.js';
 import { loadProgress, saveProgress } from '../../state/progress.js';
 import { db } from '../../storage/db.js';
 
@@ -175,12 +175,11 @@ function renderContrastSection() {
   bar.className = 'settings-segmented';
 
   const current = settings.contrast || 'sharp';
-  const labels = { soft: 'Мягкий', sharp: 'Чёткий', maximum: 'Максимальный' };
 
   CONTRAST_LEVELS.forEach(level => {
     const btn = document.createElement('button');
     btn.className = 'settings-seg-btn' + (level === current ? ' active' : '');
-    btn.textContent = labels[level];
+    btn.textContent = CONTRAST_LABELS[level];
     btn.addEventListener('click', () => {
       settings.contrast = level;
       applyContrast(level);
@@ -247,7 +246,7 @@ function sectionLabel(text) {
   return el;
 }
 
-const THEME_LABELS = {
+export const THEME_LABELS = {
   pergament: 'Пергамент', sepia: 'Сепия', ivory: 'Слоновая кость',
   fog: 'Туман', sea: 'Море', forest: 'Лес', rose: 'Роза',
   lavender: 'Лаванда', sunset: 'Закат',
