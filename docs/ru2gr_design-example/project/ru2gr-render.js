@@ -209,16 +209,13 @@
 
   R.readerRenderSettings = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
-    var themes = this.readerThemeList();
     var contrasts = this.readerContrastList();
-    var themeChip = function(key){ var t = self.THEMES[key]; var on = st.readerTheme === key; return h('button',{key:key,onClick:function(){self.setState({readerTheme:key});},style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'10px 6px 12px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?U.alpha(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(33.333% - 8px)',minWidth:0}},
-      h('div',{style:{width:'100%',height:32,borderRadius:7,background:t.paper,border:'1px solid '+U.alpha(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:self.serif,fontSize:18,color:t.ink,lineHeight:1}},'αβ')),
-      h('span',{style:{fontFamily:self.sans,fontSize:11,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
     return h('div',{'data-section':'phone-settings',className:'scScroll',style:{flex:1,minHeight:0,overflowY:'auto',background:C.read}},
       h('div',{style:{padding:'18px 20px 60px'}},
         h('div',{style:{fontFamily:this.serif,fontSize:24,fontWeight:700,color:C.ink,marginBottom:18}},'Настройки'),
         h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:10}},'Тема'),
-        h('div',{style:{display:'flex',flexWrap:'wrap',gap:8,marginBottom:22}}, themes.map(themeChip)),
+        this.readerRenderSettingsThemePicker(),
+        h('div',{style:{height:18}}),
         h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.13em',textTransform:'uppercase',color:C.muted,marginBottom:10}},'Контраст'),
         h('div',{style:{display:'inline-flex',background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:10,padding:3}},
           contrasts.map(function(ct){ var on = st.readerContrast === ct; return h('button',{key:ct,onClick:function(){self.setState({readerContrast:ct});},style:{padding:'8px 16px',borderRadius:7,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:self.sans,fontSize:13,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct); }))));
@@ -226,17 +223,14 @@
 
   R.readerRenderDeskSettings = function () {
     var C = this.CR, h = React.createElement, st = this.state, self = this;
-    var themes = this.readerThemeList();
     var contrasts = this.readerContrastList();
-    var themeChip = function(key){ var t = self.THEMES[key]; var on = st.readerTheme === key; return h('button',{key:key,onClick:function(){self.setState({readerTheme:key});},style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'12px 8px 14px',borderRadius:12,border:'2px solid '+(on?C.terra:C.line),background:on?U.alpha(C.terra,0.06):'transparent',cursor:'pointer',transition:'all .15s',flex:'1 1 calc(25% - 9px)',minWidth:0}},
-      h('div',{style:{width:'100%',height:TK.topBtnSize,borderRadius:8,background:t.paper,border:'1px solid '+U.alpha(C.ink,0.12),display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}, h('span',{style:{fontFamily:self.serif,fontSize:20,color:t.ink,lineHeight:1}},'αβ')),
-      h('span',{style:{fontFamily:self.sans,fontSize:12,fontWeight:on?700:500,color:on?C.ink:C.muted,whiteSpace:'nowrap',textOverflow:'ellipsis',overflow:'hidden',maxWidth:'100%'}},key)); };
     return h('div',{'data-section':'desk-settings',style:{flex:1,minWidth:0,display:'flex',flexDirection:'column'}},
       h('div',{className:'scScroll',style:{flex:1,overflowY:'auto',background:C.read}},
         h('div',{style:{maxWidth:TK.deskContentWidth,margin:'0 auto',padding:TK.deskContentPad}},
           h('div',{style:{fontFamily:this.serif,fontSize:26,fontWeight:700,color:C.ink,marginBottom:22}},'Настройки'),
           h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Тема'),
-          h('div',{style:{display:'flex',flexWrap:'wrap',gap:10,marginBottom:28}}, themes.map(themeChip)),
+          this.readerRenderSettingsThemePicker(),
+          h('div',{style:{height:24}}),
           h('div',{style:{fontFamily:this.sans,fontSize:11,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',color:C.muted,marginBottom:12}},'Контраст'),
           h('div',{style:{display:'inline-flex',background:U.alpha(C.ink,0.05),border:'1px solid '+C.line,borderRadius:TK.radius,padding:4}},
             contrasts.map(function(ct){ var on = st.readerContrast === ct; return h('button',{key:ct,onClick:function(){self.setState({readerContrast:ct});},style:{padding:'9px 20px',borderRadius:8,border:'none',background:on?C.paper:'transparent',color:on?C.ink:C.muted,boxShadow:on?C.shadow:'none',fontFamily:self.sans,fontSize:14,fontWeight:on?700:600,cursor:'pointer',whiteSpace:'nowrap',transition:'background .12s,color .12s'}},ct); })))));
@@ -1084,6 +1078,206 @@
   R.wordFmt = function (n) { return U.formatNum(n); };
   R.wordIconSearch = function (c) { return U.iconSearch(c); };
   R.wordIconEye = function (c) { return U.iconEyeSmall(c); };
+
+  /* ================================================================
+   * ТЕМА-ПИКЕР: слоты + поповер (Variant B)
+   * Заменяет плоский <select> тем в canvas-header.
+   * ================================================================ */
+
+  /** Переключатель режима: [Система] [Светлая] [Тёмная] + два слота + поповер */
+  /** Переключатель темы для панели Настроек: [Система] [Светлая] [Тёмная] + два слота + поповер */
+  R.readerRenderSettingsThemePicker = function () {
+    var C = this.CR, h = React.createElement, st = this.state, self = this;
+    var TOK = window.RU2GR;
+    var isMobile = (window.innerWidth || 1200) < 600;
+
+    /* ---------- кнопка режима ---------- */
+    var modeBtn = function (mode, iconFn, label) {
+      var on = st.themeMode === mode;
+      var col = on ? C.ink : C.muted;
+      var bg = on ? U.alpha(C.ink, 0.08) : 'transparent';
+      return h('button', {
+        onClick: function (e) { e.stopPropagation(); self.handleThemeMode(mode); },
+        title: label,
+        style: {
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
+          height: 30, padding: '0 10px', border: 'none', borderRadius: TK.radius - 2,
+          background: bg, cursor: 'pointer',
+          fontFamily: self.sans, fontSize: 12.5, fontWeight: on ? 700 : 500,
+          color: col, whiteSpace: 'nowrap', transition: 'all .12s'
+        }
+      }, iconFn(col, 14), isMobile ? null : h('span', null, label));
+    };
+
+    /* ---------- слот темы ---------- */
+    var slot = function (type) {
+      var themeName = type === 'light' ? (st.themeLight || 'Пергамент') : (st.themeDark || 'Ночь');
+      var themeDef = TOK.THEMES[themeName] || TOK.THEMES['Пергамент'];
+      var isOpen = st.themePopover === type;
+      var disabled = (st.themeMode === 'light' && type === 'dark') || (st.themeMode === 'dark' && type === 'light');
+      if (st.themeMode === 'system') disabled = false;
+
+      return h('button', {
+        'data-section': 'settings-theme-slot-' + type,
+        onClick: function (e) { e.stopPropagation(); if (!disabled) self.handleThemePopoverToggle(type); },
+        disabled: disabled,
+        style: {
+          display: 'flex', alignItems: 'center', gap: 7,
+          height: 32, padding: '0 10px',
+          border: '1.5px solid ' + (isOpen ? C.terra : C.line),
+          borderRadius: TK.radius, background: isOpen ? U.alpha(C.ink, 0.04) : C.paper,
+          cursor: disabled ? 'default' : 'pointer',
+          fontFamily: self.sans, fontSize: 12.5, fontWeight: 500, color: disabled ? C.muted2 : C.inkSoft,
+          whiteSpace: 'nowrap', transition: 'border-color .12s, background .12s',
+          opacity: disabled ? 0.4 : 1
+        }
+      },
+        h('span', { style: {
+          width: 14, height: 14, borderRadius: 4, flexShrink: 0,
+          background: themeDef.paper,
+          border: '1px solid ' + U.alpha(C.ink, 0.14),
+          display: 'block'
+        }}),
+        h('span', { style: { maxWidth: isMobile ? 60 : 100, overflow: 'hidden', textOverflow: 'ellipsis' } }, themeName),
+        h('span', { style: { flexShrink: 0, transition: 'transform .15s', transform: isOpen ? 'rotate(180deg)' : 'none', marginLeft: 2 } },
+          U.iconCaret(disabled ? C.muted2 : C.muted, isOpen))
+      );
+    };
+
+    return h('div', { 'data-section': 'settings-theme-picker', style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+      // сегментный переключатель режима
+      h('div', { style: { display: 'flex', gap: 1, background: U.alpha(C.ink, 0.05), border: '1px solid ' + C.line, borderRadius: TK.radius, padding: 2 } },
+        modeBtn('system', U.iconMonitor, 'Система'),
+        modeBtn('light', U.iconSun, 'Светлая'),
+        modeBtn('dark', U.iconMoon, 'Тёмная')
+      ),
+      // слоты
+      slot('light'),
+      slot('dark'),
+      // поповер / bottom sheet
+      st.themePopover ? (isMobile
+        ? R.readerRenderThemeSheet.call(self, st.themePopover)
+        : R.readerRenderThemePopover.call(self, st.themePopover))
+        : null
+    );
+  };
+
+  /** canvas-header версия (компактная) */
+  R.readerRenderThemePicker = function () {
+    return this.readerRenderSettingsThemePicker();
+  };
+
+  /** Десктопный поповер с сеткой тем */
+  R.readerRenderThemePopover = function (type) {
+    var C = this.CR, h = React.createElement, st = this.state, self = this;
+    var TOK = window.RU2GR;
+    var themes = TOK.THEMES;
+    var themeList = type === 'light' ? TOK.LIGHT_THEMES : TOK.DARK_THEMES;
+    var activeTheme = type === 'light' ? (st.themeLight || 'Пергамент') : (st.themeDark || 'Ночь');
+    var title = type === 'light' ? 'Светлая тема' : 'Тёмная тема';
+
+    var grid = themeList.map(function (name) {
+      var t = themes[name] || themes['Пергамент'];
+      var isActive = name === activeTheme;
+      return h('button', {
+        key: name,
+        onClick: function (e) { e.stopPropagation(); self.handleThemeSelect(type, name); },
+        style: {
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+          padding: '8px 4px 9px', borderRadius: TK.radiusSm + 1,
+          border: '2px solid ' + (isActive ? C.terra : 'transparent'),
+          background: isActive ? U.alpha(C.terra, 0.06) : 'transparent',
+          cursor: 'pointer', transition: 'all .12s',
+          flex: '1 1 calc(33.333% - 6px)', minWidth: 0
+        }
+      },
+        // свотч с греческой буквой
+        h('div', { style: {
+          width: '100%', height: 30, borderRadius: 6,
+          background: t.paper, border: '1px solid ' + U.alpha(C.ink, 0.1),
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        } },
+          h('span', { style: { fontFamily: self.serif, fontSize: 15, color: t.ink, lineHeight: 1, userSelect: 'none' } }, 'αβ')
+        ),
+        h('span', { style: {
+          fontFamily: self.sans, fontSize: 10, fontWeight: isActive ? 700 : 500,
+          color: isActive ? C.ink : C.muted, whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '100%'
+        } }, name)
+      );
+    });
+
+    return h('div', { style: { position: 'fixed', inset: 0, zIndex: 600 } },
+      // backdrop (клик вне — закрыть)
+      h('div', { onClick: function (e) { e.stopPropagation(); self.setState({ themePopover: null }); },
+        style: { position: 'absolute', inset: 0 } }),
+      // панель
+      h('div', { style: {
+        position: 'absolute', top: 48, right: Math.max(16, (window.innerWidth || 1200) - 1180 - 16 + 300),
+        background: C.paper, border: '1px solid ' + C.line2,
+        borderRadius: TK.radiusLg, boxShadow: '0 20px 44px -14px rgba(40,34,22,0.45)',
+        padding: '14px 14px 12px', width: 290, maxHeight: 400, overflowY: 'auto',
+        animation: 'scPop .16s ease'
+      } },
+        h('div', { style: { fontFamily: self.sans, fontSize: 12, fontWeight: 700, color: C.muted, marginBottom: 10, letterSpacing: '0.02em' } }, title),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } }, grid)
+      )
+    );
+  };
+
+  /** Мобильный bottom sheet с сеткой тем */
+  R.readerRenderThemeSheet = function (type) {
+    var C = this.CR, h = React.createElement, st = this.state, self = this;
+    var TOK = window.RU2GR;
+    var themes = TOK.THEMES;
+    var themeList = type === 'light' ? TOK.LIGHT_THEMES : TOK.DARK_THEMES;
+    var activeTheme = type === 'light' ? (st.themeLight || 'Пергамент') : (st.themeDark || 'Ночь');
+    var title = type === 'light' ? 'Светлая тема' : 'Тёмная тема';
+
+    var grid = themeList.map(function (name) {
+      var t = themes[name] || themes['Пергамент'];
+      var isActive = name === activeTheme;
+      return h('button', {
+        key: name,
+        onClick: function (e) { e.stopPropagation(); self.handleThemeSelect(type, name); },
+        style: {
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+          padding: '10px 4px 12px', borderRadius: TK.radiusSm + 1,
+          border: '2px solid ' + (isActive ? C.terra : 'transparent'),
+          background: isActive ? U.alpha(C.terra, 0.06) : 'transparent',
+          cursor: 'pointer', transition: 'all .12s',
+          flex: '1 1 calc(33.333% - 6px)', minWidth: 0
+        }
+      },
+        h('div', { style: {
+          width: '100%', height: 34, borderRadius: 7,
+          background: t.paper, border: '1px solid ' + U.alpha(C.ink, 0.1),
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        } },
+          h('span', { style: { fontFamily: self.serif, fontSize: 17, color: t.ink, lineHeight: 1, userSelect: 'none' } }, 'αβ')
+        ),
+        h('span', { style: {
+          fontFamily: self.sans, fontSize: 11, fontWeight: isActive ? 700 : 500,
+          color: isActive ? C.ink : C.muted, whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '100%'
+        } }, name)
+      );
+    });
+
+    return h('div', { style: { position: 'fixed', inset: 0, zIndex: 600, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' } },
+      h('div', { onClick: function (e) { e.stopPropagation(); self.setState({ themePopover: null }); },
+        style: { position: 'absolute', inset: 0, background: U.alpha('#15140f', 0.28), animation: 'scFade .2s ease' } }),
+      h('div', { style: {
+        position: 'relative', background: C.paper,
+        borderRadius: TK.sheetTopRadius, maxHeight: '65vh', overflowY: 'auto',
+        padding: '12px 16px 28px', animation: 'scSheetUp .25s ease'
+      } },
+        h('div', { style: { width: 36, height: 4.5, borderRadius: 2.5, background: C.muted2, margin: '0 auto 16px' } }),
+        h('div', { style: { fontFamily: self.sans, fontSize: 16, fontWeight: 700, color: C.ink, textAlign: 'center', marginBottom: 18 } }, title),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8 } }, grid)
+      )
+    );
+  };
 
   window.RU2GR_RENDER = R;
 })();

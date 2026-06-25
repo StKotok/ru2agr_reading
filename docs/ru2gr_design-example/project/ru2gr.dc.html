@@ -226,7 +226,11 @@ class Component extends DCLogic {
       readerToast:null, readerDeskScale:1,
       readerTheme: this.props.theme || 'Пергамент',
       readerContrast: this.props.contrast || 'Чёткий',
-      posStyle: this.props.posStyle || 'Сегменты'
+      posStyle: this.props.posStyle || 'Сегменты',
+      themeMode: 'system',
+      themeLight: 'Пергамент',
+      themeDark: 'Ночь',
+      themePopover: null
     };
 
     Object.assign(this.state, {
@@ -295,6 +299,32 @@ class Component extends DCLogic {
     this.setState({ cardOrder: o });
   }
 
+  handleThemeMode(mode) {
+    var st = this.state;
+    var osDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var eff;
+    if (mode === 'system') eff = osDark ? st.themeDark : st.themeLight;
+    else if (mode === 'light') eff = st.themeLight;
+    else eff = st.themeDark;
+    this.setState({ themeMode: mode, readerTheme: eff, themePopover: null });
+  }
+
+  handleThemeSelect(type, themeName) {
+    var st = this.state;
+    var osDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var newLight = type === 'light' ? themeName : st.themeLight;
+    var newDark  = type === 'dark'  ? themeName : st.themeDark;
+    var eff;
+    if (st.themeMode === 'system') eff = osDark ? newDark : newLight;
+    else if (st.themeMode === 'light') eff = newLight;
+    else eff = newDark;
+    this.setState({ themeLight: newLight, themeDark: newDark, readerTheme: eff, themePopover: null });
+  }
+
+  handleThemePopoverToggle(type) {
+    this.setState({ themePopover: this.state.themePopover === type ? null : type });
+  }
+
   /* ================================================================
    * 4. LIFECYCLE
    * ================================================================ */
@@ -314,6 +344,18 @@ class Component extends DCLogic {
         this.setState({ readerWordSMenuOpen: false });
     };
     document.addEventListener('mousedown', this._onDocDown);
+    // Слушатель изменения системной темы (dark mode)
+    this._darkMq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    if (this._darkMq) {
+      this._onDarkChange = () => {
+        if (this.state.themeMode === 'system' && this._mounted) {
+          var osDark = this._darkMq.matches;
+          var eff = osDark ? this.state.themeDark : this.state.themeLight;
+          this.setState({ readerTheme: eff });
+        }
+      };
+      this._darkMq.addListener(this._onDarkChange);
+    }
   }
   componentDidUpdate() {
     this.readerWordSetupScroll('readerDeskWordList');
@@ -323,6 +365,7 @@ class Component extends DCLogic {
     this._mounted = false;
     if (this._onResize) window.removeEventListener('resize', this._onResize);
     if (this._onDocDown) document.removeEventListener('mousedown', this._onDocDown);
+    if (this._darkMq && this._onDarkChange) this._darkMq.removeListener(this._onDarkChange);
     this._cleanupScrollListeners();
   }
 

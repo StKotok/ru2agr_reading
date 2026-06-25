@@ -218,6 +218,29 @@
       h('path', { d: 'M6 9l6 6 6-6' }));
   }
 
+  /* ---- иконки для переключателя режима темы ---- */
+
+  function iconSun(c, sz) {
+    var h = React.createElement, s = sz || 16;
+    return h('svg', { width: s, height: s, viewBox: '0 0 24 24', fill: 'none', stroke: c, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' },
+      h('circle', { cx: 12, cy: 12, r: 5 }),
+      h('path', { d: 'M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42' }));
+  }
+
+  function iconMoon(c, sz) {
+    var h = React.createElement, s = sz || 16;
+    return h('svg', { width: s, height: s, viewBox: '0 0 24 24', fill: 'none', stroke: c, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' },
+      h('path', { d: 'M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z' }));
+  }
+
+  function iconMonitor(c, sz) {
+    var h = React.createElement, s = sz || 16;
+    return h('svg', { width: s, height: s, viewBox: '0 0 24 24', fill: 'none', stroke: c, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' },
+      h('rect', { x: 2, y: 3, width: 20, height: 14, rx: 2 }),
+      h('path', { d: 'M8 21h8' }),
+      h('path', { d: 'M12 17v4' }));
+  }
+
   /* ================================================================
    * 6. СОСТОЯНИЯ ЧИПОВ РЕЖИМА
    * ================================================================ */
@@ -275,6 +298,9 @@
     iconEyeSmall: iconEyeSmall,
     iconX: iconX,
     iconCaret: iconCaret,
+    iconSun: iconSun,
+    iconMoon: iconMoon,
+    iconMonitor: iconMonitor,
     // Чипы
     getChipStates: getChipStates,
     getLiveChipState: getLiveChipState,

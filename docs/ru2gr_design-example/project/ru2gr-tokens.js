@@ -61,5 +61,11 @@
     'Уголь':          mk({paper:'#1f1f21',alt:'#28282b',read:'#19191b',title:'#2c2c2f',ink:'#ededee',inkSoft:'#c2c2c4',muted:'#8d8d90',muted2:'#66666a',blue:'#5aa0d0',blueBg:'#2b3a47',blueTx:'#9fcbe8',terra:'#d8924f',terraSoft:'#443323',green:'#84b25f',greenDk:'#aad187',greenBg:'#2c3a27',overlayDimBase:'#15140f',toastBg:'#e0dcd0',toastTx:'#1e1e1e',shadowBase:'rgb(0,0,0)'}),
   };
 
-  window.RU2GR = { THEMES: THEMES, a: a };
+  var LIGHT_THEMES = ['Пергамент','Сепия','Слоновая кость','Туман','Море','Лес','Роза','Лаванда','Закат'];
+  var DARK_THEMES  = ['Тёмная','Ночь','Уголь'];
+  var IS_DARK_THEME = {};
+  LIGHT_THEMES.forEach(function(t){ IS_DARK_THEME[t] = false; });
+  DARK_THEMES.forEach(function(t){ IS_DARK_THEME[t] = true; });
+
+  window.RU2GR = { THEMES: THEMES, a: a, LIGHT_THEMES: LIGHT_THEMES, DARK_THEMES: DARK_THEMES, IS_DARK_THEME: IS_DARK_THEME };
 })();
