@@ -136,6 +136,7 @@ const NT_BOOKS = [
    д. Сформировать итоговый объект:
       {
         schema: "original-book-v2",
+        sourceDataVersion: "sblgnt-macula-clean-v1",
         bookId,
         title: loadGreekTitle(bookId),
         chapters: [{ n, verses: [{ n, ref, tokens }] }]
@@ -161,7 +162,7 @@ function lexemeIdToSlug(lexemeId) {
 }
 ```
 
-Важно: slug не является каноническим ключом и может быть коротким (`o`, `en`) или нечитаемым. При генерации `legacyKeys` нужно детектить коллизии slug/Strong's fallback и не создавать неоднозначный legacy mapping.
+Важно: slug не является каноническим ключом и может быть коротким (`o`, `en`) или нечитаемым. После первичной генерации slug'ов нужно проверить коллизии `lexemeSlug`; для дубликатов добавить disambiguation suffix из хвоста `lexemeId` (например, `logos-9adfa6`). При генерации `legacyKeys` нужно отдельно детектить коллизии slug/Strong's fallback и не создавать неоднозначный legacy mapping.
 
 ### Греческие названия книг (TITLES)
 
@@ -183,14 +184,15 @@ node scripts/build-bibles.mjs
 ls assets/data/bibles/grc/ | wc -l  # → 27
 
 # Проверить один файл
-node -e "
-const d = require('./assets/data/bibles/grc/matthew.json');
+node - <<'NODE'
+import { readFileSync } from 'fs';
+const d = JSON.parse(readFileSync('assets/data/bibles/grc/matthew.json', 'utf8'));
 console.log('schema:', d.schema);
 console.log('chapters:', d.chapters.length);
 const v1 = d.chapters[0].verses[0];
 console.log('1:1 tokens:', v1.tokens.length);
 console.log('first token:', JSON.stringify(v1.tokens[0], null, 2));
-"
+NODE
 # Ожидаемый вывод:
 # schema: original-book-v2
 # chapters: 28
@@ -307,8 +309,9 @@ function tokenizeWords(text) {
 ### Верификация
 
 ```bash
-node -e "
-const d = require('./assets/data/bibles/eng/matthew.json');
+node - <<'NODE'
+import { readFileSync } from 'fs';
+const d = JSON.parse(readFileSync('assets/data/bibles/eng/matthew.json', 'utf8'));
 console.log('schema:', d.schema);
 console.log('translationId:', d.translationId);
 const ch1 = d.chapters[0];
@@ -317,7 +320,7 @@ console.log('1:1 text:', v1.text.substring(0, 80));
 console.log('1:1 words[0]:', JSON.stringify(v1.words[0]));
 console.log('offset check:', v1.text.slice(v1.words[0].start, v1.words[0].end));
 // Должно совпасть: v1.text.slice(start, end) === words[0].text
-"
+NODE
 ```
 
 ### Коммит
@@ -400,7 +403,8 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
       - ruMatches, ruExclude, refs — взять из top1000
    з. legacyKeys: [lexemeSlug] + (если есть strong: ['freq-' + strongNumber] для каждого)
       но только если legacyKey однозначно указывает на одну lexemeId
-5. После сборки всех записей проверить legacyKey collisions:
+5. После сборки всех записей проверить lexemeSlug и legacyKey collisions:
+   - если lexemeSlug встречается у нескольких lexemeId, добавить suffix из хвоста lexemeId
    - если legacyKey встречается у нескольких lexemeId, удалить его из legacyKeys всех конфликтующих записей
    - записать конфликт в build-report/verify output
    - не создавать неоднозначный auto-migration mapping
@@ -411,14 +415,15 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
 ### Верификация
 
 ```bash
-node -e "
-const d = require('./assets/data/lexicon/core.json');
+node - <<'NODE'
+import { readFileSync } from 'fs';
+const d = JSON.parse(readFileSync('assets/data/lexicon/core.json', 'utf8'));
 console.log('schema:', d.schema);
 console.log('items count:', d.items.length);
 // Должно быть 5468
 const biblos = d.items.find(x => x.lexemeSlug === 'biblos');
 console.log('biblos:', JSON.stringify(biblos, null, 2).substring(0, 500));
-"
+NODE
 ```
 
 ### Коммит
@@ -441,7 +446,7 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
 - `assets/data/bibles/grc/{book}.json` — результат Task 1
 - `assets/data/bibles/eng/{book}.json` — результат Task 2
 - `docs/source-data/enriched/lexemes.json` — для лемма-глоссов
-- `docs/source-data/alignments/grc-eng/manual-alignments.json` — optional ручные overrides (если файл существует)
+- `docs/source-data/alignments/grc-eng/manual-alignments.json` — optional ручные overrides/exclusions (если файл существует)
 
 ### Выход
 
@@ -463,7 +468,7 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
    б. Сопоставить с BSB-словами детерминированными v1-проходами:
       - exact normalized single-word match → q="a", method="gloss-exact"
       - bracket-optional single-word match → q="a", method="bracket-optional"
-      - normalized phrase over adjacent BSB words → q="a", method="phrase"
+      - normalized phrase over 2-4 adjacent, unclaimed BSB words → q="a", method="phrase"
       - simple fuzzy: lowercase, strip punctuation, normalize apostrophes → q="f", method="fuzzy"
    в. Если на одно BSB-слово претендуют несколько токенов:
       - принять только однозначный match
@@ -472,12 +477,16 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
       если есть уверенный span, можно записать q="x" для диагностики
    д. Невыровненные meaningful tokens записать в warningsByRef/report как q="u"
 
-4. Применить manual-alignments overrides:
-   - override обязан указывать ref, tokenId, span, method="manual"
-   - verify обязан проверить, что tokenId существует в том же ref, span валиден,
-     text.slice(span[0], span[1]) непустой
+4. Применить manual-alignments overrides/exclusions:
+   - manual pair обязан указывать ref, tokenId, span, q="a"|"f", method="manual"
+   - manual exclusion обязан указывать ref, tokenId, q="u", method="manual-exclusion" без span
+   - verify обязан проверить, что tokenId существует в том же ref
+   - если span есть: span валиден, text.slice(span[0], span[1]) непустой
+     и содержит хотя бы одну букву или цифру (`/[\p{L}\p{N}]/u`)
    - manual pair побеждает алгоритмическую пару для того же tokenId
-   - количество manual пар попадает в build-report.json
+   - manual exclusion удаляет алгоритмическую пару для tokenId и записывает diagnostic в warningsByRef/report;
+     для non-function tokens это считается unaligned и не улучшает coverage
+   - количество manual пар и manual exclusions попадает в build-report.json
 
 5. Отсортировать pairs по span[0], затем tokenId
 6. Проверить: нет дублирующихся span
@@ -486,6 +495,25 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
 ```
 
 `pairsByRef` содержит только записи со span, которые runtime может безопасно обработать. `q="u"` хранится в `warningsByRef`/report, не как span-less pair в `pairsByRef`.
+
+### Формат manual-alignments.json
+
+```json
+[
+  { "ref": "matthew 1:1", "tokenId": "n40001001001", "span": [0, 4], "q": "a", "method": "manual" },
+  { "ref": "matthew 1:1", "tokenId": "n40001001002", "q": "u", "method": "manual-exclusion" }
+]
+```
+
+Файл должен валидироваться до применения overrides. Ошибка схемы, неизвестный `tokenId`,
+невалидный `span` или `span`, состоящий только из пунктуации/пробелов, останавливает сборку.
+
+### Phrase matching v1
+
+Phrase matching в v1 не использует gaps и не ищет “похожие” фразы через весь стих.
+Для candidate phrase длиной 2-4 normalized words скрипт проверяет только contiguous
+windows такой же длины среди ещё не занятых BSB words. Если найдено больше одного
+окна или часть слов уже занята другой accepted pair — токен остаётся unaligned/ambiguous.
 
 ### Правила нормализации
 
@@ -523,6 +551,7 @@ function normalizeBerean(gloss) {
     {"lexemeId": "grc-...", "lemma": "δέ", "count": 1500, "glossBerean": "and/but"}
   ],
   "manualPairCount": 0,
+  "manualExclusionCount": 0,
   "thresholds": {
     "nonFunctionCoverageMin": 90,
     "versesWithPairsMin": 95
@@ -547,15 +576,20 @@ function normalizeBerean(gloss) {
 ```bash
 node scripts/build-align.mjs
 # Проверить отчёт
-node -e "console.log(JSON.stringify(require('./assets/data/align/grc-eng/build-report.json'), null, 2))" | head -30
+node - <<'NODE'
+import { readFileSync } from 'fs';
+const report = JSON.parse(readFileSync('assets/data/align/grc-eng/build-report.json', 'utf8'));
+console.log(JSON.stringify(report, null, 2).split('\n').slice(0, 30).join('\n'));
+NODE
 
 # Проверить один стих
-node -e "
-const a = require('./assets/data/align/grc-eng/matthew.json');
+node - <<'NODE'
+import { readFileSync } from 'fs';
+const a = JSON.parse(readFileSync('assets/data/align/grc-eng/matthew.json', 'utf8'));
 const pairs = a.pairsByRef['matthew 1:1'];
 console.log('matthew 1:1 pairs:', pairs.length);
 pairs.slice(0, 3).forEach(p => console.log(JSON.stringify(p)));
-"
+NODE
 ```
 
 ### Коммит
@@ -572,6 +606,11 @@ git commit -m "feat(pipeline): build-align.mjs — generate alignment packs"
 ### Назначение
 
 Скопировать `alphabet.json`, `books.json` и сгенерировать `data-manifest.json`.
+
+`books.json` остаётся UI/navigation metadata на русском языке: порядок книг, группы,
+русские `title`/`short` для навигации. Английское source title хранится в
+`bibles/eng/{book}.json.title`. Не заменять русские названия в `books.json`
+на английские без отдельного UX-решения.
 
 ### Вход
 
@@ -591,6 +630,8 @@ git commit -m "feat(pipeline): build-align.mjs — generate alignment packs"
   "schema": "data-manifest-v2",
   "version": "2.0.0",
   "buildDate": "<ISO timestamp>",
+  "sourceDataVersion": "sblgnt-macula-clean-v1",
+  "normalizationVersion": "bsb-text-v1",
   "dataTypes": ["grc-bible", "eng-bible", "alignment", "lexicon-core", "lexicon-dict", "alphabet", "books"],
   "files": [
     { "path": "bibles/grc/matthew.json", "type": "grc-bible", "size": 12345, "sha256": "abc..." },
@@ -740,41 +781,55 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
 6.  Все eng-книги имеют один normalizationVersion;
     каждый alignment pack имеет тот же normalizationVersion, что eng-книга
 
-7.  Греческих токенов в grc-книге === enriched-токенов для того же bookId
+7.  Все grc-книги имеют один sourceDataVersion;
+    каждый alignment pack имеет тот же grcSourceDataVersion, что grc-книга
+
+8.  Греческих токенов в grc-книге === enriched-токенов для того же bookId
     (ни один токен не потерян при группировке)
 
-8.  token.id уникальны в пределах всего NT corpus
+9.  token.id уникальны в пределах всего NT corpus
 
-9.  Каждый греческий токен имеет обязательные поля:
+10. Каждый греческий токен имеет обязательные поля:
     id, s, lemma, lexemeId, morph, strongs, fw
 
-10. core.json содержит 5468 записей
+11. core.json содержит 5468 записей
 
-11. Каждая curated RU запись (top1000.core.json) либо мапится
+12. Каждая curated RU запись (top1000.core.json) либо мапится
     на существующий lexemeId, либо перечислена в migrationWarnings
 
-12. Каждая alignment-пара ссылается на существующий греческий токен
+13. Каждый lexemeSlug уникален в пределах core.json; legacyKeys не содержат
+    ключей, которые указывают на несколько lexemeId
+
+14. Каждая alignment-пара ссылается на существующий греческий токен
     (проверка: tokenId существует в grc-книге того же стиха)
 
-13. Каждый alignment-span валиден:
+15. Каждый alignment-span валиден:
     span[0] >= 0 && span[1] <= engVerse.text.length
     и engVerse.text.slice(span[0], span[1]).trim() !== ''
+    и /[\p{L}\p{N}]/u.test(engVerse.text.slice(span[0], span[1]))
 
-14. Alignment quality thresholds:
+16. manual-alignments.json, если существует:
+    - валиден по схеме
+    - manual pair имеет span и q="a"|"f"
+    - manual-exclusion не имеет span, имеет q="u"
+    - все tokenId/ref существуют
+
+17. Alignment quality thresholds:
     non-function-token coverage >= 90%
     verses with >=1 pair >= 95%
 
-15. data-manifest.json: все перечисленные файлы существуют,
+18. data-manifest.json: все перечисленные файлы существуют,
     размеры и sha256 совпадают с реальными; build-report.json включён
 
-16. Ни один app-ready файл не содержит source-only/UBS-полей:
+19. Ни один app-ready файл не содержит source-only/UBS-полей:
     semantic, louwNida, domain, domainCode, ln,
     sourceId, sourceRef, maculaSource, accent,
     surfaceNfc, surfaceSearch, normalized, lemmaSearch
     (проверка grep-ом по JSON-ключам)
 
-17. Общий размер assets/data находится в ожидаемом диапазоне
-    (warning при > 60 MB, error при > 100 MB)
+20. Размер данных находится в ожидаемом диапазоне:
+    - общий assets/data: warning при > 60 MB, error при > 100 MB
+    - отдельный JSON-файл: warning при > 5 MB, error при > 20 MB
 ```
 
 ### Вывод
@@ -788,6 +843,7 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
 ✓ token counts: enriched = generated (0 lost)
 ✓ core.json: 5468/5468 lexemes
 ✓ alignment spans valid (0 errors)
+✓ manual alignments valid (0 errors)
 ✓ thresholds: coverage 91.3% >= 90%, verses 100% >= 95%
 ✓ manifest includes build-report.json
 ```

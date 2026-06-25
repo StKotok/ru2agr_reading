@@ -73,7 +73,7 @@ assets/data/
 ├── lexicon/core.json                 ← словарь: 5468 лемм
 ├── lexicon/dictionary.json           ← Strong's определения + рус. соответствия
 ├── alphabet.json                     ← копия из source-data
-├── books.json                        ← копия из source-data
+├── books.json                        ← UI/navigation metadata на русском
 └── data-manifest.json                ← манифест: версия, файлы, хеши
 ```
 
@@ -86,6 +86,7 @@ assets/data/
 ```json
 {
   "schema": "original-book-v2",
+  "sourceDataVersion": "sblgnt-macula-clean-v1",
   "bookId": "matthew",
   "title": "ΚΑΤΑ ΜΑΘΘΑΙΟΝ",
   "chapters": [{
@@ -153,6 +154,7 @@ assets/data/
   "schema": "alignment-book-v2",
   "alignmentId": "grc-eng",
   "bookId": "matthew",
+  "grcSourceDataVersion": "sblgnt-macula-clean-v1",
   "normalizationVersion": "bsb-text-v1",
   "stats": {
     "tokenCount": 18329,
@@ -202,7 +204,7 @@ Runtime показывает греческие вставки только дл
 
 Порог качества релиза 1.1: ≥90% accepted non-function-token coverage, ≥95% стихов с ≥1 accepted парой. Цель для следующей итерации alignment — ≥92%. Если hard gate не пройден, релиз блокируется: нужно улучшить алгоритм или добавить проверенный manual override.
 
-Manual overrides допустимы как релизный safety valve, но только как маленький auditable JSON (`manual-alignments.json`) с проверкой tokenId/span/ref и отчётом о количестве ручных пар.
+Manual overrides допустимы как релизный safety valve, но только как маленький auditable JSON (`manual-alignments.json`) с проверкой tokenId/ref. Override может либо создать/заменить связь через `span`, либо подавить ошибочную автоматическую связь через `q="u", method="manual-exclusion"` без `span`. Количество ручных связей и ручных исключений попадает в отчёт.
 
 ---
 
@@ -231,6 +233,7 @@ Manual overrides допустимы как релизный safety valve, но �
 - Карточка слова объясняет греческую лемму по-русски, а поле “исходное слово” показывает английское слово BSB.
 - В греческом режиме подсказка под стихом показывает английский BSB, не русский перевод.
 - При первом запуске версии 1.1 нужен короткий русскоязычный notice/onboarding: почему текст стал английским и что русский перевод вернётся отдельным лицензионным этапом.
+- Навигационные названия книг могут оставаться русскими как часть русского UI; английское название источника берётся из `bibles/eng/{book}.json.title`, если экрану нужно явно показать source title.
 
 ---
 

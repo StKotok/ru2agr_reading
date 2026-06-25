@@ -54,6 +54,9 @@ Runtime-этап начинается только после полного в�
    - Путь: `data/data-manifest.json`
    - Использовать `manifest.version` для cache-busting: `?v=${manifest.version}`
    - Не читать attribution/licensing из manifest
+   - Проверять `manifest.schema`, `manifest.sourceDataVersion` и `manifest.normalizationVersion`;
+     при mismatch с загруженной книгой/alignment retry один раз с `cache: 'reload'`,
+     затем fail-soft fallback без white screen
 
 4. **Поле `morph` в греческих токенах:**
    - Старое: `token.morph` (строка) — уже есть
@@ -119,13 +122,10 @@ git commit -m "refactor(data): update bible-loader for v2 paths and formats"
 ### Верификация
 
 ```bash
-node -e "
-import { loadCoreLexicon } from './src/data/lexicon-loader.js';
-const items = await loadCoreLexicon();
-console.log('items:', items.length);
-console.log('first:', items[0].lexemeId, items[0].lexemeKey);
-// Должны присутствовать оба поля
-"
+npm run dev
+# В браузере открыть приложение и проверить Network:
+# - data/lexicon/core.json загружается
+# - первые entries имеют lexemeId и lexemeKey/lexemeSlug fallback
 ```
 
 ### Коммит
@@ -196,42 +196,54 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
 
 1. **Имя загружаемого перевода:** `'eng'` вместо `'syn'`
 
-2. **`ruHint`-переменные и логика (строки 425-429):**
+2. **Module-level индексы:**
+   ```js
+   let coreByIdCache = null;       // Map<lexemeId, coreEntry>
+   let coreByLegacyKey = null;     // Map<legacyKey, coreEntry>
+   let freqByKeyCache = null;
+   let lexemeIdKnownSet = null;    // renamed from lexemeKeyKnownSet
+   ```
+
+3. **`ruHint`-переменные и логика (строки 425-429):**
    - Переименовать `ruHint` → `enSourceHint` (или оставить `ruHint` — это подсказка на языке перевода)
    - Текст: «Русский текст» → «Английский текст (BSB)» в подсказке
 
-3. **`data-lexeme-key` атрибут (строка 409):**
+4. **`data-lexeme-*` атрибуты (строка 409):**
    ```js
    span.setAttribute('data-lexeme-id', token.lexemeId || '');
+   span.setAttribute('data-lexeme', token.lexemeId || token.lexemeKey || '');
    span.setAttribute('data-lexeme-key', token.lexemeSlug || token.lexemeKey || token.lexemeId || '');
    ```
 
-4. **`coreByIdCache` (строки 602-603):**
+   `data-lexeme` оставить как legacy DOM alias: текущий `reading.js` использует его
+   для кликабельности и подсветки после mark-as-known.
+
+5. **`coreByIdCache` (строки 602-603):**
    ```js
    coreByIdCache = new Map((coreLexicon || []).map(l => [l.lexemeId, l]).filter(([key]) => key));
-   const coreByLegacyKey = new Map((coreLexicon || []).flatMap(l =>
+   coreByLegacyKey = new Map((coreLexicon || []).flatMap(l =>
      [l.lexemeKey, l.lexemeSlug, ...(l.legacyKeys || [])]
        .filter(Boolean)
        .map(k => [k, l])
    ));
    ```
 
-5. **`freqByKeyCache` (строки 608-609):**
+6. **`freqByKeyCache` (строки 608-609):**
    ```js
    const key = item.lexemeId || item.lexemeKey || item.lexemeSlug;
    ```
 
-6. **`lexemeKeyKnownSet` (строка 615):**
+7. **`lexemeKeyKnownSet` (строка 615):**
    - Переименовать в `lexemeIdKnownSet`
    - Наполнять `lexemeId || lexemeKey`
 
-7. **Функция `buildWordEntries` (строки 625-648):**
+8. **Функция `buildWordEntries` (строки 625-648):**
    - `lexemeKey` в возвращаемом объекте заменить на `lexemeId`
    - Добавить `lexemeSlug` для отображения
 
-8. **Функция `collectWordData` (строка 914):**
+9. **Функция `collectWordData` (строка 914):**
    ```js
-   const lexemeIdFromAttr = span.getAttribute('data-lexeme-id');
+   const lexemeIdFromAttr = span.getAttribute('data-lexeme-id') || span.getAttribute('data-lexeme');
    const legacyKeyFromAttr = span.getAttribute('data-lexeme-key');
    const lookupKey = lexemeIdFromAttr || legacyKeyFromAttr;
    const core = lexemeIdFromAttr
@@ -239,12 +251,20 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
      : coreByLegacyKey.get(legacyKeyFromAttr);
    ```
 
-9. **Graceful degradation:**
+10. **`onMarkStatus` selector:**
+   ```js
+   const escaped = CSS.escape(lexemeId);
+   const spans = document.querySelectorAll(
+     `span.gr[data-lexeme-id="${escaped}"], span.gr[data-lexeme="${escaped}"]`
+   );
+   ```
+
+11. **Graceful degradation:**
    - если `bookData` загрузилась, но `alignmentBookData` отсутствует или битая, не показывать white screen;
    - рендерить BSB plain text + letter layer fallback;
    - показать fail-soft toast только если настройки требуют греческий слой.
 
-10. **Греческий режим:**
+12. **Греческий режим:**
    - подсказка под стихом становится source hint BSB;
    - внутреннее имя можно оставить `ruHint` только временно, но UI label должен быть “Показывать английский текст BSB под стихом”.
 
@@ -264,9 +284,16 @@ grep -n "Синодал\|русск.*текст\|ruHint\|Synodal\|bibles/syn" sr
 
 Также обновить:
 - `src/ui/components/top-bar.js`: “Показать обычный русский текст” → “Показать обычный текст BSB”; “Вернуть греческий слой” оставить.
-- `src/ui/components/mode-widget.js`: “чистый русский”, “русский перевод под стихом” → BSB/source wording.
+- `src/ui/components/mode-widget.js`:
+  - “0% — чистый русский” → “0% — чистый BSB”
+  - “Греческий текст Нового Завета как основной. Под каждым стихом — русский перевод...” → BSB/source wording
+  - “Показывать русский перевод под стихом” → “Показывать английский текст BSB под стихом”
 - `src/ui/components/word-card.js`: “из Синодального перевода”, JSDoc “исходное русское слово” → “исходное слово перевода”.
 - `src/ui/screens/dictionary.js`: “русско-греческое соответствие” → “проверенное соответствие в тексте”.
+
+`src/ui/components/top-bar.js` может продолжать показывать русские названия книг
+из `books.json`, потому это navigation UI. Если нужен английский source title,
+брать его из `bibles/eng/{book}.json.title`, а не менять `books.json`.
 
 ### Коммит
 
@@ -318,6 +345,55 @@ git commit -m "refactor(ui): update about screen with BSB and CC-BY attributions
 
 ---
 
+## Task 5b: `src/ui/screens/onboarding.js` / settings — notice релиза 1.1
+
+### Файлы
+
+- `src/ui/screens/onboarding.js`
+- `src/state/settings.js`
+- `src/app.js` или route bootstrap, если notice показывается не внутри onboarding flow
+
+### Что изменить
+
+VISION требует отдельный notice: в релизе 1.1 source text становится английским BSB,
+а русский перевод вернётся только отдельным лицензионным этапом. Это должно быть
+реальным implementation task, а не только продуктовой заметкой.
+
+Рекомендуемый контракт:
+
+```js
+const DATA_NOTICE_VERSION = '1.1-bsb-source';
+// settings.dismissedNotices: string[]
+```
+
+Поведение:
+- если `settings.dismissedNotices` не содержит `DATA_NOTICE_VERSION`, показать короткий русскоязычный notice;
+- notice показывается один раз на устройство и закрывается явной кнопкой;
+- закрытие сохраняется через существующие settings/storage wrappers, без прямого localStorage/IndexedDB;
+- для новых пользователей notice можно встроить в onboarding, для существующих — показать перед/над reading screen;
+- текст не должен обещать сроки возвращения русского перевода.
+
+Минимальный текст:
+
+```text
+В версии 1.1 основной текст чтения временно английский (Berean Standard Bible), потому что это источник с чистой лицензией. Русский интерфейс и греческий слой сохраняются. Русский перевод вернётся отдельным этапом после проверки лицензии.
+```
+
+### Верификация
+
+- Новый пользователь видит notice в onboarding.
+- Существующий пользователь после обновления видит notice один раз.
+- После закрытия и перезагрузки notice не повторяется.
+
+### Коммит
+
+```bash
+git add src/ui/screens/onboarding.js src/state/settings.js src/app.js
+git commit -m "feat(ui): add one-time BSB source notice for v1.1"
+```
+
+---
+
 ## Task 6: `src/ui/render.js` — lexeme DOM attributes
 
 ### Файл
@@ -332,10 +408,13 @@ span.setAttribute('data-lexeme-key', seg.lexemeKey || seg.lexemeId);
 
 // Стало:
 span.setAttribute('data-lexeme-id', seg.lexemeId || '');
+span.setAttribute('data-lexeme', seg.lexemeId || seg.lexemeKey || '');
 span.setAttribute('data-lexeme-key', seg.lexemeKey || seg.lexemeSlug || seg.lexemeId || '');
 ```
 
-`data-lexeme-id` — canonical runtime key. `data-lexeme-key` остаётся legacy/display fallback на время миграции.
+`data-lexeme-id` — canonical runtime key. `data-lexeme` остаётся compatibility alias
+для текущих event handlers/selector'ов. `data-lexeme-key` остаётся legacy/display
+fallback на время миграции.
 
 ### Коммит
 
@@ -402,10 +481,17 @@ function buildLegacyKeyMap(coreLexicon) {
   return map;
 }
 
+function parseStoredTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && /^\d+$/.test(value)) return Number(value);
+  const parsed = Date.parse(value || '');
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function mergeDictionaryEntry(existing, incoming) {
   const statusOrder = { known: 3, learning: 2, new: 1 };
-  const existingTime = Date.parse(existing.updatedAt || existing.addedAt || '') || 0;
-  const incomingTime = Date.parse(incoming.updatedAt || incoming.addedAt || '') || 0;
+  const existingTime = parseStoredTimestamp(existing.updatedAt || existing.addedAt);
+  const incomingTime = parseStoredTimestamp(incoming.updatedAt || incoming.addedAt);
 
   const fresher = incomingTime > existingTime ? incoming : existing;
   const strongerStatus = (statusOrder[incoming.status] || 0) > (statusOrder[existing.status] || 0)
@@ -418,7 +504,9 @@ function mergeDictionaryEntry(existing, incoming) {
     ...fresher,
     status: incomingTime !== existingTime ? fresher.status : strongerStatus,
     showInText: existing.showInText === false || incoming.showInText === false ? false : fresher.showInText,
-    addedAt: [existing.addedAt, incoming.addedAt].filter(Boolean).sort()[0] || fresher.addedAt
+    addedAt: [existing.addedAt, incoming.addedAt]
+      .filter(Boolean)
+      .sort((a, b) => parseStoredTimestamp(a) - parseStoredTimestamp(b))[0] || fresher.addedAt
   };
 }
 
@@ -459,6 +547,17 @@ The caller persists results fail-soft:
 
 Unknown legacy entries are technical debt. They remain in IndexedDB but do not participate in text replacement. Add a v1.2 follow-up for a small maintenance UI or export/debug path if warnings appear in real user data.
 
+Также обновить `countActiveWords` в этом же файле:
+
+```js
+const coreById = new Map(coreLexicon
+  .map(l => [l.lexemeId || l.id, l])
+  .filter(([key]) => key));
+```
+
+`frequencyList` fallback должен искать `lexemeId` первым и legacy `freq-*`/Strong's
+только как fallback для старых записей.
+
 ### Верификация
 
 ```bash
@@ -467,6 +566,7 @@ Unknown legacy entries are technical debt. They remain in IndexedDB but do not p
 # - Старые ключи (logos, freq-3056) должны мигрировать или получить _legacy: true
 # - dictionary_migration_warnings должен содержать записи без safe mapping
 # - progress.wordsToday.added не содержит старых legacy keys, если для них есть mapping
+# - timestamp merge работает и для ISO/date строк, и для number Date.now() fixtures
 ```
 
 ### Коммит
@@ -559,6 +659,18 @@ async function cleanupOldDataCaches() {
 ```
 
 Вызвать внутри `try/catch`; ошибка cleanup не должна ломать запуск приложения.
+
+Важно: cleanup из `app.js` не является механизмом консистентности текущей сессии.
+Если страницу ещё контролирует старый service worker, он уже мог отдать старый app shell
+или старые runtime cache responses до выполнения нового `app.js`. Для v1.1 корректность
+держится на трёх вещах:
+- новые data paths (`data/bibles/**`, `data/align/grc-eng/**`) не совпадают со старыми;
+- loader добавляет `?v=${manifest.version}` и валидирует schema/version загруженных файлов;
+- существующий `wb.addEventListener('activated', ...)` делает reload при обновлении SW.
+
+Если позже проект перейдёт на `injectManifest`/custom service worker, cleanup старых
+runtime caches лучше перенести в SW `activate` event через `event.waitUntil(...)`.
+Для v1.1 не вводить custom SW только ради cleanup.
 
 ### Верификация
 
@@ -671,7 +783,7 @@ git commit -m "test: update test fixtures for v2 field names"
 ### Команда
 
 ```bash
-rg -n "Синод|русск|ruHint|Synodal|syn--sblgnt|исходное русское|русско-греческ|bibles/syn|top1000\\.core" src tests
+rg -n "Синод|русск|ruHint|Synodal|syn--sblgnt|исходное русское|русско-греческ|bibles/syn|top1000\\.core|data-lexeme" src tests
 ```
 
 ### Ожидаемые хиты и действия
@@ -685,6 +797,7 @@ rg -n "Синод|русск|ruHint|Synodal|syn--sblgnt|исходное рус�
 | `syn--sblgnt-macula` | Не должно остаться — все заменены в Tasks 1-4 |
 | `bibles/syn` | Не должно остаться |
 | `top1000.core` в runtime/tests | Не должно остаться, кроме source-data pipeline/docs |
+| `data-lexeme` | Должен остаться только как compatibility alias к `data-lexeme-id` |
 
 Обязательные файлы аудита:
 - `src/ui/screens/reading.js`
@@ -732,6 +845,7 @@ npm run build        # Vite production build
 - [ ] Режим офлайн (отключить сеть, перезагрузить)
 - [ ] About screen показывает лицензии
 - [ ] About screen видимо показывает BSB/SBLGNT/MACULA/Cherith attribution
+- [ ] v1.1 notice про BSB source text показывается один раз и больше не повторяется
 - [ ] При битом/отсутствующем alignment приложение не падает и показывает BSB fallback
 - [ ] IndexedDB migration не теряет dictionary/progress entries
 
@@ -771,14 +885,15 @@ netlify deploy --prod --dir=dist
  3. form-layer.js        — lexemeId предпочтение
  4. reading.js           — BSB вместо Синодального
  5. about.js             — лицензии
- 6. render.js            — data-lexeme-id + compatibility key
- 7. dictionary.js        — миграция ключей
- 8. vite.config.js/app.js — PWA-кеширование и cleanup
- 9. tests/               — обновление фикстур
-10. UI wording           — нейтральный BSB/source wording
-11. End-to-end проверка
-12. Деплой
+ 6. onboarding/settings  — one-time v1.1 BSB notice
+ 7. render.js            — data-lexeme-id + compatibility key
+ 8. dictionary.js        — миграция ключей
+ 9. vite.config.js/app.js — PWA-кеширование и cleanup
+10. tests/               — обновление фикстур
+11. UI wording           — нейтральный BSB/source wording
+12. End-to-end проверка
+13. Деплой
 ```
 
-Коммиты 1-10 должны компилироваться и проходить unit-тесты. Полная ручная
+Коммиты 1-11 должны компилироваться и проходить unit-тесты. Полная ручная
 проверка чтения требует уже сгенерированных v2 data packs из `IMPL-PIPELINE.md`.
