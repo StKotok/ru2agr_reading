@@ -295,49 +295,73 @@ function render() {
   searchContainer.appendChild(searchInput);
   container.appendChild(searchContainer);
 
-  // Табы-фильтры по статусу
-  const tabs = document.createElement('div');
-  tabs.className = 'dict-tabs';
+  // Строка фильтров: Статус | Часть речи | Чекбокс (как в прототипе)
+  const filterBar = document.createElement('div');
+  filterBar.className = 'dict-filter-bar';
+
+  // 1. Статус
+  const statusSelect = document.createElement('select');
+  statusSelect.className = 'dict-filter-select';
+  statusSelect.setAttribute('aria-label', 'Фильтр по статусу');
   [
     { value: 'all', label: 'Все' },
-    { value: 'checked', label: 'Отмеченные' },
     { value: 'new', label: 'Новые' },
     { value: 'learning', label: 'Учу' },
     { value: 'known', label: 'Знаю' }
   ].forEach(({ value, label }) => {
-    const btn = document.createElement('button');
-    btn.className = 'btn' + (value === filterStatus ? ' btn-primary' : '');
-    btn.textContent = label;
-    btn.addEventListener('click', () => {
-      filterStatus = value;
-      renderedCount = 0;
-      render();
-    });
-    tabs.appendChild(btn);
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    if (value === filterStatus) opt.selected = true;
+    statusSelect.appendChild(opt);
   });
-  container.appendChild(tabs);
+  statusSelect.addEventListener('change', () => {
+    filterStatus = statusSelect.value;
+    renderedCount = 0;
+    render();
+  });
+  filterBar.appendChild(statusSelect);
 
-  // Табы-фильтры по части речи
-  const posTabs = document.createElement('div');
-  posTabs.className = 'dict-tabs';
+  // 2. Часть речи
+  const posSelect = document.createElement('select');
+  posSelect.className = 'dict-filter-select';
+  posSelect.setAttribute('aria-label', 'Фильтр по части речи');
   [
     { value: 'all', label: 'Все' },
-    { value: 'verb', label: 'Глаголы' },
-    { value: 'noun', label: 'Существ.' },
+    { value: 'noun', label: 'Сущ.' },
+    { value: 'verb', label: 'Глаг.' },
     { value: 'adj', label: 'Прил.' },
-    { value: 'func', label: 'Служебн.' }
+    { value: 'func', label: 'Служ.' }
   ].forEach(({ value, label }) => {
-    const btn = document.createElement('button');
-    btn.className = 'btn' + (value === filterPOS ? ' btn-primary' : '');
-    btn.textContent = label;
-    btn.addEventListener('click', () => {
-      filterPOS = value;
-      renderedCount = 0;
-      render();
-    });
-    posTabs.appendChild(btn);
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    if (value === filterPOS) opt.selected = true;
+    posSelect.appendChild(opt);
   });
-  container.appendChild(posTabs);
+  posSelect.addEventListener('change', () => {
+    filterPOS = posSelect.value;
+    renderedCount = 0;
+    render();
+  });
+  filterBar.appendChild(posSelect);
+
+  // 3. Чекбокс «Показывать в тексте»
+  const showInTextLabel = document.createElement('label');
+  showInTextLabel.className = 'dict-filter-check';
+  const showInTextCbx = document.createElement('input');
+  showInTextCbx.type = 'checkbox';
+  showInTextCbx.checked = filterStatus === 'checked';
+  showInTextCbx.addEventListener('change', () => {
+    filterStatus = showInTextCbx.checked ? 'checked' : 'all';
+    renderedCount = 0;
+    render();
+  });
+  showInTextLabel.appendChild(showInTextCbx);
+  showInTextLabel.appendChild(document.createTextNode(' В тексте'));
+  filterBar.appendChild(showInTextLabel);
+
+  container.appendChild(filterBar);
 
   // Счётчик
   const counter = document.createElement('div');

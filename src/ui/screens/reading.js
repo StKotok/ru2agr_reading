@@ -212,11 +212,28 @@ export async function mount(container, ctx) {
   pageHeading.id = 'reading-heading';
   container.appendChild(pageHeading);
 
+  // Wrapper для текста + инспектора (desktop layout)
+  const readingLayout = document.createElement('div');
+  readingLayout.className = 'reading-layout';
+  container.appendChild(readingLayout);
+
   // Контейнер текста
   const textArea = document.createElement('div');
   textArea.className = 'scripture-text';
   textArea.id = 'scripture-text';
-  container.appendChild(textArea);
+  readingLayout.appendChild(textArea);
+
+  // Инспектор (desktop: панель справа 364px, mobile: скрыт)
+  const inspector = document.createElement('div');
+  inspector.className = 'reading-inspector';
+  inspector.id = 'reading-inspector';
+  inspector.innerHTML = `
+    <div class="inspector-empty">
+      <div class="inspector-empty-icon">α</div>
+      <div class="inspector-empty-text">Выберите греческое слово или букву в тексте — карточка появится здесь.</div>
+    </div>
+  `;
+  readingLayout.appendChild(inspector);
 
   // Загружаем книгу (и греческий текст + alignment если нужен для словарного слоя)
   try {
