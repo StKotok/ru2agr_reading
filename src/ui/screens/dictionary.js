@@ -409,64 +409,68 @@ function renderBatch(list, filtered) {
     const entry = dict[dictId];
     const available = item.hasAlignment;
 
-    // Дивайдер при смене частотной группы (только без поиска)
+    // Group divider at frequency bucket change (only when not searching)
     if (showDividers) {
       const bucket = rankBucket(item.rank);
       if (bucket > lastDividerBucket) {
         lastDividerBucket = bucket;
         const pct = bucketCoverage[bucket];
-        const pctText = pct !== undefined ? ` · приблизительно ${pct}% текста НЗ` : '';
+        const pctText = pct !== undefined ? `≈${pct}% текста НЗ` : '';
         const divider = document.createElement('div');
         divider.className = 'dict-divider';
-        divider.innerHTML = `<span>Топ ${bucket}${pctText}</span>`;
+        divider.innerHTML = `
+          <span class="dict-divider-label">Топ ${bucket}</span>
+          <span class="dict-divider-line"></span>
+          <span class="dict-divider-cov">${pctText}</span>`;
         list.appendChild(divider);
       }
     }
 
-    const row = document.createElement('div');
-    row.className = `dict-row${!available ? ' dict-row--disabled' : ''}`;
-    row.setAttribute('data-strong', String(item.strong));
+    const isActive = false; // active row tracking done via click
+    const hasStatus = entry && entry.status;
     const statusLabel = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry?.status] || '';
+    const checked = entry && entry.showInText !== false;
+    const gloss = lex ? (lex.ruGloss || lex.glossesBerean?.[0] || '') : '';
+
+    const row = document.createElement('div');
+    row.className = `dict-row${!available ? ' dict-row--disabled' : ''}${isActive ? ' dict-row--active' : ''}`;
+    row.setAttribute('data-strong', String(item.strong));
 
     row.innerHTML = `
       <span class="dict-rank">${item.rank}</span>
-      <span class="dict-lemma">${item.lemma}</span>
-      <span class="dict-translit">${item.translit}</span>
-      <span class="dict-freq">${item.count}</span>
-      ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${statusLabel}</span>` : '<span class="dict-badge-placeholder"></span>'}
-      <label class="dict-check" title="${available ? 'Показывать в тексте' : 'Нет проверенного соответствия — слово не участвует в подстановках'}">
-        <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} ${!available ? 'disabled' : ''} aria-label="Показывать ${item.lemma} в тексте">
-      </label>
+      <div class="dict-word-col">
+        <div class="dict-word-line1">
+          <span class="dict-lemma">${item.lemma}</span>
+          <span class="dict-translit">${item.translit}</span>
+          <span class="dict-freq">${item.count}&nbsp;в НЗ</span>
+        </div>
+        ${gloss ? `<div class="dict-gloss">${gloss}</div>` : ''}
+      </div>
+      ${hasStatus ? `<span class="dict-status-pill badge-${entry.status}">${statusLabel}</span>` : ''}
+      ${available
+        ? `<button class="dict-cbx${checked ? ' on' : ''}" aria-label="${checked ? 'Убрать из текста' : 'Показывать в тексте'}" title="${checked ? 'Убрать из текста' : 'Показывать в тексте'}">${checked ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' : ''}</button>`
+        : `<span class="dict-cbx-na" title="Нет соответствия в тексте">–</span>`}
     `;
 
-    // Чекбокс
-    const checkbox = row.querySelector('input[type="checkbox"]');
-    checkbox.addEventListener('change', async () => {
-      let updated = { ...dict };
-      if (checkbox.checked) {
+    // Checkbox toggle
+    const cbxBtn = row.querySelector('.dict-cbx');
+    if (cbxBtn) {
+      cbxBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        let updated = { ...dict };
         if (!updated[dictId]) {
           updated = addWord(dictId, updated);
-          if (progress) {
-            progress = trackNewWord(dictId, progress);
-            saveProgress(progress);
-          }
+          if (progress) { progress = trackNewWord(dictId, progress); saveProgress(progress); }
         }
-        updated = setWordSetting(dictId, 'showInText', true, updated);
-      } else {
-        if (updated[dictId]) {
-          updated = setWordSetting(dictId, 'showInText', false, updated);
-        }
-      }
-      dict = updated;
-      await saveDictionary(dict);
-      store.update(s => ({ ...s, dictionary: dict }));
-      // Точечное обновление бейджа строки
-      const badge = row.querySelector('.dict-badge, .dict-badge-placeholder');
-      if (checkbox.checked && !entry) {
-        badge.className = 'dict-badge badge-new';
-        badge.textContent = 'Новое';
-      }
-    });
+        const newVal = !(updated[dictId]?.showInText !== false);
+        updated = setWordSetting(dictId, 'showInText', newVal, updated);
+        dict = updated;
+        await saveDictionary(dict);
+        store.update(s => ({ ...s, dictionary: dict }));
+        // Refresh just this row
+        updateRow(item);
+      });
+    }
 
     // Тап по строке (не по чекбоксу) → карточка
     row.addEventListener('click', (e) => {
@@ -485,27 +489,36 @@ function renderBatch(list, filtered) {
 function updateRow(item) {
   if (!container) return;
   const row = container.querySelector(`.dict-row[data-strong="${item.strong}"]`);
-  if (!row) return; // строка может быть не отрендерена (DOM-окно)
+  if (!row) return;
   const coreByIdMap = coreById();
   const lex = coreByIdMap.get(item.strong);
   const dictId = lex ? lex.id : `freq-${item.strong}`;
   const entry = dict[dictId];
 
-  // Бейдж
-  const badge = row.querySelector('.dict-badge, .dict-badge-placeholder');
-  if (badge) {
-    if (entry) {
-      badge.className = `dict-badge badge-${entry.status || 'new'}`;
-      badge.textContent = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое';
+  // Status pill
+  const pill = row.querySelector('.dict-status-pill');
+  if (entry) {
+    if (!pill) {
+      // Create pill if it doesn't exist (was empty before)
+      const pillEl = document.createElement('span');
+      pillEl.className = `dict-status-pill badge-${entry.status || 'new'}`;
+      pillEl.textContent = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое';
+      row.querySelector('.dict-word-col')?.after(pillEl);
     } else {
-      badge.className = 'dict-badge-placeholder';
-      badge.textContent = '';
+      pill.className = `dict-status-pill badge-${entry.status || 'new'}`;
+      pill.textContent = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое';
     }
   }
 
-  // Чекбокс
-  const checkbox = row.querySelector('input[type="checkbox"]');
-  if (checkbox) checkbox.checked = !!entry && entry.showInText !== false;
+  // Custom checkbox
+  const cbx = row.querySelector('.dict-cbx');
+  if (cbx) {
+    const checked = !!entry && entry.showInText !== false;
+    cbx.classList.toggle('on', checked);
+    cbx.innerHTML = checked
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>'
+      : '';
+  }
 }
 
 /**
