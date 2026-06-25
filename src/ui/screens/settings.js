@@ -118,6 +118,9 @@ function renderThemeSection() {
       const card = document.createElement('button');
       card.className = 'settings-gallery-card' + (slug === currentTheme ? ' active' : '');
       const label = themeLabel(slug);
+      const colors = THEME_COLORS[slug] || THEME_COLORS.pergament;
+      card.style.background = colors[0];  // paper-цвет темы
+      card.style.color = colors[1];       // ink-цвет темы
       card.innerHTML = `
         <span class="settings-gallery-strips">${themeStrips(slug)}</span>
         <span class="settings-gallery-name">${label}</span>

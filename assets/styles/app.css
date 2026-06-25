@@ -254,6 +254,7 @@ h3 {
   background: var(--primary);
   color: var(--on-primary);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--greek-bg);
 }
 
 .btn-primary:hover {
@@ -1322,6 +1323,7 @@ section[data-chapter] {
 .status-btn.status-learning.active {
   background: var(--primary);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--greek-bg);
 }
 
 .status-btn.status-known.active {
@@ -1432,6 +1434,7 @@ section[data-chapter] {
 .status-btn.status-learning:hover,
 .status-btn.status-learning.active {
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--greek-bg);
 }
 
 .status-btn.status-known {
@@ -2040,6 +2043,7 @@ section[data-chapter] {
   background: var(--selection);
   color: var(--primary);
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--greek-bg);
 }
 
 .letter-cell.letter-locked {
@@ -2112,6 +2116,7 @@ section[data-chapter] {
 
 .onboarding-card:hover {
   border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--greek-bg);
   background: var(--selection);
 }
 
@@ -2543,7 +2548,7 @@ section[data-chapter] {
 
 .settings-gallery-card.active {
   border-color: var(--primary);
-  background: var(--greek-bg);
+  box-shadow: 0 0 0 2px var(--greek-bg);
 }
 
 .settings-gallery-strips {
