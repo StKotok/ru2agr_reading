@@ -7,6 +7,15 @@
   padding: 0;
 }
 
+html, body {
+  background: var(--canvas-bg);
+  font-family: var(--font-sans);
+  font-size: var(--fsBody);
+  color: var(--canvas-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* === Font faces: текст Писания === */
 @font-face {
   font-family: 'Gentium Plus';
@@ -41,9 +50,22 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── Scrollbar ── */
+.scroll-none::-webkit-scrollbar { width: 0; height: 0; }
+.scroll-none { scrollbar-width: none; }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 ::selection {
   background: var(--selection);
-  color: var(--text);
+  color: var(--ink);
 }
 
 body {
