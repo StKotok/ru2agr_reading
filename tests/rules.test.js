@@ -109,19 +109,24 @@ describe('isPunctuationOrSpace', () => {
 });
 
 describe('getRules', () => {
-  it('возвращает массив правил', () => {
+  it('getRules() без аргументов возвращает латиницу (32 правила)', () => {
     const rules = getRules();
     expect(Array.isArray(rules)).toBe(true);
-    expect(rules.length).toBeGreaterThan(0);
+    expect(rules.length).toBe(32);
   });
 
-  it('содержит ровно 38 правил', () => {
-    const rules = getRules();
+  it('getRules("latin") — 32 правила', () => {
+    const rules = getRules('latin');
+    expect(rules.length).toBe(32);
+  });
+
+  it('getRules("cyrillic") — 38 правил', () => {
+    const rules = getRules('cyrillic');
     expect(rules.length).toBe(38);
   });
 
-  it('каждое правило имеет поля ru и gr', () => {
-    const rules = getRules();
+  it('каждое правило имеет поля ru и gr (latin)', () => {
+    const rules = getRules('latin');
     for (const rule of rules) {
       expect(rule).toHaveProperty('ru');
       expect(rule).toHaveProperty('gr');
@@ -130,37 +135,69 @@ describe('getRules', () => {
     }
   });
 
-  it('диграфы (многосимвольные) идут раньше одиночных букв', () => {
-    const rules = getRules();
-    // Находим первый одиночный ru (длиной 1, не regex)
+  it('каждое правило имеет поля ru и gr (cyrillic)', () => {
+    const rules = getRules('cyrillic');
+    for (const rule of rules) {
+      expect(rule).toHaveProperty('ru');
+      expect(rule).toHaveProperty('gr');
+      expect(typeof rule.ru).toBe('string');
+      expect(typeof rule.gr).toBe('string');
+    }
+  });
+
+  it('диграфы идут раньше одиночных букв (latin)', () => {
+    const rules = getRules('latin');
     let firstSingleIdx = -1;
     for (let i = 0; i < rules.length; i++) {
-      const r = rules[i];
-      if (r.ru.length === 1 && !r.regex) {
+      if (rules[i].ru.length === 1 && !rules[i].regex) {
         firstSingleIdx = i;
         break;
       }
     }
-    // Все правила до firstSingleIdx должны быть диграфами или regex-правилами
     for (let i = 0; i < firstSingleIdx; i++) {
-      const r = rules[i];
-      expect(r.ru.length > 1 || r.regex).toBe(true);
+      expect(rules[i].ru.length > 1 || rules[i].regex).toBe(true);
     }
   });
 
-  it('содержит известные правила: кс→ξ, пс→ψ, тх→θ', () => {
-    const rules = getRules();
+  it('диграфы идут раньше одиночных букв (cyrillic)', () => {
+    const rules = getRules('cyrillic');
+    let firstSingleIdx = -1;
+    for (let i = 0; i < rules.length; i++) {
+      if (rules[i].ru.length === 1 && !rules[i].regex) {
+        firstSingleIdx = i;
+        break;
+      }
+    }
+    for (let i = 0; i < firstSingleIdx; i++) {
+      expect(rules[i].ru.length > 1 || rules[i].regex).toBe(true);
+    }
+  });
+
+  it('латиница: содержит th→θ, ph→φ, ch→χ', () => {
+    const rules = getRules('latin');
     const findRu = (ru) => rules.find(r => r.ru === ru);
-    expect(findRu('кс')).toBeDefined();
+    expect(findRu('th').gr).toBe('θ');
+    expect(findRu('ph').gr).toBe('φ');
+    expect(findRu('ch').gr).toBe('χ');
+  });
+
+  it('латиница: содержит w→ω (визуальная мнемоника)', () => {
+    const rules = getRules('latin');
+    const wRule = rules.find(r => r.ru === 'w');
+    expect(wRule).toBeDefined();
+    expect(wRule.gr).toBe('ω');
+  });
+
+  it('кириллица: содержит кс→ξ, пс→ψ, тх→θ', () => {
+    const rules = getRules('cyrillic');
+    const findRu = (ru) => rules.find(r => r.ru === ru);
     expect(findRu('кс').gr).toBe('ξ');
-    expect(findRu('пс')).toBeDefined();
     expect(findRu('пс').gr).toBe('ψ');
-    expect(findRu('тх')).toBeDefined();
     expect(findRu('тх').gr).toBe('θ');
   });
 
-  it('regex-правило для г перед е/и имеет regex: true', () => {
-    const rules = getRules();
+  it('кириллица: regex-правило для г перед е/и', () => {
+    const rules = getRules('cyrillic');
     const gRule = rules.find(r => r.ru === 'г(?=[еи])');
     expect(gRule).toBeDefined();
     expect(gRule.regex).toBe(true);

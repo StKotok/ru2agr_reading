@@ -2,16 +2,29 @@ import { describe, it, expect } from 'vitest';
 import { composeVerse } from '../src/engine/compose.js';
 
 describe('composeVerse', () => {
-  it('mode 1 applies letter layer', () => {
+  it('mode 1 applies letter layer (Cyrillic)', () => {
     const segments = composeVerse('тест', {
-      mode: 1,
-      intensity: 100,
+      mode: 1, intensity: 100,
       progressLetters: {
         'τ': { status: 'known' },
         'ε': { status: 'known' },
         'σ': { status: 'known' }
       },
-      seedPrefix: 'test'
+      seedPrefix: 'test', script: 'cyrillic'
+    });
+    const text = segments.map(s => s.greek || s.plain || '').join('');
+    expect(text).toBe('τεστ');
+  });
+
+  it('mode 1 applies letter layer (Latin)', () => {
+    const segments = composeVerse('test', {
+      mode: 1, intensity: 100,
+      progressLetters: {
+        'τ': { status: 'known' },
+        'ε': { status: 'known' },
+        'σ': { status: 'known' }
+      },
+      seedPrefix: 'test', script: 'latin'
     });
     const text = segments.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('τεστ');
@@ -21,7 +34,7 @@ describe('composeVerse', () => {
     const segments = composeVerse('текст', {
       mode: 1, intensity: 100,
       progressLetters: {},
-      seedPrefix: 'test'
+      seedPrefix: 'test', script: 'cyrillic'
     });
     const text = segments.map(s => s.greek || s.plain || '').join('');
     expect(text).toBe('текст');

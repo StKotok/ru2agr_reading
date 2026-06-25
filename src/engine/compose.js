@@ -19,7 +19,7 @@ import { stripDiacritics } from './rules.js';
 export function composeVerse(verseText, ctx = {}) {
   const {
     mode = 1, intensity = 35, progressLetters = {}, seedPrefix = '',
-    wordEntries = [], showDiacritics = true,
+    wordEntries = [], showDiacritics = true, script = 'latin',
     words = null, grcTokens = null, alignment = null
   } = ctx;
 
@@ -32,7 +32,7 @@ export function composeVerse(verseText, ctx = {}) {
 
   // Mode 1: letter layer only
   if (mode === 1) {
-    return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
+    return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix, script });
   }
 
   // Modes 2–5: word/form layer with alignment
@@ -44,10 +44,10 @@ export function composeVerse(verseText, ctx = {}) {
       });
 
       // Apply letter layer to plain segments only
-      return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics);
+      return applyLetterToPlain(segs, activeLetters, intensity, seedPrefix, showDiacritics, script);
     }
     // Fallback: no alignment data → letter layer
-    return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix });
+    return applyLetterLayer(verseText, { activeLetters, intensity, seedPrefix, script });
   }
 
   // Unknown mode — safe fallback
@@ -57,13 +57,13 @@ export function composeVerse(verseText, ctx = {}) {
 /**
  * Apply letter layer to plain segments within an already-composed form layer.
  */
-function applyLetterToPlain(segments, activeLetters, intensity, seedPrefix, showDiacritics) {
+function applyLetterToPlain(segments, activeLetters, intensity, seedPrefix, showDiacritics, script) {
   const result = [];
   let plainOffset = 0;
   for (const seg of segments) {
     if (seg.plain !== undefined) {
       const letterSegs = applyLetterLayer(seg.plain, {
-        activeLetters, intensity, seedPrefix: `${seedPrefix}:${plainOffset}`
+        activeLetters, intensity, seedPrefix: `${seedPrefix}:${plainOffset}`, script
       });
       result.push(...letterSegs);
       plainOffset += seg.plain.length;

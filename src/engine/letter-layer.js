@@ -11,11 +11,12 @@ import { getRules, isPunctuationOrSpace, finalSigma, preserveCase } from './rule
  * @param {Set<string>} opts.activeLetters — множество строчных греческих букв, доступных для замены
  * @param {number} opts.intensity — 0..100, доля заменяемых вхождений
  * @param {string} opts.seedPrefix — префикс для seed (например, id книги)
+ * @param {'cyrillic'|'latin'} opts.script — алфавит исходного текста
  * @returns {Array<{plain?: string, greek?: string, original?: string, kind?: string, letter?: string}>}
  */
 export function applyLetterLayer(text, opts = {}) {
-  const { activeLetters = new Set(), intensity = 0, seedPrefix = '' } = opts;
-  const rules = getRules();
+  const { activeLetters = new Set(), intensity = 0, seedPrefix = '', script = 'latin' } = opts;
+  const rules = getRules(script);
   const segments = [];
   let index = 0;
 

@@ -513,7 +513,8 @@ function renderWindowed() {
     progressLetters: progress.letters,
     seedPrefix: bookData.id,
     wordEntries,
-    showDiacritics: settings.show?.diacritics ?? false
+    showDiacritics: settings.show?.diacritics ?? false,
+    script: 'latin'                // BSB English — латиница
   };
 
   const renderCtx = { letterNames };
