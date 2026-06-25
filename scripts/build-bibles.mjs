@@ -4,6 +4,7 @@
 
 import { SOURCE_DATA_VERSION, NORMALIZATION_VERSION } from './lib/versions.mjs';
 import { buildSlugMap } from './lib/lexeme-slug.mjs';
+import { WORD_PATTERN } from './lib/align-normalize.mjs';
 import { readSourceJson, readDataJson, writeDataJson, DATA_ROOT } from './lib/fs.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -169,7 +170,9 @@ function tokenizeWords(text) {
   // Разбить текст на слова, сохраняя UTF-16 code unit offsets.
   // Слово = последовательность букв (Unicode letter), цифр или апострофа.
   const words = [];
-  const wordPattern = /[\p{L}\p{N}'’]+/gu;
+  // Single source of truth — WORD_PATTERN из align-normalize.mjs. Клонируем, чтобы
+  // у каждого вызова был свежий lastIndex (общий /g-regex держит состояние между вызовами).
+  const wordPattern = new RegExp(WORD_PATTERN.source, WORD_PATTERN.flags);
   let match;
   while ((match = wordPattern.exec(text)) !== null) {
     words.push({

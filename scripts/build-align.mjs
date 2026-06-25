@@ -86,10 +86,13 @@ function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
 
     if (candIndices.length === 1) {
       const wi = candIndices[0];
+      const span = [engWords[wi].start, engWords[wi].end];
+      // Overlap-guard (defensive; claimed[] already prevents it for word-aligned spans)
+      if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
       claimed[wi] = true;
       td.hasPair = true;
       pairs.push({
-        span: [engWords[wi].start, engWords[wi].end],
+        span,
         tokenId: td.token.id,
         lexemeId: td.token.lexemeId,
         q: 'a',
@@ -123,10 +126,12 @@ function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
 
     if (candIndices.length === 1) {
       const wi = candIndices[0];
+      const span = [engWords[wi].start, engWords[wi].end];
+      if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
       claimed[wi] = true;
       td.hasPair = true;
       pairs.push({
-        span: [engWords[wi].start, engWords[wi].end],
+        span,
         tokenId: td.token.id,
         lexemeId: td.token.lexemeId,
         q: 'a',
@@ -178,12 +183,14 @@ function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
 
     if (candStarts.length === 1) {
       const wi = candStarts[0];
+      const span = [engWords[wi].start, engWords[wi + glossWords.length - 1].end];
+      if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
       for (let j = 0; j < glossWords.length; j++) {
         claimed[wi + j] = true;
       }
       td.hasPair = true;
       pairs.push({
-        span: [engWords[wi].start, engWords[wi + glossWords.length - 1].end],
+        span,
         tokenId: td.token.id,
         lexemeId: td.token.lexemeId,
         q: 'a',
@@ -397,6 +404,16 @@ function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
 
         if (candIndices.length === 1) {
           const wi = candIndices[0];
+          // Corroboration (N3, accuracy-first): a lexeme-level ALTERNATE gloss must not
+          // claim a word that is the DIRECT gloss of another still-unaligned token in this
+          // verse — that word more likely belongs to the other token. Defer instead.
+          const contested = tokenData.some(td2 => {
+            if (td2 === td || td2.hasPair) return false;
+            return norm === normalizeWord(td2.primaryGloss) ||
+                   norm === normalizeWord(normalizeBerean(td2.primaryGloss)) ||
+                   norm === normalizeWord(td2.altGloss);
+          });
+          if (contested) continue; // try next candidate gloss; else leave token unaligned
           const span = [engWords[wi].start, engWords[wi].end];
           if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
           claimed[wi] = true;
@@ -443,10 +460,12 @@ function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
 
     if (candIndices.length === 1) {
       const wi = candIndices[0];
+      const span = [engWords[wi].start, engWords[wi].end];
+      if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
       claimed[wi] = true;
       td.hasPair = true;
       pairs.push({
-        span: [engWords[wi].start, engWords[wi].end],
+        span,
         tokenId: td.token.id,
         lexemeId: td.token.lexemeId,
         q: 'f',
@@ -616,7 +635,8 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
               const w = engWords[manual.wordIndex];
               if (!w) throw new Error(`${ref}: wordIndex ${manual.wordIndex} out of bounds (${engWords.length} words)`);
               span = [w.start, w.end];
-            } else if (manual.wordIndexes && manual.wordIndexes.length >= 2) {
+            } else if (Array.isArray(manual.wordIndexes) && manual.wordIndexes.length >= 1) {
+              // Accept single- or multi-element arrays (consistent with verify Check 15c)
               const first = engWords[manual.wordIndexes[0]];
               const last = engWords[manual.wordIndexes[manual.wordIndexes.length - 1]];
               if (!first || !last) throw new Error(`${ref}: wordIndexes out of bounds`);

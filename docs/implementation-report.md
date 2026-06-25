@@ -318,3 +318,19 @@ M  tests/frequency-data.test.js
 ### Гейты после fixup
 `npm run verify:data` → 0 errors, 41 warnings (accuracy invariant holds; partition complete).
 `npm test` → 193 passed (14 files). `npm run build` → OK. `node scripts/audit-align.mjs` → 535 audited, exit 0.
+
+### Follow-up N1–N3 (post-review hardening)
+- **N1 — гигиена** (0 изменений поведения): стейл-коммент (no-gloss → warn, не «станет error»), удалён dead `dirSize`,
+  `WORD_PATTERN` вынесен в единый источник (`align-normalize.mjs`, build-bibles клонирует), overlap-guard
+  добавлен в Pass 1–4 для единообразия (overlap структурно невозможен — claimed[] + verify Check 15b).
+- **N2 — пилот ручной курации** (де-риск): 4 реальные `manual`-пары (Ἰησοῦς: matthew 14:29, matthew 27:11 ×2,
+  mark 10:32). **Пилот нашёл реальный баг:** ветка `wordIndexes` в build-align требовала `length >= 2` и падала
+  на одноэлементном массиве — рассинхрон с verify Check 15c (`>= 1`). Исправлено (`>= 1`). Теперь manualPair=4,
+  обе ветки (`wordIndex` int + `wordIndexes` array) проверены на живых данных.
+- **N3 — ужесточение `lexicon-gloss-exact`**: добавлен corroboration-guard — лексемная АЛЬТЕРНАТИВНАЯ глосса не
+  клеймит слово, которое является ПРЯМОЙ глоссой другого ещё-невыровненного токена стиха (accuracy-first: лучше
+  отложить, чем дать слабую пару). Эффект: 6335 → 6329 пар (−6 contested, 0.09%), net aligned +1. Вывод: риск
+  тира был низким, но guard закрывает класс «альтернатива крадёт чужое слово». Тир остаётся **audit-required**.
+
+Состояние после N1–N3: aligned **58 976** (81.8%), manual-pair 4, auto-deferred 13 106, no-bsb 15, no-gloss 5.
+verify 0 errors/41 warnings, npm test 193 passed, npm run build OK.

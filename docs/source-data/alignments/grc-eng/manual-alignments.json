@@ -1,4 +1,37 @@
 {
   "normalizationVersion": "bsb-text-v2",
-  "entries": []
+  "entries": [
+    {
+      "ref": "matthew 14:29",
+      "tokenId": "n40014029019",
+      "method": "manual",
+      "wordIndex": 18,
+      "expectedText": "Jesus",
+      "note": "Greek Ἰησοῦν is at verse end (πρὸς τὸν Ἰησοῦν); BSB's leading 'said Jesus' [2] is a translator addition. Maps to [18]."
+    },
+    {
+      "ref": "matthew 27:11",
+      "tokenId": "n40027011003",
+      "method": "manual",
+      "wordIndex": 1,
+      "expectedText": "Jesus",
+      "note": "First Ἰησοῦς (i=3) = 'Jesus stood' -> [1]."
+    },
+    {
+      "ref": "matthew 27:11",
+      "tokenId": "n40027011022",
+      "method": "manual",
+      "wordIndexes": [20],
+      "expectedText": "Jesus",
+      "note": "Second Ἰησοῦς (i=22) = 'Jesus replied' -> [20]. Uses wordIndexes (array) form to exercise that branch."
+    },
+    {
+      "ref": "mark 10:32",
+      "tokenId": "n41010032014",
+      "method": "manual",
+      "wordIndex": 9,
+      "expectedText": "Jesus",
+      "note": "Single Ἰησοῦς (i=14) = 'Jesus was walking ahead' -> [9]; BSB's later 'Again Jesus' [26] is a translator addition."
+    }
+  ]
 }

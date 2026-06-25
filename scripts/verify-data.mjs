@@ -751,8 +751,9 @@ for (const bookId of NT_BOOKS) {
   }
 }
 
-// For now, report empty-gloss tokens as warnings (they'll become errors in T3.3
-// once no-gloss exclusions are in place). After T3.3, switch to error.
+// Empty-gloss fw===false tokens are auto-categorized as `no-gloss` by build-align and
+// are guaranteed to be in the partition (Check 16d). Reported here as warn for visibility
+// — NOT an error, because some are legitimately glossless (pericope / textual variants).
 if (emptyGlossTokens.length > 0) {
   warn(`${emptyGlossTokens.length} fw===false tokens with BOTH glosses empty (will need no-gloss exclusion or fw fix):`);
   for (const t of emptyGlossTokens.slice(0, 20)) {
@@ -1023,14 +1024,6 @@ if (stripErrors === 0) ok('no source-only fields in app-ready data');
 // Check 20: Data size ranges
 // ===========================================================================
 console.log('\n--- Check 20: Data size ranges ---');
-function dirSize(dir) {
-  let total = 0;
-  function walk(d) {
-    const entries = readFileSync ? null : null; // can't walk with readFileSync
-  }
-  // Use approximate check
-  return total;
-}
 
 // Check total size
 try {
