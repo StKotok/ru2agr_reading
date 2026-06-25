@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addWord, setWordSetting, setWordStatus, getActive, countActiveWords, isDictionaryEntry, sanitizeDictionary } from '../src/state/dictionary.js';
+import { addWord, setWordSetting, setWordStatus, getActive, countActiveWords, isDictionaryEntry, sanitizeDictionary, migrateDictionaryData } from '../src/state/dictionary.js';
 
 describe('dictionary', () => {
   describe('addWord', () => {
@@ -262,6 +262,177 @@ describe('dictionary', () => {
       expect(updated.logos.status).toBe('new');
       expect(updated.logos.showInText).toBe(true);
       expect(updated.logos.addedAt).toBe('2026-01-01');
+    });
+  });
+
+  describe('migrateDictionaryData', () => {
+    // Mock core lexicon with real-looking items
+    const coreLexicon = [
+      {
+        lexemeId: 'grc-iesoys-2fba61',
+        lexemeSlug: 'iesous',
+        lexemeKey: 'iesous',
+        legacyKeys: ['iesous', 'freq-2424'],
+        lemma: 'Ἰησοῦς',
+        translit: 'Iēsous',
+        strongs: ['2424']
+      },
+      {
+        lexemeId: 'grc-logos-04b1f3',
+        lexemeSlug: 'logos',
+        lexemeKey: 'logos',
+        legacyKeys: ['logos', 'freq-3056'],
+        lemma: 'λόγος',
+        translit: 'logos',
+        strongs: ['3056']
+      },
+      {
+        lexemeId: 'grc-theos-3f4df2',
+        lexemeSlug: 'theos',
+        lexemeKey: 'theos',
+        legacyKeys: ['theos', 'freq-2316'],
+        lemma: 'θεός',
+        translit: 'theos',
+        strongs: ['2316']
+      },
+      {
+        lexemeId: 'grc-agape-aa1d2f',
+        lexemeSlug: 'agape',
+        lexemeKey: 'agape',
+        legacyKeys: ['agape', 'freq-26'],
+        lemma: 'ἀγάπη',
+        translit: 'agapē',
+        strongs: ['26']
+      },
+      // This one shares a legacyKey with another to test ambiguity
+      {
+        lexemeId: 'grc-pneuma-5bc3d1',
+        lexemeSlug: 'pneuma',
+        lexemeKey: 'pneuma',
+        legacyKeys: ['pneuma', 'freq-4151'],
+        lemma: 'πνεῦμα',
+        translit: 'pneuma',
+        strongs: ['4151']
+      }
+    ];
+
+    // A second core item sharing 'pneuma' key for ambiguity test
+    const coreWithConflict = [
+      ...coreLexicon,
+      {
+        lexemeId: 'grc-pneuma-other-xxxxx',
+        lexemeSlug: 'pneuma-alt',
+        lexemeKey: 'pneuma-alt',
+        legacyKeys: ['pneuma'], // conflict!
+        lemma: 'πνεῦμα',
+        translit: 'pneuma',
+        strongs: ['9999']
+      }
+    ];
+
+    it('переносит slug-ключ → lexemeId', () => {
+      const dict = {
+        iesous: { status: 'known', showInText: true, addedAt: '2025-01-01' }
+      };
+      const progress = { reading: { lastBook: 'john' }, wordsToday: { date: '', added: [] } };
+      const result = migrateDictionaryData(dict, progress, coreLexicon);
+      expect(result.dictionary['grc-iesoys-2fba61']).toBeDefined();
+      expect(result.dictionary['grc-iesoys-2fba61'].status).toBe('known');
+      expect(result.dictionary.iesous).toBeUndefined(); // old key removed
+      expect(result.warnings.length).toBe(0);
+    });
+
+    it('переносит freq-* ключ → lexemeId', () => {
+      const dict = {
+        'freq-3056': { status: 'learning', showInText: true, addedAt: '2025-02-01' }
+      };
+      const progress = { wordsToday: { date: '', added: [] } };
+      const result = migrateDictionaryData(dict, progress, coreLexicon);
+      expect(result.dictionary['grc-logos-04b1f3']).toBeDefined();
+      expect(result.dictionary['grc-logos-04b1f3'].status).toBe('learning');
+      expect(result.dictionary['freq-3056']).toBeUndefined();
+    });
+
+    it('canonical lexemeId passes through unchanged', () => {
+      const dict = {
+        'grc-theos-3f4df2': { status: 'known', showInText: true, addedAt: '2025-03-01' }
+      };
+      const progress = { wordsToday: { date: '', added: [] } };
+      const result = migrateDictionaryData(dict, progress, coreLexicon);
+      expect(result.dictionary['grc-theos-3f4df2']).toBeDefined();
+      expect(result.dictionary['grc-theos-3f4df2'].status).toBe('known');
+    });
+
+    it('неоднозначный legacy-ключ помечается _legacy:true и НЕ удаляется', () => {
+      const dict = {
+        pneuma: { status: 'new', showInText: true, addedAt: '2025-04-01' }
+      };
+      const progress = { wordsToday: { date: '', added: [] } };
+      const result = migrateDictionaryData(dict, progress, coreWithConflict);
+      // pneuma is ambiguous (2 lexemes share it) → stays with _legacy:true
+      expect(result.dictionary.pneuma).toBeDefined();
+      expect(result.dictionary.pneuma._legacy).toBe(true);
+      expect(result.dictionary.pneuma.status).toBe('new');
+      expect(result.warnings.length).toBeGreaterThan(0);
+      expect(result.warnings[0].key).toBe('pneuma');
+    });
+
+    it('идемпотентен: повторный вызов не меняет результат', () => {
+      const dict = {
+        iesous: { status: 'known', showInText: true, addedAt: '2025-01-01' },
+        'freq-3056': { status: 'learning', showInText: true, addedAt: '2025-02-01' },
+        'grc-theos-3f4df2': { status: 'known', showInText: true, addedAt: '2025-03-01' }
+      };
+      const progress = { wordsToday: { date: '', added: ['iesous'] } };
+      const result1 = migrateDictionaryData(dict, progress, coreLexicon);
+      const result2 = migrateDictionaryData(result1.dictionary, result1.progress, coreLexicon);
+      expect(Object.keys(result2.dictionary)).toEqual(Object.keys(result1.dictionary));
+      expect(result2.warnings.length).toBe(0);
+    });
+
+    it('мигрирует progress.wordsToday.added ключи', () => {
+      const dict = {};
+      const progress = {
+        wordsToday: { date: '2025-06-01', added: ['iesous', 'freq-3056', 'unknown-key'] }
+      };
+      const result = migrateDictionaryData(dict, progress, coreLexicon);
+      expect(result.progress.wordsToday.added).toContain('grc-iesoys-2fba61');
+      expect(result.progress.wordsToday.added).toContain('grc-logos-04b1f3');
+      expect(result.progress.wordsToday.added).toContain('unknown-key'); // unmapped passes through
+    });
+
+    it('не-словарные записи: строки пропускаются, объекты без маппинга → _legacy', () => {
+      const dict = {
+        iesous: { status: 'known', showInText: true, addedAt: '2025-01-01' },
+        __meta: { version: 1 },           // passes isDictionaryEntry → no mapping → _legacy:true
+        _schema: 'dict-v1'                 // string → fails isDictionaryEntry → skipped
+      };
+      const progress = { wordsToday: { date: '', added: [] } };
+      const result = migrateDictionaryData(dict, progress, coreLexicon);
+      expect(result.dictionary['grc-iesoys-2fba61']).toBeDefined();
+      // __meta — объект без маппинга, получает _legacy:true
+      expect(result.dictionary.__meta).toBeDefined();
+      expect(result.dictionary.__meta._legacy).toBe(true);
+      // _schema — строка, isDictionaryEntry=false → пропущена
+      expect(result.dictionary._schema).toBeUndefined();
+    });
+
+    it('пустой словарь → пустой результат без warnings', () => {
+      const result = migrateDictionaryData({}, { wordsToday: { date: '', added: [] } }, coreLexicon);
+      expect(Object.keys(result.dictionary).length).toBe(0);
+      expect(result.warnings.length).toBe(0);
+    });
+
+    it('merge: при коллизии canonical-ключа выбирает свежайшую запись', () => {
+      const dict = {
+        'freq-2424': { status: 'known', showInText: true, addedAt: '2025-01-01', updatedAt: '2025-01-01' },
+        'grc-iesoys-2fba61': { status: 'new', showInText: true, addedAt: '2024-06-01' }
+      };
+      const progress = { wordsToday: { date: '', added: [] } };
+      const result = migrateDictionaryData(dict, progress, coreLexicon);
+      // Both map to grc-iesoys-2fba61 — the fresher (2025-01-01) wins
+      expect(result.dictionary['grc-iesoys-2fba61'].status).toBe('known');
+      expect(Object.keys(result.dictionary).length).toBe(1); // only one entry survives
     });
   });
 });

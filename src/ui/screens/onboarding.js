@@ -19,7 +19,7 @@ const PRESETS = [
     desc: 'Смешанный текст — слова из личного словаря заменяются на греческие леммы.',
     readingMode: 'mixed', wordLayer: 'lemma', intensity: 35,
     introduce: 0, allLettersKnown: true,
-    example: 'Пример: «Слово» → λόγος (лемма, всегда одна словарная форма)'
+    example: 'Пример: «Word» → λόγος (лемма, всегда одна словарная форма)'
   },
   {
     id: 3,
@@ -27,7 +27,7 @@ const PRESETS = [
     desc: 'Смешанный текст — реальные формы слов (падежи, спряжения).',
     readingMode: 'mixed', wordLayer: 'form', intensity: 35,
     introduce: 0, allLettersKnown: true,
-    example: 'Пример: «Слову» → λόγῳ (реальная форма, зависит от падежа!)'
+    example: 'Пример: «Word» → λόγῳ (реальная форма, зависит от падежа в оригинале!)'
   },
 ];
 
@@ -124,7 +124,7 @@ function renderStep2() {
   const johnCard = document.createElement('button');
   johnCard.className = 'card onboarding-card';
   johnCard.style.setProperty('--onboarding-stripe', STRIPE_COLORS[0]);
-  johnCard.innerHTML = '<strong>Иоанн 1</strong><p>В начале было Слово — классический старт</p>';
+  johnCard.innerHTML = '<strong>Иоанн 1</strong><p>«In the beginning was the Word» — классический старт</p>';
   johnCard.addEventListener('click', () => finish('john'));
   cards.appendChild(johnCard);
 
