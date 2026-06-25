@@ -93,21 +93,23 @@ export async function loadFrequency() {
     const core = await loadCoreLexicon();
     const alignedLexemes = await loadAlignedLexemes();
     if (!core) return null;
-    return core.map(item => ({
-      lexemeId: item.lexemeId,
-      lexemeKey: item.lexemeKey || item.lexemeSlug,
-      lemma: item.lemma,
-      transliteration: item.translit,
-      tokenCount: item.freqTokenCount,
-      verseCount: item.freqVerseCount,
-      rank: item.freqRank,
-      strong: item.strongs?.[0] || null,
-      pos: item.pos,
-      glossesEn: item.glossesBerean || [],
-      isFunctionWord: item.isFunctionWord,
-      firstRef: item.allRefs?.[0] || null,
-      hasAlignment: alignedLexemes ? alignedLexemes.has(item.lexemeId) : false
-    }));
+    return core
+      .map(item => ({
+        lexemeId: item.lexemeId,
+        lexemeKey: item.lexemeKey || item.lexemeSlug,
+        lemma: item.lemma,
+        transliteration: item.translit,
+        count: item.freqTokenCount,
+        verseCount: item.freqVerseCount,
+        rank: item.freqRank,
+        strong: item.strongs?.[0] || null,
+        pos: item.pos,
+        glossesEn: item.glossesBerean || [],
+        isFunctionWord: item.isFunctionWord,
+        firstRef: item.allRefs?.[0] || null,
+        hasAlignment: alignedLexemes ? alignedLexemes.has(item.lexemeId) : false
+      }))
+      .sort((a, b) => a.rank - b.rank);
   } catch (e) {
     console.warn('loadFrequency error:', e);
     return null;
