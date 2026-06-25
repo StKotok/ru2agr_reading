@@ -1108,99 +1108,106 @@ section[data-chapter] {
   cursor: default;
 }
 
+/* --- Заголовки секций (как readerSecLabel в прототипе) --- */
+.word-card-inline-label,
+.word-card-info-label,
+.word-card-lemma-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.6875rem;         /* 11px */
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 18px;
+  margin-bottom: 6px;
+}
+
 /* --- Значение в этом стихе (Синодальный перевод) --- */
 .word-card-inline {
-  margin-bottom: 14px;
+  margin-bottom: 0;
 }
 
 .word-card-inline-label {
-  font-size: 0.75rem;          /* 12px */
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 2px;
+  margin-top: 18px;
 }
 
 .word-card-inline-word {
+  font-family: 'Gentium Plus', serif;
   font-size: 1.5rem;            /* 24px */
+  font-weight: 700;
   color: var(--text);
   line-height: 1.3;
-  font-weight: 500;
 }
 
 /* --- Информационные блоки (также означает, определение, происхождение) --- */
 .word-card-info-block {
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .word-card-info-label {
-  font-size: 0.75rem;          /* 12px */
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 3px;
+  margin-top: 18px;
 }
 
 .word-card-info-text {
-  font-size: 0.8125rem;        /* 13px */
-  color: var(--text);
-  line-height: 1.5;
+  font-family: 'Gentium Plus', serif;
+  font-size: 1.03125rem;        /* 16.5px */
+  color: var(--text-soft);
+  line-height: 1.55;
 }
 
-/* --- Подробнее --- */
-
-
-
-/* --- Лемма --- */
+/* --- Лемма: сетка «словарная форма» (как dict grid в прототипе) --- */
 .word-card-lemma-section {
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .word-card-lemma-grid {
-  display: inline-grid;
-  grid-template-columns: auto auto auto;
-  grid-template-rows: auto auto;
-  column-gap: 6px;
-  row-gap: 0;
-  align-items: baseline;
-  line-height: 1.15;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 0 14px;
+  width: 100%;
 }
 
-/* Колонка 1 (слова): правое выравнивание — ближе к стрелке */
 .word-card-lemma-grid > :nth-child(3n+1) {
-  justify-self: end;
+  text-align: right;
 }
 
-/* Колонка 2 (стрелки): центр */
 .word-card-lemma-grid > :nth-child(3n+2) {
-  justify-self: center;
+  text-align: center;
 }
 
-/* Колонка 3 (лемма): левое выравнивание — ближе к стрелке */
 .word-card-lemma-grid > :nth-child(3n+3) {
-  justify-self: start;
+  text-align: left;
 }
 
 .word-card-lemma {
   font-family: 'Gentium Plus', serif;
-  font-size: 1.25rem;          /* 20px */
+  font-size: 1.625rem;          /* 26px как в прототипе */
   color: var(--greek);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .word-card-surface {
   font-family: 'Gentium Plus', serif;
-  font-size: 1.25rem;
+  font-size: 1.625rem;          /* 26px */
   color: var(--greek-word);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .word-card-lemma-arrow {
-  color: var(--muted);
-  font-size: 1rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--muted2);
+  font-size: 1.125rem;          /* 18px */
 }
 
 .word-card-lemma-label {
-  font-size: 0.75rem;          /* 12px */
-  color: var(--muted);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.6875rem;         /* 11px */
+  color: var(--muted2);
 }
 
 .morph-chip {
