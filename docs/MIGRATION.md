@@ -1,69 +1,109 @@
-# Migration to Clean Data: Vision & Technical Plan
+# Migration to Clean Data: Robust Technical Plan
 
-> **Status:** Принят. 2026-06-24. Обновлён после критического разбора (см. `docs/obsolete-dont-use/docs/MIGRATION-feedback.md`).
-> **Цель:** Перевести приложение на новые данные с чистыми лицензиями. Первый язык — английский.
-
----
-
-## 1. Текущее состояние vs. Целевое
-
-| Измерение | Было (dev2 до чистки) | Стало (цель) |
-|---|---|---|
-| **Данные** | SBLGNT/MACULA с UBS-полями, Strong's, Синодальный перевод, alignment через старый пайплайн | SBLGNT/MACULA (без UBS), Cherith + Berean глоссы, Strong's, BSB. Всё — public domain или CC-BY |
-| **Пайплайн** | 23 скрипта, частично завязанных на UBS | 5 скриптов: bibles, lexicon, align, app-config, verify |
-| **Язык данных** | Русский (Синодальный) | Английский (BSB). UI остаётся русским, меняются данные и метки перевода |
-| **App-ready данные** | Не существуют (`assets/data/` пуста) | Генерируются пайплайном из `docs/source-data/` |
-| **Код** | `src/` — engine + UI + state + storage | UI сохраняется, engine/data-загрузчики адаптируются |
+> **Status:** проект плана, обновлён после критического разбора 2026-06-24.
+> **Цель:** перевести приложение на данные с чистыми лицензиями. Первый язык данных — английский (BSB). UI пока остаётся русским.
+>
+> **Ключевые решения v2:** runtime/IndexedDB используют `lexemeId` из enriched; app-ready данные коммитятся в `assets/data/`.
 
 ---
 
-## 2. Почему английский первым
+## 0. Блокирующие решения
 
-- BSB — public domain, не требует разрешений
-- Cherith (CC-BY 4.0) + Berean (PD) глоссы — пословное греко-английское выравнивание
-- Strong's Dictionary на английском (PD)
-- Русские переводы (РБО, Десницкий, Кассиан) требуют разрешений → вторым этапом
+### 0.1 Канонический ID лексемы
 
----
+В source-data сейчас есть два разных класса ключей:
 
-## 3. Архитектура данных
+| Источник | Пример | Семантика |
+|---|---:|---|
+| `enriched.books[].lexemeId` | `grc-biblos-9adfa6` | стабильный enriched/MACULA-derived id |
+| `lexicon/top1000.core.json[].lexemeKey` | `biblos` | человекочитаемый slug старого curated-словаря |
+| `lexicon/top1000.core.json[].maculaLexemeId` | `grc-biblos-9adfa6` | связь curated-словаря с enriched id |
+| старые пользовательские ключи | `logos`, `freq-3056` | IndexedDB `dictionary`, `wordsToday` |
 
-### 3.1 Источники → App-ready
+**Решение для v2:** канонический runtime key = `lexemeId` из enriched, например `grc-biblos-9adfa6`.
 
-```
-docs/source-data/
-├── enriched/books/*.json           (27 книг, плоский список токенов)
-├── enriched/lexemes.json           (5468 лемм)
-├── enriched/frequency.json         (ранги частотности)
-├── translations/bsb-complete.json   (66 книг → фильтруем до 27 НЗ)
-├── translations/asv.json           (запасной буквальный)
-├── translations/ult.json           (технический для сверки)
-├── translations/oeb.json           (NT, запасной)
-├── translations/web.json           (запасной, с апокрифами)
-├── strongs/strongs-dictionary.json (PD, английские определения)
-├── strongs/strongs-ru-alignment.json (русские соответствия Strong's)
-├── lexicon/top1000.core.json       (проект: 204 леммы с русскими глоссами)
-├── app-config/alphabet.json        (греческий алфавит)
-├── app-config/books.json           (метаданные книг)
-└── app-config/schema/              (JSON-схемы)
-
-        ↓ ПАЙПЛАЙН (5 скриптов) ↓
-
-assets/data/
-├── bibles/grc/{book}.json          (греческий текст с глоссами)
-├── bibles/eng/{book}.json          (BSB — основной английский)
-├── lexicon/core.json               (словарь: лемма → всё)
-├── lexicon/dictionary.json         (Strong's определения)
-├── align/grc-eng/{book}.json       (span-based выравнивание)
-├── alphabet.json                   (копия из source-data)
-├── books.json                      (копия из source-data)
-└── data-manifest.json              (генерируется)
-```
-
-### 3.2 App-ready формат: греческий текст
+App-ready данные должны хранить оба поля:
 
 ```json
-// assets/data/bibles/grc/matthew.json
+{
+  "lexemeId": "grc-biblos-9adfa6",
+  "lexemeSlug": "biblos"
+}
+```
+
+Правила:
+- `lexemeId` используется в `dictionary`, `progress.wordsToday`, alignment, `data-lexeme-key`, словарных карточках и `wordEntries`.
+- `lexemeSlug` используется только для отображения, поиска, совместимости и диагностики.
+- Старый `freq-*` формат не используется как новый ключ; при загрузке словаря он мигрирует в `lexemeId` через Strong's fallback, если соответствие однозначно.
+- Если Strong's номер даёт несколько лексем, запись не мигрируется автоматически; она остаётся legacy-записью и получает warning в `dictionary_migration_warnings`.
+
+### 0.2 App-ready данные: commit policy
+
+Текущие правила проекта в `AGENTS.md` говорят: данные генерируются скриптами и коммитятся. Поэтому решение “не коммитить `assets/data/`” нельзя принимать внутри миграционного плана без изменения project policy.
+
+**Решение v2:** коммитить app-ready данные в `assets/data/`.
+
+Причины:
+- локальный `npm run dev` работает сразу после clone/install;
+- Netlify deploy не зависит от долгой генерации данных;
+- diff данных можно ревьюить;
+- rollback прост: откат кода и данных одним git revert;
+- это соответствует текущим правилам проекта.
+
+Вариант “не коммитить app-ready данные” не входит в этот план. Для него нужен отдельный approved change к `AGENTS.md`, `.gitignore`, Netlify build command, README и dev workflow.
+
+---
+
+## 1. Текущее состояние vs. цель
+
+| Измерение | Сейчас | Цель v2 |
+|---|---|---|
+| Данные | source-data уже очищены от UBS; `assets/data/` отсутствует | app-ready данные генерируются из `docs/source-data/` |
+| Основной перевод | Синодальный в старых форматах/архиве | BSB, только НЗ |
+| Греческий оригинал | enriched SBLGNT/MACULA без UBS semantic fields | app-ready Greek book packs |
+| Alignment | старый русский `syn--sblgnt-macula` в source-data/obsolete | новый `grc-eng` span-based alignment |
+| UI | русская оболочка, старые строки про русский текст | русская оболочка, строки адаптированы под английский BSB |
+| Storage | IndexedDB `ru2agr_db` / `app_state` | те же database/store/key names, с миграцией словарных ключей |
+
+---
+
+## 2. Лицензии и атрибуция
+
+Разрешённые источники:
+
+| Данные | Лицензия | Обязательное действие |
+|---|---|---|
+| SBLGNT/MACULA cleaned | CC BY 4.0 | сохранить attribution в `README.md`, `CATALOG.md` и экране “О приложении” |
+| Cherith glosses | CC BY 4.0 | сохранить attribution в `README.md`, `CATALOG.md` и экране “О приложении” |
+| BSB | Public domain | сохранить источник `https://berean.bible/` |
+| Strong's Dictionary | Public domain | указать источник в `README.md`/`CATALOG.md`/about |
+| Project curated RU data | project-owned | указать как данные проекта |
+
+`data-manifest.json` — технический манифест загрузчика. Он не должен содержать attribution/licensing blocks и не должен становиться третьим источником правды о лицензиях.
+
+Читабельность и полнота attribution проверяются через `README.md`, `docs/source-data/CATALOG.md` и экран “О приложении”. Нельзя добавлять новые текстовые источники без обновления `docs/source-data/CATALOG.md` и пользовательской атрибуции в `src/ui/screens/about.js`.
+
+---
+
+## 3. App-ready форматы
+
+### 3.1 Дерево данных
+
+```text
+assets/data/
+├── bibles/grc/{book}.json
+├── bibles/eng/{book}.json
+├── align/grc-eng/{book}.json
+├── lexicon/core.json
+├── lexicon/dictionary.json
+├── alphabet.json
+├── books.json
+└── data-manifest.json
+```
+
+### 3.2 Greek book pack
+
+```json
 {
   "schema": "original-book-v2",
   "bookId": "matthew",
@@ -78,11 +118,12 @@ assets/data/
         "id": "n40001001001",
         "s": "Βίβλος",
         "lemma": "βίβλος",
-        "lexemeKey": "biblos",
+        "lexemeId": "grc-biblos-9adfa6",
+        "lexemeSlug": "biblos",
         "translit": "Biblos",
         "morph": "N-NSF",
         "morphLabelRu": "сущ., им. падеж, ед. ч., жен. род",
-        "strong": ["976"],
+        "strongs": ["976"],
         "glossBerean": "[The] book",
         "glossCherith": "book",
         "pos": "noun",
@@ -95,253 +136,223 @@ assets/data/
 }
 ```
 
-### 3.3 Таблица трансформации полей: enriched → app-ready
+Field mapping:
 
-| Поле в enriched | Тип в enriched | Поле в app-ready | Тип в app-ready | Примечание |
-|---|---|---|---|---|
-| `id` | str | `id` | str | как есть |
-| `surface` | str | `s` | str | переименовать |
-| `lemma` | str | `lemma` | str | как есть |
-| `lexemeId` | str | `lexemeKey` | str | в enriched имена, в app-ready ключи |
-| `transliteration` | str | `translit` | str | как есть (уже готово) |
-| `morphology.code` | str (внутри объекта) | `morph` | str | **извлечь** `.code` из объекта `morphology` |
-| `morphology.labelRu` | str (внутри объекта) | `morphLabelRu` | str | **извлечь** `.labelRu` из `morphology` |
-| `strong` | [str] | `strong` | [str] | как есть |
-| `pos.labelRu` | str (внутри объекта) | `posLabelRu` | str | **извлечь** `.labelRu` из `pos` |
-| `pos.primary` | str (внутри объекта) | `pos` | str | **извлечь** `.primary` из `pos` |
-| `glossEn` | str | `glossBerean` | str | Berean Interlinear (PD) — с артиклями в скобках |
-| `english` | str | `glossCherith` | str | Cherith Glosses (CC-BY 4.0) — простое слово |
-| `isFunctionWord` | bool | `fw` | bool | переименовать |
-| — (из frequency.json) | — | `freqRank` | int | join по `lexemeId` |
+| enriched field | app-ready field | Notes |
+|---|---|---|
+| `id` | `id` | token id, unchanged |
+| `surface` | `s` | visible Greek form |
+| `lemma` | `lemma` | unchanged |
+| `lexemeId` | `lexemeId` | canonical key |
+| curated slug by `maculaLexemeId` | `lexemeSlug` | optional, for display/backcompat |
+| `transliteration` | `translit` | if object, use `.value`; if string, use as-is |
+| `morphology.code` | `morph` | Robinson-like code |
+| `morphology.labelRu` | `morphLabelRu` | display label |
+| `strong` | `strongs` | always array of strings |
+| `pos.primary` / `pos.source` | `pos` | normalized POS |
+| `pos.labelRu` | `posLabelRu` | display label |
+| `glossEn` | `glossBerean` | Berean gloss |
+| `english` | `glossCherith` | Cherith gloss |
+| `isFunctionWord` | `fw` | boolean |
+| `frequency.rank` or join by `lexemeId` | `freqRank` | integer or `null` |
 
-**Почему `glossEn` = Berean, а `english` = Cherith:** соответствие проверено по покрытию в build-report.md (Berean `gloss`: 99.4% ≈ enriched `glossEn`: 99.3%; Cherith `english`: 96.6% ≈ enriched `english`: 96.7%). Berean — интерлинеарный стиль с артиклями в скобках (`[The] book`). Cherith — простое слово (`book`).
+### 3.3 English BSB book pack
 
-### 3.4 App-ready формат: английский перевод (BSB)
+The translation pack must preserve frozen word offsets. The current engine depends on them.
 
 ```json
-// assets/data/bibles/eng/matthew.json
 {
   "schema": "translation-book-v2",
-  "translationId": "BSB",
+  "translationId": "bsb",
   "bookId": "matthew",
   "title": "Matthew",
+  "short": "Matt",
+  "normalizationVersion": "bsb-text-v1",
   "license": "Public domain",
   "attribution": "Berean Standard Bible, https://berean.bible/",
   "chapters": [{
     "n": 1,
     "verses": [{
+      "ref": "matthew 1:1",
       "n": 1,
-      "text": "This is the record of the genealogy of Jesus Christ, the son of David, the son of Abraham:"
+      "text": "This is the record of the genealogy of Jesus Christ, the son of David, the son of Abraham:",
+      "words": [
+        { "i": 0, "text": "This", "start": 0, "end": 4 }
+      ]
     }]
   }]
 }
 ```
 
-**Конвертация BSB:** исходный формат — typed content array (`[{type: "heading"|"verse"|"line_break", ...}]`).
+BSB conversion rules:
+- Keep only the 27 NT books.
+- `type: "verse"` becomes one verse object.
+- Verse `content` strings are concatenated.
+- Inline objects with `noteId` are skipped.
+- Inline objects with `lineBreak: true` become one space.
+- Top-level `type: "heading"` and `type: "line_break"` are skipped.
+- Build the final displayed `text` once with deterministic whitespace normalization.
+- Generate `words` from that final displayed `text`.
+- Do not mutate `text` after `words` are generated.
+- Text normalization is part of the `translation-book-v2` data contract. Changing normalization rules requires:
+  - bumping `normalizationVersion`;
+  - regenerating all BSB translation packs;
+  - regenerating all dependent `grc-eng` alignment packs;
+  - rejecting mixed packs generated with different normalization versions.
+- Every verse must have `ref`, `n`, `text`, and `words`.
 
-Правила конвертации:
-- `type: "verse"` → `{n, text}`. Поле `content` — массив строк и объектов `{text, noteId}`. Строки конкатенируются, объекты с `noteId` пропускаются (сноски не сохраняем). `line_break` между кусками verse-контента → пробел.
-- `type: "heading"` → **пропускается** (заголовки не включаются в app-ready формат)
-- `type: "line_break"` → **пропускается** (не значим для построчного рендеринга)
-- Фильтрация: только 27 книг НЗ. Маппинг ID: uppercase BSB (`MAT`, `MRK`, ...) → lowercase app-ready (`matthew`, `mark`, ...)
-
-### 3.5 App-ready формат: alignment
+### 3.4 Alignment book pack
 
 ```json
-// assets/data/align/grc-eng/matthew.json
 {
   "schema": "alignment-book-v2",
   "alignmentId": "grc-eng",
   "bookId": "matthew",
+  "normalizationVersion": "bsb-text-v1",
+  "stats": {
+    "tokenCount": 18329,
+    "alignedTokenCount": 0,
+    "unalignedTokenCount": 0,
+    "warningCount": 0
+  },
   "pairsByRef": {
     "matthew 1:1": [
-      {"span": [0, 4], "tokenId": "n40001001001", "lexemeKey": "biblos"},
-      {"span": [8, 12], "tokenId": "n40001001002", "lexemeKey": "genesis"},
-      ...
+      {
+        "span": [0, 4],
+        "tokenId": "n40001001001",
+        "lexemeId": "grc-biblos-9adfa6",
+        "q": "a",
+        "method": "gloss-exact"
+      }
     ]
+  },
+  "warningsByRef": {
+    "matthew 1:1": []
   }
 }
 ```
 
-**Это НЕ простая переупаковка enriched-данных.** Enriched содержит пословные глоссы (каждому греческому токену — английское слово), но engine требует span-based alignment: для каждого слова английского текста — позиция `[start, end]` в `verseText` и привязка к греческому `tokenId`.
+`q` values:
+- `a`: accepted deterministic match.
+- `f`: fuzzy but accepted; visible in text only if verified by rules.
+- `u`: unaligned; must not render as replacement.
+- `x`: excluded function-word or punctuation-only mapping; must not render as replacement.
 
-Однако для английского построение alignment **существенно проще**, чем для русского:
-1. Глоссы enriched уже на английском (том же языке, что и перевод)
-2. Алгоритм: токенизировать BSB-стих → для каждого английского слова найти соответствующий enriched-токен по совпадению глосса → вычислить span в тексте стиха
-3. Не требуется кандидат-генерация, сертификация, LLM-аудит (как в старом `build:align`)
+Alignment pairs must be sorted by `span[0]`, then `tokenId`. A single BSB span can map to multiple Greek tokens only when the pair explicitly sets `groupId`. Duplicate spans without `groupId` are a verify error.
 
 ---
 
-## 4. Пайплайн: 5 скриптов
+## 4. Alignment algorithm and quality gates
 
-### 4.1 Обзор
+Direct gloss-to-BSB matching is the v1 baseline. More complex scoring is intentionally deferred until the first alignment report proves it is needed.
 
+### 4.1 V1 algorithm
+
+For each verse:
+
+1. Load final BSB `verse.text` and `verse.words`.
+2. Load Greek enriched tokens for the same `ref`.
+3. Build normalized candidates from:
+   - `glossBerean` with bracket text treated as optional;
+   - `glossCherith`;
+   - lemma-level `glossesEn` / `englishGlosses`;
+   - exact BSB word text.
+4. Match in deterministic passes:
+   - exact normalized single-word match;
+   - bracket-optional single-word match;
+   - normalized phrase match across adjacent BSB words;
+   - simple fuzzy match: lowercase, strip punctuation, compare ASCII apostrophe variants.
+5. Reject ambiguous candidates. Do not guess between repeated BSB words in v1.
+6. Emit `q="u"` warning for unaligned meaningful tokens.
+7. Emit `q="x"` for excluded function words only when exclusion is intentional and counted.
+
+No `Math.random()` or nondeterministic tie-breaking.
+
+### 4.2 Deferred v2 alignment work
+
+Add scoring only if v1 cannot pass the quality gates. Potential v2 tools:
+- one-to-many / many-to-one alignment with explicit `groupId`;
+- monotonic order bonus;
+- distance penalty from Greek token order;
+- score margins for ambiguous candidates.
+
+These are not v1 requirements.
+
+### 4.3 Required reports
+
+`build-align.mjs` must write one machine-readable report:
+
+```text
+assets/data/align/grc-eng/build-report.json
 ```
+
+The build command should also print a concise console summary from the JSON report. A Markdown report may be generated later from the JSON, but it is not a required artifact.
+
+Minimum report fields:
+- aligned token percentage;
+- aligned non-function token percentage;
+- verses with zero accepted pairs;
+- duplicate span count;
+- ambiguous candidate count;
+- top unaligned lexemes;
+- worst 50 verses by coverage;
+- 20 sample verses across Gospels, Paul, Hebrews, Catholic Epistles, Revelation.
+
+### 4.4 Fail thresholds
+
+Initial hard gates:
+- 27 alignment book files exist.
+- 0 invalid token ids.
+- 0 spans outside `verse.text`.
+- 0 spans that include external punctuation unless intentionally grouped.
+- 0 duplicate spans without `groupId`.
+- 0 pairs pointing to a different verse.
+- At least 90% accepted non-function-token coverage.
+- Target for v2 alignment quality: 92% accepted non-function-token coverage.
+- At least 95% verses have at least one accepted pair.
+
+Coverage thresholds must not be silently lowered. Any threshold change requires updating this document.
+
+---
+
+## 5. Pipeline
+
+### 5.1 Scripts
+
+```text
 scripts/
-├── build-bibles.mjs       — греческий текст + BSB
-├── build-lexicon.mjs      — словарь (Strong's + частотность + русские глоссы)
-├── build-align.mjs        — выравнивание греческий↔BSB (span-based)
-├── build-app-config.mjs   — alphabet.json, books.json, data-manifest.json
-├── build-data.mjs         — оркестратор
-└── verify-data.mjs        — верификация сгенерированных данных
+├── build-bibles.mjs
+├── build-lexicon.mjs
+├── build-align.mjs
+├── build-app-config.mjs
+├── build-data.mjs
+└── verify-data.mjs
 ```
 
-### 4.2 `build-bibles.mjs`
+The repository currently has `package.json` commands that refer to `scripts/`, while `scripts/` is absent in the working tree. Phase 1 must restore a coherent scripts baseline before changing runtime code.
 
-**Вход:**
-- `docs/source-data/enriched/books/{book}.json` (27 файлов, плоский массив токенов)
-- `docs/source-data/enriched/frequency.json` (ранги по lexemeId)
-- `docs/source-data/translations/bsb-complete.json` (66 книг, typed content)
+### 5.2 Atomic generation
 
-**Выход:**
-- `assets/data/bibles/grc/{book}.json` (27 файлов, иерархический)
-- `assets/data/bibles/eng/{book}.json` (27 файлов, BSB — только НЗ)
+`build-data.mjs` must generate into a temporary directory first:
 
-**Детальная логика:**
-
-1. **Загрузка frequency:** прочитать `frequency.json` → Map `<lexemeId, rank>`
-
-2. **Генерация греческих книг (grc):**
-   ```
-   для каждой книги из списка 27 НЗ:
-     а. Прочитать enriched/books/{book}.json → плоский массив токенов
-     б. Добавить freqRank: token.lexemeId → frequencyMap.get(lexemeId)?.rank ?? null
-     в. Сгруппировать токены по chapter → verse:
-        - Ключ группировки: token.chapter (int), token.verse (int)
-        - В каждом стихе: отсортировать по tokenIndex
-        - Проверить, что количество токенов не изменилось (sum = исходная длина массива)
-     г. Для каждого токена применить маппинг полей (см. таблицу 3.3):
-        - morphology.code → morph (плоская строка)
-        - morphology.labelRu → morphLabelRu
-        - transliteration (строка) → translit (как есть)
-        - glossEn → glossBerean
-        - english → glossCherith
-        - isFunctionWord → fw
-        - surface → s
-        - id, lemma, strong → как есть
-        - lexemeId → lexemeKey (переименовать, значение то же)
-     д. Записать {schema, bookId, title, chapters: [{n, verses: [{n, ref, tokens}]}]}
-   ```
-
-3. **Генерация BSB-книг (eng):**
-   ```
-   загрузить bsb-complete.json
-   маппинг ID книг: {MAT: matthew, MRK: mark, LUK: luke, JHN: john, ...}
-   для каждой из 27 книг НЗ:
-     а. Найти книгу в BSB по uppercase ID
-     б. Для каждой главы:
-        - Пройти по content-массиву
-        - type="verse": собрать text из content (строки конкатенировать,
-          объекты с noteId пропускать, line_break → пробел)
-        - type="heading", type="line_break": пропустить
-     в. Записать {schema, translationId, bookId, title, license,
-        attribution, chapters: [{n, verses: [{n, text}]}]}
-   ```
-
-4. **Маппинг ID книг (BSB uppercase → app-ready lowercase):**
-   ```
-   MAT→matthew, MRK→mark, LUK→luke, JHN→john, ACT→acts,
-   ROM→romans, 1CO→1corinthians, 2CO→2corinthians, GAL→galatians,
-   EPH→ephesians, PHP→philippians, COL→colossians,
-   1TH→1thessalonians, 2TH→2thessalonians, 1TI→1timothy,
-   2TI→2timothy, TIT→titus, PHM→philemon, HEB→hebrews,
-   JAS→james, 1PE→1peter, 2PE→2peter, 1JN→1john,
-   2JN→2john, 3JN→3john, JUD→jude, REV→revelation
-   ```
-
-### 4.3 `build-lexicon.mjs`
-
-**Вход:**
-- `docs/source-data/enriched/lexemes.json` (5468 лемм)
-- `docs/source-data/enriched/frequency.json` (ранги)
-- `docs/source-data/strongs/strongs-dictionary.json` (PD, англ. определения по номерам Strong's)
-- `docs/source-data/strongs/strongs-ru-alignment.json` (рус. соответствия по номерам Strong's)
-- `docs/source-data/lexicon/top1000.core.json` (проект: 204 леммы с рус. глоссами, ruMatches, refs)
-
-**Выход:**
-- `assets/data/lexicon/core.json` — комбинированный словарь
-- `assets/data/lexicon/dictionary.json` — Strong's определения
-
-**Детальная логика:**
-
-1. **core.json:**
-   ```
-   для каждой леммы из lexemes.json:
-     - id, lemma, transliteration, pos, strong, frequency, allRefs,
-       attestedForms, glossesEn (Berean), englishGlosses (Cherith) → как есть
-     - добавить freqRank = frequency.rank (join по lexemeId)
-     - если есть strong и strong есть в strongs-ru-alignment:
-         добавить ruPrimary (основной русский глосс)
-         добавить ruTopWords (русские альтернативы)
-     - если lemma есть в top1000.core.json:
-         добавить ruMatches, ruExclude, refs (примеры для показа)
-   ```
-
-2. **dictionary.json:**
-   ```
-   переупаковать strongs-dictionary.json:
-     ключ = номер Strong's → { definitionEn, greekWord, translit }
-   добавить из strongs-ru-alignment.json:
-     ключ = номер Strong's → { ruPrimary, ruTopWords }
-   ```
-
-### 4.4 `build-align.mjs`
-
-**Вход:**
-- `docs/source-data/enriched/books/{book}.json` — токены с глоссами
-- `assets/data/bibles/eng/{book}.json` — сгенерированный BSB (выход build-bibles)
-- `assets/data/bibles/grc/{book}.json` — сгенерированный греческий (выход build-bibles)
-
-**Выход:**
-- `assets/data/align/grc-eng/{book}.json` — span-based alignment
-
-**Алгоритм выравнивания (для каждого стиха):**
-
-```
-1. Взять BSB verse.text
-2. Токенизировать verse.text в слова с позициями:
-   words = tokenizeWithOffsets(verse.text)
-   // words[i] = {text: "This", start: 0, end: 4}
-3. Взять enriched-токены этого стиха (enrichedTokens)
-4. Для каждого enriched-токена t:
-   а. Взять t.glossEn (Berean) как searchGloss
-   б. Очистить searchGloss от скобок: удалить '[', ']'
-   в. Найти в words[i] слово, совпадающее с searchGloss
-      (по lemma-нормализации: lowercase, убрать пунктуацию)
-   г. Если найдено: создать alignment pair {
-        span: [words[i].start, words[i].end],
-        tokenId: t.id,
-        lexemeKey: t.lexemeId
-      }
-   д. Если НЕ найдено: пометить q="u" (unaligned)
-5. Записать pairsByRef[ref] = [alignment pairs]
+```text
+assets/.data-tmp-{timestamp}/
 ```
 
-**Ключевое отличие от старого alignment:** старый требовал candidates → certify → manual-certified → LLM-audit. Новый использует прямое сопоставление глоссов со словами BSB — алгоритмически, детерминированно. Не требуется база «золотых» пар и ручная сертификация.
+Then:
+1. run all builders;
+2. run schema validation;
+3. run invariant verification;
+4. write `data-manifest.json`;
+5. replace `assets/data/` atomically enough for local filesystem use:
+   - remove old `assets/data`;
+   - rename temp dir to `assets/data`.
 
-### 4.5 `build-app-config.mjs`
+If any step fails, keep old `assets/data/` intact.
 
-**Вход:**
-- `docs/source-data/app-config/alphabet.json`
-- `docs/source-data/app-config/books.json`
-- `docs/source-data/app-config/schema/*.json`
+### 5.3 Package scripts
 
-**Выход:**
-- `assets/data/alphabet.json` (копия)
-- `assets/data/books.json` (копия)
-- `assets/data/data-manifest.json` (генерируется — список всех файлов в `assets/data/` с путями и размерами)
-
-### 4.6 `verify-data.mjs`
-
-**Проверки:**
-1. Все 27 книг присутствуют в `bibles/grc/`, `bibles/eng/`, `align/grc-eng/`
-2. Количество токенов в каждой сгенерированной grc-книге = количество enriched-токенов для этой книги (ни один не потерян при группировке)
-3. Количество стихов в каждой eng-книге = ожидаемому (сверка с эталонным списком)
-4. Для каждой alignment-книги: нет orphan-токенов без span (все q="u" залогированы)
-5. `lexicon/core.json`: все 5468 лемм присутствуют
-6. `data-manifest.json` соответствует фактическому содержимому `assets/data/`
-
-### 4.7 `npm run build:data`
+Because v2 commits app-ready data, `build` remains a Vite build. `build:data` is run manually when source-data or data builders change.
 
 ```json
 {
@@ -350,209 +361,320 @@ scripts/
     "build:lexicon": "node scripts/build-lexicon.mjs",
     "build:align": "node scripts/build-align.mjs",
     "build:app-config": "node scripts/build-app-config.mjs",
-    "build:data": "npm run build:bibles && npm run build:lexicon && npm run build:align && npm run build:app-config",
-    "verify:data": "node scripts/verify-data.mjs"
+    "build:data": "node scripts/build-data.mjs",
+    "verify:data": "node scripts/verify-data.mjs",
+    "build": "vite build"
   }
 }
 ```
 
----
-
-## 5. Что в коде меняется
-
-### 5.1 Оставить без изменений
-
-```
-src/state/       — store, settings, progress, dictionary
-src/storage/     — IndexedDB (key-value, абстрактный)
-src/ui/components/ — bottom-sheet, icons, inspector, mode-widget, nav, toast, top-bar, word-card
-src/ui/screens/  — about, dictionary, onboarding, progress, settings
-src/router.js    — хэш-роутер
-src/app.js       — точка входа
-index.html       — оболочка PWA
-vite.config.js   — сборка
-assets/styles/   — CSS
-assets/fonts/    — GentiumPlus
-```
-
-### 5.2 Адаптировать
-
-```
-src/ui/screens/reading.js  — ключевой экран: переход с русского текста на английский
-src/engine/compose.js      — использование новых полей (glossBerean, glossCherith, translit, freqRank)
-src/engine/form-layer.js   — новый alignment-формат (span на английский текст вместо русского)
-src/engine/morphology.js   — маппинг morph-кода в русские метки (без изменений, формат morph совместим)
-src/engine/letter-layer.js — без изменений (работает с surface-формами)
-src/engine/rules.js        — без изменений
-src/engine/hash.js         — без изменений
-```
-
-### 5.3 Переписать
-
-```
-src/data/bible-loader.js   — полное переписывание:
-  - Новые пути: data/bibles/grc/ + data/bibles/eng/ (вместо data/originals/ + data/translations/)
-  - Новый формат токенов (см. таблицу 3.3)
-  - Загрузка alignment из data/align/grc-eng/ (вместо data/align/syn--sblgnt-macula/)
-  - Загрузка books.json и data-manifest.json из data/ (пути не меняются)
-
-src/data/lexicon-loader.js — переписывание:
-  - Новый формат core.json и dictionary.json
-  - Загрузка alphabet.json (путь не меняется)
-```
-
-### 5.4 UI: русский интерфейс + английские данные
-
-UI остаётся на русском (заголовки, метки, кнопки). Меняется:
-- Заголовок перевода: «BSB» вместо «Синодальный»
-- В hebrew/greek-переключении: «Английский / BSB» вместо «Русский / Синодальный»
-- Лейблы режимов чтения адаптируются под английский контекст
-- Онбординг: текст про «русский → греческий» заменить на «английский → греческий»
-
-Это ~20 строк текста. Полноценная английская локализация UI — отдельной фазой.
+`build-data.mjs` must run `verify-data.mjs` before success.
 
 ---
 
-## 6. Миграция пользовательских данных (IndexedDB)
+## 6. Verification
 
-### 6.1 Что хранится
+`verify-data.mjs` must validate schemas and invariants.
 
-| Store | Ключ | Совместимость |
+Required checks:
+1. All 27 NT books exist in `bibles/grc`, `bibles/eng`, and `align/grc-eng`.
+2. Expected chapter and verse counts match `docs/source-data/app-config/books.json`.
+3. Every generated translation verse has `ref`, `text`, and frozen `words`.
+4. Every `word.start/end` points exactly to `text.slice(start, end) === word.text`.
+5. All translation packs have the same `normalizationVersion`.
+6. Every alignment pack has the same `normalizationVersion` as its matching translation pack.
+7. Greek token count per book equals enriched token count.
+8. Every Greek token has `id`, `s`, `lemma`, `lexemeId`, `morph`, `strongs`, `fw`.
+9. `lexicon/core.json` contains all 5468 enriched lexemes.
+10. Every curated RU entry either maps to exactly one `lexemeId` or is listed in migration warnings.
+11. Every alignment pair references an existing Greek token in the same verse.
+12. Every alignment span is valid for the matching BSB verse.
+13. Alignment quality thresholds from section 4.4 pass.
+14. `data-manifest.json` exactly matches generated files, sizes, hashes and schema versions.
+15. Smoke-check source and app-ready data for known excluded UBS fields: `semantic`, `louwNida`, `domain`, `domainCode`, `ln`.
+
+Schema validation may use `ajv` only if the dependency is already accepted for the project. If not, use a small local validator first and propose adding `ajv` separately.
+
+---
+
+## 7. Runtime code changes
+
+### 7.1 Keep
+
+Keep these contracts stable:
+- `src/storage/db.js`: database `ru2agr_db`, store `app_state`.
+- IndexedDB top-level keys: `settings`, `progress`, `dictionary`.
+- hash routes.
+- deterministic engine behavior and `hash01`.
+- no DOM/fetch/storage in `src/engine/**`.
+
+### 7.2 Adapt
+
+`src/data/bible-loader.js`:
+- load `./data/bibles/grc/{book}.json`;
+- load `./data/bibles/eng/{book}.json`;
+- load `./data/align/grc-eng/{book}.json`;
+- load `./data/data-manifest.json`;
+- append data version query only through one helper, not scattered string concatenation.
+
+`src/data/lexicon-loader.js`:
+- load `./data/lexicon/core.json`;
+- load `./data/lexicon/dictionary.json`;
+- expose data in the shape current UI needs: `id`, `lexemeId`, `lexemeSlug`, `lemma`, `translit`, `gloss`, `shortGloss`, `pos`, `rank`, `count`, `strongs`, `ruMatches`.
+
+`src/state/dictionary.js`:
+- add one fail-soft dictionary migration on load;
+- preserve unknown old keys in place with `_legacy: true`;
+- store migration warnings under the separate IndexedDB key `dictionary_migration_warnings`;
+- never delete user data automatically.
+
+`src/ui/screens/reading.js`:
+- `loadBook('eng', bookId)` replaces old `syn` call;
+- use `verse.ref` and `verse.words` from BSB pack;
+- replace Russian-source wording with English-source wording;
+- keep visible UI text in Russian.
+
+`src/ui/screens/dictionary.js`:
+- stop assuming Strong's is the primary row key;
+- use `lexemeId` as dictionary key and Strong's only as metadata/filter text.
+
+`src/ui/components/word-card.js`:
+- rename comments/data labels from “исходное русское слово” to neutral “исходное слово перевода”;
+- display BSB original word when a Greek insertion is tapped.
+
+`src/ui/screens/about.js`:
+- show visible attribution for SBLGNT/MACULA, Cherith glosses, BSB, Strong's Dictionary and project-curated data;
+- do not read attribution from `data-manifest.json`.
+
+`src/engine/compose.js` and `src/engine/form-layer.js`:
+- update alignment handling from `lexemeKey` to `lexemeId`;
+- keep a temporary compatibility shim for old `pair.lexemeKey` during migration tests;
+- do not add loader or lexicon responsibilities to engine.
+
+Cross-cutting `lexemeKey` → `lexemeId` touch points:
+- `src/engine/form-layer.js`: pair lookup, segment metadata, dictionary lookup key.
+- `src/engine/compose.js`: context comments/tests and pass-through assumptions.
+- `src/ui/render.js`: DOM attributes `data-lexeme-key` / compatibility aliases.
+- `src/ui/screens/reading.js`: `buildWordEntries()`, `collectWordData()`, span attributes, status updates.
+- `src/ui/screens/dictionary.js`: row identity, filters, add/update actions.
+- `src/ui/components/word-card.js`: data contract comments and callbacks.
+- `src/state/dictionary.js`: persisted key migration.
+- `src/state/progress.js`: `wordsToday.added` migration.
+- `src/data/lexicon-loader.js`: v2 core shape and legacy key map.
+- tests for form layer, dictionary, progress, lexicon and reading data adapters.
+
+### 7.3 UI string audit
+
+Before finishing Phase 2, run:
+
+```bash
+rg -n "Синод|русск|ruHint|Synodal|syn|исходное русское|перевод" src
+```
+
+Every hit must be classified:
+- keep because UI language is Russian;
+- change because source text is now English/BSB;
+- obsolete because old data path.
+
+---
+
+## 8. IndexedDB migration
+
+### 8.1 What stays stable
+
+| Key | Keep? | Notes |
 |---|---|---|
-| `progress` | `{bookId, chapter}` | ✅ bookId те же (lowercase), chapter — число |
-| `letters` | `{letter}` | ✅ буквы греческого алфавита не меняются |
-| `dictionary` | `{lexemeKey}` | ✅ lexemeId совпадает между enriched и новым форматом (`grc-biblos-9adfa6`) |
-| `settings` | ключи настроек | ✅ структура не меняется |
+| `settings` | yes | structure mostly unchanged |
+| `progress.reading.lastBook` | yes | book ids stay lowercase |
+| `progress.reading.books` | yes | chapter numbers stay valid |
+| `progress.letters` | yes | Greek alphabet unchanged |
+| `dictionary` | migrate entries | lexeme keys may change |
+| `progress.wordsToday.added` | migrate entries | same key class as dictionary |
 
-### 6.2 Стратегия
+### 8.2 Migration map
 
-**Совместимость без миграции.** Все ключи (bookId, lexemeKey, chapter) идентичны между старым и новым форматом. При обновлении приложения:
-1. Service worker обновляется → новый кеш
-2. IndexedDB-данные остаются валидными (ключи не изменились)
-3. Пользователь продолжает с того же места
+Constants:
 
-**Единственный риск:** если пользователь обновит страницу во время загрузки данных (старый формат частично в кеше, новый загружается). Решение: версионирование data-manifest.json — при несовпадении версии сбрасывать кеш и перезагружать.
+```js
+const DICTIONARY_MIGRATION_WARNINGS_KEY = 'dictionary_migration_warnings';
+```
 
-### 6.3 Версионирование
+`lexicon/core.json` must include:
 
 ```json
-// assets/data/data-manifest.json
 {
-  "schema": "data-manifest-v2",
-  "version": "2.0.0",
-  "buildDate": "2026-06-24T...",
-  "files": [...]
+  "lexemeId": "grc-logos-...",
+  "lexemeSlug": "logos",
+  "legacyKeys": ["logos", "freq-3056"]
 }
 ```
 
-При старте приложение сверяет `manifest.version` с сохранённой в localStorage. При несовпадении — инвалидация кеша, перезагрузка всех данных.
+Migration logic:
+1. Build `legacyKey -> lexemeId` map from `core.json`.
+2. For every dictionary entry:
+   - if key is already a known `lexemeId`, keep it;
+   - if key maps to one `lexemeId`, move entry to that key;
+   - if both old and new keys exist, merge conservatively:
+     - strongest status wins: `known > learning > new`;
+     - `showInText: false` wins over true;
+     - keep earliest `addedAt`;
+   - if no safe mapping exists, preserve the old entry under its old key, add `_legacy: true`, and append a warning to `dictionary_migration_warnings`.
+3. Save migrated dictionary only after successful lexicon load.
+4. Save warnings to IndexedDB key `dictionary_migration_warnings`; do not store metadata inside `dictionary`.
+5. Apply same mapping to `progress.wordsToday.added`.
+
+This migration is idempotent and fail-soft. If anything throws, load the original dictionary unchanged.
 
 ---
 
-## 7. PWA / Service Worker
+## 9. PWA and data versioning
 
-Текущий service worker генерируется `vite-plugin-pwa` (Workbox). При изменении структуры `assets/data/`:
+### 9.1 Current risk
 
-1. **Precache:** Workbox сам обновит precache-манифест при `vite build` (новые файлы в `dist/data/` попадут в кеш)
-2. **Runtime-кеш:** данные загружаются через `bible-loader.js` → fetch. Workbox runtime-кеширует их по URL. При изменении URL (новые пути) старый кеш становится нерелевантным
-3. **Инвалидация:** использовать `data-manifest.json` version как cache-busting параметр: `fetch('data/bibles/grc/matthew.json?v=2.0.0')`
+Current Workbox config excludes old data directories from precache and runtime-caches old paths. New paths under `/data/bibles/` are not covered unless `vite.config.js` is changed.
 
-**Стратегия:** полагаться на стандартный механизм Workbox + версионирование через data-manifest.
+### 9.2 Required config changes
 
----
+Update Workbox runtime caching to cover:
 
-## 8. Стратегия CI/CD и отката
-
-### 8.1 Генерация vs. коммит app-ready данных
-
-**Решение: app-ready данные НЕ коммитятся в репозиторий.**
-
-- `assets/data/` в `.gitignore`
-- Данные генерируются при `npm run build:data` перед `npm run build`
-- `npm run build` = `npm run build:data && vite build` (как было в старом проекте)
-- В CI (Netlify): build command = `npm run build`
-- Размер source-data: ~217 MB (уже в репо)
-- Размер app-ready: оценка ~30 MB (греческий + BSB + alignment + lexicon) — НЕ в репо
-
-### 8.2 Откат
-
-```bash
-# Откат данных: перегенерировать из source-data
-npm run build:data
-
-# Откат кода: git checkout предыдущего коммита
-git checkout <previous-commit>
-
-# Полный откат: git revert
+```js
+/\/data\/(bibles|align|lexicon)\/.*/
 ```
 
-Source-data в репо — это точка восстановления. App-ready данные всегда можно перегенерировать.
+Use versioned cache names:
+
+```text
+book-packs-v{dataManifest.version}
+lexicon-data-v{dataManifest.version}
+```
+
+If dynamic cache names cannot use manifest version at build time, use stable cache names plus query version:
+
+```js
+fetch(`./data/bibles/eng/${bookId}.json?v=${dataVersion}`)
+```
+
+All data fetches must go through one loader helper so cache-busting is consistent.
+
+### 9.3 Update protocol
+
+On app start:
+1. Load `data-manifest.json` with `cache: "no-store"` where supported.
+2. Compare manifest version with the saved version in IndexedDB or localStorage.
+3. If version changed:
+   - clear only known app data caches, not IndexedDB user data;
+   - clear in-memory loader caches;
+   - save new data version;
+   - reload data packs.
+4. If manifest load fails offline:
+   - continue with cached data;
+   - do not wipe caches;
+   - show no blocking error.
+
+Do not rely on “old URL paths become irrelevant” as the only invalidation mechanism.
 
 ---
 
-## 9. План фаз
+## 10. Deployment and rollback
 
-### Фаза 1: Пайплайн
+### 10.1 Gates before deploy
 
-| Задача | Оценка |
-|---|---|
-| Создать `scripts/` | 0.1 дня |
-| `build-bibles.mjs` — группировка токенов, маппинг полей, конвертация BSB | 3 дня |
-| `build-lexicon.mjs` — слияние enriched + Strong's + top1000 | 2 дня |
-| `build-align.mjs` — span-based alignment глоссы→BSB | 3 дня |
-| `build-app-config.mjs` — копирование + data-manifest | 0.5 дня |
-| `build-data.mjs` — оркестратор | 0.5 дня |
-| `verify-data.mjs` — проверки целостности | 1 день |
-| **Итого Фаза 1** | **~2 недели** |
+Required:
 
-### Фаза 2: Адаптация кода
+```bash
+npm test
+npm run build:data
+npm run verify:data
+npm run build
+```
 
-| Задача | Оценка |
-|---|---|
-| `bible-loader.js` — новые пути, новый формат, английский текст | 2 дня |
-| `lexicon-loader.js` — новый формат словаря | 1 день |
-| `engine/compose.js` — новые имена полей | 0.5 дня |
-| `engine/form-layer.js` — alignment на английский текст | 1 день |
-| `reading.js` — переход на английские данные, замена строк | 1 день |
-| Обновление тестов (12 файлов) | 1 день |
-| **Итого Фаза 2** | **~1.5 недели** |
+Migration smoke checks:
+- desktop 1280px, light and dark theme;
+- mobile 375px, light and dark theme;
+- mixed mode, Greek mode, plain view;
+- dictionary add/status changes survive reload;
+- About screen shows required data attribution;
+- offline reload after data has been cached;
+- update from old service worker to new service worker.
 
-### Фаза 3: Верификация и деплой
+### 10.2 Rollback
 
-| Задача | Оценка |
-|---|---|
-| Сквозной прогон: все 5 режимов × 27 книг | 1 день |
-| PWA: service worker, офлайн-режим, кеширование | 0.5 дня |
-| Кросс-браузерное тестирование IndexedDB | 0.5 дня |
-| `npm run build` → Netlify deploy | 0.5 дня |
-| **Итого Фаза 3** | **~2.5 дня** |
+```bash
+git revert <migration-commit>
+npm run build
+netlify deploy --prod --dir=dist
+```
 
-### Фаза 4: Русский язык (отдельный план)
-
-### Общая оценка: **4–4.5 недель**
+Also verify Netlify UI rollback is possible for the previous deploy. Rollback must not clear IndexedDB; migrated dictionary keys should remain usable or safely ignored by old code.
 
 ---
 
-## 10. Что НЕ входит
+## 11. Phases
 
-- Полноценная английская локализация UI (только замена строк, связанных с данными)
-- Новая функциональность (конкорданс, семантический поиск, etc.)
-- Русские переводы с ограниченными лицензиями
-- Серверный рендеринг / SSR
-- Мобильные приложения (PWA достаточно)
+### Phase 1: Pipeline and data contracts
+
+| Task | Exit criteria |
+|---|---|
+| Restore `scripts/` baseline | package scripts point to existing files |
+| Add schemas v2 | schema files exist and are used by verify |
+| Build Greek packs | 27 files, token counts match enriched |
+| Build BSB packs | 27 files, verse counts and `words` offsets verified |
+| Build lexicon | 5468 lexemes, legacy key map generated |
+| Build alignment | JSON report written, thresholds pass |
+| Build app config/manifest | hashes, sizes and schema versions included |
+| Atomic `build-data.mjs` | old data survives failed generation |
+
+### Phase 2: Runtime adaptation
+
+| Task | Exit criteria |
+|---|---|
+| `bible-loader.js` | new paths, manifest version helper, fail-soft |
+| `lexicon-loader.js` | v2 core/dictionary shape consumed by UI |
+| dictionary migration | idempotent tests for old and new keys |
+| reading screen | BSB text renders with Greek replacements |
+| dictionary screen | uses `lexemeId`, no Strong-primary assumptions |
+| word card | neutral source-word wording, BSB original shown |
+| about screen | visible attribution for all shipped data sources |
+| PWA config | new data paths cached and invalidated correctly |
+| tests | engine/state/loader/migration tests pass |
+
+### Phase 3: Release verification
+
+| Task | Exit criteria |
+|---|---|
+| Data quality review | alignment report reviewed; no hard gate failures |
+| Browser migration smoke QA | required project viewports/themes, online/offline |
+| Update QA | old SW/cache to new version tested |
+| Deploy | Netlify production deploy from `dist/` |
+| Rollback drill | documented previous deploy rollback path |
+
+### Phase 4: Russian translations
+
+Separate plan. Do not start without source permissions and license update.
 
 ---
 
-## 11. Ключевые решения
+## 12. Out of scope
 
-| Решение | Выбор |
-|---|---|
-| Первый язык данных | Английский |
-| Основной перевод | BSB (public domain) |
-| Язык UI | Русский (с адаптацией строк под английские данные) |
-| Источник выравнивания | Berean (glossEn) ↔ слова BSB (прямое сопоставление) |
-| Формат данных | Иерархический: книга → глава → стих → токены |
-| App-ready данные | Не коммитятся, генерируются при сборке |
-| Миграция IndexedDB | Не требуется (ключи совместимы) |
-| Пайплайн | 5 скриптов Node.js + verify |
-| Source-data | В репозитории (217 MB) |
+- Full English UI localization.
+- New learning adaptation or hidden metrics.
+- New analytics, telemetry, remote logging.
+- Server state, accounts, backend.
+- Russian translations that require permission.
+- SSR or mobile native apps.
+
+---
+
+## 13. Final checklist for implementers
+
+Before reporting “готово”:
+
+- `npm test` passed.
+- `npm run build:data` passed.
+- `npm run verify:data` passed.
+- `npm run build` passed.
+- Migration smoke checks passed on 375px and 1280px in light/dark themes.
+- Data attribution is present in `README.md`, `docs/source-data/CATALOG.md` and About screen.
+- No generated data was edited manually.
+- UBS-excluded-field smoke check passed.
+- Git status and changed files are reported.
