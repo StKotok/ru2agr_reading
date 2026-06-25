@@ -1,6 +1,7 @@
-import { loadSettings, saveSettings, applyTheme } from '../../state/settings.js';
+import { loadSettings, saveSettings } from '../../state/settings.js';
 import { loadProgress, saveProgress } from '../../state/progress.js';
 import { db } from '../../storage/db.js';
+import { mountThemePicker } from '../components/theme-picker.js';
 
 let settings = null;
 let progress = null;
@@ -44,36 +45,14 @@ function renderThemeSection() {
   section.className = 'progress-section';
 
   const h3 = document.createElement('h3');
-  h3.textContent = 'Тема';
+  h3.textContent = 'Оформление';
   section.appendChild(h3);
 
-  ['light', 'dark', 'auto'].forEach(theme => {
-    const label = document.createElement('label');
-    label.className = 'settings-radio';
-    label.style.display = 'flex';
-    label.style.alignItems = 'center';
-    label.style.gap = '8px';
-    label.style.padding = '4px 0';
-
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'theme';
-    radio.value = theme;
-    radio.checked = settings.theme === theme;
-    radio.addEventListener('change', () => {
-      if (radio.checked) {
-        settings.theme = theme;
-        applyTheme(theme);   // синхронно — DOM + localStorage (FOUC-защита)
-        saveSettings(settings);  // асинхронно — IndexedDB
-        store.update(s => ({ ...s, settings: { ...settings } }));
-      }
-    });
-
-    const names = { light: 'Светлая', dark: 'Тёмная', auto: 'Авто (как система)' };
-    label.appendChild(radio);
-    label.appendChild(document.createTextNode(names[theme]));
-    section.appendChild(label);
-  });
+  // Визуальный выборщик тем (12 тем + контраст)
+  const pickerContainer = document.createElement('div');
+  pickerContainer.style.marginTop = '8px';
+  section.appendChild(pickerContainer);
+  mountThemePicker(pickerContainer, { store });
 
   container.appendChild(section);
 }
