@@ -1,8 +1,8 @@
-# Implementation Report — Clean-Data Migration (v2)
+# Implementation Report — Clean-Data Migration (v2) + Alignment Completion
 
 **Дата:** 2026-06-25
 **Ветка:** dev2
-**Выполнено:** Phase 1 (Data Pipeline) + Phase 2 (Runtime Adaptation)
+**Выполнено:** Phase 1 (Data Pipeline) + Phase 2 (Runtime Adaptation) + Alignment Phases 0-2
 
 ---
 
@@ -234,3 +234,32 @@ M  tests/frequency-data.test.js
 3. **Ручное тестирование IndexedDB миграции** — на копии реальной БД
 4. **Smoke-тест на Netlify preview** — перед деплоем в production
 5. **Деплой** — после достижения порога coverage или явного решения о его снижении
+
+## Alignment Completion — Coverage Tracking (2026-06-25)
+
+### Phase 0 — BSB Text Foundation
+| Metric | Before | After |
+|--------|--------|-------|
+| NORMALIZATION_VERSION | bsb-text-v1 | bsb-text-v2 |
+| Coverage (NF) | 53.5% | 53.7% |
+| Aligned NF tokens | 38,562 | 38,727 |
+
+### Phase 1 — Accuracy Hard-Gate
+| Metric | Before | After |
+|--------|--------|-------|
+| Coverage (NF) | 53.7% | 54.3% |
+| Bracket-optional pairs | 0 | ~400 |
+
+### Phase 2 — Coverage Boost
+- T2.1 (glossCherith): 54.3% → 73.1% (+18.8pp, +13,545 pairs)
+- T2.2 (lexicon): 73.1% → 81.8% (+8.7pp, +6,299 pairs)
+- **Total Phase 2:** 54.3% → 81.8% (+27.5pp)
+
+| Metric | Phase 2 End |
+|--------|-------------|
+| Coverage (NF) | 81.8% |
+| Aligned NF tokens | 58,971 |
+| Unresolved NF tokens | 13,131 |
+| Verses with zero pairs | 17 |
+| Overlap errors | 0 |
+| verify:data errors | 0 |

@@ -7,6 +7,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { normalizeWord, normalizeBerean, fuzzyNormalize, tokenizeGloss, WORD_PATTERN, ALIGN_METHODS } from './lib/align-normalize.mjs';
 
+// Positional disambiguation — ВЫКЛЮЧЕН по умолчанию.
+// При включении требует 100% ручного аудита всех positional пар (см. план T2.3/T4.2).
+const ENABLE_POSITIONAL = false;
+
 const NT_BOOKS = [
   'matthew', 'mark', 'luke', 'john', 'acts',
   'romans', '1corinthians', '2corinthians', 'galatians',
@@ -21,7 +25,7 @@ const NT_BOOKS = [
 // Alignment algorithm (per verse)
 // =============================================================================
 
-function alignVerse(engWords, grcTokens, verseText) {
+function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
   const claimed = new Array(engWords.length).fill(false);
   const pairs = [];
   const warnings = [];
@@ -173,6 +177,229 @@ function alignVerse(engWords, grcTokens, verseText) {
   }
 
   // ===========================================================================
+  // Pass 3a: alt-gloss-exact (Cherith) → q="a", method="alt-gloss-exact"
+  // ===========================================================================
+  for (const td of tokenData) {
+    if (td.hasPair) continue;
+    if (!td.altGloss) continue;
+    // Skip if Cherith gloss normalizes to same as Berean (already tried)
+    if (normalizeWord(td.altGloss) === normalizeWord(td.primaryGloss)) continue;
+    const norm = normalizeWord(td.altGloss);
+    if (!norm || norm.includes(' ')) continue;
+
+    const candIndices = [];
+    for (let wi = 0; wi < engWords.length; wi++) {
+      if (!claimed[wi] && normalizeWord(engWords[wi].text) === norm) {
+        candIndices.push(wi);
+      }
+    }
+
+    if (candIndices.length === 1) {
+      const wi = candIndices[0];
+      const span = [engWords[wi].start, engWords[wi].end];
+      // Overlap guard
+      if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
+      claimed[wi] = true;
+      td.hasPair = true;
+      pairs.push({
+        span,
+        tokenId: td.token.id,
+        lexemeId: td.token.lexemeId,
+        q: 'a',
+        method: 'alt-gloss-exact'
+      });
+    } else if (candIndices.length > 1) {
+      ambiguousCandidateCount++;
+      warnings.push({
+        tokenId: td.token.id,
+        lexemeId: td.token.lexemeId,
+        reason: 'ambiguous',
+        pass: 'alt-exact'
+      });
+    }
+  }
+
+  // ===========================================================================
+  // Pass 3b: alt-gloss-bracket (Cherith bracket-optional) → q="a", method="alt-gloss-bracket"
+  // ===========================================================================
+  for (const td of tokenData) {
+    if (td.hasPair) continue;
+    if (!td.altGloss) continue;
+    const altBerean = normalizeBerean(td.altGloss);
+    if (normalizeWord(altBerean) === normalizeWord(normalizeBerean(td.primaryGloss))) continue;
+    const norm = normalizeWord(altBerean);
+    if (!norm || norm.includes(' ')) continue;
+
+    const candIndices = [];
+    for (let wi = 0; wi < engWords.length; wi++) {
+      if (!claimed[wi] && normalizeWord(engWords[wi].text) === norm) {
+        candIndices.push(wi);
+      }
+    }
+
+    if (candIndices.length === 1) {
+      const wi = candIndices[0];
+      const span = [engWords[wi].start, engWords[wi].end];
+      if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
+      claimed[wi] = true;
+      td.hasPair = true;
+      pairs.push({
+        span,
+        tokenId: td.token.id,
+        lexemeId: td.token.lexemeId,
+        q: 'a',
+        method: 'alt-gloss-bracket'
+      });
+    } else if (candIndices.length > 1) {
+      ambiguousCandidateCount++;
+      warnings.push({
+        tokenId: td.token.id,
+        lexemeId: td.token.lexemeId,
+        reason: 'ambiguous',
+        pass: 'alt-bracket'
+      });
+    }
+  }
+
+  // ===========================================================================
+  // Pass 3c: alt-gloss-phrase (Cherith phrase 2-4) → q="a", method="alt-gloss-phrase"
+  // ===========================================================================
+  for (const td of tokenData) {
+    if (td.hasPair) continue;
+    if (!td.altGloss) continue;
+    const altGlossWords = tokenizeGloss(td.altGloss);
+    if (altGlossWords.length < 2 || altGlossWords.length > 4) continue;
+
+    // Skip if Cherith phrase normalizes to same as Berean phrase (already tried)
+    const primaryGlossWords = tokenizeGloss(td.primaryGloss);
+    if (altGlossWords.length === primaryGlossWords.length &&
+        altGlossWords.every((w, i) => normalizeWord(w) === normalizeWord(primaryGlossWords[i]))) continue;
+
+    const normAltWords = altGlossWords.map(normalizeWord);
+    const candStarts = [];
+    for (let wi = 0; wi <= engWords.length - altGlossWords.length; wi++) {
+      let allUnclaimed = true;
+      for (let j = 0; j < altGlossWords.length; j++) {
+        if (claimed[wi + j]) { allUnclaimed = false; break; }
+      }
+      if (!allUnclaimed) continue;
+
+      let allMatch = true;
+      for (let j = 0; j < altGlossWords.length; j++) {
+        if (normalizeWord(engWords[wi + j].text) !== normAltWords[j]) {
+          allMatch = false;
+          break;
+        }
+      }
+      if (allMatch) {
+        candStarts.push(wi);
+      }
+    }
+
+    if (candStarts.length === 1) {
+      const wi = candStarts[0];
+      const span = [engWords[wi].start, engWords[wi + altGlossWords.length - 1].end];
+      if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
+      for (let j = 0; j < altGlossWords.length; j++) {
+        claimed[wi + j] = true;
+      }
+      td.hasPair = true;
+      pairs.push({
+        span,
+        tokenId: td.token.id,
+        lexemeId: td.token.lexemeId,
+        q: 'a',
+        method: 'alt-gloss-phrase'
+      });
+    } else if (candStarts.length > 1) {
+      ambiguousCandidateCount++;
+      warnings.push({
+        tokenId: td.token.id,
+        lexemeId: td.token.lexemeId,
+        reason: 'ambiguous',
+        pass: 'alt-phrase'
+      });
+    }
+  }
+
+  // ===========================================================================
+  // Pass 3d: lexicon-gloss-exact — multiple glosses from core lexicon
+  // ===========================================================================
+  if (lexiconGlossMap && lexiconGlossMap.size > 0) {
+    for (const td of tokenData) {
+      if (td.hasPair) continue;
+      const lexId = td.token.lexemeId;
+      const lexEntry = lexiconGlossMap.get(lexId);
+      if (!lexEntry) continue;
+
+      // Collect candidate glosses, skipping already-checked ones
+      const alreadyChecked = new Set();
+      if (td.primaryGloss) {
+        alreadyChecked.add(normalizeWord(td.primaryGloss));
+        alreadyChecked.add(normalizeWord(normalizeBerean(td.primaryGloss)));
+      }
+      if (td.altGloss) {
+        alreadyChecked.add(normalizeWord(td.altGloss));
+        alreadyChecked.add(normalizeWord(normalizeBerean(td.altGloss)));
+      }
+
+      // Build candidate gloss list: Berean first, then Cherith, deduped
+      const candidateGlosses = [];
+      for (const g of lexEntry.glossesBerean) {
+        const nw = normalizeWord(g);
+        if (!alreadyChecked.has(nw) && nw && !nw.includes(' ')) {
+          candidateGlosses.push({ gloss: g, norm: nw });
+          alreadyChecked.add(nw);
+        }
+      }
+      for (const g of lexEntry.glossesCherith) {
+        const nw = normalizeWord(g);
+        if (!alreadyChecked.has(nw) && nw && !nw.includes(' ')) {
+          candidateGlosses.push({ gloss: g, norm: nw });
+          alreadyChecked.add(nw);
+        }
+      }
+
+      if (candidateGlosses.length === 0) continue;
+
+      // Try each candidate gloss in order; first one with single match wins
+      for (const { gloss, norm } of candidateGlosses) {
+        const candIndices = [];
+        for (let wi = 0; wi < engWords.length; wi++) {
+          if (!claimed[wi] && normalizeWord(engWords[wi].text) === norm) {
+            candIndices.push(wi);
+          }
+        }
+
+        if (candIndices.length === 1) {
+          const wi = candIndices[0];
+          const span = [engWords[wi].start, engWords[wi].end];
+          if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) continue;
+          claimed[wi] = true;
+          td.hasPair = true;
+          pairs.push({
+            span,
+            tokenId: td.token.id,
+            lexemeId: td.token.lexemeId,
+            q: 'a',
+            method: 'lexicon-gloss-exact'
+          });
+          break; // Move to next token
+        } else if (candIndices.length > 1) {
+          ambiguousCandidateCount++;
+          warnings.push({
+            tokenId: td.token.id,
+            lexemeId: td.token.lexemeId,
+            reason: 'ambiguous',
+            pass: 'lexicon-exact'
+          });
+          break; // Ambiguous for this token, don't try other glosses
+        }
+      }
+    }
+  }
+
+  // ===========================================================================
   // Pass 4: simple fuzzy → q="f", method="fuzzy"
   // ===========================================================================
   for (const td of tokenData) {
@@ -212,6 +439,69 @@ function alignVerse(engWords, grcTokens, verseText) {
     }
   }
 
+  // ===========================================================================
+  // Pass 5 (OFF by default): positional-equal-count → proposal tier
+  // ===========================================================================
+  if (ENABLE_POSITIONAL) {
+    // Group unpaired tokens by normalized gloss
+    const groups = new Map(); // normGloss → [{tokenData, tokenIndex}]
+    for (const td of tokenData) {
+      if (td.hasPair) continue;
+      const norm = normalizeWord(td.primaryGloss);
+      if (!norm || norm.includes(' ')) continue;
+      if (!groups.has(norm)) groups.set(norm, []);
+      groups.get(norm).push(td);
+    }
+
+    for (const [normGloss, tds] of groups) {
+      if (tds.length === 0) continue;
+      // Find unclaimed BSB words with same normalized form
+      const availWords = [];
+      for (let wi = 0; wi < engWords.length; wi++) {
+        if (!claimed[wi] && normalizeWord(engWords[wi].text) === normGloss) {
+          availWords.push(wi);
+        }
+      }
+
+      // Only pair if count matches AND words are pairwise distinct after normalization
+      if (availWords.length !== tds.length) continue;
+
+      // Check that available words are pairwise distinct (they already are by index)
+      // Sort both by position and pair by index
+      const sortedTds = [...tds].sort((a, b) => (a.token.i ?? 0) - (b.token.i ?? 0));
+      const sortedWords = [...availWords].sort((a, b) => a - b);
+
+      let allOk = true;
+      for (let k = 0; k < sortedTds.length; k++) {
+        const td = sortedTds[k];
+        const wi = sortedWords[k];
+        const span = [engWords[wi].start, engWords[wi].end];
+        if (!pairs.every(p => span[1] <= p.span[0] || span[0] >= p.span[1])) {
+          allOk = false;
+          break;
+        }
+      }
+
+      if (!allOk) continue;
+
+      // Commit all pairs
+      for (let k = 0; k < sortedTds.length; k++) {
+        const td = sortedTds[k];
+        const wi = sortedWords[k];
+        const span = [engWords[wi].start, engWords[wi].end];
+        claimed[wi] = true;
+        td.hasPair = true;
+        pairs.push({
+          span,
+          tokenId: td.token.id,
+          lexemeId: td.token.lexemeId,
+          q: 'a',
+          method: 'positional-equal-count'
+        });
+      }
+    }
+  }
+
   // Unaligned non-function tokens → q="u"
   for (const td of tokenData) {
     if (!td.hasPair) {
@@ -231,7 +521,7 @@ function alignVerse(engWords, grcTokens, verseText) {
 // Per-book alignment
 // =============================================================================
 
-function buildAlignmentForBook(bookId, manualAlignments) {
+function buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap) {
   const grcBook = readDataJson(`bibles/grc/${bookId}.json`);
   const engBook = readDataJson(`bibles/eng/${bookId}.json`);
 
@@ -268,7 +558,7 @@ function buildAlignmentForBook(bookId, manualAlignments) {
       const engWords = vs.words || [];
       const verseText = vs.text || '';
 
-      const result = alignVerse(engWords, grcTokens, verseText);
+      const result = alignVerse(engWords, grcTokens, verseText, lexiconGlossMap);
       let pairs = result.pairs;
       totalAmbiguous += result.ambiguousCandidateCount;
 
@@ -390,6 +680,12 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
   // We'd need to read warnings data; for now, compute from stats
   // This is a simplified version
 
+  // Resolved = aligned + excluded (excluded ≈ 0 for now, will include
+  // no-bsb-verse and manual-exclusion in Phase 3)
+  const totalExcluded = manualExclusionCount; // auto-exclusions added in T3.2
+  const totalResolved = totalAligned + totalExcluded;
+  const totalUnresolved = totalNonFunc - totalResolved;
+
   const report = {
     generatedAt: new Date().toISOString(),
     totalTokens,
@@ -397,6 +693,8 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
     unalignedTokens: totalUnaligned,
     alignedNonFunctionTokens: totalAligned,
     totalNonFunctionTokens: totalNonFunc,
+    resolvedNonFunctionTokens: totalResolved,
+    unresolvedNonFunctionTokens: totalUnresolved,
     coveragePercent: coverage,
     nonFunctionCoveragePercent: coverage,
     versesWithZeroPairs: totalVersesWithZero,
@@ -463,8 +761,25 @@ if (manualAlignments) {
   manualExclusionCount = manualAlignments.filter(m => m.method === 'manual-exclusion').length;
 }
 
+// Load core lexicon for lexicon-gloss-exact pass
+/** @type {Map<string, {glossesBerean: string[], glossesCherith: string[]}>} */
+let lexiconGlossMap = new Map();
+try {
+  const corePath = join(DATA_ROOT, 'lexicon/core.json');
+  const core = JSON.parse(readFileSync(corePath, 'utf8'));
+  for (const item of (core.items || [])) {
+    lexiconGlossMap.set(item.lexemeId, {
+      glossesBerean: item.glossesBerean || [],
+      glossesCherith: item.glossesCherith || []
+    });
+  }
+  console.log(`  lexicon gloss map: ${lexiconGlossMap.size} entries`);
+} catch (e) {
+  console.warn(`  lexicon core not loaded: ${e.message}`);
+}
+
 for (const bookId of NT_BOOKS) {
-  const stats = buildAlignmentForBook(bookId, manualAlignments);
+  const stats = buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap);
   stats.bookId = bookId;
   allStats.push(stats);
   console.log(`  ${bookId}: ${stats.alignedNonFunctionTokens}/${stats.nonFunctionTokenCount} NF aligned (${stats.nonFunctionCoveragePercent}%), ${stats.versesWithZeroPairs} empty verses`);

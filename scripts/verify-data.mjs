@@ -378,7 +378,7 @@ console.log('\n--- Check 16: Accuracy invariant ---');
 let accuracyErrors = 0;
 
 // Build per-book grc token gloss lookup
-/** @type {Map<string, Map<string, {glossBerean: string, glossCherith: string}>>} */
+/** @type {Map<string, Map<string, {glossBerean: string, glossCherith: string, lexemeId: string}>>} */
 const grcGlossByBook = new Map();
 for (const bookId of NT_BOOKS) {
   const grc = readDataJson(`bibles/grc/${bookId}.json`);
@@ -389,11 +389,35 @@ for (const bookId of NT_BOOKS) {
         tokenGloss.set(t.id, {
           glossBerean: t.glossBerean || '',
           glossCherith: t.glossCherith || '',
+          lexemeId: t.lexemeId || '',
         });
       }
     }
   }
   grcGlossByBook.set(bookId, tokenGloss);
+}
+
+// Build lexicon gloss map for lexicon-gloss-exact validation
+/** @type {Map<string, Set<string>>} */
+const lexiconNormGlosses = new Map();
+try {
+  const core = readDataJson('lexicon/core.json');
+  for (const item of (core.items || [])) {
+    const normSet = new Set();
+    for (const g of (item.glossesBerean || [])) {
+      const nw = normalizeWord(g);
+      if (nw && !nw.includes(' ')) normSet.add(nw);
+    }
+    for (const g of (item.glossesCherith || [])) {
+      const nw = normalizeWord(g);
+      if (nw && !nw.includes(' ')) normSet.add(nw);
+    }
+    if (normSet.size > 0) {
+      lexiconNormGlosses.set(item.lexemeId, normSet);
+    }
+  }
+} catch (e) {
+  warn(`Cannot load lexicon for accuracy check: ${e.message}`);
 }
 
 for (const bookId of NT_BOOKS) {
@@ -440,8 +464,14 @@ for (const bookId of NT_BOOKS) {
         gloss = ti?.glossBerean || '';
       }
 
-      // Run accuracy check
-      const result = checkPairAccuracy(slice, gloss, method);
+      // Run accuracy check — pass lexicon glosses for lexicon-gloss-exact
+      let checkOpts = {};
+      if (method === 'lexicon-gloss-exact') {
+        const lexId = ti?.lexemeId || '';
+        const lexGlosses = lexiconNormGlosses.get(lexId);
+        if (lexGlosses) checkOpts.lexiconGlosses = lexGlosses;
+      }
+      const result = checkPairAccuracy(slice, gloss, method, checkOpts);
       if (!result.ok) {
         error(`${ref}: accuracy invariant failed for ${method} — token ${pair.tokenId}: ${result.reason} (slice="${slice.slice(0, 40)}", gloss="${gloss.slice(0, 40)}")`);
         accuracyErrors++;
