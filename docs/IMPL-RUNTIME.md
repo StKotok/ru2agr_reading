@@ -52,7 +52,20 @@ Runtime-этап начинается только после полного в�
 
 3. **Функция загрузки data-manifest:**
    - Путь: `data/data-manifest.json`
-   - Использовать `manifest.version` для cache-busting: `?v=${manifest.version}`
+   - **Chicken-and-egg cache-busting.** `manifest.version` нужен, чтобы добавлять
+     `?v=${version}` к URL книг/lexicon. Но сам манифест нельзя грузить через тот же
+     cache-first SW — иначе старый SW отдаст старый манифест → старая `version` → новые
+     данные не подтянутся. Поэтому **манифест всегда грузится свежим**:
+     ```js
+     const manifest = await fetch('data/data-manifest.json', { cache: 'no-cache' })
+       .then(r => r.json());
+     // далее — данные с версией:
+     const url = `data/bibles/${type}/${bookId}.json?v=${manifest.version}`;
+     ```
+     (`no-cache` = «проверь на сервере по ETag», не «не кешируй вовсе»; для офлайна SW
+     отдаст fallback. В офлайне манифест берётся из кеша — это ок, версия уже совпадает
+     с тем, что в кеше.)
+   - Книги/lexicon/alignment грузятся **с** `?v=${manifest.version}`.
    - Не читать attribution/licensing из manifest
    - Проверять `manifest.schema`, `manifest.sourceDataVersion` и `manifest.normalizationVersion`;
      при mismatch с загруженной книгой/alignment retry один раз с `cache: 'reload'`,
@@ -178,7 +191,12 @@ git commit -m "refactor(data): update lexicon-loader for v2 core/dictionary form
    терять текст:
 
    ```js
-   if (pair.span[0] < cursor) continue; // overlap guard: пайплайн не должен такого отдавать
+   if (pair.span[0] < cursor) {
+     // Пайплайн (Task 4 шаг 6 + verify #15b) не должен такого отдавать.
+     // Если сработало — это баг данных, его НЕ глушим бесследно:
+     console.warn('[form-layer] overlapping span skipped:', pair.tokenId, pair.span);
+     continue;
+   }
    ```
 
 6. В `compose.js`:
@@ -186,6 +204,86 @@ git commit -m "refactor(data): update lexicon-loader for v2 core/dictionary form
    - локальную переменную `dictByLexemeKey` заменить на `dictByLexemeId`;
    - JSDoc “Synodal/Russian verse text” заменить на BSB/source verse text;
    - JSDoc token/alignment fixtures описывать как `{lexemeId, lexemeKey?}`.
+
+### Полный список сайтов `lexemeKey` в `form-layer.js` (чтобы ничего не пропустить)
+
+Замена cross-cutting; в текущем файле `lexemeKey` встречается на строках
+17–18 (JSDoc), 31/34–36 (карта `grcTokenByLexemeKey`), 89–90 (lookup), 101 (seed),
+131–132 (Segment), 167–179 (`buildDictByLexemeKey`). Ниже — итоговый вид ключевых
+частей (alignment-пары нового формата несут `lexemeId`, **без** `lexemeKey`;
+grc-токены несут `lexemeId`/`lexemeSlug`, **без** `lexemeKey`):
+
+```js
+export function applyFormLayer(verseText, words, grcTokens, alignment, dictByLexemeId, opts = {}) {
+  const { seedPrefix = '', mode = 3 } = opts;
+  if (!grcTokens?.length || !alignment?.length) return [{ plain: verseText }];
+
+  const grcTokenById = new Map();
+  for (const t of grcTokens) grcTokenById.set(t.id, t);   // lookup по tokenId — основной
+
+  const segments = [];
+  let cursor = 0, segmentCount = 0;
+
+  for (const pair of alignment) {
+    if (pair.q === 'u' || pair.q === 'x') continue;       // uncertain/excluded не рендерим
+    if (!pair.span) continue;                              // span-less не должно быть, но защищаемся
+    const [spanStart, spanEnd] = pair.span;
+    if (spanStart < cursor) {                              // overlap guard (см. п.5)
+      console.warn('[form-layer] overlapping span skipped:', pair.tokenId, pair.span);
+      continue;
+    }
+    if (cursor < spanStart) {
+      const plain = verseText.slice(cursor, spanStart);
+      if (plain.length) { segments.push({ plain }); segmentCount++; }
+      cursor = spanStart;
+    }
+    const srcWord = verseText.slice(spanStart, spanEnd);
+    const grToken = grcTokenById.get(pair.tokenId);
+
+    const lexemeId = pair.lexemeId || pair.lexemeKey;      // canonical, legacy fallback
+    const dictEntry = lexemeId ? dictByLexemeId.get(lexemeId) : null;
+    if (!grToken || !dictEntry) { segments.push({ plain: srcWord }); cursor = spanEnd; segmentCount++; continue; }
+
+    const seed = `${seedPrefix}:${lexemeId}:${pair.tokenId}`;
+    const pct = dictEntry.intensityPct ?? 100;
+    const shouldReplace = dictEntry.status === 'known' || hash01(seed) * 100 < pct;
+    if (!shouldReplace) { segments.push({ plain: srcWord }); cursor = spanEnd; segmentCount++; continue; }
+
+    const forms = dictEntry.forms || 'form';
+    let display = mode === 5 ? (grToken.s || grToken.lemma) : (forms === 'lemma' ? grToken.lemma : grToken.s);
+    let greekText = display || grToken.s || '';
+    const isUpper = srcWord.length > 0 && srcWord[0] === srcWord[0].toUpperCase();
+    if (isUpper && greekText) greekText = greekText[0].toUpperCase() + greekText.slice(1);
+
+    const seg = {
+      greek: greekText, original: srcWord, kind: 'form',
+      lexemeId,                                            // canonical
+      lexemeKey: pair.lexemeKey || pair.lexemeSlug || lexemeId,  // legacy/display alias
+      morph: grToken.morph, strong: grToken.strongs?.[0] || null,
+      strongs: grToken.strongs || [], lemma: grToken.lemma, tokenId: pair.tokenId,
+    };
+    if (pair.q === 'f') seg.quality = 'f';
+    segments.push(seg); cursor = spanEnd; segmentCount++;
+  }
+  if (cursor < verseText.length) {
+    const tail = verseText.slice(cursor);
+    if (tail.trim() !== '') segments.push({ plain: tail });
+  }
+  return segments;
+}
+
+export function buildDictByLexemeId(wordEntries) {
+  const map = new Map();
+  for (const entry of wordEntries) {
+    const key = entry.lexemeId || entry.lexemeKey || entry.id;  // canonical-first
+    if (key) map.set(key, entry);
+  }
+  return map;
+}
+```
+
+Примечание: старая карта `grcTokenByLexemeKey` в исходном файле не использовалась телом
+функции — её можно удалить (не оставлять мёртвый код на `lexemeKey`).
 
 ### Коммит
 
@@ -323,6 +421,19 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
    - подсказка под стихом становится source hint BSB;
    - внутреннее имя можно оставить `ruHint` только временно, но UI label должен быть “Показывать английский текст BSB под стихом”.
 
+13. **Tap/keyboard-хендлеры (строки 346 и 363) — проверить, не менять логику.**
+   Оба делают `if (span.getAttribute('data-lexeme') || data-strong || data-w)` как
+   признак «это интерактивное слово → `handleWordTap`». После п.4 `data-lexeme`
+   по-прежнему выставляется (= `lexemeId`), поэтому эти проверки продолжают работать.
+   **Инвариант:** `data-lexeme` ОБЯЗАН оставаться на каждом интерактивном greek-span'е
+   (и в `buildGreekTextFragment`, и в `render.js`), иначе слова станут некликабельными.
+   Это причина, по которой `data-lexeme` сохраняется как alias, а не удаляется в v1.1.
+
+**Полный аудит чтений атрибутов.** Перед коммитом прогнать
+`grep -rn "getAttribute('data-lexeme" src/` и убедиться, что покрыты все сайты:
+`reading.js` 346, 363 (признак слова), 914 (`data-lexeme-key`), 915 (`data-lexeme`),
+988 (`onMarkStatus`). Новых сайтов быть не должно.
+
 ### Поиск и замена строк про Синодальный перевод
 
 ```bash
@@ -430,6 +541,13 @@ const DATA_NOTICE_VERSION = '1.1-bsb-source';
   пользователь может сразу читать, не закрывая notice. Баннер имеет видимую кнопку
   «Понятно», по нажатию которой `DATA_NOTICE_VERSION` добавляется в `dismissedNotices`
   и баннер исчезает. Не блокировать чтение и не перехватывать фокус;
+- **DOM-позиция (конкретно):** вставлять как первый дочерний элемент контейнера
+  reading screen, **после** `top-bar` и **над** `#scripture-text` — в обычном потоке
+  (`position: static`, НЕ `sticky/fixed`), чтобы он прокручивался вместе с контентом и
+  не конфликтовал со `sticky` top-bar. Класс `.data-notice` (новый, в существующем
+  CSS-файле), роль `role="status"`, кнопка закрытия — `<button>` с `aria-label`.
+  При скролле баннер уезжает вверх (одноразовое сообщение, не требует постоянной
+  видимости);
 - текст не должен обещать сроки возвращения русского перевода.
 
 Минимальный текст:
@@ -606,6 +724,17 @@ The caller persists results fail-soft:
 
 Unknown legacy entries are technical debt. They remain in IndexedDB but do not participate in text replacement. Add a v1.2 follow-up for a small maintenance UI or export/debug path if warnings appear in real user data.
 
+### Зачем `mergeDictionaryEntry` (а не «просто перезаписать»)
+
+Merge срабатывает, когда **два legacy-ключа схлопываются в один `lexemeId`** — реальный,
+а не теоретический случай: одно и то же слово могло быть добавлено в словарь под
+slug-ключом (`logos`) в одной версии и под Strong's-ключом (`freq-3056`) в другой. При
+миграции обе записи указывают на `grc-logos-…`, и их нужно объединить, не потеряв
+прогресс. Поэтому merge сохраняет: сильнейший статус, «прилипший» `showInText:false`,
+и самый ранний `addedAt`. Не упрощать до «перезаписать последним» — это молча терял бы
+статус `known`. Коллизии редки, но цена потери прогресса высока; тесты (Task 9)
+обязаны покрыть эту ветку.
+
 ### Формат timestamp в v1.0.x (важно для merge)
 
 Реальный v1.0.x пишет только одно поле даты — `addWord` (`src/state/dictionary.js`)
@@ -747,6 +876,14 @@ async function cleanupOldDataCaches() {
 ```
 
 Вызвать внутри `try/catch`; ошибка cleanup не должна ломать запуск приложения.
+
+⚠️ **`cacheName` в `vite.config.js` и `keep`-сет в `app.js` обязаны совпадать СИМВОЛ-В-СИМВОЛ.**
+`'book-packs-v2'`/`'lexicon-data-v2'` определены в двух местах (runtimeCaching выше и
+`keep` здесь). Любая опечатка → `keep` не содержит реальное имя кеша → `cleanupOldDataCaches`
+сносит **свежий** кеш при каждом старте `app.js` (приложение каждый раз перекачивает данные).
+Рекомендация: вынести имена в одну экспортируемую константу и импортировать в обоих местах,
+либо добавить комментарий-якорь «KEEP IN SYNC» в обоих файлах. `oldPrefixes` (`book-packs`,
+`lexicon-data` без `-v2`) намеренно ловят прежние версии — их `keep` не защищает.
 
 Важно: cleanup из `app.js` не является механизмом консистентности текущей сессии.
 Если страницу ещё контролирует старый service worker, он уже мог отдать старый app shell
@@ -949,19 +1086,43 @@ npx vite preview
 
 ## Task 12: Деплой
 
-### Команда
+### Предусловия (не деплоить, если красное)
 
 ```bash
-npm run build
+npm run verify:data   # данные целы
+npm test              # юнит зелёные
+npm run build         # vite build прошёл, dist/ собран
+```
+
+Только при зелёных всех трёх — деплой. `netlify deploy` без успешного `build` задеплоит
+устаревший/битый `dist/`.
+
+### Команда (preview → prod)
+
+```bash
+# 1. Сначала draft/preview (получить URL для smoke-теста без затрагивания prod):
+netlify deploy --dir=dist
+# 2. Smoke-тест на preview URL (см. ниже). Если ок — promote в prod:
 netlify deploy --prod --dir=dist
 ```
 
-### Проверки после деплоя
+### Smoke-тест (на preview перед prod, и на prod после)
 
-- [ ] https://ru2gr.netlify.app открывается
-- [ ] PWA: можно установить
-- [ ] Service worker обновляется (старая версия → новая)
-- [ ] IndexedDB: прогресс сохраняется после обновления
+- [ ] `curl -sI <url>` → 200; `curl -s <url>/data/data-manifest.json` → валидный JSON с нужной `version`
+- [ ] Главная открывается, reading screen рендерит BSB
+- [ ] Network: `data/bibles/eng/*.json?v=…` грузятся 200
+- [ ] PWA: можно установить; SW обновляется (старая версия → новая)
+- [ ] IndexedDB: прогресс сохраняется после обновления; миграция не теряет записи
+- [ ] v1.1 BSB notice показывается один раз
+
+### Откат
+
+Netlify хранит историю деплоев и поддерживает **instant rollback**: в дашборде
+Deploys → выбрать предыдущий успешный → «Publish deploy» (или
+`netlify rollback`). Откат мгновенный (меняет указатель на готовый прошлый билд),
+данные пользователя в IndexedDB не затрагиваются. Если регрессия в данных —
+откат фронта не чинит уже закешированные у пользователя data-паки; для этого нужен
+bump `manifest.version` (см. Task 5 стратегия version bump) в новом деплое.
 
 ---
 

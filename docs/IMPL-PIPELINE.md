@@ -68,6 +68,15 @@ export function lexemeIdToSlug(lexemeId) { /* см. Task 1 */ }
 одинаковый вход → одинаковый выход. Покрыть unit-тестом на стабильность и на
 коллизию (две леммы с одинаковым базовым slug → разные финальные slug).
 
+**Масштаб коллизий (измерено на данных):** среди 5468 лемм fallback-slug даёт 97
+групп коллизий, затрагивающих ~200 лемм (`o×3`, `de×2`, `solomon×2`, …). Значит ~200
+дисплей-слугов получат hex-суффикс (`logos-9adfa6`) и в таком виде могут попасть в
+список «Словарь» и в `legacyKeys`. Это приемлемо (≈3.7%, редкие/непервостепенные
+леммы), но: (а) curated-леммы из top1000 имеют человекочитаемый `lexemeKey` и обычно
+не страдают; (б) UI словаря должен показывать `lemma`/`ruGloss`, а не сырой slug, так
+что суффикс пользователю не виден в норме. Сам `lexemeId` суффиксов не имеет — он
+всегда канонический.
+
 ### Общий модуль: `scripts/lib/versions.mjs` (единый источник версий)
 
 Чтобы `sourceDataVersion` и `normalizationVersion` не были захардкожены независимо в
@@ -77,11 +86,60 @@ export function lexemeIdToSlug(lexemeId) { /* см. Task 1 */ }
 // scripts/lib/versions.mjs
 export const SOURCE_DATA_VERSION = 'sblgnt-macula-clean-v1';
 export const NORMALIZATION_VERSION = 'bsb-text-v1';
+// Ожидаемый хеш enriched-снимка (из enriched/source-manifest.json). verify check #21
+// сверяет его; при регенерации enriched обновить ОБА: версию и этот хеш.
+export const EXPECTED_SOURCE_FILE_SHA256 =
+  '7f71504fdee8659bdd9f85342e4103d645864c2851b8205915bb298f0c004cc5';
 ```
 
 `build-bibles.mjs` (grc/eng), `build-app-config.mjs` (manifest) импортируют отсюда;
 `build-align.mjs` версии **не импортирует**, а читает из grc/eng-книг (Task 4) и потом
 verify сверяет всё со значениями в паках.
+
+### Общий модуль: `scripts/lib/fs.mjs` (общие файловые утилиты)
+
+Чтобы каждый скрипт не дублировал чтение/запись/пути, вынести в один модуль. Все
+скрипты используют его, а не повторяют логику путей:
+
+```js
+// scripts/lib/fs.mjs
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+
+export const SOURCE_ROOT = resolve('docs/source-data');
+// Куда писать app-ready данные: BUILD_DATA_DIR (оркестратор Task 6) или assets/data.
+export const DATA_ROOT = resolve(process.env.BUILD_DATA_DIR || 'assets/data');
+
+export function readSourceJson(relPath) {
+  return JSON.parse(readFileSync(join(SOURCE_ROOT, relPath), 'utf8'));
+}
+export function readDataJson(relPath) {
+  return JSON.parse(readFileSync(join(DATA_ROOT, relPath), 'utf8'));
+}
+export function writeDataJson(relPath, data) {
+  const abs = join(DATA_ROOT, relPath);
+  mkdirSync(dirname(abs), { recursive: true });
+  // Без \n-форматирования ради размера; читаемость не нужна в app-ready.
+  writeFileSync(abs, JSON.stringify(data));
+}
+export { existsSync };
+```
+
+Важно: `DATA_ROOT` вычисляется один раз из `process.env.BUILD_DATA_DIR`. При запуске
+через оркестратор (Task 6) переменная указывает на временную директорию; при ручном
+запуске отдельного скрипта — на `assets/data`. Скрипты НЕ должны хардкодить
+`assets/data` напрямую.
+
+### `.gitignore`: временные директории сборки
+
+Оркестратор (Task 6) создаёт `assets/.data-tmp-{timestamp}`. При жёстком прерывании
+(`SIGINT`/`SIGKILL`) `catch`-блок может не сработать и директория останется орфаном.
+Добавить в `.gitignore` репозитория:
+
+```gitignore
+assets/.data-tmp-*
+assets/data.backup-*
+```
 
 **Файл:** `package.json` — добавить scripts:
 
@@ -108,6 +166,34 @@ verify сверяет всё со значениями в паках.
 git add scripts/.gitkeep package.json
 git commit -m "chore: create scripts/ and add pipeline npm scripts"
 ```
+
+---
+
+## Task 0b: PoC alignment на Матфее (валидация порога 90% ДО полной реализации)
+
+**Зачем.** Порог ≥90% non-function coverage — жёсткий релизный гейт, но он ни разу не
+измерен на реальных данных. Если на Матфее реально достижимо, скажем, 75%, весь
+alignment-план (Task 4) и продуктовое требование (VISION §6) нужно пересматривать
+**до** того, как написаны 6 скриптов. Это снимает архитектурный риск №1 дешевле всего.
+
+**Что сделать (минимальный вертикальный срез, можно throwaway-скриптом):**
+1. Сгенерировать grc + eng **только для Матфея** (логика Task 1 + Task 2 на одной книге).
+2. Прогнать алгоритм Task 4 (exact → bracket-opt → phrase → fuzzy + claimedWords) на Матфее.
+3. Посчитать: non-function coverage %, % стихов с ≥1 парой, вклад каждого прохода
+   отдельно (сколько пар дал exact / bracket / phrase / fuzzy), топ unaligned-леммы.
+
+**Гейт решения:**
+- coverage ≥ 90% → план подтверждён, продолжать Task 1 в полном объёме.
+- 80–90% → достижимо доводкой алгоритма/override'ами; зафиксировать план добора.
+- < 80% → **СТОП**, пересмотреть стратегию alignment (см. VISION §6 эскалацию) прежде
+  чем реализовывать весь пайплайн.
+
+Особое внимание — **вклад phrase-прохода**: измерить, какой % non-function токенов имеет
+multi-word глосс и какой % из них реально совпал. Если вклад phrase ≈ 0 (всё держится
+на exact+fuzzy), это ранний сигнал, что 90% под вопросом из-за SOV/SVO-расхождений.
+
+PoC не коммитит `assets/data/`; его результат — цифры в описании коммита/PR и решение
+go/no-go. Только после go начинается Task 1.
 
 ---
 
@@ -189,6 +275,37 @@ const NT_BOOKS = [
       где title берётся из originals/sblgnt-macula/books/{bookId}.json
    е. Записать в assets/data/bibles/grc/{bookId}.json (mkdir -p)
 ```
+
+### Контракт enriched-токена (проверено на данных 2026-06-25)
+
+Точные имена и типы полей в `enriched/books/{book}.json` (плоский массив токенов).
+Не путать с `lexemes.json` (см. ниже) — у них **разная** форма `pos`:
+
+| Поле токена | Тип | Пример | Примечание |
+|---|---|---|---|
+| `id` | string | `n40001001001` | |
+| `lexemeId` | string | `grc-biblos-9adfa6` | |
+| `surface` | string | `Βίβλος` | |
+| `lemma` | string | `βίβλος` | |
+| `strong` | string[] | `["976"]` | массив **строк**; может быть `[]` |
+| `pos` | object | `{source, code, category, labelRu}` | у токена есть `pos.source`, **нет** `pos.primary` |
+| `morphology` | object | `{code, labelRu, …}` | `morphology.code`, `morphology.labelRu` |
+| `glossEn` | string | `[The] book` | Berean (PD) → `glossBerean` |
+| `english` | string | `book` | Cherith (CC-BY) → `glossCherith` |
+| `transliteration` | string | `Biblos` | у токена это **строка**, не объект |
+| `isFunctionWord` | bool | `false` | → `fw` |
+| `tokenIndex` | int | `1` | присутствует у 100% токенов (проверено 18329/18329 в Мф) |
+| `chapter`,`verse` | int | `1`,`1` | для группировки |
+
+⚠️ **Асимметрия pos.** В **токене** — `pos.source` (`"noun"`). В **лемме**
+(`lexemes.json`, Task 3) — `pos.primary` (`"noun"`), поля `source` там нет. Поэтому
+`build-bibles.mjs` читает `token.pos.source`, а `build-lexicon.mjs` —
+`lexeme.pos.primary`. Перепутать = `undefined` во всех записях. Оба объекта имеют
+`pos.labelRu`.
+
+Поля `sourceId`, `sourceRef`, `surfaceNfc`, `surfaceSearch`, `normalized`,
+`lemmaSearch`, `accent`, `maculaSource`, `bookId`, `ref` в токене **есть**, но в
+app-ready **не копируются** (см. verify check #19 — strip-список).
 
 ### Извлечение lexemeSlug
 
@@ -298,28 +415,36 @@ const BSB_TO_BOOKID = {
 ### Логика конвертации typed-content → verses
 
 ```
-1. Загрузить bsb-complete.json
+1. Загрузить bsb-complete.json. Верх: `{ translation, books: [...66] }`.
 2. Для каждого BSB_ID → bookId из BSB_TO_BOOKID:
-   а. Найти книгу в BSB: bsb.books.find(b => b.id === BSB_ID)
-   б. Для каждой главы:
-      - Пройти по массиву chapter.content (или chapter.chapter.content —
-        проверить структуру: в BSB JSON глава = { chapter: { content: [...] } })
+   а. Найти книгу: `bsb.books.find(b => b.id === BSB_ID)`. Если не найдена — ERROR.
+      Книга: `{ id, name, commonName, title, order, numberOfChapters,
+      totalNumberOfVerses, chapters: [...] }`.
+   б. Для каждой главы по индексу `ci` (0-based) в `book.chapters`:
+      - **Структура главы (проверено): `book.chapters[ci].chapter.content` — массив.**
+        Номер главы = `ci + 1` (главы упорядочены по позиции; собственного поля
+        `number` у объекта главы нет — `chapters[ci].number` === undefined).
+      - **Жёсткая проверка структуры:** если `book.chapters[ci].chapter?.content`
+        не массив — падать с ошибкой `BSB shape changed: <book> ch <ci+1>`
+        (не молчаливый `?.`-фоллбэк).
       - Для каждого элемента content-массива:
-        * type === "verse":
-          собрать text из поля content (массив):
-          - строки конкатенировать
-          - объекты с полем noteId — пропустить (сноски)
-          - объекты с полем lineBreak — заменить на пробел
-          - объекты с полем text — извлечь text и конкатенировать
-            (BSB использует {text, poem} для поэтической/генеалогической разметки)
-          - нормализовать пробелы: заменить /\s+/g на ' ', убрать trim
-          - сгенерировать words: токенизировать text на слова,
-            для каждого слова вычислить { i, text: слово, start, end }
-            где start/end — UTF-16 code unit offsets в итоговом text
-        * type === "heading" — пропустить
-        * type === "line_break" на верхнем уровне — пропустить
-      - Сформировать verses: [{ ref, n, text, words }]
-        ref = `${bookId} ${chapterNumber}:${verseNumber}`
+        * `el.type === "verse"`: номер стиха = **`el.number`** (int). Собрать text
+          из `el.content` (массив):
+          - строковые элементы — конкатенировать как есть;
+          - объекты `{text, poem?}` — взять `.text` (BSB так размечает
+            поэзию/генеалогию); конкатенировать;
+          - объекты `{lineBreak: true}` — заменить на пробел;
+          - объекты `{noteId: …}` — пропустить (сноски);
+          - **любой иной объект без `text`/`lineBreak`/`noteId` — пропустить**
+            (защита от неизвестных типов разметки);
+          - после сборки нормализовать пробелы: `text.replace(/\s+/g, ' ').trim()`;
+          - сгенерировать `words` через `tokenizeWords(text)` (ниже): для каждого
+            слова `{ i, text, start, end }`, где start/end — UTF-16 code unit offsets.
+        * `el.type === "heading"` — пропустить;
+        * `el.type === "line_break"` (верхний уровень между стихами) — пропустить;
+        * иной `el.type` — пропустить (не падать; разметка может расширяться).
+      - Сформировать `verses: [{ ref, n, text, words }]`, где
+        `n = el.number`, `ref = `${bookId} ${ci + 1}:${el.number}``.
    в. Записать { schema, translationId, bookId, title, short, license,
         attribution, normalizationVersion, chapters: [{ n, verses }] }
       - title: взять из bsb-объекта книги (поле name или commonName)
@@ -360,6 +485,16 @@ function tokenizeWords(text) {
 ```
 
 После токенизации `text` больше не мутируется. Проверка `text.slice(start, end) === word.text` выполняется для каждого слова в каждом стихе.
+
+**Дефисы (важно для alignment).** `wordPattern` (`/[\p{L}\p{N}']+/gu`) **не включает
+дефис**, поэтому `mother-in-law` даёт три слова: `mother`, `in`, `law` (дефис остаётся
+в `text` как разделитель между словами, в `words` его нет). Это сознательно: тот же
+паттерн применяется к глоссам в Task 4, поэтому Berean-глосс `mother-in-law` тоже
+разбивается на `["mother","in","law"]` и совпадает с этими тремя BSB-словами phrase-
+проходом (span покрывает `mother-in-law` целиком, включая дефисы, т.к. span — это
+`[start("mother"), end("law")]`). Менять `wordPattern` (добавлять дефис) **не нужно** —
+это сломало бы консистентность и потребовало bump `normalizationVersion`. В Berean-
+глоссах ~86 лемм с внутренним дефисом (проверено), они покрываются именно так.
 
 ### Верификация
 
@@ -438,38 +573,63 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
 
 ### Логика
 
+**Точные имена полей входов (проверено на данных 2026-06-25) — НЕ доверять памяти:**
+
+| Источник | Реальные поля | Примечание |
+|---|---|---|
+| `lexemes.json` (5468) | `id`, `lemma`, `transliteration:{value,…}`, `strong:string[]`, `pos:{primary,categories,labelRu}`, `isFunctionWord`, `frequency`, `attestedForms`, `allRefs`, `allRefsCount`, `firstRef`, `glossesEn`, `englishGlosses` | `pos.primary` (не `source`); `transliteration` — **объект** |
+| `frequency.json` (массив) | `lexemeId`, `rank`, `tokenCount`, `verseCount`, `strong`, `pos`, `isFunctionWord`, … | ключ join — `lexemeId` |
+| `strongs-ru-alignment.json` (5378) | `strong:number`, `ru_primary:string`, `ru_top_words:string[]`, `total_alignments` | **snake_case**; `strong` — **число** |
+| `top1000.core.json` `.items` (1000) | `lexemeKey`, `maculaLexemeId`, `lemma`, `strongs`, `rank`, … | **нет** `ruMatches`/`ruExclude` (0 записей) |
+| `locales/ru/core.json` `.items` (182) | `lexemeKey`, `pos:string(ru)`, `ruMatches:string[]`, `ruExclude:string[]`, `refs:string[]` | ключ — `lexemeKey`; **здесь** живут ru-guards |
+| `locales/ru/top1000.json` `.items` (182) | `lexemeKey`, `gloss:string(ru)`, `shortGloss:string(ru)` | ключ — `lexemeKey`; курированный ru-глосс для дисплея |
+
 ```
-1. Загрузить все входные файлы
-2. Построить индекс: strongNumber → { ruPrimary, ruTopWords } из strongs-ru-alignment.json
-3. Построить индекс: maculaLexemeId → top1000-запись из lexicon/top1000.core.json
-4. Для каждой лемы из lexemes.json:
-   а. Базовые поля из lexemes.json: lexemeId(=id), lemma, transliteration(=transliteration.value),
-      pos(=lexeme.pos.primary), strongs(=strong), allRefs, attestedForms,
-      glossesBerean(=glossesEn), glossesCherith(=englishGlosses),
-      isFunctionWord, freqRank(=frequency.rank)
-   б. lexemeSlug: взять из общей `Map<lexemeId, slug>` модуля
-      `scripts/lib/lexeme-slug.mjs` (Task 0) — тот же источник, что у grc-токенов
-      в Task 1. Не вычислять slug повторно отдельной логикой.
-   в. posLabelRu: из pos.labelRu
-   г. freqTokenCount: из frequency.tokenCount
-   д. freqVerseCount: из frequency.verseCount
-   е. Если есть strongs и strongNumber есть в strongs-ru-alignment:
-      - ruGloss = ruPrimary
-      - ruTopWords = ruTopWords
-   ж. Если lexeme.id есть в top1000.maculaLexemeId:
-      - ruMatches, ruExclude, refs — взять из top1000
-   з. legacyKeys: [lexemeSlug] + (если есть strong: ['freq-' + strongNumber] для каждого)
-      но только если legacyKey однозначно указывает на одну lexemeId
-5. Коллизии `lexemeSlug` уже разрешены в `scripts/lib/lexeme-slug.mjs` (suffix из
+1. Загрузить все входные файлы.
+2. Индекс strongs-ru: Map<number, {ruPrimary, ruTopWords}> по item.strong.
+   ВАЖНО: ключ — число. Маппинг полей: ruPrimary = item.ru_primary,
+   ruTopWords = item.ru_top_words. (Если написать item.ruPrimary — undefined у всех.)
+3. Индекс частотности: Map<lexemeId, freqItem> по item.lexemeId (frequency.json).
+4. Индекс curated ru: Map<lexemeKey, {ruMatches, ruExclude, refs}> из
+   locales/ru/core.json по item.lexemeKey (НЕ из top1000.core.json — там этих полей нет).
+   И индекс ru-дисплея: Map<lexemeKey, {gloss, shortGloss}> из locales/ru/top1000.json.
+5. Для каждой леммы из lexemes.json:
+   а. Базовые поля: lexemeId = lexeme.id; lemma; translit = lexeme.transliteration.value
+      (объект → .value); pos = lexeme.pos.primary; posLabelRu = lexeme.pos.labelRu;
+      strongs = lexeme.strong (массив строк, как есть); allRefs; attestedForms;
+      glossesBerean = lexeme.glossesEn; glossesCherith = lexeme.englishGlosses;
+      isFunctionWord = lexeme.isFunctionWord.
+   б. lexemeSlug: из общей Map<lexemeId, slug> модуля scripts/lib/lexeme-slug.mjs
+      (Task 0) — тот же источник, что у grc-токенов в Task 1. Не вычислять повторно.
+   в. freqRank/freqTokenCount/freqVerseCount: из freqIndex.get(lexeme.id) →
+      .rank / .tokenCount / .verseCount (null если леммы нет в frequency.json).
+   г. ru-глоссы по Strong's: для КАЖДОГО s из strongs привести к числу `Number(s)`
+      и искать в strongs-ru индексе. Взять первое совпадение:
+      ruGloss = hit.ruPrimary; ruTopWords = hit.ruTopWords. (lexeme.strong = "976"
+      строка; strongs-ru.strong = 976 число — отсюда обязательный Number()-каст.)
+   д. ru-дисплей (curated, приоритетнее Strong's): если lexemeSlug есть в индексе
+      locales/ru/top1000.json — **переопределить** ruGloss = top.shortGloss || top.gloss
+      (курированный глосс качественнее авто-Strong's). ruTopWords оставить из шага г.
+      Это значение — основное русское в списке экрана «Словарь» (VISION §8).
+   е. ru-guards (curated): ruByKey = curatedRuIndex.get(lexemeSlug). Если есть —
+      ruMatches = ruByKey.ruMatches; ruExclude = ruByKey.ruExclude; refs = ruByKey.refs.
+      (Join по lexemeSlug, т.к. для curated-лемм slug === их lexemeKey, напр. "logos".)
+   ж. legacyKeys: [lexemeSlug] + (для каждого strong, если strongs непустой:
+      'freq-' + strong). Только однозначные (одна lexemeId) попадают; коллизии
+      разрешает шаг 6.
+6. Коллизии `lexemeSlug` уже разрешены в `scripts/lib/lexeme-slug.mjs` (suffix из
    хвоста lexemeId), поэтому slug'и в `core.json` уникальны by construction. Здесь
    проверяется только `legacyKey` collisions:
    - если legacyKey (slug или `freq-<strong>`) встречается у нескольких lexemeId,
      удалить его из `legacyKeys` всех конфликтующих записей
-   - `freq-<strong>` добавлять только если `strongs` непустой (см. шаг з)
+   - `freq-<strong>` добавлять только если `strongs` непустой (см. шаг 5ж)
    - записать конфликт в build-report/verify output
    - не создавать неоднозначный auto-migration mapping
-6. Записать core.json
-7. Для dictionary.json — переупаковать strongs-dictionary в объект { [strongNumber]: { definition, greek, translit, ruPrimary, ruTopWords } }
+7. Записать core.json (объект `{ schema: "lexicon-core-v2", items: [...] }`).
+8. Для dictionary.json — переупаковать strongs-dictionary в объект
+   `{ [strongNumber]: { definition, greek, translit, ruPrimary, ruTopWords } }`.
+   Ключ strongNumber — строка (как в lexeme.strong); ruPrimary/ruTopWords берутся
+   из того же strongs-ru индекса по `Number(strongNumber)`.
 ```
 
 ### Верификация
@@ -564,6 +724,52 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
 
 `pairsByRef` содержит только записи со span, которые runtime может безопасно обработать. `q="u"` хранится в `warningsByRef`/report, не как span-less pair в `pairsByRef`.
 
+### Точный механизм claimedWords и порядок разрешения конфликтов (обязательно)
+
+Алгоритм детерминирован: **проходы применяются по приоритету, ко всем токенам стиха,
+с единым набором занятых BSB-слов**. Без этого две реализации дадут разное покрытие.
+
+```
+для каждого стиха:
+  claimed = new Array(words.length).fill(false)   // занятость BSB-слова по индексу i
+  pairs = []
+  candidates = grcTokens.filter(t => t.fw === false)  // fw=true не даёт visible pair
+                       .sort by tokenIndex             // детерминированный порядок
+
+  // Проход = (приоритет, функция нормализации, qualityCode). Порядок строгий:
+  //   1) exact         — normalizeWord(primaryGloss),     q="a", method="gloss-exact"
+  //   2) bracket-opt    — normalizeBerean(primaryGloss),  q="a", method="bracket-optional"
+  //   3) phrase (2-4)   — токены глосса == окно BSB,       q="a", method="phrase"
+  //   4) fuzzy          — fuzzyNormalize,                  q="f", method="fuzzy"
+
+  для каждого pass в [exact, bracket-opt, phrase, fuzzy]:
+    для каждого token в candidates, у которого ещё НЕТ пары:
+      cand = индексы BSB-слов, которые (а) НЕ claimed и (б) матчатся по правилу pass
+      // single-word passes (1,2,4): cand — индексы отдельных слов
+      // phrase pass (3): cand — стартовые индексы contiguous-окон из НЕзанятых слов,
+      //   совпадающих как массив с токенизированным глоссом (тот же wordPattern, Task 2)
+      если cand.length === 1:
+        занять слово(а) этого матча → claimed[i]=true для всех слов матча
+        pairs.push({ span:[start(first), end(last)], tokenId, lexemeId, q, method })
+      иначе если cand.length > 1:
+        // НЕ угадывать: неоднозначность фиксируется, токен остаётся без пары
+        warningsByRef[ref].push({ tokenId, lexemeId, reason:"ambiguous", pass })
+        ambiguousCandidateCount++
+      // cand.length === 0 → токен переходит к следующему pass
+```
+
+Свойства, на которые опираются инварианты:
+- **claim немедленный и общий.** Заняв слово, exact-проход убирает его из кандидатов
+  для всех последующих токенов и проходов → пересечений span не возникает (но
+  проверка шага 6 всё равно обязательна как defense-in-depth).
+- **first-come по tokenIndex.** Если два токена претендуют на одно и то же
+  единственное слово, его получает токен с меньшим `tokenIndex`; второй остаётся
+  `q="u"`. Это сознательный детерминированный выбор, не «угадывание».
+- **phrase видит частично занятое окно как непригодное.** Если хотя бы одно слово окна
+  уже claimed — окно не кандидат (`cand` его не содержит).
+- токены без пары после всех проходов → `q="u"` в `warningsByRef`; для non-function
+  токенов это unaligned (снижает coverage), что и должно отражаться в отчёте.
+
 ### Версии и итоговый объект alignment-книги
 
 `build-align.mjs` читает версии из уже сгенерированных книг и переносит их в каждый
@@ -657,6 +863,18 @@ function normalizeBerean(gloss) {
   ],
   "manualPairCount": 0,
   "manualExclusionCount": 0,
+  "perBook": [
+    {
+      "bookId": "matthew",
+      "tokenCount": 18329,
+      "nonFunctionTokenCount": 0,
+      "alignedNonFunctionTokens": 0,
+      "nonFunctionCoveragePercent": 0,
+      "versesWithZeroPairs": 0,
+      "ambiguousCandidateCount": 0,
+      "overlappingSpanCount": 0
+    }
+  ],
   "thresholds": {
     "nonFunctionCoverageMin": 90,
     "versesWithPairsMin": 95
@@ -810,9 +1028,10 @@ git commit -m "feat(pipeline): build-app-config.mjs — generate config files"
    - build-align.mjs      (пишет в TMP_DIR/align/)
    - build-app-config.mjs (пишет в TMP_DIR/)
 4. Запустить verify-data.mjs на TMP_DIR
-5. Если verify прошёл:
-   - удалить assets/data (если существует)
-   - переименовать TMP_DIR → assets/data
+5. Если verify прошёл (безопасная замена без деструктивного rm, см. реализацию):
+   - rename(assets/data → assets/data.backup-{ts}) — упадёт при lock, старое цело
+   - rename(TMP_DIR → assets/data); при ошибке — откатить backup обратно
+   - rm(backup) только после успешного rename
 6. Если любой шаг упал:
    - удалить TMP_DIR
    - оставить старый assets/data нетронутым
@@ -855,16 +1074,28 @@ try {
     env: { ...process.env, BUILD_DATA_DIR: TMP_DIR }
   });
 
+  // Безопасная замена: rename(old → backup) → rename(tmp → data) → rm(backup).
+  // НЕ удаляем assets/data деструктивно: если каталог залочен (открыт в редакторе/
+  // Finder), первый rename упадёт ДО любого удаления, и старые данные целы.
+  const BACKUP_DIR = `assets/data.backup-${TIMESTAMP}`;
+  let backedUp = false;
   if (existsSync('assets/data')) {
-    rmSync('assets/data', { recursive: true, force: true });
+    renameSync('assets/data', BACKUP_DIR);  // упадёт при lock — старое цело
+    backedUp = true;
   }
-  renameSync(TMP_DIR, 'assets/data');
+  try {
+    renameSync(TMP_DIR, 'assets/data');
+  } catch (renameErr) {
+    if (backedUp) renameSync(BACKUP_DIR, 'assets/data');  // откат
+    throw renameErr;
+  }
+  if (backedUp) rmSync(BACKUP_DIR, { recursive: true, force: true });
   console.log('\n✓ Atomic generation complete');
 } catch (err) {
   if (existsSync(TMP_DIR)) {
     rmSync(TMP_DIR, { recursive: true, force: true });
   }
-  console.error('\n✗ Generation failed, old data preserved');
+  console.error('\n✗ Generation failed, old data preserved:', err.message);
   process.exit(1);
 }
 ```
@@ -921,8 +1152,14 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
 
 9.  token.id уникальны в пределах всего NT corpus
 
-10. Каждый греческий токен имеет обязательные поля:
-    id, s, lemma, lexemeId, morph, strongs, fw
+10. Каждый греческий токен имеет все маппинг-поля (ловит опечатку в имени поля
+    Task 1, иначе фронтенд получает undefined в карточке):
+    - непустые: id, s, lemma, lexemeId, lexemeSlug, morph, pos, posLabelRu
+    - ключ присутствует (значение может быть пустым/обычным): morphLabelRu, translit,
+      glossBerean, glossCherith
+    - strongs — массив (возможно пустой); fw — boolean
+    - freqRank — present (число или null)
+    Проверять структурно (по ключам объекта), не подстрокой по тексту.
 
 11. core.json содержит 5468 записей
 
@@ -960,11 +1197,20 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
     semantic, louwNida, domain, domainCode, ln,
     sourceId, sourceRef, maculaSource, accent,
     surfaceNfc, surfaceSearch, normalized, lemmaSearch
-    (проверка grep-ом по JSON-ключам)
+    **Структурная проверка по КЛЮЧАМ объектов, а не grep по тексту**: рекурсивно
+    обойти распарсенный JSON и проверять `Object.keys`. Grep по тексту даёт ложные
+    срабатывания на значениях (напр. слово «normalized» внутри BSB-текста).
 
 20. Размер данных находится в ожидаемом диапазоне:
     - общий assets/data: warning при > 60 MB, error при > 100 MB
     - отдельный JSON-файл: warning при > 5 MB, error при > 20 MB
+
+21. Снимок источника не «уплыл» незаметно. В `docs/source-data/enriched/source-manifest.json`
+    есть `sourceFileSha256` и `schemaVersion`. verify хранит ожидаемый
+    `sourceFileSha256` (константа рядом с SOURCE_DATA_VERSION в scripts/lib/versions.mjs)
+    и сверяет с текущим manifest. Mismatch → error «enriched source changed —
+    bump SOURCE_DATA_VERSION & expected sha». Это дешёвый автоконтроль, который ловит
+    регенерацию enriched без поднятия версии (см. VISION §5.4).
 ```
 
 ### Вывод
@@ -1015,3 +1261,20 @@ npm run build:data
 git add assets/data/
 git commit -m "feat(data): initial app-ready data generation (v2.0.0)"
 ```
+
+### CI / гейт в репозитории
+
+App-ready `assets/data/` **коммитится** (AGENTS.md), поэтому CI **не должен**
+регенерировать данные на каждый PR. CI запускает только:
+
+```bash
+npm run verify:data   # проверяет уже закоммиченный assets/data
+npm test
+npm run build
+```
+
+`npm run build:data` (полная регенерация) запускается локально/вручную разработчиком,
+когда менялись source-data или пайплайн, и результат коммитится. Если когда-нибудь
+verify в CI падёт на закоммиченных данных — значит данные и скрипты рассинхронились,
+и нужно перегенерировать локально. (`build:data` в CI избыточен и медленен —
+enriched 152 MB.)
