@@ -32,12 +32,56 @@ scripts/
 
 ### Создать `scripts/` и базовый `package.json`
 
-**Файл:** `scripts/.gitkeep` (пустой)
+**Файлы:** `scripts/.gitkeep` (пустой), `scripts/lib/` (общие модули).
 
 ```bash
-mkdir -p scripts
+mkdir -p scripts/lib
 touch scripts/.gitkeep
 ```
+
+### Общий модуль: `scripts/lib/lexeme-slug.mjs` (источник правды для slug'ов)
+
+`lexemeSlug` нельзя выводить из `lexemeId` независимо в двух местах — он зависит от
+curated-карты (`grc-o-677c59 → "ho"`, не `"o"`) и от разрешения коллизий по **всему**
+набору лемм. Если `build-bibles.mjs` (Task 1, grc-токены) и `build-lexicon.mjs`
+(Task 3, `core.json`) посчитают slug каждый сам, при разном наборе/порядке лемм
+они могут разойтись, и alignment/словарь будут указывать на разные display-ключи.
+
+Решение: **один детерминированный модуль строит полную карту `Map<lexemeId, slug>`
+по всему `enriched/lexemes.json` (5468 лемм) + curated `top1000.core.json`**, а Task 1
+и Task 3 только читают готовую карту. Результат не зависит от порядка запуска скриптов.
+
+```js
+// scripts/lib/lexeme-slug.mjs
+// Детерминированно: вход — полный список лемм + curated map; выход — Map<lexemeId, slug>.
+export function buildSlugMap(allLexemes, curatedItems) {
+  // 1. curated: maculaLexemeId → lexemeKey (приоритет, обратная совместимость)
+  // 2. fallback: lexemeIdToSlug(lexemeId)
+  // 3. разрешение коллизий по ОТСОРТИРОВАННОМУ по lexemeId списку:
+  //    при дубле slug — добавить полный hex-хвост lexemeId (логос-9adfa6), не усечённый.
+  //    Хвост lexemeId уникален по построению, поэтому второго прохода коллизий не нужно.
+}
+export function lexemeIdToSlug(lexemeId) { /* см. Task 1 */ }
+```
+
+Контракт: `buildSlugMap` чистая и детерминированная (сортировка входа по `lexemeId`),
+одинаковый вход → одинаковый выход. Покрыть unit-тестом на стабильность и на
+коллизию (две леммы с одинаковым базовым slug → разные финальные slug).
+
+### Общий модуль: `scripts/lib/versions.mjs` (единый источник версий)
+
+Чтобы `sourceDataVersion` и `normalizationVersion` не были захардкожены независимо в
+нескольких скриптах (риск рассинхрона, см. VISION §5.4), вынести их в одну константу:
+
+```js
+// scripts/lib/versions.mjs
+export const SOURCE_DATA_VERSION = 'sblgnt-macula-clean-v1';
+export const NORMALIZATION_VERSION = 'bsb-text-v1';
+```
+
+`build-bibles.mjs` (grc/eng), `build-app-config.mjs` (manifest) импортируют отсюда;
+`build-align.mjs` версии **не импортирует**, а читает из grc/eng-книг (Task 4) и потом
+verify сверяет всё со значениями в паках.
 
 **Файл:** `package.json` — добавить scripts:
 
@@ -133,10 +177,10 @@ const NT_BOOKS = [
       |   token.lexemeId)?.rank  |                   |                                                 |
       | token.tokenIndex \|\| i  | i                 | индекс токена в стихе                           |
 
-   д. Сформировать итоговый объект:
+   д. Сформировать итоговый объект (SOURCE_DATA_VERSION из scripts/lib/versions.mjs):
       {
         schema: "original-book-v2",
-        sourceDataVersion: "sblgnt-macula-clean-v1",
+        sourceDataVersion: SOURCE_DATA_VERSION,   // "sblgnt-macula-clean-v1"
         bookId,
         title: loadGreekTitle(bookId),
         chapters: [{ n, verses: [{ n, ref, tokens }] }]
@@ -148,12 +192,18 @@ const NT_BOOKS = [
 
 ### Извлечение lexemeSlug
 
-Основной источник `lexemeSlug` — curated-словарь `docs/source-data/lexicon/top1000.core.json`, поле `maculaLexemeId → lexemeKey`. Это даёт обратную совместимость для 1000 curated-лемм. Для остальных лемм fallback — парсинг `lexemeId`.
+`build-bibles.mjs` **не считает slug сам** — он импортирует общий модуль
+`scripts/lib/lexeme-slug.mjs` (Task 0), строит полную `Map<lexemeId, slug>` по
+`enriched/lexemes.json` + `top1000.core.json` и берёт `slugMap.get(token.lexemeId)`.
+Так grc-токены и `core.json` (Task 3) гарантированно получают одинаковые slug'и
+независимо от порядка запуска скриптов.
+
+Базовый fallback (внутри модуля), когда леммы нет в curated-карте:
 
 ```js
 function lexemeIdToSlug(lexemeId) {
   // grc-biblos-9adfa6 → biblos
-  // grc-o-677c59 → o
+  // grc-o-677c59 → o   (но curated map даёт "ho" — она в приоритете)
   const parts = lexemeId.split('-');
   if (parts.length >= 3 && parts[0] === 'grc') {
     return parts.slice(1, -1).join('-');
@@ -162,7 +212,12 @@ function lexemeIdToSlug(lexemeId) {
 }
 ```
 
-Важно: slug не является каноническим ключом и может быть коротким (`o`, `en`) или нечитаемым. После первичной генерации slug'ов нужно проверить коллизии `lexemeSlug`; для дубликатов добавить disambiguation suffix из хвоста `lexemeId` (например, `logos-9adfa6`). При генерации `legacyKeys` нужно отдельно детектить коллизии slug/Strong's fallback и не создавать неоднозначный legacy mapping.
+Важно: slug не является каноническим ключом и может быть коротким (`o`, `en`) или
+нечитаемым. Коллизии slug'ов разрешаются **внутри модуля** один раз, по всему набору
+лемм: дубликату добавляется disambiguation suffix из **полного** hex-хвоста `lexemeId`
+(`logos-9adfa6`), который уникален по построению, поэтому повторных коллизий не возникает.
+При генерации `legacyKeys` (Task 3) отдельно детектить коллизии slug/Strong's fallback
+и не создавать неоднозначный legacy mapping.
 
 ### Греческие названия книг (TITLES)
 
@@ -271,7 +326,7 @@ const BSB_TO_BOOKID = {
       - short: взять из bsb-объекта книги (поле id)
       - license: "Public domain"
       - attribution: "Berean Standard Bible, https://berean.bible/"
-      - normalizationVersion: "bsb-text-v1"
+      - normalizationVersion: NORMALIZATION_VERSION  // "bsb-text-v1", из scripts/lib/versions.mjs
 ```
 
 ### Нормализация и токенизация в words
@@ -392,7 +447,9 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
       pos(=lexeme.pos.primary), strongs(=strong), allRefs, attestedForms,
       glossesBerean(=glossesEn), glossesCherith(=englishGlosses),
       isFunctionWord, freqRank(=frequency.rank)
-   б. lexemeSlug: извлечь из lexemeId (см. Task 1)
+   б. lexemeSlug: взять из общей `Map<lexemeId, slug>` модуля
+      `scripts/lib/lexeme-slug.mjs` (Task 0) — тот же источник, что у grc-токенов
+      в Task 1. Не вычислять slug повторно отдельной логикой.
    в. posLabelRu: из pos.labelRu
    г. freqTokenCount: из frequency.tokenCount
    д. freqVerseCount: из frequency.verseCount
@@ -403,9 +460,12 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
       - ruMatches, ruExclude, refs — взять из top1000
    з. legacyKeys: [lexemeSlug] + (если есть strong: ['freq-' + strongNumber] для каждого)
       но только если legacyKey однозначно указывает на одну lexemeId
-5. После сборки всех записей проверить lexemeSlug и legacyKey collisions:
-   - если lexemeSlug встречается у нескольких lexemeId, добавить suffix из хвоста lexemeId
-   - если legacyKey встречается у нескольких lexemeId, удалить его из legacyKeys всех конфликтующих записей
+5. Коллизии `lexemeSlug` уже разрешены в `scripts/lib/lexeme-slug.mjs` (suffix из
+   хвоста lexemeId), поэтому slug'и в `core.json` уникальны by construction. Здесь
+   проверяется только `legacyKey` collisions:
+   - если legacyKey (slug или `freq-<strong>`) встречается у нескольких lexemeId,
+     удалить его из `legacyKeys` всех конфликтующих записей
+   - `freq-<strong>` добавлять только если `strongs` непустой (см. шаг з)
    - записать конфликт в build-report/verify output
    - не создавать неоднозначный auto-migration mapping
 6. Записать core.json
@@ -489,12 +549,48 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
    - количество manual пар и manual exclusions попадает в build-report.json
 
 5. Отсортировать pairs по span[0], затем tokenId
-6. Проверить: нет дублирующихся span
+6. Проверить span-инварианты (любое нарушение — ошибка сборки):
+   - нет дублирующихся span (`a.span[0] === b.span[0] && a.span[1] === b.span[1]`)
+   - **нет пересекающихся span**: для соседних в отсортированном списке пар
+     `prev.span[1] <= next.span[0]`. Два валидных, но пересекающихся span'а
+     (напр. `[0,6]` и `[4,10]`) ломают курсорный рендер в `form-layer.js`
+     (дублирование/потеря текста), поэтому ловим их здесь, а не в рантайме.
+     Источник пересечений в v1 — ручные overrides; алгоритм claim'ит занятые
+     BSB-слова и сам пересечений не создаёт, но проверка обязательна как
+     defense-in-depth.
 7. Записать pairsByRef[ref] = [отсортированные пары со span]
 8. Записать warningsByRef[ref] = [unaligned/ambiguous diagnostics без span]
 ```
 
 `pairsByRef` содержит только записи со span, которые runtime может безопасно обработать. `q="u"` хранится в `warningsByRef`/report, не как span-less pair в `pairsByRef`.
+
+### Версии и итоговый объект alignment-книги
+
+`build-align.mjs` читает версии из уже сгенерированных книг и переносит их в каждый
+alignment-пак (источник правды — сами книги, не хардкод):
+
+- `grcSourceDataVersion` ← `assets/data/bibles/grc/{book}.json.sourceDataVersion`
+- `normalizationVersion` ← `assets/data/bibles/eng/{book}.json.normalizationVersion`
+
+Если у grc/eng-книги этих полей нет или они расходятся между книгами — останов с
+понятной ошибкой (нельзя строить alignment поверх несогласованных паков). Итоговый
+объект на книгу:
+
+```json
+{
+  "schema": "alignment-book-v2",
+  "alignmentId": "grc-eng",
+  "bookId": "matthew",
+  "grcSourceDataVersion": "<из grc-книги>",
+  "normalizationVersion": "<из eng-книги>",
+  "stats": { "tokenCount": 0, "alignedTokenCount": 0, "unalignedTokenCount": 0, "warningCount": 0 },
+  "pairsByRef": { "matthew 1:1": [ /* пары со span */ ] },
+  "warningsByRef": { "matthew 1:1": [ /* u/ambiguous диагностики без span */ ] }
+}
+```
+
+Verify (Task 7) затем сверяет, что эти версии совпадают со значениями в grc/eng-книгах
+(checks #6–7).
 
 ### Формат manual-alignments.json
 
@@ -512,8 +608,16 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
 
 Phrase matching в v1 не использует gaps и не ищет “похожие” фразы через весь стих.
 Для candidate phrase длиной 2-4 normalized words скрипт проверяет только contiguous
-windows такой же длины среди ещё не занятых BSB words. Если найдено больше одного
-окна или часть слов уже занята другой accepted pair — токен остаётся unaligned/ambiguous.
+windows **такой же длины** среди ещё не занятых BSB words, с **100% совпадением**
+normalized-слов и **в том же порядке**. Если найдено больше одного окна или часть
+слов уже занята другой accepted pair — токен остаётся unaligned/ambiguous.
+
+Явные **ограничения v1** (не баги, а сознательный объём):
+- нет partial/subset-совпадений (греч. «the Son of God» ≠ BSB «Son of God» + отдельный «the»);
+- нет перестановок слов: при расхождении порядка (греч. SOV «to him said» vs BSB SVO
+  «said to him») contiguous-окно не находится, токен остаётся `q="u"`. Это часть
+  ожидаемого недо-покрытия; закрывается ручными override'ами или следующей итерацией
+  алгоритма (permutation pass), а не в v1.
 
 ### Правила нормализации
 
@@ -546,6 +650,7 @@ function normalizeBerean(gloss) {
   "nonFunctionCoveragePercent": 91.3,
   "versesWithZeroPairs": 12,
   "duplicateSpanCount": 0,
+  "overlappingSpanCount": 0,
   "ambiguousCandidateCount": 340,
   "topUnalignedLexemes": [
     {"lexemeId": "grc-...", "lemma": "δέ", "count": 1500, "glossBerean": "and/but"}
@@ -566,10 +671,17 @@ function normalizeBerean(gloss) {
 - 0 invalid token ids
 - 0 spans outside verse.text length
 - 0 duplicate spans
+- 0 overlapping spans
 - 0 pairs referencing wrong verse
 - non-function-token coverage >= 90%
 - >= 95% verses have at least one accepted pair
 ```
+
+**Знаменатели coverage.** `totalTokens` считает все токены; `totalNonFunctionTokens`
+считает только `fw=false`. Function words (`fw=true`) не создают visible pair по
+умолчанию, поэтому они исключены из знаменателя non-function coverage — иначе
+покрытие искусственно занижалось бы. `nonFunctionCoveragePercent =
+alignedNonFunctionTokens / totalNonFunctionTokens`.
 
 ### Верификация
 
@@ -648,6 +760,20 @@ import { createHash } from 'crypto';
 ```
 
 Manifest должен включать `align/grc-eng/build-report.json`; иначе `verify:data` обязан падать.
+Он попадает в манифест только как **диагностика** (целостность через sha256 + опц.
+статистика для экрана «О приложении»), runtime-логика на него не завязана — loader
+его не читает для принятия решений.
+
+**Стратегия version bump манифеста.** `version` («2.0.0») — версия app-ready набора
+данных, отдельная от версии приложения. Поднимать: major — несовместимое изменение
+schema любого пака; minor — изменение `sourceDataVersion`/`normalizationVersion` или
+полная регенерация контента; patch — точечные правки данных без смены контрактов.
+`version` используется loader'ом для cache-busting (`?v=`), поэтому любая регенерация,
+которую должны увидеть существующие клиенты, обязана менять хотя бы patch.
+
+`books.json` имеет два экземпляра: `docs/source-data/app-config/books.json` —
+**источник правды**, `assets/data/books.json` — его копия для runtime. Task 5
+копирует source→assets; verify (check #2) сверяет главы/стихи именно с source-версией.
 
 ### Верификация
 
@@ -745,6 +871,12 @@ try {
 
 Каждый дочерний скрипт читает `process.env.BUILD_DATA_DIR` и пишет туда. Если переменная не задана — пишет в `assets/data/` (для ручного запуска отдельного скрипта).
 
+`execSync` здесь идёт со `stdio: 'inherit'`: вывод дочерних скриптов проксируется
+прямо в терминал, **не буферизуется**, поэтому лимит `maxBuffer` неприменим даже при
+тысячах строк warning'ов. Переходить на `spawn` ради этого не нужно. `execSync`
+пробрасывает ненулевой exit-код дочернего скрипта как исключение — это и есть нужный
+fail-fast для атомарной генерации.
+
 `TMP_DIR` создаётся внутри `assets/`, чтобы `renameSync(TMP_DIR, 'assets/data')` не пересекал filesystem boundary. Если rename падает из-за lock/permission, скрипт должен оставить старый `assets/data` нетронутым и вывести понятную ошибку.
 
 ### Коммит
@@ -808,6 +940,9 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
     и engVerse.text.slice(span[0], span[1]).trim() !== ''
     и /[\p{L}\p{N}]/u.test(engVerse.text.slice(span[0], span[1]))
 
+15b. Внутри каждого ref пары не пересекаются: после сортировки по span[0]
+    для соседних пар prev.span[1] <= next.span[0] (0 overlapping spans)
+
 16. manual-alignments.json, если существует:
     - валиден по схеме
     - manual pair имеет span и q="a"|"f"
@@ -843,6 +978,8 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
 ✓ token counts: enriched = generated (0 lost)
 ✓ core.json: 5468/5468 lexemes
 ✓ alignment spans valid (0 errors)
+✓ no overlapping spans (0 errors)
+✓ alignment versions match grc/eng packs (0 errors)
 ✓ manual alignments valid (0 errors)
 ✓ thresholds: coverage 91.3% >= 90%, verses 100% >= 95%
 ✓ manifest includes build-report.json

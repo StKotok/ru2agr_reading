@@ -171,6 +171,16 @@ git commit -m "refactor(data): update lexicon-loader for v2 core/dictionary form
 
 5. `q="u"` и `q="x"` не рендерить как греческие вставки. Если pair не имеет span, пропускать до обращения к `pair.span`.
 
+   Курсорный рендер (`applyFormLayer`) предполагает пары, **отсортированные по `span[0]`
+   и непересекающиеся** — это гарантия пайплайна (IMPL-PIPELINE Task 4 шаг 6 + verify).
+   В качестве дефенсивного барьера на случай битого alignment пропускать пару, если
+   `pair.span[0] < cursor` (пересечение с уже отрендеренным), а не молча дублировать/
+   терять текст:
+
+   ```js
+   if (pair.span[0] < cursor) continue; // overlap guard: пайплайн не должен такого отдавать
+   ```
+
 6. В `compose.js`:
    - заменить импорт `buildDictByLexemeKey` на `buildDictByLexemeId`;
    - локальную переменную `dictByLexemeKey` заменить на `dictByLexemeId`;
@@ -218,6 +228,25 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
    `data-lexeme` оставить как legacy DOM alias: текущий `reading.js` использует его
    для кликабельности и подсветки после mark-as-known.
 
+4a. **Подсветка known-слов в Greek-only режиме (строка 415) — обязательно.**
+   Текущий код проверяет `token.lexemeKey`, но app-ready grc-токены имеют только
+   `lexemeId`/`lexemeSlug` (поля `lexemeKey` нет, см. контракт VISION §5.1).
+   Без правки подсветка «слово в словаре» в греческом режиме молча перестаёт
+   работать. Привязать проверку к каноническому ключу и к `lexemeIdKnownSet`
+   (см. п.7), который наполняется `lexemeId`:
+
+   ```js
+   // Было: if (token.lexemeKey && lexemeKeyKnownSet && lexemeKeyKnownSet.has(token.lexemeKey))
+   const tokenLexId = token.lexemeId || token.lexemeKey; // lexemeKey — только legacy fixture
+   if (tokenLexId && lexemeIdKnownSet && lexemeIdKnownSet.has(tokenLexId)) {
+     span.classList.add('known');
+   }
+   ```
+
+   То же `buildGreekTextFragment` должно выставлять три data-атрибута из п.4
+   (не только `data-lexeme-key`), иначе `onMarkStatus`-селектор (п.10) не найдёт
+   эти span'ы по `data-lexeme-id`.
+
 5. **`coreByIdCache` (строки 602-603):**
    ```js
    coreByIdCache = new Map((coreLexicon || []).map(l => [l.lexemeId, l]).filter(([key]) => key));
@@ -241,7 +270,14 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
    - `lexemeKey` в возвращаемом объекте заменить на `lexemeId`
    - Добавить `lexemeSlug` для отображения
 
-9. **Функция `collectWordData` (строка 914):**
+9. **Функция `collectWordData` (строки 906-968):** правка не ограничивается lookup'ом.
+   Текущий код строит `effectiveLexemeId = lexemeKeyFromAttr || lexemeId` (т.е.
+   сначала `data-lexeme-key`). После п.4 `data-lexeme-key` = `lexemeSlug` («biblos»),
+   поэтому `effectiveLexemeId` стал бы slug'ом, и `dictionary[effectiveLexemeId]`
+   промахнулся бы (после миграции словарь ключуется `lexemeId`), а `onMarkStatus`
+   получил бы slug и не нашёл span'ы по `data-lexeme-id`. **Канонический ключ должен
+   быть первым:**
+
    ```js
    const lexemeIdFromAttr = span.getAttribute('data-lexeme-id') || span.getAttribute('data-lexeme');
    const legacyKeyFromAttr = span.getAttribute('data-lexeme-key');
@@ -249,7 +285,22 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
    const core = lexemeIdFromAttr
      ? coreByIdCache.get(lexemeIdFromAttr)
      : coreByLegacyKey.get(legacyKeyFromAttr);
+
+   // freq: тот же приоритет (frequencyList ключуется lexemeId, legacy — как fallback)
+   const freq = lookupKey
+     ? (frequencyList || []).find(f => (f.lexemeId || f.lexemeKey) === lookupKey)
+     : null;
+
+   // канонический id для записи в словарь и для DOM-селектора onMarkStatus:
+   const effectiveLexemeId = lexemeIdFromAttr || legacyKeyFromAttr || core?.lexemeId || core?.id || null;
+   const dictEntry = effectiveLexemeId ? (dictionary[effectiveLexemeId] || null) : null;
+   // возвращаемое поле lexemeId === effectiveLexemeId (канонический)
    ```
+
+   Проверить: возвращаемый `wordData.lexemeId` уходит в `onMarkStatus(lexemeId, ...)`,
+   который делает `dictionary[lexemeId] = ...` и `querySelectorAll([data-lexeme-id="…"])`.
+   Оба обязаны работать на каноническом `lexemeId`, иначе mark-as-known пишет под
+   неверным ключом и не подсвечивает слово.
 
 10. **`onMarkStatus` selector:**
    ```js
@@ -258,6 +309,10 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
      `span.gr[data-lexeme-id="${escaped}"], span.gr[data-lexeme="${escaped}"]`
    );
    ```
+   `lexemeId` сюда приходит из `collectWordData` (п.9) и обязан быть каноническим
+   (`grc-…`), а не slug — иначе селектор по `data-lexeme-id` ничего не найдёт.
+   `CSS.escape` есть во всех целевых браузерах (Chrome 46+, FF 31+, Safari 10+);
+   для PWA-таргета polyfill не нужен — сверить с `browserslist` в `package.json`.
 
 11. **Graceful degradation:**
    - если `bookData` загрузилась, но `alignmentBookData` отсутствует или битая, не показывать white screen;
@@ -370,7 +425,11 @@ const DATA_NOTICE_VERSION = '1.1-bsb-source';
 - если `settings.dismissedNotices` не содержит `DATA_NOTICE_VERSION`, показать короткий русскоязычный notice;
 - notice показывается один раз на устройство и закрывается явной кнопкой;
 - закрытие сохраняется через существующие settings/storage wrappers, без прямого localStorage/IndexedDB;
-- для новых пользователей notice можно встроить в onboarding, для существующих — показать перед/над reading screen;
+- для новых пользователей notice встраивается в onboarding flow; для существующих —
+  это **non-blocking баннер** в верхней части reading screen (не modal, не toast):
+  пользователь может сразу читать, не закрывая notice. Баннер имеет видимую кнопку
+  «Понятно», по нажатию которой `DATA_NOTICE_VERSION` добавляется в `dismissedNotices`
+  и баннер исчезает. Не блокировать чтение и не перехватывать фокус;
 - текст не должен обещать сроки возвращения русского перевода.
 
 Минимальный текст:
@@ -546,6 +605,35 @@ The caller persists results fail-soft:
 - `console.warn` once if warnings are non-empty
 
 Unknown legacy entries are technical debt. They remain in IndexedDB but do not participate in text replacement. Add a v1.2 follow-up for a small maintenance UI or export/debug path if warnings appear in real user data.
+
+### Формат timestamp в v1.0.x (важно для merge)
+
+Реальный v1.0.x пишет только одно поле даты — `addWord` (`src/state/dictionary.js`)
+делает:
+
+```js
+addedAt: new Date().toISOString().split('T')[0]   // строка вида "2026-06-25"
+```
+
+То есть:
+- `addedAt` — **строка `YYYY-MM-DD`** (без времени), не number и не полный ISO;
+- поля `updatedAt` в v1.0.x **нет** — оно появляется только как будущее/fixture-поле.
+
+Поэтому `parseStoredTimestamp` обязан корректно обрабатывать именно date-строки
+(ветка `Date.parse`), а ветки number / numeric-string — защита для будущих форматов
+и тестовых фикстур, а не реальный v1.0.x путь. `mergeDictionaryEntry`, читая
+`updatedAt || addedAt`, у реальных записей опирается на `addedAt`-дату; при равных
+датах (типичный случай — оба слова добавлены в один день) решает `strongerStatus`.
+Тесты должны покрыть оба представления: date-строку `"2026-06-25"` и number `Date.now()`.
+
+### Идемпотентность и schema-флаг (необязательная оптимизация)
+
+Миграция уже идемпотентна (мигрированные `grc-*`-ключи проходят через
+`knownLexemeIds.has(key)` без изменений), поэтому повторный прогон безопасен.
+Чтобы не гонять полную миграцию при каждой загрузке, можно один раз записать
+`dictionarySchemaVersion: 2` через тот же storage-wrapper и пропускать миграцию,
+если флаг уже стоит. Это перф/ясность, а не корректность: при отсутствии флага
+повторная миграция данные не портит. Не вводить ради этого прямой доступ к IndexedDB.
 
 Также обновить `countActiveWords` в этом же файле:
 
