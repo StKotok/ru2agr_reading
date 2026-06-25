@@ -77,10 +77,15 @@ h3 {
 
 .screen-container {
   flex: 1;
-  padding: 0;
+  padding: 0 22px 40px;
   width: 100%;
   overflow-y: auto;
   background: var(--surface-read);
+}
+
+/* Экран чтения: убираем общие отступы — scripture-text управляет своими */
+.screen-container:has(.scripture-text) {
+  padding: 0;
 }
 
 /* Desktop: сайдбар + контент */
@@ -658,7 +663,7 @@ p, h2, h3, span {
   align-items: center;
   gap: 10px;
   height: 52px;
-  padding: 0 18px;
+  padding: 0 22px;
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
