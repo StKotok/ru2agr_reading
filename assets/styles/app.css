@@ -95,30 +95,30 @@ h3 {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
+  background: var(--paper);
 }
 
 .screen-container {
   flex: 1;
-  padding: 0 22px 40px;
-  width: 100%;
-  overflow-y: auto;
-  background: var(--surface-read);
+  min-height: 0;
+  background: var(--paper);
 }
 
-/* Экран чтения: убираем общие отступы — scripture-text управляет своими */
-.screen-container:has(.scripture-text) {
-  padding: 0;
+/* Mobile: space for bottom nav */
+@media (max-width: 899px) {
+  .screen-container {
+    padding-bottom: 64px;
+  }
 }
 
-/* Desktop: сайдбар + контент */
+/* Desktop: sidebar offset */
 @media (min-width: 900px) {
   #app {
     flex-direction: row;
   }
 
   .screen-container {
-    max-width: none;
-    margin: 0;
+    margin-left: var(--navWidth);
     flex: 1;
     min-width: 0;
   }
@@ -127,59 +127,82 @@ h3 {
 /* === Навигация === */
 .app-nav {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 6px 8px;
-  padding-bottom: max(6px, env(safe-area-inset-bottom));
-  position: sticky;
-  bottom: 0;
+  background: var(--paper);
   z-index: 100;
-  height: 56px;
-  box-sizing: content-box;
 }
 
-/* Desktop: sidebar */
+/* Mobile: bottom bar */
+@media (max-width: 899px) {
+  .app-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 64px;
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(6px);
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Desktop: side bar */
 @media (min-width: 900px) {
   .app-nav {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
     flex-direction: column;
+    width: var(--navWidth);
+    border-right: 1px solid var(--line);
+    padding: 24px 12px;
+    gap: 2px;
+    background: var(--sidebar);
+  }
+
+  .nav-tab {
+    flex-direction: row;
     justify-content: flex-start;
-    border-top: none;
-    border-right: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    bottom: auto;
-    width: 236px;
-    min-width: 236px;
-    max-width: 236px;
-    height: 100dvh;
-    padding: 16px 12px;
-    gap: 4px;
-    background: var(--surface-sidebar);
+    gap: 12px;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    flex: 0 0 auto;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .nav-tab.active {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
   }
 }
 
 .nav-tab {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   min-width: 44px;
   min-height: 44px;
-  padding: 6px 10px;
+  padding: 8px 4px;
   border: none;
   background: transparent;
   color: var(--muted);
-  font-family: inherit;
-  font-size: 0.75rem;
+  font-family: var(--font-sans);
   font-weight: 500;
   cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: background-color 0.15s, color 0.15s, transform 0.1s ease;
+  border-radius: var(--radius);
+  transition: background-color 0.15s, color 0.15s;
   touch-action: manipulation;
   flex: 1;
+}
+
+/* Mobile tab layout */
+@media (max-width: 899px) {
+  .nav-tab {
+    flex-direction: column;
+    font-size: 10px;
+    padding: 6px 4px;
+  }
 }
 
 .nav-tab-icon {
@@ -194,46 +217,19 @@ h3 {
 }
 
 .nav-tab:hover {
-  background-color: var(--surface-card);
-  color: var(--text);
+  color: var(--ink);
 }
 
 .nav-tab.active,
 .nav-tab[aria-current="page"] {
-  color: var(--primary);
+  color: var(--ink);
   font-weight: 600;
-}
-
-.nav-tab.active .nav-tab-icon,
-.nav-tab[aria-current="page"] .nav-tab-icon {
-  color: var(--primary);
-}
-
-.nav-tab:active {
-  transform: scale(0.97);
-  transition: transform 0.1s ease;
 }
 
 .nav-tab:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
-
-/* Desktop: horizontal tab layout */
-@media (min-width: 900px) {
-  .nav-tab {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 14px;
-    font-size: 0.875rem;
-    flex: 0 0 auto;
-    height: 44px;
-    min-height: 44px;
-  }
-
-  .nav-tab.active,
   .nav-tab[aria-current="page"] {
     background: var(--greek-bg);
   }

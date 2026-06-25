@@ -1,12 +1,11 @@
 import { navigate } from '../../router.js';
-import { iconRead, iconWords, iconProgress, iconGear, iconInfo } from './icons.js';
+import { iconRead, iconWords, iconProgress, iconGear } from './icons.js';
 
 const TABS = [
-  { id: 'reading',    label: 'Читать',    icon: iconRead,     hash: '#/read/john' },
-  { id: 'dictionary', label: 'Слова',     icon: iconWords,    hash: '#/dictionary' },
+  { id: 'reading',    label: 'Чтение',    icon: iconRead,    hash: '#/read/john' },
+  { id: 'dictionary', label: 'Словарь',   icon: iconWords,   hash: '#/dictionary' },
   { id: 'progress',   label: 'Прогресс',  icon: iconProgress, hash: '#/progress' },
-  { id: 'settings',   label: 'Настр',     icon: iconGear,     hash: '#/settings' },
-  { id: 'about',      label: 'О',         icon: iconInfo,     hash: '#/about' },
+  { id: 'settings',   label: 'Ещё',       icon: iconGear,    hash: '#/settings' },
 ];
 
 export function createNav(store) {
@@ -14,31 +13,30 @@ export function createNav(store) {
   nav.className = 'app-nav';
   nav.setAttribute('aria-label', 'Главная навигация');
 
-  function render(screen) {
-    nav.innerHTML = TABS.map(t =>
-      `<button class="nav-tab ${t.id === screen ? 'active' : ''}"
-               data-screen="${t.id}"
-               aria-current="${t.id === screen ? 'page' : 'false'}"
-               aria-label="${t.label}">
-         <span class="nav-tab-icon">${t.icon(20)}</span>
-         <span class="nav-tab-label">${t.label}</span>
-       </button>`
-    ).join('');
+  let buttons = [];
+
+  TABS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-tab';
+    btn.setAttribute('aria-label', t.label);
+    btn.innerHTML = `<span class="nav-tab-icon">${t.icon(22)}</span><span class="nav-tab-label">${t.label}</span>`;
+    btn.addEventListener('click', () => navigate(t.hash));
+    nav.appendChild(btn);
+    buttons.push({ btn, id: t.id });
+  });
+
+  function updateActive(screen) {
+    // Map 'about' to 'settings' — both live under Ещё
+    const activeId = screen === 'about' ? 'settings' : screen;
+    buttons.forEach(({ btn, id }) => {
+      const isActive = id === activeId;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-current', isActive ? 'page' : 'false');
+    });
   }
 
-  nav.addEventListener('click', (e) => {
-    const btn = e.target.closest('.nav-tab');
-    if (!btn) return;
-    const tab = TABS.find(t => t.id === btn.dataset.screen);
-    if (tab) navigate(tab.hash);
-  });
-
-  // Определяем текущий экран из store
-  store.subscribe([], (state) => {
-    render(state.screen);
-  });
-
-  render(store.get().screen);
+  store.subscribe([], (state) => updateActive(state.screen));
+  updateActive(store.get().screen);
 
   return nav;
 }
