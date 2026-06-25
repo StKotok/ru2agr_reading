@@ -126,6 +126,24 @@ export async function mount(cnt, ctx) {
   render();
 }
 
+function statusCount(statusValue) {
+  if (!frequencyList) return 0;
+  const coreByIdMap = coreById();
+  const q = searchQuery.trim().toLowerCase();
+  return frequencyList.filter(item => {
+    if (filterPOS !== 'all' && item.posGroup !== filterPOS) return false;
+    if (filterStatus === 'checked' && !(dict[coreByIdMap.get(item.strong)?.id || `freq-${item.strong}`]?.showInText !== false)) return false;
+    if (q && !item.lemma.toLowerCase().includes(q) && !(item.transliteration || '').toLowerCase().includes(q)) return false;
+    if (statusValue !== 'all') {
+      const lex = coreByIdMap.get(item.strong);
+      const dictId = lex ? lex.id : `freq-${item.strong}`;
+      const entry = dict[dictId];
+      if (!entry || entry.status !== statusValue) return false;
+    }
+    return true;
+  }).length;
+}
+
 function getFilteredList() {
   if (!frequencyList || frequencyList.length === 0) return [];
 
@@ -301,52 +319,135 @@ function render() {
   });
   header.appendChild(searchContainer);
 
-  // Filter row: status buttons + POS select + show-in-text toggle
+  // ═══ Filter row: status dropdown + POS dropdown + show-in-text toggle ═══
   const filterRow = document.createElement('div');
   filterRow.className = 'dict-filter-row';
 
-  const statusBtns = [
+  // --- Status dropdown (prototype: readerWordSV3) ---
+  const statusOpts = [
     { value: 'all', label: 'Все' },
     { value: 'new', label: 'Новые' },
     { value: 'learning', label: 'Учу' },
     { value: 'known', label: 'Знаю' },
   ];
-  statusBtns.forEach(({ value, label }) => {
-    const btn = document.createElement('button');
-    btn.className = 'btn' + (filterStatus === value ? ' btn-primary' : '');
-    btn.textContent = label;
-    btn.addEventListener('click', () => {
-      filterStatus = value;
-      renderedCount = 0;
-      render();
-    });
-    filterRow.appendChild(btn);
-  });
+  const curStatus = statusOpts.find(o => o.value === filterStatus) || statusOpts[0];
 
-  // POS dropdown
-  const posSelect = document.createElement('select');
-  posSelect.className = 'dict-filter-select';
-  posSelect.setAttribute('aria-label', 'Фильтр по части речи');
-  [
+  const statusDD = document.createElement('div');
+  statusDD.className = 'dict-dropdown';
+  let statusMenuOpen = false;
+  const statusBtn = document.createElement('button');
+  statusBtn.className = 'dict-dropdown-btn';
+  statusBtn.innerHTML = `<span class="dict-dropdown-label">Статус:</span> <span class="dict-dropdown-value">${curStatus.label}</span> <span class="dict-dropdown-count">${statusCount(filterStatus)}</span> <span class="dict-dropdown-caret">▾</span>`;
+  statusBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAllDropdowns();
+    statusMenuOpen = !statusMenuOpen;
+    toggleStatusMenu();
+  });
+  statusDD.appendChild(statusBtn);
+
+  const statusMenu = document.createElement('div');
+  statusMenu.className = 'dict-dropdown-menu';
+  statusMenu.hidden = true;
+  statusDD.appendChild(statusMenu);
+
+  function toggleStatusMenu() {
+    statusMenu.innerHTML = '';
+    if (!statusMenuOpen) { statusMenu.hidden = true; return; }
+    statusOpts.forEach(({ value, label }) => {
+      const item = document.createElement('button');
+      item.className = 'dict-dropdown-item';
+      const on = filterStatus === value;
+      if (on) item.classList.add('active');
+      item.innerHTML = `<span>${label}</span> <span>${statusCount(value)}</span>`;
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterStatus = value;
+        statusMenuOpen = false;
+        statusMenu.hidden = true;
+        renderedCount = 0;
+        render();
+      });
+      statusMenu.appendChild(item);
+    });
+    statusMenu.hidden = false;
+  }
+
+  filterRow.appendChild(statusDD);
+
+  // Desktop separator
+  if (window.innerWidth >= 900) {
+    const sep = document.createElement('div');
+    sep.className = 'dict-filter-sep';
+    filterRow.appendChild(sep);
+  }
+
+  // --- POS dropdown (prototype: readerWordPosDropdown) ---
+  const posOpts = [
     { value: 'all', label: 'Все' },
     { value: 'noun', label: 'Сущ.' },
     { value: 'verb', label: 'Глаг.' },
     { value: 'adj', label: 'Прил.' },
-    { value: 'func', label: 'Служ.' }
-  ].forEach(({ value, label }) => {
-    const opt = document.createElement('option');
-    opt.value = value; opt.textContent = label;
-    if (value === filterPOS) opt.selected = true;
-    posSelect.appendChild(opt);
-  });
-  posSelect.addEventListener('change', () => {
-    filterPOS = posSelect.value;
-    renderedCount = 0;
-    render();
-  });
-  filterRow.appendChild(posSelect);
+    { value: 'func', label: 'Служ.' },
+  ];
+  const curPOS = posOpts.find(o => o.value === filterPOS) || posOpts[0];
 
-  // Show-in-text toggle
+  const posDD = document.createElement('div');
+  posDD.className = 'dict-dropdown';
+  let posMenuOpen = false;
+  const posBtn = document.createElement('button');
+  posBtn.className = 'dict-dropdown-btn dict-dropdown-btn--pos';
+  posBtn.innerHTML = `<span class="dict-dropdown-label">Часть речи:</span> <span class="dict-dropdown-value">${curPOS.label}</span> <span class="dict-dropdown-caret">▾</span>`;
+  posBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAllDropdowns();
+    posMenuOpen = !posMenuOpen;
+    togglePOSMenu();
+  });
+  posDD.appendChild(posBtn);
+
+  const posMenu = document.createElement('div');
+  posMenu.className = 'dict-dropdown-menu';
+  posMenu.hidden = true;
+  posDD.appendChild(posMenu);
+
+  function togglePOSMenu() {
+    posMenu.innerHTML = '';
+    if (!posMenuOpen) { posMenu.hidden = true; return; }
+    posOpts.forEach(({ value, label }) => {
+      const item = document.createElement('button');
+      item.className = 'dict-dropdown-item';
+      const on = filterPOS === value;
+      if (on) item.classList.add('active');
+      item.innerHTML = `<span>${label}</span>`;
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterPOS = value;
+        posMenuOpen = false;
+        posMenu.hidden = true;
+        renderedCount = 0;
+        render();
+      });
+      posMenu.appendChild(item);
+    });
+    posMenu.hidden = false;
+  }
+
+  filterRow.appendChild(posDD);
+
+  // --- Close all dropdowns ---
+  function closeAllDropdowns() {
+    statusMenuOpen = false; statusMenu.hidden = true;
+    posMenuOpen = false; posMenu.hidden = true;
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!statusDD.contains(e.target) && !posDD.contains(e.target)) {
+      closeAllDropdowns();
+    }
+  });
+
+  // --- Show-in-text toggle ---
   const isChecked = filterStatus === 'checked';
   const showToggle = document.createElement('button');
   showToggle.className = 'dict-show-toggle' + (isChecked ? ' on' : '');

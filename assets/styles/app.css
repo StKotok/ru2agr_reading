@@ -2311,6 +2311,114 @@ section[data-chapter] {
   color: var(--terra);
 }
 
+/* ── Filter dropdowns (prototype: readerWordSV3 / readerWordPosDropdown) ── */
+.dict-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dict-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line2);
+  background: var(--read);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dict-dropdown-btn--pos {
+  /* POS dropdown uses blue accent when active */
+}
+
+.dict-dropdown-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.dict-dropdown-value {
+  font-weight: 700;
+}
+
+.dict-dropdown-count {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted2);
+}
+
+.dict-dropdown-caret {
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+.dict-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 184px;
+  background: var(--paper2);
+  border: 1px solid var(--line);
+  border-radius: var(--radiusLg);
+  box-shadow: 0 16px 38px -12px rgba(40,34,22,0.42);
+  padding: 6px;
+  animation: scPop 0.14s ease;
+}
+
+.dict-dropdown-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--inkSoft);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dict-dropdown-item:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+
+.dict-dropdown-item.active {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.dict-dropdown-item span:last-child {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted2);
+}
+
+.dict-filter-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--line2);
+  flex-shrink: 0;
+}
+
+/* Animation for dropdown */
+@keyframes scPop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* ── Word list ── */
 .dict-list {
   display: flex;
