@@ -372,6 +372,68 @@ if (spanErrors === 0) ok('all spans valid');
 if (overlapErrors === 0) ok('no overlapping spans');
 
 // ===========================================================================
+// Check 15c: Manual alignments file validation
+// ===========================================================================
+console.log('\n--- Check 15c: Manual alignments validation ---');
+let manualErrors = 0;
+const manualPath = 'docs/source-data/alignments/grc-eng/manual-alignments.json';
+try {
+  const manualRaw = JSON.parse(readFileSync(manualPath, 'utf8'));
+  const manualVersion = manualRaw.normalizationVersion;
+  const entries = manualRaw.entries || [];
+
+  if (manualVersion !== NORMALIZATION_VERSION) {
+    error(`manual-alignments.json normalizationVersion "${manualVersion}" != current "${NORMALIZATION_VERSION}" — re-validate manual bindings`);
+    manualErrors++;
+  } else {
+    ok(`manual-alignments normalizationVersion matches current (${NORMALIZATION_VERSION})`);
+  }
+
+  // Check duplicate tokenIds
+  const seenTokenIds = new Set();
+  let dupCount = 0;
+  for (const entry of entries) {
+    if (seenTokenIds.has(entry.tokenId)) {
+      dupCount++;
+      if (dupCount <= 5) error(`manual-alignments: duplicate tokenId ${entry.tokenId}`);
+    }
+    seenTokenIds.add(entry.tokenId);
+  }
+  if (dupCount > 5) error(`... and ${dupCount - 5} more duplicates`);
+  if (dupCount === 0) ok(`no duplicate tokenIds in manual-alignments (${entries.length} entries)`);
+
+  // Validate each entry
+  let invalidRefCount = 0, missingTokenCount = 0, emptyReasonCount = 0;
+  for (const entry of entries) {
+    // Parse ref
+    const refMatch = entry.ref?.match(/^(\d?\s?\w+)\s+(\d+):(\d+)$/i);
+    if (!refMatch) {
+      if (invalidRefCount < 5) error(`manual-alignments: invalid ref "${entry.ref}"`);
+      invalidRefCount++;
+      continue;
+    }
+    const bookId = refMatch[1].toLowerCase().replace(/\s/g, '');
+
+    // For manual-exclusion: check reason is non-empty
+    if (entry.method === 'manual-exclusion' && !entry.reason) {
+      if (emptyReasonCount < 5) error(`manual-alignments: ${entry.ref}/${entry.tokenId} manual-exclusion has empty reason`);
+      emptyReasonCount++;
+    }
+  }
+  if (invalidRefCount > 0) error(`manual-alignments: ${invalidRefCount} entries with invalid ref`);
+  if (emptyReasonCount > 0) error(`manual-alignments: ${emptyReasonCount} manual-exclusion entries with empty reason`);
+  if (invalidRefCount === 0 && emptyReasonCount === 0) ok(`all manual entries have valid refs and reasons`);
+
+  if (manualErrors === 0) ok('manual-alignments file valid');
+} catch (e) {
+  if (e.code === 'ENOENT') {
+    warn('manual-alignments.json not found — manual curation not started');
+  } else {
+    error(`Cannot validate manual-alignments: ${e.message}`);
+  }
+}
+
+// ===========================================================================
 // Check 16: Alignment accuracy invariant (hard error)
 // ===========================================================================
 console.log('\n--- Check 16: Accuracy invariant ---');
