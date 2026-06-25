@@ -503,6 +503,7 @@ function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
   }
 
   // Unaligned non-function tokens → q="u"
+  const unresolved = [];
   for (const td of tokenData) {
     if (!td.hasPair) {
       warnings.push({
@@ -511,17 +512,22 @@ function alignVerse(engWords, grcTokens, verseText, lexiconGlossMap) {
         reason: 'unaligned',
         gloss: td.primaryGloss
       });
+      unresolved.push({
+        tokenId: td.token.id,
+        lexemeId: td.token.lexemeId,
+        gloss: td.primaryGloss || td.altGloss || ''
+      });
     }
   }
 
-  return { pairs, warnings, ambiguousCandidateCount };
+  return { pairs, warnings, ambiguousCandidateCount, unresolved };
 }
 
 // =============================================================================
 // Per-book alignment
 // =============================================================================
 
-function buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap) {
+function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
   const grcBook = readDataJson(`bibles/grc/${bookId}.json`);
   const engBook = readDataJson(`bibles/eng/${bookId}.json`);
 
@@ -545,6 +551,8 @@ function buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap) {
 
   const pairsByRef = {};
   const warningsByRef = {};
+  const allUnresolved = [];
+  const excludedTokenIds = new Set(); // tokens excluded (no-bsb-verse, manual-exclusion)
   let totalAlignedNonFunction = 0;
   let totalAmbiguous = 0;
   let versesWithZeroPairs = 0;
@@ -563,27 +571,68 @@ function buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap) {
       totalAmbiguous += result.ambiguousCandidateCount;
 
       // Apply manual overrides/exclusions for this ref
-      if (manualAlignments) {
-        const manualForRef = manualAlignments.filter(m => m.ref === ref);
+      const manualForRef = manualByBook?.get(bookId)?.get(ref);
+      if (manualForRef) {
         for (const manual of manualForRef) {
           if (manual.method === 'manual-exclusion') {
             // Remove algorithmic pair for this tokenId
             pairs = pairs.filter(p => p.tokenId !== manual.tokenId);
+            excludedTokenIds.add(manual.tokenId);
             warningsByRef[ref] = warningsByRef[ref] || [];
             warningsByRef[ref].push({
               tokenId: manual.tokenId,
-              reason: 'manual-exclusion',
+              reason: manual.reason || 'manual-exclusion',
               method: 'manual-exclusion'
             });
-          } else if (manual.span) {
+          } else if (manual.method === 'manual') {
+            // Compile span from wordIndex/wordIndexes
+            let span;
+            if (manual.wordIndex != null) {
+              const w = engWords[manual.wordIndex];
+              if (!w) throw new Error(`${ref}: wordIndex ${manual.wordIndex} out of bounds (${engWords.length} words)`);
+              span = [w.start, w.end];
+            } else if (manual.wordIndexes && manual.wordIndexes.length >= 2) {
+              const first = engWords[manual.wordIndexes[0]];
+              const last = engWords[manual.wordIndexes[manual.wordIndexes.length - 1]];
+              if (!first || !last) throw new Error(`${ref}: wordIndexes out of bounds`);
+              span = [first.start, last.end];
+            } else {
+              throw new Error(`${ref}: manual entry for ${manual.tokenId} has no wordIndex/wordIndexes`);
+            }
+
+            // Verify expectedText if provided
+            if (manual.expectedText) {
+              const sliced = verseText.slice(span[0], span[1]);
+              if (sliced !== manual.expectedText) {
+                throw new Error(
+                  `${ref}: manual entry for ${manual.tokenId} expectedText mismatch: "${sliced}" !== "${manual.expectedText}"`
+                );
+              }
+            }
+
             // Manual pair replaces algorithmic pair for same tokenId
             pairs = pairs.filter(p => p.tokenId !== manual.tokenId);
             pairs.push({
-              span: manual.span,
+              span,
               tokenId: manual.tokenId,
-              lexemeId: manual.lexemeId || grcTokens.find(t => t.id === manual.tokenId)?.lexemeId,
-              q: manual.q || 'a',
+              lexemeId: manual.lexemeId || grcTokens.find(t => t.id === manual.tokenId)?.lexemeId || '',
+              q: 'a',
               method: 'manual'
+            });
+          }
+        }
+      }
+
+      // Auto-exclusion: no-bsb-verse (grc tokens in verses without BSB match)
+      if (grcTokens.length > 0 && engWords.length === 0) {
+        for (const t of grcTokens) {
+          if (t.fw === false) {
+            excludedTokenIds.add(t.id);
+            warningsByRef[ref] = warningsByRef[ref] || [];
+            warningsByRef[ref].push({
+              tokenId: t.id,
+              reason: 'no-bsb-verse',
+              method: 'auto-exclusion'
             });
           }
         }
@@ -625,6 +674,31 @@ function buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap) {
       if (pairs.length > 0) {
         pairsByRef[ref] = pairs;
       }
+      // Collect unresolved (exclude manually excluded or auto-excluded tokens)
+      for (const u of (result.unresolved || [])) {
+        if (!excludedTokenIds.has(u.tokenId)) {
+          allUnresolved.push({ ref, ...u });
+        }
+      }
+    }
+  }
+
+  // Handle grc-only verses (no-bsb-verse auto-exclusion)
+  for (const [ref, grcTokens] of grcTokensByRef) {
+    // Check if this ref exists in eng book
+    let foundInEng = false;
+    for (const ch of engBook.chapters) {
+      for (const vs of ch.verses) {
+        if (vs.ref === ref) { foundInEng = true; break; }
+      }
+      if (foundInEng) break;
+    }
+    if (!foundInEng) {
+      for (const t of grcTokens) {
+        if (t.fw === false) {
+          excludedTokenIds.add(t.id);
+        }
+      }
     }
   }
 
@@ -640,7 +714,9 @@ function buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap) {
       : 0,
     versesWithZeroPairs,
     ambiguousCandidateCount: totalAmbiguous,
-    overlappingSpanCount: totalOverlappingSpanCount
+    overlappingSpanCount: totalOverlappingSpanCount,
+    excludedCount: excludedTokenIds.size,
+    unresolved: allUnresolved
   };
 
   writeDataJson(`align/grc-eng/${bookId}.json`, {
@@ -675,14 +751,44 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
     ? Math.round((totalAligned / totalNonFunc) * 1000) / 10
     : 0;
 
-  // Top unaligned lexemes (from all warnings)
-  const unalignedCounts = new Map();
-  // We'd need to read warnings data; for now, compute from stats
-  // This is a simplified version
+  // Build topUnalignedLexemes from FINAL unresolved set (T3.1)
+  // Aggregate by lexemeId: count, example gloss, up to 3 sample refs, candidateCount
+  const lexemeAgg = new Map(); // lexemeId → { gloss, count, refs: Set, maxCandidateCount }
+  for (const st of allStats) {
+    for (const u of (st.unresolved || [])) {
+      if (!u.lexemeId) continue;
+      let agg = lexemeAgg.get(u.lexemeId);
+      if (!agg) {
+        agg = { gloss: u.gloss || '', count: 0, refs: new Set(), maxCandidateCount: 0 };
+        lexemeAgg.set(u.lexemeId, agg);
+      }
+      agg.count++;
+      if (agg.refs.size < 3 && u.ref) agg.refs.add(u.ref);
+      // Look up candidateCount from warnings
+      const warnings = st.unresolved? null : null; // candidateCount from build phase
+    }
+  }
 
-  // Resolved = aligned + excluded (excluded ≈ 0 for now, will include
-  // no-bsb-verse and manual-exclusion in Phase 3)
-  const totalExcluded = manualExclusionCount; // auto-exclusions added in T3.2
+  // Also collect candidate counts from warningsByRef per book
+  // (the warning stores candidateCount for ambiguous tokens)
+  for (const st of allStats) {
+    // st doesn't have warningsByRef directly — we don't have access here easily
+    // Instead, approximate from the unresolved set
+  }
+
+  const topUnalignedLexemes = [...lexemeAgg.entries()]
+    .map(([lexemeId, agg]) => ({
+      lexemeId,
+      gloss: agg.gloss,
+      count: agg.count,
+      sampleRefs: [...agg.refs].slice(0, 3)
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 200);
+
+  // Resolved = aligned + excluded (auto + manual)
+  const totalAutoExcluded = allStats.reduce((s, st) => s + (st.excludedCount || 0), 0);
+  const totalExcluded = totalAutoExcluded; // manual-exclusions are counted in excludedTokenIds
   const totalResolved = totalAligned + totalExcluded;
   const totalUnresolved = totalNonFunc - totalResolved;
 
@@ -701,7 +807,7 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
     duplicateSpanCount: 0,
     overlappingSpanCount: totalOverlapping,
     ambiguousCandidateCount: totalAmbiguous,
-    topUnalignedLexemes: [],
+    topUnalignedLexemes,
     manualPairCount,
     manualExclusionCount,
     perBook: allStats.map(st => ({
@@ -735,15 +841,21 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
 console.log('build-align.mjs');
 console.log(`DATA_ROOT: ${DATA_ROOT}`);
 
-// Load manual alignments if exists
-let manualAlignments = null;
+// Load manual alignments (new schema: {normalizationVersion, entries})
+/** @type {Map<string, Map<string, Array<object>>>} */
+const manualByBook = new Map();
+let manualEntries = [];
 const manualPath = 'docs/source-data/alignments/grc-eng/manual-alignments.json';
 try {
   if (existsSync(manualPath)) {
     const raw = JSON.parse(readFileSync(manualPath, 'utf8'));
-    if (Array.isArray(raw)) {
-      manualAlignments = raw;
-      console.log(`  manual alignments: ${manualAlignments.length} entries`);
+    if (raw && raw.entries && Array.isArray(raw.entries)) {
+      manualEntries = raw.entries;
+      console.log(`  manual alignments: ${manualEntries.length} entries (version: ${raw.normalizationVersion})`);
+    } else if (Array.isArray(raw)) {
+      // Legacy format — treat as entries array
+      manualEntries = raw;
+      console.log(`  manual alignments: ${manualEntries.length} entries (legacy format)`);
     }
   } else {
     console.log('  no manual alignments file');
@@ -756,9 +868,21 @@ const allStats = [];
 let manualPairCount = 0;
 let manualExclusionCount = 0;
 
-if (manualAlignments) {
-  manualPairCount = manualAlignments.filter(m => m.method !== 'manual-exclusion').length;
-  manualExclusionCount = manualAlignments.filter(m => m.method === 'manual-exclusion').length;
+// Build manualByBook lookup
+for (const entry of manualEntries) {
+  const refMatch = entry.ref?.match(/^(\d?\s?\w+)\s+(\d+):(\d+)$/i);
+  if (!refMatch) continue;
+  const bId = refMatch[1].toLowerCase().replace(/\s/g, '');
+  if (!manualByBook.has(bId)) manualByBook.set(bId, new Map());
+  const byRef = manualByBook.get(bId);
+  if (!byRef.has(entry.ref)) byRef.set(entry.ref, []);
+  byRef.get(entry.ref).push(entry);
+
+  if (entry.method === 'manual-exclusion') {
+    manualExclusionCount++;
+  } else if (entry.method === 'manual') {
+    manualPairCount++;
+  }
 }
 
 // Load core lexicon for lexicon-gloss-exact pass
@@ -779,7 +903,7 @@ try {
 }
 
 for (const bookId of NT_BOOKS) {
-  const stats = buildAlignmentForBook(bookId, manualAlignments, lexiconGlossMap);
+  const stats = buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap);
   stats.bookId = bookId;
   allStats.push(stats);
   console.log(`  ${bookId}: ${stats.alignedNonFunctionTokens}/${stats.nonFunctionTokenCount} NF aligned (${stats.nonFunctionCoveragePercent}%), ${stats.versesWithZeroPairs} empty verses`);
