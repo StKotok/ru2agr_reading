@@ -12,6 +12,13 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version)
   },
+  test: {
+    // Исключить obsolete-сгенерённые тесты, которые требуют
+    // несуществующих сгенерированных файлов.
+    // node_modules и dist исключены по умолчанию; перечисляем явно,
+    // чтобы не потерять при кастомном exclude.
+    exclude: ['node_modules/**', 'dist/**', 'docs/obsolete-dont-use/**']
+  },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',

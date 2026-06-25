@@ -6,6 +6,7 @@ import { readSourceJson, readDataJson, DATA_ROOT, existsSync } from './lib/fs.mj
 import { readFileSync, statSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { checkPairAccuracy, normalizeWord, normalizeBerean, fuzzyNormalize, tokenizeGloss, ALIGN_METHODS } from './lib/align-normalize.mjs';
 
 const NT_BOOKS = [
   'matthew', 'mark', 'luke', 'john', 'acts',
@@ -369,6 +370,286 @@ for (const bookId of NT_BOOKS) {
 }
 if (spanErrors === 0) ok('all spans valid');
 if (overlapErrors === 0) ok('no overlapping spans');
+
+// ===========================================================================
+// Check 16: Alignment accuracy invariant (hard error)
+// ===========================================================================
+console.log('\n--- Check 16: Accuracy invariant ---');
+let accuracyErrors = 0;
+
+// Build per-book grc token gloss lookup
+/** @type {Map<string, Map<string, {glossBerean: string, glossCherith: string}>>} */
+const grcGlossByBook = new Map();
+for (const bookId of NT_BOOKS) {
+  const grc = readDataJson(`bibles/grc/${bookId}.json`);
+  const tokenGloss = new Map();
+  for (const ch of grc.chapters) {
+    for (const vs of ch.verses) {
+      for (const t of vs.tokens) {
+        tokenGloss.set(t.id, {
+          glossBerean: t.glossBerean || '',
+          glossCherith: t.glossCherith || '',
+        });
+      }
+    }
+  }
+  grcGlossByBook.set(bookId, tokenGloss);
+}
+
+for (const bookId of NT_BOOKS) {
+  const eng = readDataJson(`bibles/eng/${bookId}.json`);
+  const engTexts = new Map();
+  /** @type {Map<string, Array<{start: number, end: number, text: string}>>} */
+  const engWordsByRef = new Map();
+  for (const ch of eng.chapters) {
+    for (const vs of ch.verses) {
+      engTexts.set(vs.ref, vs.text);
+      engWordsByRef.set(vs.ref, vs.words.map(w => ({
+        start: w.start, end: w.end, text: w.text
+      })));
+    }
+  }
+
+  const align = readDataJson(`align/grc-eng/${bookId}.json`);
+  const tokenGloss = grcGlossByBook.get(bookId);
+
+  for (const [ref, pairs] of Object.entries(align.pairsByRef || {})) {
+    const verseText = engTexts.get(ref) || '';
+    const engWords = engWordsByRef.get(ref) || [];
+
+    for (const pair of pairs) {
+      const method = pair.method;
+
+      // Validate method is known
+      if (!ALIGN_METHODS[method]) {
+        error(`${ref}: unknown method "${method}" for token ${pair.tokenId}`);
+        accuracyErrors++;
+        continue;
+      }
+
+      const slice = verseText.slice(pair.span[0], pair.span[1]);
+      const ti = tokenGloss.get(pair.tokenId);
+
+      // Determine which gloss to use based on method
+      let gloss;
+      if (method.startsWith('alt-gloss-')) {
+        gloss = ti?.glossCherith || '';
+      } else if (method === 'lexicon-gloss-exact') {
+        gloss = ti?.glossBerean || ti?.glossCherith || '';
+      } else {
+        gloss = ti?.glossBerean || '';
+      }
+
+      // Run accuracy check
+      const result = checkPairAccuracy(slice, gloss, method);
+      if (!result.ok) {
+        error(`${ref}: accuracy invariant failed for ${method} — token ${pair.tokenId}: ${result.reason} (slice="${slice.slice(0, 40)}", gloss="${gloss.slice(0, 40)}")`);
+        accuracyErrors++;
+      }
+    }
+
+    // Structural single-candidate check for proven methods
+    for (let pi = 0; pi < pairs.length; pi++) {
+      const pair = pairs[pi];
+      const method = pair.method;
+      const tier = ALIGN_METHODS[method]?.tier;
+
+      // Only check proven-tier methods
+      if (tier !== 'proven') continue;
+
+      const isPhrase = method === 'phrase' || method === 'alt-gloss-phrase';
+
+      if (isPhrase) {
+        // For phrase: check exactly one non-overlapping window of same-length normalized tokens
+        const slice = verseText.slice(pair.span[0], pair.span[1]);
+        const sliceTokens = tokenizeGloss(slice).map(normalizeWord);
+        const windowLen = sliceTokens.length;
+
+        // Find all non-overlapping windows matching this normalized token sequence
+        const matchingWindows = [];
+        for (let wi = 0; wi <= engWords.length - windowLen; wi++) {
+          // Check if window overlaps with any OTHER pair's span
+          const wStart = engWords[wi].start;
+          const wEnd = engWords[wi + windowLen - 1].end;
+          let overlapsOther = false;
+          for (let pj = 0; pj < pairs.length; pj++) {
+            if (pj === pi) continue;
+            const otherSpan = pairs[pj].span;
+            if (!(wEnd <= otherSpan[0] || wStart >= otherSpan[1])) {
+              overlapsOther = true;
+              break;
+            }
+          }
+          if (overlapsOther) continue;
+
+          // Check token-by-token match
+          let allMatch = true;
+          for (let j = 0; j < windowLen; j++) {
+            if (normalizeWord(engWords[wi + j].text) !== sliceTokens[j]) {
+              allMatch = false;
+              break;
+            }
+          }
+          if (allMatch) {
+            matchingWindows.push({ start: wStart, end: wEnd });
+          }
+        }
+
+        if (matchingWindows.length !== 1) {
+          error(`${ref}: structural phrase window count=${matchingWindows.length} for ${method} token ${pair.tokenId} (expected exactly 1, slice="${slice.slice(0, 30)}")`);
+          accuracyErrors++;
+        }
+      } else {
+        // For single-word proven methods: count unclaimed words with same normalized form
+        const slice = verseText.slice(pair.span[0], pair.span[1]);
+        const normSlice = normalizeWord(slice);
+
+        const competingIndices = [];
+        for (let wi = 0; wi < engWords.length; wi++) {
+          const wStart = engWords[wi].start;
+          const wEnd = engWords[wi].end;
+          let claimedByOther = false;
+          for (let pj = 0; pj < pairs.length; pj++) {
+            if (pj === pi) continue;
+            const otherSpan = pairs[pj].span;
+            if (!(wEnd <= otherSpan[0] || wStart >= otherSpan[1])) {
+              claimedByOther = true;
+              break;
+            }
+          }
+          if (!claimedByOther && normalizeWord(engWords[wi].text) === normSlice) {
+            competingIndices.push(wi);
+          }
+        }
+
+        if (competingIndices.length !== 1) {
+          error(`${ref}: structural candidate count=${competingIndices.length} for ${method} token ${pair.tokenId} (expected exactly 1 unclaimed match, slice="${slice.slice(0, 30)}")`);
+          accuracyErrors++;
+        }
+      }
+    }
+  }
+}
+
+if (accuracyErrors === 0) {
+  ok('alignment accuracy invariant holds');
+}
+
+// ===========================================================================
+// Check 16b: fw classification and no-gloss check
+// ===========================================================================
+console.log('\n--- Check 16b: fw/gloss classification ---');
+let fwErrors = 0;
+let fwWarnings = 0;
+const emptyGlossTokens = [];   // fw===false with BOTH glosses empty
+const suspectFwTokens = [];    // fw===true with non-trivial gloss
+
+const FUNCTION_GLOSSES = new Set(['', '—', '[the]', 'the', 'a', 'an']);
+
+for (const bookId of NT_BOOKS) {
+  const grc = readDataJson(`bibles/grc/${bookId}.json`);
+  for (const ch of grc.chapters) {
+    for (const vs of ch.verses) {
+      for (const t of vs.tokens) {
+        const glossB = (t.glossBerean || '').trim();
+        const glossC = (t.glossCherith || '').trim();
+
+        if (t.fw === false) {
+          // Content word — must have at least one gloss OR be excluded
+          if (!glossB && !glossC) {
+            emptyGlossTokens.push({
+              ref: vs.ref,
+              tokenId: t.id,
+              lemma: t.lemma,
+              lexemeId: t.lexemeId
+            });
+          }
+        } else {
+          // fw===true but has a non-trivial gloss — suspicious
+          if ((glossB && !FUNCTION_GLOSSES.has(glossB)) ||
+              (glossC && !FUNCTION_GLOSSES.has(glossC))) {
+            suspectFwTokens.push({
+              ref: vs.ref,
+              tokenId: t.id,
+              lemma: t.lemma,
+              glossBerean: glossB,
+              glossCherith: glossC
+            });
+          }
+        }
+      }
+    }
+  }
+}
+
+// For now, report empty-gloss tokens as warnings (they'll become errors in T3.3
+// once no-gloss exclusions are in place). After T3.3, switch to error.
+if (emptyGlossTokens.length > 0) {
+  warn(`${emptyGlossTokens.length} fw===false tokens with BOTH glosses empty (will need no-gloss exclusion or fw fix):`);
+  for (const t of emptyGlossTokens.slice(0, 20)) {
+    warn(`  ${t.ref} token ${t.tokenId} lemma=${t.lemma}`);
+  }
+  if (emptyGlossTokens.length > 20) {
+    warn(`  ... and ${emptyGlossTokens.length - 20} more`);
+  }
+  fwWarnings++;
+} else {
+  ok('all fw===false tokens have at least one gloss');
+}
+
+if (suspectFwTokens.length > 0) {
+  // Count unique lemmas for a manageable summary
+  const lemmaCounts = new Map();
+  for (const t of suspectFwTokens) {
+    lemmaCounts.set(t.lemma, (lemmaCounts.get(t.lemma) || 0) + 1);
+  }
+  const topLemmas = [...lemmaCounts.entries()]
+    .sort((a, b) => b[1] - a[1]).slice(0, 20);
+  warn(`${suspectFwTokens.length} fw===true tokens have non-trivial glosses (heuristic, not errors). Top lemmas:`);
+  for (const [lemma, count] of topLemmas) {
+    warn(`  ${lemma}: ${count} occurrences`);
+  }
+  if (lemmaCounts.size > 20) {
+    warn(`  ... and ${lemmaCounts.size - 20} more unique lemmas`);
+  }
+  fwWarnings++;
+} else {
+  ok('no suspicious fw===true tokens');
+}
+
+// ===========================================================================
+// Check 16c: Build-report aggregate consistency
+// ===========================================================================
+console.log('\n--- Check 16c: Build-report aggregate consistency ---');
+try {
+  const report = readDataJson('align/grc-eng/build-report.json');
+  const perBook = report.perBook || [];
+
+  const sumTotal = perBook.reduce((s, b) => s + (b.nonFunctionTokenCount || 0), 0);
+  const sumAligned = perBook.reduce((s, b) => s + (b.alignedNonFunctionTokens || 0), 0);
+
+  if (sumTotal !== report.totalNonFunctionTokens) {
+    error(`build-report totalNonFunctionTokens=${report.totalNonFunctionTokens} but sum(perBook)=${sumTotal}`);
+  }
+
+  if (sumAligned !== report.alignedNonFunctionTokens) {
+    error(`build-report alignedNonFunctionTokens=${report.alignedNonFunctionTokens} but sum(perBook)=${sumAligned}`);
+  }
+
+  const recalculatedCoverage = sumTotal > 0 ? Math.round((sumAligned / sumTotal) * 1000) / 10 : 0;
+  if (Math.abs(recalculatedCoverage - report.nonFunctionCoveragePercent) > 0.1) {
+    error(`build-report coverage=${report.nonFunctionCoveragePercent}% but recalculated=${recalculatedCoverage}%`);
+  }
+
+  if (errors === fwErrors + (sumTotal !== report.totalNonFunctionTokens ? 1 : 0) +
+      (sumAligned !== report.alignedNonFunctionTokens ? 1 : 0)) {
+    // No new errors from this check beyond fw errors already counted
+  }
+
+  ok('build-report aggregates consistent with per-book sums');
+} catch (e) {
+  error(`Cannot verify build-report aggregates: ${e.message}`);
+}
 
 // ===========================================================================
 // Check 17: Alignment quality thresholds

@@ -5,6 +5,7 @@
 import { readSourceJson, readDataJson, writeDataJson, DATA_ROOT, existsSync } from './lib/fs.mjs';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { normalizeWord, normalizeBerean, fuzzyNormalize, tokenizeGloss, WORD_PATTERN, ALIGN_METHODS } from './lib/align-normalize.mjs';
 
 const NT_BOOKS = [
   'matthew', 'mark', 'luke', 'john', 'acts',
@@ -15,40 +16,6 @@ const NT_BOOKS = [
   'james', '1peter', '2peter', '1john', '2john', '3john',
   'jude', 'revelation'
 ];
-
-// =============================================================================
-// Normalization helpers
-// =============================================================================
-
-function normalizeWord(w) {
-  return w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '').trim();
-}
-
-function normalizeBerean(gloss) {
-  // Berean '[The] book' → 'the book' (then normalize)
-  const stripped = gloss.replace(/\[/g, '').replace(/\]/g, '').toLowerCase().trim();
-  return stripped;
-}
-
-function fuzzyNormalize(w) {
-  // Lowercase, strip punctuation, normalize apostrophes
-  return w.toLowerCase()
-    .replace(/[’'']/g, "'")
-    .replace(/[^\p{L}\p{N}'\s]/gu, '')
-    .trim();
-}
-
-// Word pattern (same as build-bibles.mjs tokenizeWords)
-const WORD_PATTERN = /[\p{L}\p{N}'’]+/gu;
-
-function tokenizeGloss(text) {
-  const words = [];
-  let match;
-  while ((match = WORD_PATTERN.exec(text)) !== null) {
-    words.push(match[0]);
-  }
-  return words;
-}
 
 // =============================================================================
 // Alignment algorithm (per verse)
@@ -450,7 +417,11 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
       overlappingSpanCount: st.overlappingSpanCount
     })),
     thresholds: {
+      // accuracyInvariant: 'hard' — enforced by verify:data Check 16 (accuracy invariant)
+      // coverage is advisory (warn, never blocks release)
+      accuracyInvariant: 'hard',
       nonFunctionCoverageMin: 90,
+      nonFunctionCoverageEnforced: false,
       versesWithPairsMin: 95
     }
   };
