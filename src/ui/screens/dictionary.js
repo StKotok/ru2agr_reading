@@ -2,6 +2,7 @@ import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting,
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
+import { iconX } from '../components/icons.js';
 
 let dict = {};
 let lexicon = [];
@@ -262,10 +263,6 @@ function render() {
   renderedCount = 0;
   lastDividerBucket = 0;
 
-  const h2 = document.createElement('h2');
-  h2.textContent = 'Словарь';
-  container.appendChild(h2);
-
   const filtered = getFilteredList();
 
   // Частотный список недоступен — показываем личный словарь
@@ -274,15 +271,25 @@ function render() {
     return;
   }
 
-  // Поисковая строка
+  // ═══ Header: Словарь + N слов ═══
+  const header = document.createElement('div');
+  header.className = 'dict-header';
+  header.innerHTML = `
+    <div class="dict-title-row">
+      <span class="dict-title">Словарь</span>
+      <span class="dict-title-count">${filtered.length}&nbsp;слов</span>
+    </div>
+  `;
+
+  // Search bar
   const searchContainer = document.createElement('div');
   searchContainer.className = 'dict-search-container';
-  const searchInput = document.createElement('input');
-  searchInput.type = 'search';
-  searchInput.className = 'dict-search';
-  searchInput.placeholder = 'Поиск по лемме...';
-  searchInput.value = searchQuery;
-  searchInput.setAttribute('aria-label', 'Поиск слов в словаре');
+  searchContainer.innerHTML = `
+    <div class="dict-search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" placeholder="Поиск: λόγος или logos…" value="${searchQuery.replace(/"/g, '&quot;')}" aria-label="Поиск слов в словаре">
+    </div>`;
+  const searchInput = searchContainer.querySelector('input');
   let searchTimer;
   searchInput.addEventListener('input', () => {
     clearTimeout(searchTimer);
@@ -292,37 +299,31 @@ function render() {
       render();
     }, 150);
   });
-  searchContainer.appendChild(searchInput);
-  container.appendChild(searchContainer);
+  header.appendChild(searchContainer);
 
-  // Строка фильтров: Статус | Часть речи | Чекбокс (как в прототипе)
-  const filterBar = document.createElement('div');
-  filterBar.className = 'dict-filter-bar';
+  // Filter row: status buttons + POS select + show-in-text toggle
+  const filterRow = document.createElement('div');
+  filterRow.className = 'dict-filter-row';
 
-  // 1. Статус
-  const statusSelect = document.createElement('select');
-  statusSelect.className = 'dict-filter-select';
-  statusSelect.setAttribute('aria-label', 'Фильтр по статусу');
-  [
+  const statusBtns = [
     { value: 'all', label: 'Все' },
     { value: 'new', label: 'Новые' },
     { value: 'learning', label: 'Учу' },
-    { value: 'known', label: 'Знаю' }
-  ].forEach(({ value, label }) => {
-    const opt = document.createElement('option');
-    opt.value = value;
-    opt.textContent = label;
-    if (value === filterStatus) opt.selected = true;
-    statusSelect.appendChild(opt);
+    { value: 'known', label: 'Знаю' },
+  ];
+  statusBtns.forEach(({ value, label }) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn' + (filterStatus === value ? ' btn-primary' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      filterStatus = value;
+      renderedCount = 0;
+      render();
+    });
+    filterRow.appendChild(btn);
   });
-  statusSelect.addEventListener('change', () => {
-    filterStatus = statusSelect.value;
-    renderedCount = 0;
-    render();
-  });
-  filterBar.appendChild(statusSelect);
 
-  // 2. Часть речи
+  // POS dropdown
   const posSelect = document.createElement('select');
   posSelect.className = 'dict-filter-select';
   posSelect.setAttribute('aria-label', 'Фильтр по части речи');
@@ -334,8 +335,7 @@ function render() {
     { value: 'func', label: 'Служ.' }
   ].forEach(({ value, label }) => {
     const opt = document.createElement('option');
-    opt.value = value;
-    opt.textContent = label;
+    opt.value = value; opt.textContent = label;
     if (value === filterPOS) opt.selected = true;
     posSelect.appendChild(opt);
   });
@@ -344,64 +344,53 @@ function render() {
     renderedCount = 0;
     render();
   });
-  filterBar.appendChild(posSelect);
+  filterRow.appendChild(posSelect);
 
-  // 3. Чекбокс «Показывать в тексте»
-  const showInTextLabel = document.createElement('label');
-  showInTextLabel.className = 'dict-filter-check';
-  const showInTextCbx = document.createElement('input');
-  showInTextCbx.type = 'checkbox';
-  showInTextCbx.checked = filterStatus === 'checked';
-  showInTextCbx.addEventListener('change', () => {
-    filterStatus = showInTextCbx.checked ? 'checked' : 'all';
+  // Show-in-text toggle
+  const isChecked = filterStatus === 'checked';
+  const showToggle = document.createElement('button');
+  showToggle.className = 'dict-show-toggle' + (isChecked ? ' on' : '');
+  showToggle.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>
+    В тексте`;
+  showToggle.addEventListener('click', () => {
+    filterStatus = filterStatus === 'checked' ? 'all' : 'checked';
     renderedCount = 0;
     render();
   });
-  showInTextLabel.appendChild(showInTextCbx);
-  showInTextLabel.appendChild(document.createTextNode(' В тексте'));
-  filterBar.appendChild(showInTextLabel);
+  filterRow.appendChild(showToggle);
 
-  container.appendChild(filterBar);
+  header.appendChild(filterRow);
+  container.appendChild(header);
 
-  // Счётчик
-  const counter = document.createElement('div');
-  counter.className = 'dict-counter';
-  counter.textContent = `Найдено: ${filtered.length}`;
-  container.appendChild(counter);
+  // ═══ Word list ═══
+  const listScroll = document.createElement('div');
+  listScroll.className = 'dict-list-scroll';
 
-  // Список
   const list = document.createElement('div');
   list.className = 'dict-list';
-  container.appendChild(list);
+  listScroll.appendChild(list);
+  container.appendChild(listScroll);
 
-  // DOM-окно: отрендерить первые PAGE_SIZE, остальные через Observer
+  // Render first PAGE_SIZE, rest via Observer
   renderBatch(list, filtered);
 
   if (filtered.length > PAGE_SIZE * 2) {
-    // Отключаем предыдущий observer если есть
     if (dictObserver) dictObserver.disconnect();
-
-    // Сентинел для подгрузки
     const sentinel = document.createElement('div');
     sentinel.className = 'dict-sentinel';
-    sentinel.style.height = '1px';
-    list.appendChild(sentinel);
-
+    listScroll.appendChild(sentinel);
     dictObserver = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         dictObserver.disconnect();
         sentinel.remove();
         renderBatch(list, filtered);
         if (renderedCount < filtered.length) {
-          // Добавляем новый сентинел
           const nextSentinel = document.createElement('div');
           nextSentinel.className = 'dict-sentinel';
-          nextSentinel.style.height = '1px';
-          list.appendChild(nextSentinel);
+          listScroll.appendChild(nextSentinel);
           dictObserver.observe(nextSentinel);
-        } else {
-          dictObserver = null;
-        }
+        } else dictObserver = null;
       }
     });
     dictObserver.observe(sentinel);
@@ -437,14 +426,15 @@ function renderBatch(list, filtered) {
     const row = document.createElement('div');
     row.className = `dict-row${!available ? ' dict-row--disabled' : ''}`;
     row.setAttribute('data-strong', String(item.strong));
+    const statusLabel = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry?.status] || '';
 
     row.innerHTML = `
       <span class="dict-rank">${item.rank}</span>
       <span class="dict-lemma">${item.lemma}</span>
       <span class="dict-translit">${item.translit}</span>
       <span class="dict-freq">${item.count}</span>
-      ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${{ new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое'}</span>` : '<span class="dict-badge-placeholder"></span>'}
-      <label class="dict-check" title="${available ? 'Показывать в тексте' : 'Нет проверенного соответствия в тексте — слово пока не участвует в подстановках'}">
+      ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${statusLabel}</span>` : '<span class="dict-badge-placeholder"></span>'}
+      <label class="dict-check" title="${available ? 'Показывать в тексте' : 'Нет проверенного соответствия — слово не участвует в подстановках'}">
         <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} ${!available ? 'disabled' : ''} aria-label="Показывать ${item.lemma} в тексте">
       </label>
     `;
@@ -562,124 +552,82 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
 
   const status = dictEntry?.status || null;
   const inDict = !!dictEntry;
+  const ruGloss = lexeme?.ruGloss || lexeme?.glossesBerean?.[0] || '';
+  const strongNum = lexeme?.strongs?.[0] || '';
+  const hasAlignment = item.hasAlignment;
 
+  // Close button + header
   card.innerHTML = `
-    <div class="word-card-lemma">${item.lemma}</div>
-    <div class="word-card-translit">${item.translit}</div>
-    ${lexeme ? `<div class="word-card-gloss">${lexeme.ruGloss || lexeme.glossesBerean?.[0] || ''}</div>` : ''}
-    ${lexeme ? `<div class="word-card-pos">${lexeme.pos || ''}</div>` : ''}
-    <div class="word-card-freq">Частота: ${item.count} (ранг ${item.rank} в НЗ)</div>
-    ${lexeme && lexeme.strongs?.[0] ? `<div class="word-card-strong">Strong G${lexeme.strongs[0]}</div>` : ''}
-    ${!item.hasAlignment ? '<p class="word-card-warning">⚠️ Нет проверенного соответствия в тексте — слово пока не участвует в подстановках</p>' : ''}
-    <div class="word-card-actions"></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div class="word-card-lemma">${item.lemma}</div>
+        <div class="word-card-translit">${item.translit}</div>
+      </div>
+      <button class="word-card-close" aria-label="Закрыть" onclick="this.closest('.popover-card, .bottom-sheet-content')?.querySelector('.popover-close, .bottom-sheet-close')?.click()">${iconX(18)}</button>
+    </div>
+    ${ruGloss ? `
+    <div class="word-card-gloss">
+      <div class="word-card-gloss-text">${ruGloss}</div>
+      <div class="word-card-meta">
+        ${lexeme?.pos ? `<span class="word-card-pos">${lexeme.pos}</span>` : ''}
+        <span class="word-card-freq">Частота: ${item.count}</span>
+        <span class="word-card-rank">ранг ${item.rank} в НЗ</span>
+        ${strongNum ? `<span class="word-card-strong">Strong G${strongNum}</span>` : ''}
+      </div>
+    </div>` : ''}
+    ${!hasAlignment ? '<p class="word-card-warning">Нет проверенного соответствия в тексте — слово пока не участвует в подстановках</p>' : ''}
+    <section>
+      <h3>Статус изучения</h3>
+      <div class="word-card-actions">
+        <button class="btn${status === 'new' ? ' btn-primary' : ''}" data-status="new">Новое</button>
+        <button class="btn${status === 'learning' ? ' btn-learning' : ''}" data-status="learning">Учу</button>
+        <button class="btn${status === 'known' ? ' btn-known' : ''}" data-status="known">Знаю</button>
+      </div>
+    </section>
+    <div class="word-card-toggle">
+      <div>
+        <div class="word-card-toggle-label">${inDict ? 'Показывать в тексте' : 'Добавить в словарь'}</div>
+        <div class="word-card-toggle-hint">${hasAlignment ? 'Заменяет слово в тексте чтения' : 'Нет соответствия в тексте'}</div>
+      </div>
+      ${hasAlignment
+        ? `<button class="word-card-toggle-switch${inDict && dictEntry.showInText !== false ? ' on' : ''}" aria-label="Показывать в тексте"></button>`
+        : '<span style="font-size:18px;color:var(--muted2);flex-shrink:0">–</span>'}
+    </div>
   `;
 
-  const actions = card.querySelector('.word-card-actions');
-
-  if (inDict) {
-    // Статус
-    const statusDiv = document.createElement('div');
-    statusDiv.style.margin = '4px 0';
-    ['new', 'learning', 'known'].forEach(s => {
-      const btn = document.createElement('button');
-      btn.className = 'btn' + (status === s ? ' btn-primary' : '');
-      btn.textContent = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[s];
-      btn.style.fontSize = '0.8rem';
-      btn.addEventListener('click', async () => {
-        dict = setWordStatus(dictId, s, dict);
-        await saveDictionary(dict);
-        store.update(s2 => ({ ...s2, dictionary: dict }));
-        updateRow(item);
-        refreshCard(card, item, dict[dictId], dictId);
-      });
-      statusDiv.appendChild(btn);
+  // Status buttons
+  card.querySelectorAll('.word-card-actions .btn, .word-card-actions .btn-learning, .word-card-actions .btn-known').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const s = btn.dataset.status;
+      if (!dict[dictId]) {
+        dict = addWord(dictId, dict);
+        progress = trackNewWord(dictId, progress);
+        saveProgress(progress);
+      }
+      dict = setWordStatus(dictId, s, dict);
+      await saveDictionary(dict);
+      store.update(s2 => ({ ...s2, dictionary: dict }));
+      updateRow(item);
+      refreshCard(card, item, dict[dictId], dictId);
     });
-    actions.appendChild(statusDiv);
+  });
 
-    // Показывать в тексте
-    const toggleLabel = document.createElement('label');
-    toggleLabel.style.display = 'flex';
-    toggleLabel.style.alignItems = 'center';
-    toggleLabel.style.gap = '8px';
-    toggleLabel.style.margin = '8px 0';
-    const toggle = document.createElement('input');
-    toggle.type = 'checkbox';
-    toggle.checked = dictEntry.showInText !== false;
-    toggle.disabled = !item.hasAlignment;
-    toggle.addEventListener('change', async () => {
-      dict = setWordSetting(dictId, 'showInText', toggle.checked, dict);
+  // Toggle switch
+  const toggleBtn = card.querySelector('.word-card-toggle-switch');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', async () => {
+      if (!dict[dictId]) {
+        dict = addWord(dictId, dict);
+        progress = trackNewWord(dictId, progress);
+        saveProgress(progress);
+      }
+      const newShow = !(dict[dictId]?.showInText !== false);
+      dict = setWordSetting(dictId, 'showInText', newShow, dict);
       await saveDictionary(dict);
       store.update(s => ({ ...s, dictionary: dict }));
       updateRow(item);
       refreshCard(card, item, dict[dictId], dictId);
     });
-    toggleLabel.appendChild(toggle);
-    toggleLabel.appendChild(document.createTextNode('Показывать в тексте'));
-    actions.appendChild(toggleLabel);
-
-    // Интенсивность
-    if (item.hasAlignment) {
-      const intensityDiv = document.createElement('div');
-      intensityDiv.style.margin = '4px 0';
-      const intensityLabel = document.createElement('span');
-      intensityLabel.textContent = 'Интенсивность: ';
-      intensityLabel.style.fontSize = '0.85rem';
-      intensityDiv.appendChild(intensityLabel);
-      ['often', 'sometimes', 'rare'].forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'btn' + ((dictEntry.intensity || 'often') === opt ? ' btn-primary' : '');
-        btn.textContent = { often: 'Часто', sometimes: 'Иногда', rare: 'Редко' }[opt];
-        btn.style.fontSize = '0.75rem';
-        btn.addEventListener('click', async () => {
-          dict = setWordSetting(dictId, 'intensity', opt, dict);
-          await saveDictionary(dict);
-          store.update(s2 => ({ ...s2, dictionary: dict }));
-          refreshCard(card, item, dict[dictId], dictId);
-        });
-        intensityDiv.appendChild(btn);
-      });
-      actions.appendChild(intensityDiv);
-
-      // Формы: по виджету / лемма / форма оригинала
-      const formsDiv = document.createElement('div');
-      formsDiv.style.margin = '4px 0';
-      const formsLabel = document.createElement('span');
-      formsLabel.textContent = 'В тексте: ';
-      formsLabel.style.fontSize = '0.85rem';
-      formsDiv.appendChild(formsLabel);
-      const currentForms = dictEntry.forms; // undefined = По виджету
-      [{ value: undefined, label: 'По виджету' },
-       { value: 'lemma', label: 'Лемма' },
-       { value: 'form', label: 'Форма оригинала' }].forEach(opt => {
-        const btn = document.createElement('button');
-        const isActive = currentForms === opt.value; // undefined === undefined → true
-        btn.className = 'btn' + (isActive ? ' btn-primary' : '');
-        btn.textContent = opt.label;
-        btn.style.fontSize = '0.75rem';
-        btn.addEventListener('click', async () => {
-          dict = setWordSetting(dictId, 'forms', opt.value, dict);
-          await saveDictionary(dict);
-          store.update(s2 => ({ ...s2, dictionary: dict }));
-          refreshCard(card, item, dict[dictId], dictId);
-        });
-        formsDiv.appendChild(btn);
-      });
-      actions.appendChild(formsDiv);
-    }
-  } else {
-    // Слово не в словаре — кнопка «Добавить»
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-primary';
-    addBtn.textContent = 'Добавить в словарь';
-    addBtn.disabled = !item.hasAlignment;
-    addBtn.addEventListener('click', async () => {
-      dict = addWord(dictId, dict);
-      await saveDictionary(dict);
-      store.update(s => ({ ...s, dictionary: dict }));
-      updateRow(item);
-      refreshCard(card, item, dict[dictId], dictId);
-    });
-    actions.appendChild(addBtn);
   }
 
   return card;
