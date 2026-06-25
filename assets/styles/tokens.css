@@ -14,8 +14,8 @@
   --red-400: #CC6B6B;
   --green-600: #6B8E5A;
   --green-500: #7BA36A;
-  --beige-100: #F7F3EB;      /* тёплый пергаментный фон */
-  --beige-200: #EBE3D3;     /* тёплая карточка — лучшее отделение от --surface */
+  --beige-100: #F7F3EB;
+  --beige-200: #EBE3D3;
   --gray-900: #1E1E1E;
   --gray-800: #2A2A2A;
   --gray-700: #3A3A3A;
@@ -23,60 +23,250 @@
   --gray-500: #8C8C8C;
 }
 
-/* === Токены ролей: светлая тема === */
-:root,
-[data-theme="light"] {
-  /* Типографика */
-  --font-greek: 'Gentium Plus', serif;
+/* === 12-theme primitive palette (from ru2gr-tokens.js) === */
+/* Grouped by semantic role, one variable per theme */
+:root {
+  /* paper */
+  --paper-pergament: #ECE7DD;
+  --paper-sepia: #E9DFC8;
+  --paper-ivory: #FAF8F3;
+  --paper-fog: #E8E8EB;
+  --paper-sea: #E2ECF0;
+  --paper-forest: #E6EADD;
+  --paper-rose: #F1E4E1;
+  --paper-lavender: #E9E5F0;
+  --paper-sunset: #F0E2D4;
+  --paper-dark: #26231d;
+  --paper-night: #1b2230;
+  --paper-coal: #1f1f21;
 
-  /* Поверхности */
-  --surface: var(--beige-100);            /* #F7F3EB — фон страницы */
-  --surface-card: var(--beige-200);       /* #EBE3D3 — фон карточек (отделен от --surface) */
+  /* alt */
+  --alt-pergament: #E3DDD0;
+  --alt-sepia: #E2D6BB;
+  --alt-ivory: #F1EEE6;
+  --alt-fog: #DFDFE3;
+  --alt-sea: #D7E4EA;
+  --alt-forest: #DCE2D0;
+  --alt-rose: #EBD8D5;
+  --alt-lavender: #E1DBEC;
+  --alt-sunset: #E9D6C3;
+  --alt-dark: #2e2a23;
+  --alt-night: #222b3b;
+  --alt-coal: #28282b;
 
-  /* Текст */
-  --text: #2B2B2B;
-  --muted: #5A5A5A;                       /* затемнён для WCAG AA ≥4.5:1 на --surface */
+  /* read */
+  --read-pergament: #F6F3EE;
+  --read-sepia: #F4ECD9;
+  --read-ivory: #FFFFFF;
+  --read-fog: #F4F4F7;
+  --read-sea: #F0F7F9;
+  --read-forest: #F2F5EC;
+  --read-rose: #FAF1EF;
+  --read-lavender: #F5F2FA;
+  --read-sunset: #FBEFE0;
+  --read-dark: #201d18;
+  --read-night: #161c28;
+  --read-coal: #19191b;
 
-  /* Акценты */
-  --greek: var(--blue-600);               /* #264e83 — только греческий текст */
-  --primary: var(--blue-600);             /* #264e83 — UI-элементы (кнопки, табы, слайдеры) */
-  --greek-word: var(--terracotta-500);    /* #8B5E3C — греческие слова/формы (затемнён с #B07D4F для WCAG AA) */
-  --greek-bar-track: rgba(38, 78, 131, 0.15);
-  --greek-word-bar-track: rgba(139, 94, 60, 0.15);
+  /* title */
+  --title-pergament: ;
+  --title-sepia: ;
+  --title-ivory: ;
+  --title-fog: ;
+  --title-sea: ;
+  --title-forest: ;
+  --title-rose: ;
+  --title-lavender: ;
+  --title-sunset: ;
+  --title-dark: ;
+  --title-night: ;
+  --title-coal: ;
 
-  /* Декоративные */
-  --hint: #98A8C0;                        /* dotted underline — decorative, contrast exempt */
-  --focus: #4A7FB5;                       /* outline (отделён от --greek для визуальной различимости) */
-  --selection: #C5D9F0;                   /* фон выделения / hover (усилен с #D6E4F0) */
+  /* ink */
+  --ink-pergament: #272320;
+  --ink-sepia: #36291a;
+  --ink-ivory: #2a2722;
+  --ink-fog: #25262b;
+  --ink-sea: #1f2a30;
+  --ink-forest: #232a1f;
+  --ink-rose: #2e2422;
+  --ink-lavender: #28242e;
+  --ink-sunset: #34261c;
+  --ink-dark: #ece6da;
+  --ink-night: #e3e9f2;
+  --ink-coal: #ededee;
 
-  /* Семантика состояний */
-  --progress: var(--green-600);           /* #6B8E5A */
-  --status-known: var(--progress);        /* alias — «известно» */
-  --danger: var(--red-500);               /* #C44D4D */
-  --border: #D9D3C7;
+  /* inkSoft */
+  --inkSoft-pergament: #4a463e;
+  --inkSoft-sepia: #574630;
+  --inkSoft-ivory: #514c43;
+  --inkSoft-fog: #45474e;
+  --inkSoft-sea: #3c4b53;
+  --inkSoft-forest: #424a39;
+  --inkSoft-rose: #54443f;
+  --inkSoft-lavender: #494456;
+  --inkSoft-sunset: #5a4632;
+  --inkSoft-dark: #c4bdae;
+  --inkSoft-night: #b3bdcd;
+  --inkSoft-coal: #c2c2c4;
 
-  /* inverse of surface/text — intentional (классический паттерн «on-inverse» для toast) */
-  --toast-bg: #2B2B2B;
-  --toast-text: #FAF7F2;
+  /* muted */
+  --muted-pergament: #9a9488;
+  --muted-sepia: #998966;
+  --muted-ivory: #9b9488;
+  --muted-fog: #8a8c95;
+  --muted-sea: #7f939c;
+  --muted-forest: #899078;
+  --muted-rose: #a08c87;
+  --muted-lavender: #908aa0;
+  --muted-sunset: #a4876c;
+  --muted-dark: #8f897b;
+  --muted-night: #7e879a;
+  --muted-coal: #8d8d90;
 
-  /* Текст на цветных фонах */
-  --on-primary: #FFFFFF;
+  /* muted2 */
+  --muted2-pergament: #bdb6a7;
+  --muted2-sepia: #c1b08d;
+  --muted2-ivory: #c7c0b2;
+  --muted2-fog: #b6b8c0;
+  --muted2-sea: #aec0c8;
+  --muted2-forest: #b6bda6;
+  --muted2-rose: #cbb4ae;
+  --muted2-lavender: #bcb4cc;
+  --muted2-sunset: #ccb191;
+  --muted2-dark: #6c6659;
+  --muted2-night: #5b6577;
+  --muted2-coal: #66666a;
 
-  /* Бейджи */
-  --badge-learning-bg: #f0e6c0;
-  --badge-learning-text: #8a7a30;
+  /* blue */
+  --blue-pergament: #2f5d85;
+  --blue-sepia: #39627a;
+  --blue-ivory: #2f5d85;
+  --blue-fog: #3a5f8a;
+  --blue-sea: #2c6e8f;
+  --blue-forest: #3a6079;
+  --blue-rose: #5a5f93;
+  --blue-lavender: #5258a0;
+  --blue-sunset: #44708a;
+  --blue-dark: #5a93cc;
+  --blue-night: #5fa0d6;
+  --blue-coal: #5aa0d0;
 
-  /* Предупреждения */
-  --warning-bg: #fff3cd;
-  --warning-text: #856404;
+  /* blueBg */
+  --blueBg-pergament: #cdd9e6;
+  --blueBg-sepia: #d2dbdb;
+  --blueBg-ivory: #d8e3ef;
+  --blueBg-fog: #d4ddeb;
+  --blueBg-sea: #cadfe9;
+  --blueBg-forest: #d2dde1;
+  --blueBg-rose: #dedaed;
+  --blueBg-lavender: #dddaf1;
+  --blueBg-sunset: #d5e0e5;
+  --blueBg-dark: #2a3f50;
+  --blueBg-night: #26384f;
+  --blueBg-coal: #2b3a47;
 
-  /* Elevation (3-уровневая шкала) */
-  --shadow-raised: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.1);
-  --shadow-overlay: 0 4px 32px rgba(0,0,0,0.12);
-  --overlay-bg: rgba(0,0,0,0.3);
+  /* blueTx */
+  --blueTx-pergament: #345f82;
+  --blueTx-sepia: #39627a;
+  --blueTx-ivory: #2f5d85;
+  --blueTx-fog: #3a5f8a;
+  --blueTx-sea: #2c6e8f;
+  --blueTx-forest: #3a6079;
+  --blueTx-rose: #5a5f93;
+  --blueTx-lavender: #5258a0;
+  --blueTx-sunset: #44708a;
+  --blueTx-dark: #9cc3e2;
+  --blueTx-night: #a6cdef;
+  --blueTx-coal: #9fcbe8;
 
-  /* Не-цветовые токены (для будущего рефакторинга) */
+  /* terra */
+  --terra-pergament: #bb763c;
+  --terra-sepia: #b3652b;
+  --terra-ivory: #c0723a;
+  --terra-fog: #b06a45;
+  --terra-sea: #c07a45;
+  --terra-forest: #b07239;
+  --terra-rose: #bb5e54;
+  --terra-lavender: #b06a8a;
+  --terra-sunset: #c4622f;
+  --terra-dark: #d99a5f;
+  --terra-night: #d99a5f;
+  --terra-coal: #d8924f;
+
+  /* terraSoft */
+  --terraSoft-pergament: #e7d3bf;
+  --terraSoft-sepia: #e7cea9;
+  --terraSoft-ivory: #f1dac2;
+  --terraSoft-fog: #e8d2c6;
+  --terraSoft-sea: #edd7c3;
+  --terraSoft-forest: #e6d3b9;
+  --terraSoft-rose: #edccc6;
+  --terraSoft-lavender: #ebd1dc;
+  --terraSoft-sunset: #f0d0b1;
+  --terraSoft-dark: #463524;
+  --terraSoft-night: #463524;
+  --terraSoft-coal: #443323;
+
+  /* green */
+  --green-pergament: #7c9d5b;
+  --green-sepia: #7c8f46;
+  --green-ivory: #6f9a4f;
+  --green-fog: #5f8f6a;
+  --green-sea: #5e9080;
+  --green-forest: #5f8240;
+  --green-rose: #7e9a5e;
+  --green-lavender: #6f9266;
+  --green-sunset: #8a934a;
+  --green-dark: #84b25f;
+  --green-night: #84b25f;
+  --green-coal: #84b25f;
+
+  /* greenDk */
+  --greenDk-pergament: #5f7d44;
+  --greenDk-sepia: #5e7033;
+  --greenDk-ivory: #547d35;
+  --greenDk-fog: #487553;
+  --greenDk-sea: #467467;
+  --greenDk-forest: #496630;
+  --greenDk-rose: #5f7a43;
+  --greenDk-lavender: #547349;
+  --greenDk-sunset: #6c7434;
+  --greenDk-dark: #a9cf86;
+  --greenDk-night: #a9cf86;
+  --greenDk-coal: #aad187;
+
+  /* greenBg */
+  --greenBg-pergament: #d9e3c9;
+  --greenBg-sepia: #dedcb8;
+  --greenBg-ivory: #e1ead0;
+  --greenBg-fog: #d4e4d8;
+  --greenBg-sea: #cee5dd;
+  --greenBg-forest: #d8e2c2;
+  --greenBg-rose: #dee5ca;
+  --greenBg-lavender: #dae7d4;
+  --greenBg-sunset: #e2e2bc;
+  --greenBg-dark: #33402a;
+  --greenBg-night: #2a3a28;
+  --greenBg-coal: #2c3a27;
+
+  /* overlay / toast / shadow */
+  --overlay-dim-base: #15140f;
+  --overlay-dim-alpha: 0.34;
+  --overlay-dim-alpha-light: 0.18;
+  --shadow-base: rgb(40,34,22);
+  --shadow-alpha-sheet: 0.4;
+  --shadow-alpha-menu: 0.5;
+  --shadow-alpha-dropdown: 0.42;
+  --shadow-alpha-nav: 0.08;
+  --shadow-alpha-chip: 0.1;
+  --shadow-base-dark: rgb(0,0,0);
+}
+
+/* === Общие токены (типографика, анимация, не зависят от темы) === */
+:root {
+  --font-greek: "Gentium Plus", serif;
+  --font-ui: system-ui, -apple-system, sans-serif;
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -91,45 +281,518 @@
   --duration-normal: 0.3s;
 }
 
-/* === Тёмная тема === */
+/* === Контраст: Мягкий (по умолчанию) === */
+:root {
+  --contrast-line-alpha: 0.10;
+  --contrast-line2-alpha: 0.18;
+  --contrast-shadow-raised-alpha: 0.10;
+  --contrast-shadow-elevated-alpha: 0.13;
+  --contrast-shadow-overlay-alpha: 0.16;
+}
+
+/* === Контраст: Чёткий === */
+[data-contrast="sharp"] {
+  --contrast-line-alpha: 0.16;
+  --contrast-line2-alpha: 0.24;
+  --contrast-shadow-raised-alpha: 0.14;
+  --contrast-shadow-elevated-alpha: 0.18;
+  --contrast-shadow-overlay-alpha: 0.22;
+}
+
+/* === Контраст: Максимальный === */
+[data-contrast="maximum"] {
+  --contrast-line-alpha: 0.24;
+  --contrast-line2-alpha: 0.32;
+  --contrast-shadow-raised-alpha: 0.20;
+  --contrast-shadow-elevated-alpha: 0.26;
+  --contrast-shadow-overlay-alpha: 0.30;
+}
+
+/* Dark theme dampening */
 [data-theme="dark"] {
-  --surface: var(--gray-900);             /* #1E1E1E */
-  --surface-card: var(--gray-800);        /* #2A2A2A */
+  --contrast-line-alpha: 0.12;
+  --contrast-line2-alpha: 0.20;
+}
+[data-theme="night"] {
+  --contrast-line-alpha: 0.12;
+  --contrast-line2-alpha: 0.20;
+}
+[data-theme="coal"] {
+  --contrast-line-alpha: 0.12;
+  --contrast-line2-alpha: 0.20;
+}
 
-  --text: var(--gray-100);                /* #E0DCD0 */
-  --muted: #9A9A9A;                       /* осветлён для комфортного чтения на тёмном фоне */
+/* ============================================================
+   12 тем — каждая задаёт полный набор ролевых токенов
+   ============================================================ */
 
-  --greek: var(--blue-300);               /* #7BA3CC */
-  --primary: var(--blue-300);             /* #7BA3CC */
-  --greek-word: var(--terracotta-300);    /* #C8966A (затемнён с #D4A574 для WCAG AA) */
-  --greek-bar-track: rgba(123, 163, 204, 0.15);
-  --greek-word-bar-track: rgba(200, 150, 106, 0.15);
+/* Пергамент (светлая) */
+:root,
+[data-theme="pergament"] {
+  --surface: #ECE7DD;
+  --surface-card: #E3DDD0;
+  --surface-sidebar: #E3DDD0;
+  --surface-read: #F6F3EE;
+  --surface-titlebar: #E2DBCB;
+  --text: #272320;
+  --text-soft: #4a463e;
+  --muted: #9a9488;
+  --muted2: #bdb6a7;
+  --greek: #2f5d85;
+  --primary: #2f5d85;
+  --greek-bg: #cdd9e6;
+  --on-greek: #345f82;
+  --greek-word: #bb763c;
+  --greek-word-bg: #e7d3bf;
+  --status-known: #7c9d5b;
+  --status-known-text: #5f7d44;
+  --status-known-bg: #d9e3c9;
+  --border: color-mix(in srgb, #272320 calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #272320 calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #cdd9e6;
+  --focus: #2f5d85;
+  --hint: #bdb6a7;
+  --progress: #7c9d5b;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #2f5d85 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #bb763c 15%, transparent);
+}
 
-  --hint: #5A6880;
-  --focus: #A8D8F0;                       /* усилен с #8EC8E8 для ≥4.5:1 на --surface-card */
-  --selection: #2E4A6E;                   /* усилен с #2A3F5A — лучшее отделение от surface-card */
+/* Сепия (светлая) */
+[data-theme="sepia"] {
+  --surface: #E9DFC8;
+  --surface-card: #E2D6BB;
+  --surface-sidebar: #E2D6BB;
+  --surface-read: #F4ECD9;
+  --surface-titlebar: #DBCEB0;
+  --text: #36291a;
+  --text-soft: #574630;
+  --muted: #998966;
+  --muted2: #c1b08d;
+  --greek: #39627a;
+  --primary: #39627a;
+  --greek-bg: #d2dbdb;
+  --on-greek: #39627a;
+  --greek-word: #b3652b;
+  --greek-word-bg: #e7cea9;
+  --status-known: #7c8f46;
+  --status-known-text: #5e7033;
+  --status-known-bg: #dedcb8;
+  --border: color-mix(in srgb, #36291a calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #36291a calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #d2dbdb;
+  --focus: #39627a;
+  --hint: #c1b08d;
+  --progress: #7c8f46;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #39627a 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #b3652b 15%, transparent);
+}
 
-  --progress: var(--green-500);           /* #7BA36A */
-  --status-known: var(--progress);
-  --danger: var(--red-400);               /* #CC6B6B */
-  --border: var(--gray-700);              /* #3A3A3A */
+/* Слоновая кость (светлая) */
+[data-theme="ivory"] {
+  --surface: #FAF8F3;
+  --surface-card: #F1EEE6;
+  --surface-sidebar: #F1EEE6;
+  --surface-read: #FFFFFF;
+  --surface-titlebar: #EFEBE1;
+  --text: #2a2722;
+  --text-soft: #514c43;
+  --muted: #9b9488;
+  --muted2: #c7c0b2;
+  --greek: #2f5d85;
+  --primary: #2f5d85;
+  --greek-bg: #d8e3ef;
+  --on-greek: #2f5d85;
+  --greek-word: #c0723a;
+  --greek-word-bg: #f1dac2;
+  --status-known: #6f9a4f;
+  --status-known-text: #547d35;
+  --status-known-bg: #e1ead0;
+  --border: color-mix(in srgb, #2a2722 calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #2a2722 calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #d8e3ef;
+  --focus: #2f5d85;
+  --hint: #c7c0b2;
+  --progress: #6f9a4f;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #2f5d85 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #c0723a 15%, transparent);
+}
 
-  /* inverse of surface/text — intentional */
-  --toast-bg: var(--gray-100);            /* #E0DCD0 */
-  --toast-text: var(--gray-900);          /* #1E1E1E */
+/* Туман (светлая) */
+[data-theme="fog"] {
+  --surface: #E8E8EB;
+  --surface-card: #DFDFE3;
+  --surface-sidebar: #DFDFE3;
+  --surface-read: #F4F4F7;
+  --surface-titlebar: #DBDBDF;
+  --text: #25262b;
+  --text-soft: #45474e;
+  --muted: #8a8c95;
+  --muted2: #b6b8c0;
+  --greek: #3a5f8a;
+  --primary: #3a5f8a;
+  --greek-bg: #d4ddeb;
+  --on-greek: #3a5f8a;
+  --greek-word: #b06a45;
+  --greek-word-bg: #e8d2c6;
+  --status-known: #5f8f6a;
+  --status-known-text: #487553;
+  --status-known-bg: #d4e4d8;
+  --border: color-mix(in srgb, #25262b calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #25262b calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #d4ddeb;
+  --focus: #3a5f8a;
+  --hint: #b6b8c0;
+  --progress: #5f8f6a;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #3a5f8a 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #b06a45 15%, transparent);
+}
 
+/* Море (светлая) */
+[data-theme="sea"] {
+  --surface: #E2ECF0;
+  --surface-card: #D7E4EA;
+  --surface-sidebar: #D7E4EA;
+  --surface-read: #F0F7F9;
+  --surface-titlebar: #D1E0E7;
+  --text: #1f2a30;
+  --text-soft: #3c4b53;
+  --muted: #7f939c;
+  --muted2: #aec0c8;
+  --greek: #2c6e8f;
+  --primary: #2c6e8f;
+  --greek-bg: #cadfe9;
+  --on-greek: #2c6e8f;
+  --greek-word: #c07a45;
+  --greek-word-bg: #edd7c3;
+  --status-known: #5e9080;
+  --status-known-text: #467467;
+  --status-known-bg: #cee5dd;
+  --border: color-mix(in srgb, #1f2a30 calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #1f2a30 calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #cadfe9;
+  --focus: #2c6e8f;
+  --hint: #aec0c8;
+  --progress: #5e9080;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #2c6e8f 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #c07a45 15%, transparent);
+}
+
+/* Лес (светлая) */
+[data-theme="forest"] {
+  --surface: #E6EADD;
+  --surface-card: #DCE2D0;
+  --surface-sidebar: #DCE2D0;
+  --surface-read: #F2F5EC;
+  --surface-titlebar: #D7DEC8;
+  --text: #232a1f;
+  --text-soft: #424a39;
+  --muted: #899078;
+  --muted2: #b6bda6;
+  --greek: #3a6079;
+  --primary: #3a6079;
+  --greek-bg: #d2dde1;
+  --on-greek: #3a6079;
+  --greek-word: #b07239;
+  --greek-word-bg: #e6d3b9;
+  --status-known: #5f8240;
+  --status-known-text: #496630;
+  --status-known-bg: #d8e2c2;
+  --border: color-mix(in srgb, #232a1f calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #232a1f calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #d2dde1;
+  --focus: #3a6079;
+  --hint: #b6bda6;
+  --progress: #5f8240;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #3a6079 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #b07239 15%, transparent);
+}
+
+/* Роза (светлая) */
+[data-theme="rose"] {
+  --surface: #F1E4E1;
+  --surface-card: #EBD8D5;
+  --surface-sidebar: #EBD8D5;
+  --surface-read: #FAF1EF;
+  --surface-titlebar: #E7D1CD;
+  --text: #2e2422;
+  --text-soft: #54443f;
+  --muted: #a08c87;
+  --muted2: #cbb4ae;
+  --greek: #5a5f93;
+  --primary: #5a5f93;
+  --greek-bg: #dedaed;
+  --on-greek: #5a5f93;
+  --greek-word: #bb5e54;
+  --greek-word-bg: #edccc6;
+  --status-known: #7e9a5e;
+  --status-known-text: #5f7a43;
+  --status-known-bg: #dee5ca;
+  --border: color-mix(in srgb, #2e2422 calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #2e2422 calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #dedaed;
+  --focus: #5a5f93;
+  --hint: #cbb4ae;
+  --progress: #7e9a5e;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #5a5f93 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #bb5e54 15%, transparent);
+}
+
+/* Лаванда (светлая) */
+[data-theme="lavender"] {
+  --surface: #E9E5F0;
+  --surface-card: #E1DBEC;
+  --surface-sidebar: #E1DBEC;
+  --surface-read: #F5F2FA;
+  --surface-titlebar: #DDD6EB;
+  --text: #28242e;
+  --text-soft: #494456;
+  --muted: #908aa0;
+  --muted2: #bcb4cc;
+  --greek: #5258a0;
+  --primary: #5258a0;
+  --greek-bg: #dddaf1;
+  --on-greek: #5258a0;
+  --greek-word: #b06a8a;
+  --greek-word-bg: #ebd1dc;
+  --status-known: #6f9266;
+  --status-known-text: #547349;
+  --status-known-bg: #dae7d4;
+  --border: color-mix(in srgb, #28242e calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #28242e calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #dddaf1;
+  --focus: #5258a0;
+  --hint: #bcb4cc;
+  --progress: #6f9266;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #5258a0 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #b06a8a 15%, transparent);
+}
+
+/* Закат (светлая) */
+[data-theme="sunset"] {
+  --surface: #F0E2D4;
+  --surface-card: #E9D6C3;
+  --surface-sidebar: #E9D6C3;
+  --surface-read: #FBEFE0;
+  --surface-titlebar: #E5CEB5;
+  --text: #34261c;
+  --text-soft: #5a4632;
+  --muted: #a4876c;
+  --muted2: #ccb191;
+  --greek: #44708a;
+  --primary: #44708a;
+  --greek-bg: #d5e0e5;
+  --on-greek: #44708a;
+  --greek-word: #c4622f;
+  --greek-word-bg: #f0d0b1;
+  --status-known: #8a934a;
+  --status-known-text: #6c7434;
+  --status-known-bg: #e2e2bc;
+  --border: color-mix(in srgb, #34261c calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #34261c calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px rgba(40,34,22, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #26221c;
+  --toast-text: #f3eee2;
+  --overlay-bg: rgba(21,20,15, var(--overlay-dim-alpha));
+  --selection: #d5e0e5;
+  --focus: #44708a;
+  --hint: #ccb191;
+  --progress: #8a934a;
+  --danger: #C44D4D;
+  --on-primary: #FFFFFF;
+  --greek-bar-track: color-mix(in srgb, #44708a 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #c4622f 15%, transparent);
+}
+
+/* Тёмная (тёмная) */
+[data-theme="dark"] {
+  --surface: #26231d;
+  --surface-card: #2e2a23;
+  --surface-sidebar: #2e2a23;
+  --surface-read: #201d18;
+  --surface-titlebar: #322d25;
+  --text: #ece6da;
+  --text-soft: #c4bdae;
+  --muted: #8f897b;
+  --muted2: #6c6659;
+  --greek: #5a93cc;
+  --primary: #5a93cc;
+  --greek-bg: #2a3f50;
+  --on-greek: #9cc3e2;
+  --greek-word: #d99a5f;
+  --greek-word-bg: #463524;
+  --status-known: #84b25f;
+  --status-known-text: #a9cf86;
+  --status-known-bg: #33402a;
+  --border: color-mix(in srgb, #ece6da calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #ece6da calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px var(--shadow-base-dark, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #e0dcd0;
+  --toast-text: #1e1e1e;
+  --overlay-bg: rgba(0,0,0, var(--overlay-dim-alpha));
+  --selection: #2a3f50;
+  --focus: #5a93cc;
+  --hint: #6c6659;
+  --progress: #84b25f;
+  --danger: #CC6B6B;
   --on-primary: #1E1E1E;
+  --greek-bar-track: color-mix(in srgb, #5a93cc 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #d99a5f 15%, transparent);
+}
 
-  --badge-learning-bg: #4A3F1A;
-  --badge-learning-text: #D4B84A;
+/* Ночь (тёмная) */
+[data-theme="night"] {
+  --surface: #1b2230;
+  --surface-card: #222b3b;
+  --surface-sidebar: #222b3b;
+  --surface-read: #161c28;
+  --surface-titlebar: #25303f;
+  --text: #e3e9f2;
+  --text-soft: #b3bdcd;
+  --muted: #7e879a;
+  --muted2: #5b6577;
+  --greek: #5fa0d6;
+  --primary: #5fa0d6;
+  --greek-bg: #26384f;
+  --on-greek: #a6cdef;
+  --greek-word: #d99a5f;
+  --greek-word-bg: #463524;
+  --status-known: #84b25f;
+  --status-known-text: #a9cf86;
+  --status-known-bg: #2a3a28;
+  --border: color-mix(in srgb, #e3e9f2 calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #e3e9f2 calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px var(--shadow-base-dark, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #e0dcd0;
+  --toast-text: #1e1e1e;
+  --overlay-bg: rgba(0,0,0, var(--overlay-dim-alpha));
+  --selection: #26384f;
+  --focus: #5fa0d6;
+  --hint: #5b6577;
+  --progress: #84b25f;
+  --danger: #CC6B6B;
+  --on-primary: #1E1E1E;
+  --greek-bar-track: color-mix(in srgb, #5fa0d6 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #d99a5f 15%, transparent);
+}
 
-  --warning-bg: #3D2E00;
-  --warning-text: #FFD54F;
-
-  --shadow-raised: 0 1px 3px rgba(0,0,0,0.3);
-  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.4);
-  --shadow-overlay: 0 4px 32px rgba(0,0,0,0.6);
-  --overlay-bg: rgba(0,0,0,0.6);
+/* Уголь (тёмная) */
+[data-theme="coal"] {
+  --surface: #1f1f21;
+  --surface-card: #28282b;
+  --surface-sidebar: #28282b;
+  --surface-read: #19191b;
+  --surface-titlebar: #2c2c2f;
+  --text: #ededee;
+  --text-soft: #c2c2c4;
+  --muted: #8d8d90;
+  --muted2: #66666a;
+  --greek: #5aa0d0;
+  --primary: #5aa0d0;
+  --greek-bg: #2b3a47;
+  --on-greek: #9fcbe8;
+  --greek-word: #d8924f;
+  --greek-word-bg: #443323;
+  --status-known: #84b25f;
+  --status-known-text: #aad187;
+  --status-known-bg: #2c3a27;
+  --border: color-mix(in srgb, #ededee calc(var(--contrast-line-alpha) * 100%), transparent);
+  --border-accent: color-mix(in srgb, #ededee calc(var(--contrast-line2-alpha) * 100%), transparent);
+  --shadow-raised: 0 1px 3px var(--shadow-base-dark, var(--contrast-shadow-raised-alpha));
+  --shadow-raised: 0 1px 3px rgba(0,0,0, calc(var(--contrast-shadow-raised-alpha)));
+  --shadow-elevated: 0 4px 16px rgba(0,0,0, calc(var(--contrast-shadow-elevated-alpha)));
+  --shadow-overlay: 0 4px 32px rgba(0,0,0, calc(var(--contrast-shadow-overlay-alpha)));
+  --toast-bg: #e0dcd0;
+  --toast-text: #1e1e1e;
+  --overlay-bg: rgba(0,0,0, var(--overlay-dim-alpha));
+  --selection: #2b3a47;
+  --focus: #5aa0d0;
+  --hint: #66666a;
+  --progress: #84b25f;
+  --danger: #CC6B6B;
+  --on-primary: #1E1E1E;
+  --greek-bar-track: color-mix(in srgb, #5aa0d0 15%, transparent);
+  --greek-word-bar-track: color-mix(in srgb, #d8924f 15%, transparent);
 }
 
 /* Фоновый цвет для всей страницы */

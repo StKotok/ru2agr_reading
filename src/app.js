@@ -2,7 +2,7 @@ import { Workbox } from 'workbox-window';
 import { createStore } from './state/store.js';
 import { parse, onChange } from './router.js';
 import { createNav } from './ui/components/nav.js';
-import { loadSettings, applyTheme, listenForOSThemeChanges } from './state/settings.js';
+import { loadSettings, applyTheme, applyContrast, listenForOSThemeChanges } from './state/settings.js';
 import * as readingScreen from './ui/screens/reading.js';
 import * as dictionaryScreen from './ui/screens/dictionary.js';
 import * as progressScreen from './ui/screens/progress.js';
@@ -53,7 +53,9 @@ function switchScreen(screenName, params) {
   try {
     const settings = await loadSettings();
     const theme = settings.theme || 'auto';
+    const contrast = settings.contrast || 'sharp';
     applyTheme(theme);
+    applyContrast(contrast);
   } catch (_) { /* theme fallback: auto */ }
 })();
 

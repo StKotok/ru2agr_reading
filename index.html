@@ -7,13 +7,17 @@
   <!-- FOUC-защита: применить сохранённую тему до загрузки CSS (~0.1ms, синхронный localStorage) -->
   <script>
     (function() {
+      var THEMES = ['pergament','sepia','ivory','fog','sea','forest','rose','lavender','sunset','dark','night','coal'];
       var t = localStorage.getItem('theme');
       if (t) {
         var resolved = t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark'
-                     : t === 'auto' ? 'light'
-                     : t;
+                     : t === 'auto' ? 'pergament'
+                     : THEMES.indexOf(t) >= 0 ? t
+                     : 'pergament';
         document.documentElement.setAttribute('data-theme', resolved);
       }
+      var c = localStorage.getItem('contrast');
+      if (c) document.documentElement.setAttribute('data-contrast', c);
     })();
   </script>
   <link rel="stylesheet" href="/styles/tokens.css">

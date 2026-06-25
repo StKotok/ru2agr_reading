@@ -32,6 +32,31 @@ export function shouldLoadGreek(s, activeWordCount = 0) {
   return s.readingMode === 'greek' || (s.wordLayer !== 'off' && activeWordCount > 0);
 }
 
+// === 12 тем из дизайн-прототипа ===
+
+export const THEMES = [
+  'pergament', 'sepia', 'ivory', 'fog', 'sea',
+  'forest', 'rose', 'lavender', 'sunset',
+  'dark', 'night', 'coal',
+];
+
+export const LIGHT_THEMES = ['pergament', 'sepia', 'ivory', 'fog', 'sea', 'forest', 'rose', 'lavender', 'sunset'];
+export const DARK_THEMES = ['dark', 'night', 'coal'];
+
+export const IS_DARK_THEME = Object.fromEntries([
+  ...LIGHT_THEMES.map(t => [t, false]),
+  ...DARK_THEMES.map(t => [t, true]),
+]);
+
+export const DEFAULT_THEME = 'pergament';
+
+// === Контраст ===
+
+export const CONTRAST_LEVELS = ['soft', 'sharp', 'maximum'];
+export const DEFAULT_CONTRAST = 'sharp'; // прототип по умолчанию: Чёткий
+
+// === Настройки по умолчанию ===
+
 const DEFAULTS = {
   intensity: 35,                // 0..100
   wordLayer: 'off',             // 'off' | 'lemma' | 'form'
@@ -43,7 +68,8 @@ const DEFAULTS = {
     strongs: false,
     ruHint: true
   },
-  theme: 'auto',
+  theme: 'auto',                // 'auto' | один из THEMES
+  contrast: DEFAULT_CONTRAST,   // 'soft' | 'sharp' | 'maximum'
   onboarded: false,
   dismissedNotices: []
 };
@@ -82,7 +108,22 @@ export async function saveSettings(settings) {
 // === Общая логика темы (используется app.js и settings screen) ===
 
 /** Карта theme → surface-цвет (для meta theme-color). */
-export const SURFACE_COLORS = { light: '#efeee9', dark: '#1E1E1E' };
+export const SURFACE_COLORS = {
+  light: '#efeee9',
+  dark: '#1E1E1E',
+  // 12-theme surface colors for theme-color meta
+  pergament: '#ECE7DD',
+  sepia: '#E9DFC8',
+  ivory: '#FAF8F3',
+  fog: '#E8E8EB',
+  sea: '#E2ECF0',
+  forest: '#E6EADD',
+  rose: '#F1E4E1',
+  lavender: '#E9E5F0',
+  sunset: '#F0E2D4',
+  night: '#1b2230',
+  coal: '#1f1f21'
+};
 
 /** @returns {MediaQueryList} */
 export function getIS_DARK_OS() {
@@ -90,19 +131,22 @@ export function getIS_DARK_OS() {
 }
 
 /**
- * Разрешает 'auto' → 'light' | 'dark' на основе OS-темы.
- * @param {string} theme — 'light' | 'dark' | 'auto'
- * @returns {'light' | 'dark'}
+ * Разрешает 'auto' → тему по умолчанию для OS-темы.
+ * auto + светлая OS → pergament
+ * auto + тёмная OS  → dark
+ * @param {string} theme — 'auto' или одно из значений THEMES
+ * @returns {string} одно из значений THEMES
  */
 export function resolveEffectiveTheme(theme) {
-  return theme === 'auto' && getIS_DARK_OS().matches ? 'dark'
-       : theme === 'auto' ? 'light'
-       : theme;
+  if (theme === 'auto') {
+    return getIS_DARK_OS().matches ? 'dark' : DEFAULT_THEME;
+  }
+  return THEMES.includes(theme) ? theme : DEFAULT_THEME;
 }
 
 /**
  * Применяет тему к DOM: data-theme, theme-color meta, localStorage.
- * @param {string} theme — 'light' | 'dark' | 'auto'
+ * @param {string} theme — 'auto' или одно из значений THEMES
  */
 export function applyTheme(theme) {
   const resolved = resolveEffectiveTheme(theme);
@@ -114,6 +158,16 @@ export function applyTheme(theme) {
   if (meta) {
     meta.setAttribute('content', SURFACE_COLORS[resolved] || SURFACE_COLORS.light);
   }
+}
+
+/**
+ * Применяет уровень контраста к DOM.
+ * @param {string} level — 'soft' | 'sharp' | 'maximum'
+ */
+export function applyContrast(level) {
+  const contrast = CONTRAST_LEVELS.includes(level) ? level : DEFAULT_CONTRAST;
+  document.documentElement.setAttribute('data-contrast', contrast);
+  localStorage.setItem('contrast', contrast);
 }
 
 /**
