@@ -78,9 +78,7 @@
         h('span',{style:{transform:'translateY(2px)',flex:'0 0 auto'}},U.iconChev(C.muted))),
       h('div',{style:{flex:1,display:'flex',justifyContent:'center'}},h('button',{onClick:function(e){e.stopPropagation();var wl=st.mode===1?'off':st.mode===2?'lemma':'form';self.setState({dropdown:!st.dropdown,readerWordLayer:wl});},style:{background:'none',border:'none',cursor:'pointer',padding:0}},this.readerChipH1(this.readerLiveChipState()))),
       h('div',{style:{display:'flex',gap:6,alignItems:'center',flex:'0 0 auto'}},
-        h('button',{'data-section':'desk-top--simple-view-btn',onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:TK.topBtnSize,height:TK.topBtnSize,borderRadius:TK.radius,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView)),
-        h('button',{'data-section':'desk-top--intensity-btn',onClick:function(){self.setState({intensityOpen:!st.intensityOpen});},title:'Настройки замены',style:{width:TK.topBtnSize,height:TK.topBtnSize,borderRadius:TK.radius,border:'1px solid '+C.line,background:U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:2.5,flexDirection:'row'}},
-          [0,1,2].map(function(i){ return h('span',{key:i,style:{width:3.5,height:3.5,borderRadius:'50%',background:C.inkSoft,display:'block'}}); }))));
+        h('button',{'data-section':'desk-top--simple-view-btn',onClick:function(){self.readerToggleSimple();},title:'Простой вид',style:{width:TK.topBtnSize,height:TK.topBtnSize,borderRadius:TK.radius,border:'1px solid '+(st.simpleView?U.alpha(C.terra,0.4):C.line),background:st.simpleView?U.alpha(C.terra,0.12):U.alpha(C.ink,0.03),cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}},U.iconEye(st.simpleView?C.terra:C.inkSoft,st.simpleView))));
     return h('div',{'data-section':'phone-top-header',style:{position:'sticky',top:0,zIndex:6,background:C.paper,borderBottom:'1px solid '+C.line,backdropFilter:'blur(6px)'}},bookRow);
   };
 
@@ -242,7 +240,7 @@
     var C = this.CR, h = React.createElement, st = this.state, self = this;
     var items = [['read','Читать',U.iconRead.bind(null)],['dict','Слова',U.iconWords.bind(null)],['settings','Настр',U.iconGear.bind(null)],['about','О',U.iconInfo.bind(null)]];
     return h('div',{'data-section':'phone-bottom-nav',style:{flex:'0 0 auto',display:'flex',borderTop:'1px solid '+C.line,background:U.alpha(C.paper,0.96),paddingBottom:18,backdropFilter:'blur(8px)'}},
-      items.map(function(it){ var on = st.tab === it[0]; var col = on ? C.ink : C.muted2; return h('button',{key:it[0],onClick:function(){self.setState({tab:it[0],dropdown:false,intensityOpen:false});},style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}},it[2](col),h('span',{style:{fontFamily:self.sans,fontSize:11,fontWeight:on?700:500,color:col}},it[1])); }));
+      items.map(function(it){ var on = st.tab === it[0]; var col = on ? C.ink : C.muted2; return h('button',{key:it[0],onClick:function(){self.setState({tab:it[0],dropdown:false});},style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'11px 0 4px',background:'none',border:'none',cursor:'pointer'}},it[2](col),h('span',{style:{fontFamily:self.sans,fontSize:11,fontWeight:on?700:500,color:col}},it[1])); }));
   };
 
   /* ---------- overlays ---------- */
@@ -255,19 +253,6 @@
       h('div',{style:{position:'absolute',top:150,left:14,right:14,animation:'scPop .16s ease'}},this.readerModeMenuList()));
   };
 
-  R.readerRenderIntensity = function () {
-    var C = this.CR, h = React.createElement, st = this.state, self = this;
-    if (!st.intensityOpen) return null;
-    return h('div',{'data-section':'phone-intensity',key:'int',style:{position:'absolute',inset:0,zIndex:20}},
-      h('div',{onClick:function(){self.setState({intensityOpen:false});},style:{position:'absolute',inset:0}}),
-      h('div',{style:{position:'absolute',top:92,right:14,width:262,background:C.paper,border:'1px solid '+C.line2,borderRadius:TK.radiusLg,boxShadow:'0 22px 46px -16px rgba(40,34,22,0.5)',padding:'15px 16px',animation:'scPop .16s ease'}},
-        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}},
-          h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:700,color:C.ink}},'Интенсивность букв'),
-          h('span',{style:{fontFamily:this.sans,fontSize:13,fontWeight:700,color:C.terra}},Math.round(st.intensity*100)+'%')),
-        h('div',{style:{fontFamily:this.sans,fontSize:11.5,color:C.muted,marginBottom:10}},'Сколько русских букв заменяется греческими · влияет на Режим 1'),
-        h('input',{type:'range',min:0,max:100,value:Math.round(st.intensity*100),onChange:function(e){self.setState({intensity:(+e.target.value)/100,mode:self.state.mode===1?1:self.state.mode});},style:{width:'100%',accentColor:C.terra,cursor:'pointer'}}),
-        st.mode !== 1 ? h('div',{style:{marginTop:9,fontFamily:this.sans,fontSize:11.5,color:C.muted2,display:'flex',gap:6,alignItems:'center'}},'Активно в Режиме 1 ·',h('button',{onClick:function(){self.readerSetMode(1);},style:{background:'none',border:'none',color:C.blue,fontWeight:600,cursor:'pointer',fontSize:11.5,padding:0,fontFamily:this.sans}},'перейти')) : null));
-  };
 
   R.readerRenderToast = function () {
     var C = this.CR, h = React.createElement;
@@ -567,7 +552,6 @@
       this.readerRenderContent(),
       this.readerRenderBottomNav(),
       isDict ? null : this.readerRenderModeMenu(),
-      isDict ? null : this.readerRenderIntensity(),
       isDict ? this.readerWordToastEl(true) : this.readerRenderToast(),
       isDict ? this.readerRenderWordPhoneSheet() : this.readerRenderWordSheet(),
       isDict ? null : this.readerRenderLetterSheet());
