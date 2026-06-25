@@ -61,6 +61,23 @@ export const ALIGN_METHODS = {
 };
 
 // =============================================================================
+// Resolution taxonomy — категории РАЗРЕШЕНИЯ не-служебных токенов БЕЗ пары.
+// Каждый fw===false токен попадает ровно в одну категорию: либо он `aligned`
+// (есть пара в pairsByRef), либо ровно одна из категорий ниже (в exclusionsByRef).
+// `auto-deferred` — честная замена фейковой ручной курации: «алгоритм не разрешил»
+// (backlog), а НЕ «человек решил, что слово невыравниваемо».
+// =============================================================================
+
+export const RESOLUTION_KINDS = {
+  'manual-exclusion': { source: 'human', countsAligned: false }, // рукописная причина
+  'no-bsb-verse':     { source: 'auto',  countsAligned: false }, // нет BSB-стиха для ref
+  'no-gloss':         { source: 'auto',  countsAligned: false }, // обе глоссы пусты
+  'auto-deferred':    { source: 'auto',  countsAligned: false }, // backlog, см. AUTO_DEFER_REASONS
+};
+
+export const AUTO_DEFER_REASONS = ['no-matching-word', 'ambiguous', 'already-claimed'];
+
+// =============================================================================
 // Accuracy invariant — проверка формального соответствия slice ↔ gloss по методу
 // =============================================================================
 

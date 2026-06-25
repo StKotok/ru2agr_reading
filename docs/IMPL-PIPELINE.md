@@ -169,12 +169,18 @@ git commit -m "chore: create scripts/ and add pipeline npm scripts"
 
 ---
 
-## Task 0b: PoC alignment на Матфее (валидация порога 90% ДО полной реализации)
+## Task 0b: PoC alignment на Матфее (исторический; порог 90% ОТМЕНЁН)
 
-**Зачем.** Порог ≥90% non-function coverage — жёсткий релизный гейт, но он ни разу не
-измерен на реальных данных. Если на Матфее реально достижимо, скажем, 75%, весь
-alignment-план (Task 4) и продуктовое требование (VISION §6) нужно пересматривать
-**до** того, как написаны 6 скриптов. Это снимает архитектурный риск №1 дешевле всего.
+> ⚠️ **Устарело (2026-06-25).** Гейт «≥90% non-function coverage» ОТМЕНЁН. Релизный hard-gate
+> теперь = **accuracy-инвариант + полное разбиение токенов** (`verify:data` Check 16/16d),
+> coverage — advisory (см. VISION §6 и раздел «Гейт verify» ниже). Alignment полностью построен
+> на всех 27 книгах (coverage 81.8%, accuracy-инвариант держит). Task 0b сохранён как история
+> архитектурного решения; PoC-гейт go/no-go больше не применяется.
+
+**Зачем (исторически).** Порог ≥90% non-function coverage задумывался как жёсткий релизный гейт.
+На практике alignment построен сразу по всем книгам, а гейт переопределён на точность (важнее
+покрытия). Если бы потребовалась валидация достижимости, PoC на Матфее снял бы архитектурный риск
+дешевле всего — поэтому раздел оставлен для контекста.
 
 **Что сделать (минимальный вертикальный срез, можно throwaway-скриптом):**
 1. Сгенерировать grc + eng **только для Матфея** (логика Task 1 + Task 2 на одной книге).
@@ -657,6 +663,19 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
 
 ## Task 4: `build-align.mjs`
 
+> ⚠️ **Модель эволюционировала (2026-06-25). Канонический источник — VISION §6 и
+> `docs/implementation-report.md` (раздел «Alignment Fixup F0–F4»).** Отличия от исходного
+> текста этого Task ниже:
+> - Схема файла — `alignment-book-v3`: добавлено поле `exclusionsByRef`.
+> - Исключения НЕ используют `q="u"`/`q="x"`. Каждый не-выровненный `fw=false` токен попадает в
+>   `exclusionsByRef` с `kind ∈ {manual-exclusion, no-bsb-verse, no-gloss, auto-deferred}`
+>   (у записей исключений нет `q` и нет `span`).
+> - Методы пар — закрытый реестр `ALIGN_METHODS` (gloss-exact, bracket-optional, phrase,
+>   alt-gloss-*, lexicon-gloss-exact, fuzzy, manual; positional-equal-count — proposal, off).
+> - `auto-deferred` — авто-backlog «алгоритм не разрешил» (под-причины `no-matching-word` /
+>   `ambiguous` / `already-claimed`), НЕ ручная курация.
+> - Coverage — advisory, не гейт. Где ниже написано «coverage ≥ 90%» как условие — устарело.
+
 ### Назначение
 
 Сгенерировать `assets/data/align/grc-eng/{book}.json` — span-based alignment между греческими токенами и BSB-текстом.
@@ -1120,6 +1139,13 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
 ---
 
 ## Task 7: `verify-data.mjs`
+
+> ⚠️ **Гейт обновлён (2026-06-25). Канонический источник — VISION §6.** Релизный hard-gate —
+> НЕ «coverage ≥ 90%», а: (Check 16) accuracy-инвариант slice↔gloss по методу + `q`↔`method` +
+> запрет proposal-тира; (Check 16d) полное разбиение `fw=false` токенов по категориям
+> (`aligned` XOR одна resolution-kind), сверка с агрегатами build-report. Coverage (Check 17) —
+> только `warn`, никогда не блокирует. Где ниже сказано «coverage ≥ 90%» как условие гейта —
+> устарело и читается как advisory.
 
 ### Назначение
 

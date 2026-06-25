@@ -22,6 +22,30 @@ const NT_BOOKS = [
 ];
 
 // =============================================================================
+// Classify a non-aligned non-function token into an honest resolution category.
+// Mirrors the candidate-count heuristic; replaces faked bulk manual-exclusions.
+// =============================================================================
+
+function classifyUnresolved(token, engWords) {
+  const glossB = token.glossBerean || '';
+  const glossC = token.glossCherith || '';
+  if (!glossB && !glossC) {
+    return { kind: 'no-gloss', reason: 'no-gloss-available' };
+  }
+  const normB = normalizeWord(glossB);
+  const normC = normalizeWord(glossC);
+  const normBB = normalizeWord(normalizeBerean(glossB));
+  let candCount = 0;
+  for (const w of engWords) {
+    const nw = normalizeWord(w.text);
+    if ((normB && nw === normB) || (normC && nw === normC) || (normBB && nw === normBB)) candCount++;
+  }
+  if (candCount === 0) return { kind: 'auto-deferred', reason: 'no-matching-word' };
+  if (candCount > 1) return { kind: 'auto-deferred', reason: 'ambiguous', candidateCount: candCount };
+  return { kind: 'auto-deferred', reason: 'already-claimed' };
+}
+
+// =============================================================================
 // Alignment algorithm (per verse)
 // =============================================================================
 
@@ -551,8 +575,8 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
 
   const pairsByRef = {};
   const warningsByRef = {};
-  const allUnresolved = [];
-  const excludedTokenIds = new Set(); // tokens excluded (no-bsb-verse, manual-exclusion)
+  const exclusionsByRef = {}; // authoritative resolution layer for non-aligned fw=false tokens
+  const excludedTokenIds = new Set(); // tokens already categorized (manual-exclusion, no-bsb-verse)
   let totalAlignedNonFunction = 0;
   let totalAmbiguous = 0;
   let versesWithZeroPairs = 0;
@@ -578,11 +602,12 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
             // Remove algorithmic pair for this tokenId
             pairs = pairs.filter(p => p.tokenId !== manual.tokenId);
             excludedTokenIds.add(manual.tokenId);
-            warningsByRef[ref] = warningsByRef[ref] || [];
-            warningsByRef[ref].push({
+            exclusionsByRef[ref] = exclusionsByRef[ref] || [];
+            exclusionsByRef[ref].push({
               tokenId: manual.tokenId,
-              reason: manual.reason || 'manual-exclusion',
-              method: 'manual-exclusion'
+              lexemeId: grcTokens.find(t => t.id === manual.tokenId)?.lexemeId || '',
+              kind: 'manual-exclusion',
+              reason: manual.reason || 'manual-exclusion'
             });
           } else if (manual.method === 'manual') {
             // Compile span from wordIndex/wordIndexes
@@ -623,16 +648,17 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
         }
       }
 
-      // Auto-exclusion: no-bsb-verse (grc tokens in verses without BSB match)
+      // Auto-exclusion: no-bsb-verse (grc tokens in verses without BSB text)
       if (grcTokens.length > 0 && engWords.length === 0) {
         for (const t of grcTokens) {
-          if (t.fw === false) {
+          if (t.fw === false && !excludedTokenIds.has(t.id)) {
             excludedTokenIds.add(t.id);
-            warningsByRef[ref] = warningsByRef[ref] || [];
-            warningsByRef[ref].push({
+            exclusionsByRef[ref] = exclusionsByRef[ref] || [];
+            exclusionsByRef[ref].push({
               tokenId: t.id,
-              reason: 'no-bsb-verse',
-              method: 'auto-exclusion'
+              lexemeId: t.lexemeId || '',
+              kind: 'no-bsb-verse',
+              reason: 'no-bsb-verse'
             });
           }
         }
@@ -674,33 +700,73 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
       if (pairs.length > 0) {
         pairsByRef[ref] = pairs;
       }
-      // Collect unresolved (exclude manually excluded or auto-excluded tokens)
-      for (const u of (result.unresolved || [])) {
-        if (!excludedTokenIds.has(u.tokenId)) {
-          allUnresolved.push({ ref, ...u });
-        }
+
+      // Authoritative resolution layer: every fw=false token not aligned and not
+      // already categorized (manual-exclusion / no-bsb-verse) is classified into an
+      // honest auto category (auto-deferred / no-gloss). Computed from FINAL pairs
+      // (post manual application), so manual pairs/exclusions are reflected correctly.
+      const finalAlignedIds = new Set(pairs.map(p => p.tokenId));
+      for (const t of grcTokens) {
+        if (t.fw !== false) continue;
+        if (finalAlignedIds.has(t.id)) continue;
+        if (excludedTokenIds.has(t.id)) continue;
+        const cls = classifyUnresolved(t, engWords);
+        exclusionsByRef[ref] = exclusionsByRef[ref] || [];
+        exclusionsByRef[ref].push({
+          tokenId: t.id,
+          lexemeId: t.lexemeId || '',
+          gloss: t.glossBerean || t.glossCherith || '',
+          ...cls
+        });
       }
     }
   }
 
-  // Handle grc-only verses (no-bsb-verse auto-exclusion)
+  // Handle grc-only verses (ref present in grc but absent from BSB) → no-bsb-verse.
+  const engRefs = new Set();
+  for (const ch of engBook.chapters) for (const vs of ch.verses) engRefs.add(vs.ref);
   for (const [ref, grcTokens] of grcTokensByRef) {
-    // Check if this ref exists in eng book
-    let foundInEng = false;
-    for (const ch of engBook.chapters) {
-      for (const vs of ch.verses) {
-        if (vs.ref === ref) { foundInEng = true; break; }
-      }
-      if (foundInEng) break;
-    }
-    if (!foundInEng) {
-      for (const t of grcTokens) {
-        if (t.fw === false) {
-          excludedTokenIds.add(t.id);
-        }
+    if (engRefs.has(ref)) continue;
+    for (const t of grcTokens) {
+      if (t.fw === false && !excludedTokenIds.has(t.id)) {
+        excludedTokenIds.add(t.id);
+        exclusionsByRef[ref] = exclusionsByRef[ref] || [];
+        exclusionsByRef[ref].push({
+          tokenId: t.id,
+          lexemeId: t.lexemeId || '',
+          kind: 'no-bsb-verse',
+          reason: 'no-bsb-verse'
+        });
       }
     }
   }
+
+  // Aggregate the resolution layer by category.
+  let manualExclusionCount = 0;
+  let noBsbVerseCount = 0;
+  let noGlossCount = 0;
+  let autoDeferredCount = 0;
+  const autoDeferredByReason = { 'no-matching-word': 0, 'ambiguous': 0, 'already-claimed': 0 };
+  const autoDeferredList = []; // for topUnalignedLexemes
+  for (const ref in exclusionsByRef) {
+    for (const e of exclusionsByRef[ref]) {
+      if (e.kind === 'manual-exclusion') manualExclusionCount++;
+      else if (e.kind === 'no-bsb-verse') noBsbVerseCount++;
+      else if (e.kind === 'no-gloss') noGlossCount++;
+      else if (e.kind === 'auto-deferred') {
+        autoDeferredCount++;
+        if (e.reason in autoDeferredByReason) autoDeferredByReason[e.reason]++;
+        autoDeferredList.push({
+          ref,
+          tokenId: e.tokenId,
+          lexemeId: e.lexemeId,
+          gloss: e.gloss || '',
+          candidateCount: e.candidateCount
+        });
+      }
+    }
+  }
+  const totalExcluded = manualExclusionCount + noBsbVerseCount + noGlossCount + autoDeferredCount;
 
   const stats = {
     tokenCount: totalTokenCount,
@@ -715,19 +781,26 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
     versesWithZeroPairs,
     ambiguousCandidateCount: totalAmbiguous,
     overlappingSpanCount: totalOverlappingSpanCount,
-    excludedCount: excludedTokenIds.size,
-    unresolved: allUnresolved
+    // Resolution layer counts (partition of non-aligned fw=false tokens)
+    manualExclusionCount,
+    noBsbVerseCount,
+    noGlossCount,
+    autoDeferredCount,
+    autoDeferredByReason,
+    excludedCount: totalExcluded,
+    autoDeferredList
   };
 
   writeDataJson(`align/grc-eng/${bookId}.json`, {
-    schema: 'alignment-book-v2',
+    schema: 'alignment-book-v3',
     alignmentId: 'grc-eng',
     bookId,
     grcSourceDataVersion,
     normalizationVersion,
     stats,
     pairsByRef,
-    warningsByRef
+    warningsByRef,
+    exclusionsByRef
   });
 
   return stats;
@@ -737,7 +810,7 @@ function buildAlignmentForBook(bookId, manualByBook, lexiconGlossMap) {
 // Build report
 // =============================================================================
 
-function buildReport(allStats, manualPairCount, manualExclusionCount) {
+function buildReport(allStats, manualPairCount) {
   const totalTokens = allStats.reduce((s, st) => s + st.tokenCount, 0);
   const totalNonFunc = allStats.reduce((s, st) => s + st.nonFunctionTokenCount, 0);
   const totalAligned = allStats.reduce((s, st) => s + st.alignedNonFunctionTokens, 0);
@@ -751,11 +824,11 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
     ? Math.round((totalAligned / totalNonFunc) * 1000) / 10
     : 0;
 
-  // Build topUnalignedLexemes from FINAL unresolved set (T3.1)
-  // Aggregate by lexemeId: count, example gloss, up to 3 sample refs, candidateCount
+  // Build topUnalignedLexemes from the auto-deferred backlog (F1.5).
+  // Aggregate by lexemeId: count, example gloss, up to 3 sample refs, max candidateCount.
   const lexemeAgg = new Map(); // lexemeId → { gloss, count, refs: Set, maxCandidateCount }
   for (const st of allStats) {
-    for (const u of (st.unresolved || [])) {
+    for (const u of (st.autoDeferredList || [])) {
       if (!u.lexemeId) continue;
       let agg = lexemeAgg.get(u.lexemeId);
       if (!agg) {
@@ -763,17 +836,10 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
         lexemeAgg.set(u.lexemeId, agg);
       }
       agg.count++;
+      if (!agg.gloss && u.gloss) agg.gloss = u.gloss;
       if (agg.refs.size < 3 && u.ref) agg.refs.add(u.ref);
-      // Look up candidateCount from warnings
-      const warnings = st.unresolved? null : null; // candidateCount from build phase
+      if (u.candidateCount && u.candidateCount > agg.maxCandidateCount) agg.maxCandidateCount = u.candidateCount;
     }
-  }
-
-  // Also collect candidate counts from warningsByRef per book
-  // (the warning stores candidateCount for ambiguous tokens)
-  for (const st of allStats) {
-    // st doesn't have warningsByRef directly — we don't have access here easily
-    // Instead, approximate from the unresolved set
   }
 
   const topUnalignedLexemes = [...lexemeAgg.entries()]
@@ -781,14 +847,24 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
       lexemeId,
       gloss: agg.gloss,
       count: agg.count,
-      sampleRefs: [...agg.refs].slice(0, 3)
+      sampleRefs: [...agg.refs].slice(0, 3),
+      candidateCount: agg.maxCandidateCount || undefined
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 200);
 
-  // Resolved = aligned + excluded (auto + manual)
-  const totalAutoExcluded = allStats.reduce((s, st) => s + (st.excludedCount || 0), 0);
-  const totalExcluded = totalAutoExcluded; // manual-exclusions are counted in excludedTokenIds
+  // Resolution partition: aligned ∪ manual-exclusion ∪ no-bsb-verse ∪ no-gloss ∪ auto-deferred.
+  const manualExclusionCount = allStats.reduce((s, st) => s + (st.manualExclusionCount || 0), 0);
+  const noBsbVerseCount = allStats.reduce((s, st) => s + (st.noBsbVerseCount || 0), 0);
+  const noGlossCount = allStats.reduce((s, st) => s + (st.noGlossCount || 0), 0);
+  const autoDeferredCount = allStats.reduce((s, st) => s + (st.autoDeferredCount || 0), 0);
+  const autoDeferredByReason = allStats.reduce((acc, st) => {
+    for (const r of ['no-matching-word', 'ambiguous', 'already-claimed']) {
+      acc[r] = (acc[r] || 0) + ((st.autoDeferredByReason && st.autoDeferredByReason[r]) || 0);
+    }
+    return acc;
+  }, {});
+  const totalExcluded = manualExclusionCount + noBsbVerseCount + noGlossCount + autoDeferredCount;
   const totalResolved = totalAligned + totalExcluded;
   const totalUnresolved = totalNonFunc - totalResolved;
 
@@ -808,8 +884,13 @@ function buildReport(allStats, manualPairCount, manualExclusionCount) {
     overlappingSpanCount: totalOverlapping,
     ambiguousCandidateCount: totalAmbiguous,
     topUnalignedLexemes,
+    // Resolution partition counts (honest model)
     manualPairCount,
     manualExclusionCount,
+    noBsbVerseCount,
+    noGlossCount,
+    autoDeferredCount,
+    autoDeferredByReason,
     perBook: allStats.map(st => ({
       bookId: st.bookId,
       tokenCount: st.tokenCount,
@@ -909,13 +990,16 @@ for (const bookId of NT_BOOKS) {
   console.log(`  ${bookId}: ${stats.alignedNonFunctionTokens}/${stats.nonFunctionTokenCount} NF aligned (${stats.nonFunctionCoveragePercent}%), ${stats.versesWithZeroPairs} empty verses`);
 }
 
-const report = buildReport(allStats, manualPairCount, manualExclusionCount);
+const report = buildReport(allStats, manualPairCount);
 
 console.log(`\n=== Build Report ===`);
 console.log(`Total tokens: ${report.totalTokens}`);
 console.log(`Non-function tokens: ${report.totalNonFunctionTokens}`);
-console.log(`Aligned non-function: ${report.alignedNonFunctionTokens}`);
-console.log(`Coverage: ${report.nonFunctionCoveragePercent}%`);
+console.log(`Aligned non-function: ${report.alignedNonFunctionTokens} (${report.nonFunctionCoveragePercent}%)`);
+console.log(`Resolved: ${report.resolvedNonFunctionTokens} / Unresolved: ${report.unresolvedNonFunctionTokens}`);
+console.log(`  manual-exclusion: ${report.manualExclusionCount}, manual-pair: ${report.manualPairCount}`);
+console.log(`  no-bsb-verse: ${report.noBsbVerseCount}, no-gloss: ${report.noGlossCount}`);
+console.log(`  auto-deferred (backlog): ${report.autoDeferredCount} ${JSON.stringify(report.autoDeferredByReason)}`);
 console.log(`Verses with zero pairs: ${report.versesWithZeroPairs}`);
 console.log(`Overlapping spans: ${report.overlappingSpanCount}`);
 

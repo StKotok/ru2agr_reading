@@ -181,7 +181,8 @@ for (const lex of allLexemes) {
     glossesBerean: lex.glossesEn || [],
     glossesCherith: lex.englishGlosses || [],
     allRefs: lex.allRefs || [],
-    attestedForms: lex.attestedForms || [],
+    // Strip source-only search fields (normalized, surfaceSearch) from attestedForms (F1.4)
+    attestedForms: (lex.attestedForms || []).map(({ normalized, surfaceSearch, ...keep }) => keep),
     ruGloss,
     ruTopWords,
     ruMatches,

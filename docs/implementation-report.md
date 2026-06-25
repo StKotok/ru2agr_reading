@@ -12,10 +12,15 @@
 |---|---|---|
 | Pipeline (IMPL-PIPELINE.md) | **✓ Готов** | 6 скриптов + оркестратор + verify, атомарная генерация |
 | Runtime (IMPL-RUNTIME.md) | **✓ Готов** | Все Tasks 1-8 + notice + тесты |
-| `npm test` | **212 passed, 0 relevant failures** | 1 failure в `docs/obsolete-dont-use/` (не наш код) |
+| `npm test` | **193 passed (14 files)** | obsolete-сьют исключён из vitest |
 | `npm run build` | **OK** | Vite + PWA билд успешен |
-| `npm run build:data` | **OK** | Все 27×3 + lexicon + config = 86 файлов |
-| `npm run verify:data` | **0 errors, 12 warnings** | Все предупреждения ожидаемые (см. §4) |
+| `npm run build:data` | **OK** | Все 27×3 + lexicon + config |
+| `npm run verify:data` | **0 errors, 41 warnings** | Все предупреждения ожидаемые (§4); см. также раздел «Alignment Fixup (F0–F4)» ниже |
+
+> ⚠️ Разделы §4–§5 и §9 ниже отражают СТАРОЕ состояние (coverage 53.5%, гейт 90%). Актуальное
+> состояние и модель гейта — в разделе **«Alignment Fixup (F0–F4)»** в конце документа. Гейт «90%
+> coverage» ОТМЕНЁН (см. VISION.md §6): hard-gate теперь = accuracy-инвариант + полное разбиение
+> токенов; coverage — advisory.
 
 ---
 
@@ -259,7 +264,57 @@ M  tests/frequency-data.test.js
 |--------|-------------|
 | Coverage (NF) | 81.8% |
 | Aligned NF tokens | 58,971 |
-| Unresolved NF tokens | 13,131 |
 | Verses with zero pairs | 17 |
 | Overlap errors | 0 |
 | verify:data errors | 0 |
+
+---
+
+## Alignment Fixup (F0–F4) — honest model + closed verification gaps (2026-06-25)
+
+Ревью имплементации нашло, что `resolved==100%` был достигнут скриптом `bulk-curate.mjs`,
+который пометил все 13 132 неразрешённых токена как `manual-exclusion` (выдав авто-результат за
+ручную курацию). Этот fixup сделал модель честной и закрыл дыры верификации.
+
+### Что изменено
+- **Честная модель разрешения.** `bulk-curate.mjs` удалён; `manual-alignments.json` сброшен в пустой.
+  `build-align.mjs` сам выводит категории для каждого не-выровненного `fw=false` токена:
+  `no-bsb-verse` / `no-gloss` / `auto-deferred` (backlog с под-причиной), отдельно от человеческих
+  `manual-exclusion`. Записи лежат в `exclusionsByRef` (schema `alignment-book-v3`).
+- **Partition hard-gate** (`verify:data` Check 16d): каждый `fw=false` токен ровно в одной категории
+  (aligned XOR одна resolution-kind); сверка с агрегатами build-report. Заменил «доверие к
+  report.unresolved==0».
+- **`q`↔`method` + запрет proposal** в Check 16; усиленная валидация `manual-alignments.json`
+  (Check 15c: tokenId∈ref, fw===false, method-enum, wordIndex/expectedText); `findStripFields`
+  рекурсит в массивы и сканирует все 27 книг + `lexicon/core.json`; **утечка `attestedForms`
+  (`normalized`/`surfaceSearch`) устранена** в `build-lexicon.mjs`.
+- **Аудит починен:** `audit-align.mjs` (`Map.entries`, exit≠0 при 0 пар) — реально аудирует 535 пар.
+- `topUnalignedLexemes` строится из auto-deferred backlog (с `candidateCount`).
+
+### Финальное состояние (партиция 72 102 NF-токенов)
+| Категория | Кол-во | Что значит |
+|---|---|---|
+| aligned (пара) | **58 971** (81.8%) | выровнено, coverage advisory |
+| auto-deferred (**backlog**) | **13 111** | алгоритм не разрешил: no-matching-word 8 194, ambiguous 4 464, already-claimed 453 |
+| no-bsb-verse | 15 | нет BSB-стиха (romans 16:24, 3john 1:15, revelation 12:18) |
+| no-gloss | 5 | обе глоссы пусты (перикопа john 7:53–8:11) |
+| manual-exclusion (человек) | 0 | ручная курация не велась (сознательно отложена) |
+
+> `auto-deferred` — это **технический долг/backlog**, НЕ «слова без английского эквивалента».
+> Рабочий список для будущей курации — `build-report.topUnalignedLexemes` (топ: λέγω 427, εἰμί 418,
+> πᾶς 225, θεός 217). На точность выровненных пар не влияет.
+
+### Аудит точности (F2, seed=42, `audit-align.mjs` + `audit-claimed.mjs`)
+- **fuzzy** (235/235, 100%): во всех просмотренных парах `slice == gloss` (weeping, baptize, Zebedee…). Ошибок нет.
+- **proven** (50/метод): ошибок не найдено. `lexicon-gloss-exact` (6 335 пар) — **самый слабый тир**:
+  формально валиден (slice ∈ глоссы лексемы), семантически почти всегда верен (ἀποκρίνομαι→replied,
+  πᾶς→everyone), но встречаются «свободные, но допустимые» матчи (λέγω→"asked", οὗτος→"them"). Помечен
+  как **audit-required** в доках; рекомендуется периодический ручной контроль.
+- **already-claimed (453)** — расследование `audit-claimed.mjs`: 380 — один и тот же лексема-токен
+  (два греческих токена одной леммы на одно английское слово, benign); 73 — разные леммы, но во ВСЕХ
+  просмотренных случаях занявшая пара корректна (πᾶς→all, ἱερόν→temple, λέγω→said), а отложенный
+  токен — синоним, который английский объединил. **Мис-пэйрингов не найдено.**
+
+### Гейты после fixup
+`npm run verify:data` → 0 errors, 41 warnings (accuracy invariant holds; partition complete).
+`npm test` → 193 passed (14 files). `npm run build` → OK. `node scripts/audit-align.mjs` → 535 audited, exit 0.

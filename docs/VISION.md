@@ -229,20 +229,45 @@ Phrase-проход v1 — только contiguous-окно той же длин
 итерацией алгоритма. Это прямое следствие проблем «разный порядок слов» и «лишние
 слова в BSB», перечисленных выше.
 
-Порог качества релиза 1.1: ≥90% accepted non-function-token coverage, ≥95% стихов с ≥1 accepted парой. Цель для следующей итерации alignment — ≥92%. Знаменатель coverage — только non-function токены (`fw=false`); function words в него не входят (детали в IMPL-PIPELINE Task 4).
+**Гейт релиза (решение продукта 2026-06-25): точность важнее покрытия.** Hard-gate релиза —
+НЕ процент покрытия, а две машинные проверки в `verify:data`:
+1. **Accuracy-инвариант** (Check 16): каждая выровненная пара формально соответствует глоссе
+   токена ПО МЕТОДУ (slice↔gloss); `q` соответствует методу; proposal-тир запрещён. Любое
+   нарушение → exit 1.
+2. **Полное разбиение** (Check 16d): каждый `fw=false` токен ровно в одной категории —
+   `aligned` ЛИБО одна resolution-kind (см. ниже). Нет неклассифицированных токенов.
 
-Если hard gate не пройден, релиз блокируется. Порядок эскалации (а не «релаксировать порог»):
-1. Сначала улучшить алгоритм (доп. проход lemma-gloss, расширить bracket-optional, и т.п.).
-2. Затем добавить проверенные manual override'ы для самых частых unaligned-лемм
-   (см. `topUnalignedLexemes` в build-report).
-3. Порог 90% не понижается молча. Любое осознанное снижение фиксируется отдельным
-   решением в этом документе с указанием причины и нового числа — иначе gate остаётся 90%.
+**Coverage (% aligned) — advisory.** Минимального порога НЕТ; coverage печатается как `warn` и
+никогда не блокирует релиз. Защита от «слишком многое отложили» — не процент, а требование явной
+причины у каждой категории + аудит. Текущее покрытие — 81.8% (advisory).
 
-Цель 90% — продуктовое требование к читабельности (доля слов, для которых доступен
-греческий слой), а не оценка достижимости; achievability валидируется PoC на Матфее
-до полной реализации пайплайна.
+**Категории разрешения** (партиция всех `fw=false` токенов):
+- `aligned` — есть пара (вклад в coverage);
+- `manual-exclusion` — человек, рукописная причина (греческое слово без англ. эквивалента);
+- `no-bsb-verse` — авто: нет BSB-стиха для ref (versification/textual variant);
+- `no-gloss` — авто: обе глоссы пусты;
+- `auto-deferred` — авто-**backlog**: «алгоритм не разрешил» (под-причины `no-matching-word` /
+  `ambiguous` / `already-claimed`). Это техдолг для будущей курации (`topUnalignedLexemes`), а НЕ
+  утверждение «слова невыравниваемы». `auto-deferred` НЕ выдаётся за ручную курацию.
 
-Manual overrides допустимы как релизный safety valve, но только как маленький auditable JSON (`manual-alignments.json`) с проверкой tokenId/ref. Override может либо создать/заменить связь через `span`, либо подавить ошибочную автоматическую связь через `q="u", method="manual-exclusion"` без `span`. Количество ручных связей и ручных исключений попадает в отчёт.
+`resolved = aligned ∪ manual-exclusion ∪ no-bsb-verse ∪ no-gloss ∪ auto-deferred`. `auto-deferred`
+покрывает остаток по построению, поэтому осмысленный гейт — корректность разбиения и точность, а
+не «resolved==100%».
+
+**Тиринг методов** (источник истины — `method`, не `q`): `proven` (gloss-exact, bracket-optional,
+phrase, alt-gloss-*, lexicon-gloss-exact) → `q="a"`; `fuzzy` → `q="f"`; `manual` → `q="a"`
+(человек); `positional-equal-count` → `proposal`, по умолчанию ВЫКЛЮЧЕН, в релизные данные не
+попадает. `lexicon-gloss-exact` формально проверяем, но семантически самый слабый — помечен
+audit-required (периодический ручной контроль).
+
+Manual overrides допустимы как релизный safety valve, но только как маленький auditable JSON
+(`manual-alignments.json` = `{normalizationVersion, entries[]}`) с строгой проверкой в verify
+(Check 15c): `tokenId` принадлежит `ref`, токен `fw===false`, `method ∈ {manual, manual-exclusion}`.
+Запись `manual` создаёт пару через `wordIndex`/`wordIndexes` + обязательный `expectedText` (build
+компилирует span из `words[]` и сверяет `slice===expectedText` — куратор НЕ вводит сырые офсеты).
+Запись `manual-exclusion` подавляет/помечает токен и требует непустой `reason` (без `span`, без `q`).
+Авто-категории (`no-bsb-verse`, `no-gloss`, `auto-deferred`) выводит сам build и в этот файл не пишет.
+Все счётчики категорий попадают в build-report.
 
 ⚠️ **Ручные `span` жёстко связаны с текущим BSB-текстом.** `span` — это UTF-16 офсеты в
 `verse.text`. Любое изменение `bsb-complete.json` или `normalizationVersion` сдвигает

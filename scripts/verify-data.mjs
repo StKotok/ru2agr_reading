@@ -6,7 +6,7 @@ import { readSourceJson, readDataJson, DATA_ROOT, existsSync } from './lib/fs.mj
 import { readFileSync, statSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { checkPairAccuracy, normalizeWord, normalizeBerean, fuzzyNormalize, tokenizeGloss, ALIGN_METHODS } from './lib/align-normalize.mjs';
+import { checkPairAccuracy, normalizeWord, normalizeBerean, fuzzyNormalize, tokenizeGloss, ALIGN_METHODS, RESOLUTION_KINDS } from './lib/align-normalize.mjs';
 
 const NT_BOOKS = [
   'matthew', 'mark', 'luke', 'john', 'acts',
@@ -402,27 +402,92 @@ try {
   if (dupCount > 5) error(`... and ${dupCount - 5} more duplicates`);
   if (dupCount === 0) ok(`no duplicate tokenIds in manual-alignments (${entries.length} entries)`);
 
-  // Validate each entry
-  let invalidRefCount = 0, missingTokenCount = 0, emptyReasonCount = 0;
+  // Validate each entry (strengthened — F1.3): tokenId∈ref, fw===false, method enum,
+  // wordIndex/expectedText for manual pairs, span has letters.
+  let entryErrors = 0;
+  const grcCache = new Map();
+  const engCache = new Map();
+  const loadGrcByRef = (bookId) => {
+    if (grcCache.has(bookId)) return grcCache.get(bookId);
+    let byRef = null;
+    try {
+      const grc = readDataJson(`bibles/grc/${bookId}.json`);
+      byRef = new Map();
+      for (const ch of grc.chapters) for (const vs of ch.verses) {
+        const m = new Map();
+        for (const t of vs.tokens) m.set(t.id, t);
+        byRef.set(vs.ref, m);
+      }
+    } catch { byRef = null; }
+    grcCache.set(bookId, byRef);
+    return byRef;
+  };
+  const loadEngByRef = (bookId) => {
+    if (engCache.has(bookId)) return engCache.get(bookId);
+    let byRef = null;
+    try {
+      const eng = readDataJson(`bibles/eng/${bookId}.json`);
+      byRef = new Map();
+      for (const ch of eng.chapters) for (const vs of ch.verses) byRef.set(vs.ref, vs);
+    } catch { byRef = null; }
+    engCache.set(bookId, byRef);
+    return byRef;
+  };
+
   for (const entry of entries) {
-    // Parse ref
     const refMatch = entry.ref?.match(/^(\d?\s?\w+)\s+(\d+):(\d+)$/i);
     if (!refMatch) {
-      if (invalidRefCount < 5) error(`manual-alignments: invalid ref "${entry.ref}"`);
-      invalidRefCount++;
+      error(`manual-alignments: invalid ref "${entry.ref}"`); entryErrors++;
       continue;
     }
     const bookId = refMatch[1].toLowerCase().replace(/\s/g, '');
 
-    // For manual-exclusion: check reason is non-empty
-    if (entry.method === 'manual-exclusion' && !entry.reason) {
-      if (emptyReasonCount < 5) error(`manual-alignments: ${entry.ref}/${entry.tokenId} manual-exclusion has empty reason`);
-      emptyReasonCount++;
+    if (entry.method !== 'manual' && entry.method !== 'manual-exclusion') {
+      error(`manual-alignments: ${entry.ref}/${entry.tokenId} invalid method "${entry.method}" (must be manual|manual-exclusion)`);
+      entryErrors++;
+      continue;
+    }
+
+    const token = loadGrcByRef(bookId)?.get(entry.ref)?.get(entry.tokenId);
+    if (!token) {
+      error(`manual-alignments: ${entry.ref}/${entry.tokenId} tokenId not found in this ref`); entryErrors++;
+      continue;
+    }
+    if (token.fw !== false) {
+      error(`manual-alignments: ${entry.ref}/${entry.tokenId} is a function word (fw!==false)`); entryErrors++;
+    }
+
+    if (entry.method === 'manual-exclusion') {
+      if (!entry.reason) { error(`manual-alignments: ${entry.ref}/${entry.tokenId} manual-exclusion has empty reason`); entryErrors++; }
+    } else {
+      const engVs = loadEngByRef(bookId)?.get(entry.ref);
+      if (!engVs) { error(`manual-alignments: ${entry.ref} manual pair but no BSB verse exists`); entryErrors++; continue; }
+      const words = engVs.words || [];
+      let span = null;
+      if (entry.wordIndex != null) {
+        const w = words[entry.wordIndex];
+        if (!w) { error(`manual-alignments: ${entry.ref}/${entry.tokenId} wordIndex ${entry.wordIndex} out of bounds (${words.length})`); entryErrors++; }
+        else span = [w.start, w.end];
+      } else if (Array.isArray(entry.wordIndexes) && entry.wordIndexes.length >= 1) {
+        const first = words[entry.wordIndexes[0]];
+        const last = words[entry.wordIndexes[entry.wordIndexes.length - 1]];
+        if (!first || !last) { error(`manual-alignments: ${entry.ref}/${entry.tokenId} wordIndexes out of bounds`); entryErrors++; }
+        else span = [first.start, last.end];
+      } else {
+        error(`manual-alignments: ${entry.ref}/${entry.tokenId} manual pair has no wordIndex/wordIndexes`); entryErrors++;
+      }
+      if (span) {
+        const sliced = (engVs.text || '').slice(span[0], span[1]);
+        if (!/[\p{L}\p{N}]/u.test(sliced)) { error(`manual-alignments: ${entry.ref}/${entry.tokenId} span has no letters`); entryErrors++; }
+        if (entry.expectedText == null) {
+          error(`manual-alignments: ${entry.ref}/${entry.tokenId} manual pair must include expectedText`); entryErrors++;
+        } else if (sliced !== entry.expectedText) {
+          error(`manual-alignments: ${entry.ref}/${entry.tokenId} expectedText "${entry.expectedText}" != slice "${sliced}"`); entryErrors++;
+        }
+      }
     }
   }
-  if (invalidRefCount > 0) error(`manual-alignments: ${invalidRefCount} entries with invalid ref`);
-  if (emptyReasonCount > 0) error(`manual-alignments: ${emptyReasonCount} manual-exclusion entries with empty reason`);
-  if (invalidRefCount === 0 && emptyReasonCount === 0) ok(`all manual entries have valid refs and reasons`);
+  if (entryErrors === 0) ok(`all ${entries.length} manual entries valid (tokenId∈ref, fw, method, span/expectedText)`);
 
   if (manualErrors === 0) ok('manual-alignments file valid');
 } catch (e) {
@@ -511,6 +576,18 @@ for (const bookId of NT_BOOKS) {
         error(`${ref}: unknown method "${method}" for token ${pair.tokenId}`);
         accuracyErrors++;
         continue;
+      }
+
+      // Validate q matches the method's declared quality (no fuzzy:a, no manual:f, etc.)
+      if (pair.q !== ALIGN_METHODS[method].q) {
+        error(`${ref}: q="${pair.q}" does not match method "${method}" (expected q="${ALIGN_METHODS[method].q}") for token ${pair.tokenId}`);
+        accuracyErrors++;
+      }
+
+      // proposal-tier methods must NOT appear in release data
+      if (ALIGN_METHODS[method].tier === 'proposal') {
+        error(`${ref}: proposal-tier method "${method}" present in release data (token ${pair.tokenId}) — proposal pairs require explicit audited promotion`);
+        accuracyErrors++;
       }
 
       const slice = verseText.slice(pair.span[0], pair.span[1]);
@@ -744,6 +821,97 @@ try {
 }
 
 // ===========================================================================
+// Check 16d: Resolution partition (HARD-GATE) — honest model
+// Every fw===false token must be in EXACTLY one category: aligned (pairsByRef)
+// XOR one resolution kind (exclusionsByRef). No uncategorized; no double-counting.
+// This replaces the hollow "trust report's unresolved==0".
+// ===========================================================================
+console.log('\n--- Check 16d: Resolution partition (hard-gate) ---');
+{
+  let partitionErrors = 0;
+  let pAligned = 0, pManualExcl = 0, pNoBsb = 0, pNoGloss = 0, pAutoDeferred = 0;
+
+  for (const bookId of NT_BOOKS) {
+    const grc = readDataJson(`bibles/grc/${bookId}.json`);
+    const align = readDataJson(`align/grc-eng/${bookId}.json`);
+
+    const alignedIds = new Set();
+    for (const ref in (align.pairsByRef || {})) {
+      for (const p of align.pairsByRef[ref]) alignedIds.add(p.tokenId);
+    }
+    const exclById = new Map();
+    for (const ref in (align.exclusionsByRef || {})) {
+      for (const e of align.exclusionsByRef[ref]) {
+        if (exclById.has(e.tokenId)) {
+          error(`partition ${bookId} ${ref}: token ${e.tokenId} excluded more than once`);
+          partitionErrors++;
+        }
+        exclById.set(e.tokenId, e.kind);
+        if (!RESOLUTION_KINDS[e.kind]) {
+          error(`partition ${bookId} ${ref}: unknown resolution kind "${e.kind}" for ${e.tokenId}`);
+          partitionErrors++;
+        }
+      }
+    }
+
+    for (const ch of grc.chapters) {
+      for (const vs of ch.verses) {
+        for (const t of vs.tokens) {
+          if (t.fw !== false) continue;
+          const isAligned = alignedIds.has(t.id);
+          const isExcluded = exclById.has(t.id);
+          if (isAligned && isExcluded) {
+            error(`partition ${bookId} ${vs.ref}: token ${t.id} is BOTH aligned and excluded`);
+            partitionErrors++;
+          } else if (!isAligned && !isExcluded) {
+            error(`partition ${bookId} ${vs.ref}: token ${t.id} (lemma ${t.lemma}) UNCATEGORIZED`);
+            partitionErrors++;
+          } else if (isAligned) {
+            pAligned++;
+          } else {
+            const kind = exclById.get(t.id);
+            if (kind === 'manual-exclusion') pManualExcl++;
+            else if (kind === 'no-bsb-verse') pNoBsb++;
+            else if (kind === 'no-gloss') pNoGloss++;
+            else if (kind === 'auto-deferred') pAutoDeferred++;
+          }
+        }
+      }
+    }
+  }
+
+  // Cross-check recomputed category totals against build-report
+  try {
+    const report = readDataJson('align/grc-eng/build-report.json');
+    const checks = [
+      ['alignedNonFunctionTokens', pAligned, report.alignedNonFunctionTokens],
+      ['manualExclusionCount', pManualExcl, report.manualExclusionCount],
+      ['noBsbVerseCount', pNoBsb, report.noBsbVerseCount],
+      ['noGlossCount', pNoGloss, report.noGlossCount],
+      ['autoDeferredCount', pAutoDeferred, report.autoDeferredCount],
+    ];
+    for (const [name, actual, reported] of checks) {
+      if (actual !== reported) {
+        error(`partition: ${name} recomputed=${actual} != build-report=${reported}`);
+        partitionErrors++;
+      }
+    }
+    const totalPartitioned = pAligned + pManualExcl + pNoBsb + pNoGloss + pAutoDeferred;
+    if (totalPartitioned !== report.totalNonFunctionTokens) {
+      error(`partition: category sum=${totalPartitioned} != totalNonFunctionTokens=${report.totalNonFunctionTokens}`);
+      partitionErrors++;
+    }
+  } catch (e) {
+    error(`partition: cannot cross-check build-report: ${e.message}`);
+    partitionErrors++;
+  }
+
+  if (partitionErrors === 0) {
+    ok(`resolution partition complete: aligned=${pAligned}, manual-excl=${pManualExcl}, no-bsb=${pNoBsb}, no-gloss=${pNoGloss}, auto-deferred=${pAutoDeferred} (backlog)`);
+  }
+}
+
+// ===========================================================================
 // Check 17: Alignment quality thresholds
 // ===========================================================================
 console.log('\n--- Check 17: Quality thresholds ---');
@@ -806,12 +974,19 @@ try {
 console.log('\n--- Check 19: No source-only fields ---');
 function findStripFields(obj, path = '') {
   const found = [];
-  if (obj && typeof obj === 'object') {
+  if (Array.isArray(obj)) {
+    // Recurse into array elements (F1.4 — previously skipped, hid attestedForms leaks)
+    for (let i = 0; i < obj.length; i++) {
+      if (obj[i] && typeof obj[i] === 'object') {
+        found.push(...findStripFields(obj[i], `${path}[${i}]`));
+      }
+    }
+  } else if (obj && typeof obj === 'object') {
     for (const key of Object.keys(obj)) {
       if (STRIP_FIELDS.has(key)) {
         found.push(`${path}.${key}`);
       }
-      if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+      if (obj[key] && typeof obj[key] === 'object') {
         found.push(...findStripFields(obj[key], `${path}.${key}`));
       }
     }
@@ -820,8 +995,9 @@ function findStripFields(obj, path = '') {
 }
 
 let stripErrors = 0;
-for (const bookId of NT_BOOKS.slice(0, 3)) { // Check first 3 books for performance
-  for (const dir of ['bibles/grc', 'bibles/eng']) {
+// Scan ALL books (F1.4) + lexicon core (where attestedForms[].normalized/surfaceSearch leaked)
+for (const bookId of NT_BOOKS) {
+  for (const dir of ['bibles/grc', 'bibles/eng', 'align/grc-eng']) {
     const data = readDataJson(`${dir}/${bookId}.json`);
     const found = findStripFields(data, `${dir}/${bookId}`);
     for (const f of found) {
@@ -829,6 +1005,17 @@ for (const bookId of NT_BOOKS.slice(0, 3)) { // Check first 3 books for performa
       stripErrors++;
     }
   }
+}
+try {
+  const core = readDataJson('lexicon/core.json');
+  // Sample reporting: count rather than spam every leaked path
+  const found = findStripFields(core, 'lexicon/core');
+  if (found.length > 0) {
+    error(`source-only fields in lexicon/core.json: ${found.length} (e.g. ${found.slice(0, 3).join(', ')})`);
+    stripErrors++;
+  }
+} catch (e) {
+  warn(`Check 19: cannot scan lexicon/core.json: ${e.message}`);
 }
 if (stripErrors === 0) ok('no source-only fields in app-ready data');
 

@@ -84,7 +84,7 @@ for (const bookId of NT_BOOKS) {
 const rand = seededRandom(SEED);
 let totalAudited = 0;
 
-for (const [method, pairs] of Object.entries(pairsByMethod)) {
+for (const [method, pairs] of pairsByMethod.entries()) {
   const tier = ALIGN_METHODS[method]?.tier || 'unknown';
   let sample;
 
@@ -108,6 +108,12 @@ console.log(`Seed: ${SEED} (for reproducibility)`);
 
 // Print quick stats
 console.log('\n--- Method Distribution ---');
-for (const [method, pairs] of Object.entries(pairsByMethod).sort((a, b) => b[1].length - a[1].length)) {
+for (const [method, pairs] of [...pairsByMethod.entries()].sort((a, b) => b[1].length - a[1].length)) {
   console.log(`  ${method}: ${pairs.length}`);
+}
+
+// Guard: audit must find pairs (T4.2). A silent 0-audit is a bug.
+if (totalAudited === 0) {
+  console.error('\n✗ AUDIT FOUND 0 PAIRS — audit harness is broken or data is empty.');
+  process.exit(1);
 }
