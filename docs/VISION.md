@@ -34,8 +34,8 @@
 | Первый язык данных | Английский (BSB) | Public domain, не требует разрешений |
 | Греческий текст | SBLGNT/MACULA (CC-BY 4.0, без UBS) | Уже очищен, 27 книг, морфология |
 | Пословные глоссы | Berean (PD) + Cherith (CC-BY 4.0) | Уже привязаны к каждому греческому токену |
-| Выравнивание | Span-based: глоссы → слова BSB | Строится алгоритмически при сборке |
-| Язык UI | Русский | Меняются только строки с названием перевода (~20 строк) |
+| Выравнивание | Span-based: глоссы → слова BSB | Строится алгоритмически при сборке; невыровненное не рендерится как греческая вставка |
+| Язык UI | Русский | Сохраняется как язык интерфейса, но source text становится английским BSB |
 | App-ready данные | Коммитятся в `assets/data/` | Соответствует AGENTS.md, упрощает dev-цикл |
 | Канонический ключ лексемы | `lexemeId` из enriched (`grc-biblos-9adfa6`) | Стабильный, MACULA-derived |
 | IndexedDB | Ключи совместимы, миграция словарных ключей через `legacyKeys` | Пользователь не теряет прогресс |
@@ -49,14 +49,16 @@ docs/source-data/
 ├── enriched/books/*.json             ← греческие токены + глоссы + морфология (152 MB)
 ├── enriched/lexemes.json             ← 5468 лемм: все формы, все ссылки, частотность
 ├── enriched/frequency.json           ← ранги частотности
-├── translations/bsb-complete.json    ← BSB (66 книг, typed-content формат)
+├── translations/bsb-complete.json    ← BSB (66 книг, typed-content формат; генерируем только 27 книг НЗ)
 ├── strongs/strongs-dictionary.json   ← Strong's определения (англ., PD)
 ├── strongs/strongs-ru-alignment.json ← русские соответствия Strong's
-├── lexicon/top1000.core.json         ← проект: 204 леммы с рус. глоссами
+├── lexicon/top1000.core.json         ← проект: 1000 curated лемм; ru overlays сейчас 182 записи
 ├── app-config/alphabet.json          ← греческий алфавит
 ├── app-config/books.json             ← метаданные книг
 └── app-config/schema/                ← JSON-схемы
 ```
+
+В релиз 1.1 входит только BSB. ASV/OEB/WEB/ULT остаются резервными source-data для будущих решений и не генерируются в `assets/data/`.
 
 ---
 
@@ -125,6 +127,7 @@ assets/data/
   "bookId": "matthew",
   "title": "Matthew",
   "short": "Matt",
+  "normalizationVersion": "bsb-text-v1",
   "license": "Public domain",
   "attribution": "Berean Standard Bible, https://berean.bible/",
   "chapters": [{
@@ -141,7 +144,7 @@ assets/data/
 }
 ```
 
-Поле `words` — замороженные офсеты слов в `text`. Генерируются ПОСЛЕ финальной нормализации текста. Нормализация — часть контракта: любое её изменение требует bump `schema` и полной регенерации всех пакетов.
+Поле `words` — замороженные UTF-16 code unit offsets в `text`, то есть именно те offsets, с которыми работает JavaScript `String.prototype.slice()`. Генерируются после финальной нормализации отображаемого текста. Нормализация — часть контракта: любое её изменение требует bump `normalizationVersion`, полной регенерации всех BSB-паков и полной регенерации зависимых alignment-паков. Смешанные пакеты с разными `normalizationVersion` невалидны.
 
 ### 5.3 Alignment
 
@@ -150,6 +153,7 @@ assets/data/
   "schema": "alignment-book-v2",
   "alignmentId": "grc-eng",
   "bookId": "matthew",
+  "normalizationVersion": "bsb-text-v1",
   "stats": {
     "tokenCount": 18329,
     "alignedTokenCount": 17000,
@@ -173,6 +177,8 @@ assets/data/
 `q` (quality): `a` — accepted, `f` — fuzzy, `u` — unaligned, `x` — excluded.  
 `method`: `gloss-exact`, `bracket-optional`, `fuzzy`, `lemma-gloss`, `unmatched`.
 
+Runtime показывает греческие вставки только для accepted/fuzzy пар, которые явно разрешены правилами движка. `q="u"` и `q="x"` не рендерятся как греческие вставки: пользователь видит обычное слово BSB. Это ожидаемая деградация, а не ошибка UI.
+
 ---
 
 ## 6. Alignment: как это работает
@@ -185,14 +191,18 @@ assets/data/
 - Лишние слова в BSB (артикли, «this is», «the record of»)
 - Не все греческие токены имеют прямой эквивалент в переводе
 
-Алгоритм:
+Важное соглашение по именам: `docs/source-data/CATALOG.md` фиксирует `glossEn` как Berean/public-domain поле, а `english` как Cherith/CC-BY поле. Не переименовывать эти источники по внешнему виду строки: скобки в глоссе не являются достаточным доказательством происхождения.
+
+Алгоритм v1:
 1. Для каждого стиха: взять BSB `verse.words` и греческие enriched-токены
 2. Для каждого токена построить кандидаты: `glossBerean` (с опциональными скобками), `glossCherith`, лемма-глоссы
-3. Сопоставить с BSB-словами через scoring (exact → bracket-optional → fuzzy → lemma)
-4. Применить monotonic order bonus и distance penalty для разрешения неоднозначностей
+3. Сопоставить с BSB-словами детерминированными проходами: exact → bracket-optional → phrase → simple fuzzy
+4. Не угадывать между неоднозначными повторами; такие токены остаются `q="u"` до улучшения алгоритма или ручного override
 5. Невыровненные токены пометить `q="u"`
 
-Порог качества: ≥85% accepted non-function-token coverage, ≥95% стихов с ≥1 accepted парой.
+Порог качества релиза 1.1: ≥90% accepted non-function-token coverage, ≥95% стихов с ≥1 accepted парой. Цель для следующей итерации alignment — ≥92%. Если hard gate не пройден, релиз блокируется: нужно улучшить алгоритм или добавить проверенный manual override.
+
+Manual overrides допустимы как релизный safety valve, но только как маленький auditable JSON (`manual-alignments.json`) с проверкой tokenId/span/ref и отчётом о количестве ручных пар.
 
 ---
 
@@ -211,12 +221,27 @@ assets/data/
 
 ---
 
-## 8. Что НЕ меняется
+## 8. UX-компромисс релиза 1.1
 
-- UI-компоненты (bottom-sheet, nav, inspector, word-card и др.)
+Релиз 1.1 сознательно сочетает русский UI и английский source text (BSB). Это временный продуктовый компромисс ради чистых лицензий.
+
+Правила UX:
+- Все элементы интерфейса остаются по-русски.
+- Исходный текст чтения — английский BSB.
+- Карточка слова объясняет греческую лемму по-русски, а поле “исходное слово” показывает английское слово BSB.
+- В греческом режиме подсказка под стихом показывает английский BSB, не русский перевод.
+- При первом запуске версии 1.1 нужен короткий русскоязычный notice/onboarding: почему текст стал английским и что русский перевод вернётся отдельным лицензионным этапом.
+
+---
+
+## 9. Что НЕ меняется
+
+- Базовая навигация и shell приложения
 - State management (store, settings, progress, dictionary)
 - IndexedDB (database name, store names, топология)
 - Hash-роутер
-- PWA-оболочка (index.html, vite.config.js, Workbox)
+- PWA-оболочка как концепт; Workbox runtime caching меняется под новые пути данных
 - CSS и шрифты
 - 5 режимов чтения (логика engine адаптируется, но концепт неизменен)
+
+Меняются тексты/контракты в отдельных UI-компонентах (`reading`, `top-bar`, `mode-widget`, `word-card`, `dictionary`, `about`) и data loaders.

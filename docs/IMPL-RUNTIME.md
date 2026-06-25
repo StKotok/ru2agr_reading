@@ -10,7 +10,9 @@
 
 Меняем минимально необходимое. Ключевой принцип: **engine и UI не знают о формате source-data, они знают только app-ready формат.**
 
-Поле `lexemeId` становится каноническим ключом во всех runtime-структурах. Там где код использует `lexemeKey` — добавляем fallback на `lexemeId`.
+Поле `lexemeId` становится каноническим ключом во всех runtime-структурах. `lexemeKey`/`lexemeSlug` разрешены только как legacy/display fallback на границе loaders/migration и в тестах обратной совместимости.
+
+Runtime-этап начинается только после полного выполнения `IMPL-PIPELINE.md`: `assets/data/` существует, `npm run verify:data` зелёный. Отдельные runtime-коммиты до этого могут компилироваться, но полноценная ручная проверка чтения невозможна без v2 data packs.
 
 ---
 
@@ -46,10 +48,12 @@
 2. **Функция загрузки alignment:**
    - Путь: `data/align/grc-eng/${bookId}.json`
    - Удалить загрузку `index.json` (alignment index больше не нужен — enriched данные полные)
+   - Если alignment не загрузился: вернуть `null`, не бросать наружу; reading screen рендерит обычный BSB текст/letter layer без греческих вставок
 
 3. **Функция загрузки data-manifest:**
    - Путь: `data/data-manifest.json`
    - Использовать `manifest.version` для cache-busting: `?v=${manifest.version}`
+   - Не читать attribution/licensing из manifest
 
 4. **Поле `morph` в греческих токенах:**
    - Старое: `token.morph` (строка) — уже есть
@@ -90,9 +94,10 @@ git commit -m "refactor(data): update bible-loader for v2 paths and formats"
 3. **Формат записи:** теперь каждая запись имеет `lexemeId` (канонический) и `lexemeSlug`
 4. **Функция `loadCoreLexicon`:**
    - Читает `core.json`
-   - Возвращает массив записей, где `id = lexemeSlug` для обратной совместимости с UI,
+   - Возвращает массив записей, где `id = lexemeId` для совместимости с текущими `coreById` lookup,
      но также присутствует `lexemeId`
-   - Маппинг: `coreItem.lexemeKey = coreItem.lexemeSlug` (для старого кода)
+   - Маппинг: `coreItem.lexemeKey = coreItem.lexemeSlug` (legacy/display fallback)
+   - Гарантирует, что каждая запись имеет `lexemeId`
 5. **Функция `loadDictionary` (новая):**
    - Читает `dictionary.json`
    - Возвращает Map `strongNumber → { definition, ruPrimary, ruTopWords }`
@@ -107,8 +112,8 @@ git commit -m "refactor(data): update bible-loader for v2 paths and formats"
 { lexemeId: 'grc-biblos-9adfa6', lexemeSlug: 'biblos', lemma: 'βίβλος', ... }
 
 // Адаптация для UI (lexicon-loader добавляет):
-{ lexemeKey: 'biblos', lexemeId: 'grc-biblos-9adfa6', lemma: 'βίβλος', ... }
-// lexemeKey = lexemeSlug (для обратной совместимости)
+{ id: 'grc-biblos-9adfa6', lexemeKey: 'biblos', lexemeId: 'grc-biblos-9adfa6', lemma: 'βίβλος', ... }
+// id = lexemeId; lexemeKey = lexemeSlug for legacy/display only
 ```
 
 ### Верификация
@@ -132,35 +137,50 @@ git commit -m "refactor(data): update lexicon-loader for v2 core/dictionary form
 
 ---
 
-## Task 3: `src/engine/form-layer.js` — `lexemeKey` → `lexemeId`
+## Task 3: `src/engine/form-layer.js` + `src/engine/compose.js` — `lexemeKey` → `lexemeId`
 
-### Файл
+### Файлы
 
-`src/engine/form-layer.js` — адаптировать alignment-пары и dictionary-ключи.
+- `src/engine/form-layer.js` — адаптировать alignment-пары и dictionary-ключи.
+- `src/engine/compose.js` — обновить builder map, JSDoc и передачу dictionary map.
 
-### Что изменить (3 строки)
+### Что изменить
 
-1. **Строка 89:** `const lexemeKey = pair.lexemeKey;` →
+Это механическая, но cross-cutting замена ключа. Не ограничивать задачу “3 строками”: нужно обновить lookup, Segment metadata и тесты.
+
+1. Pair key:
    ```js
-   const lexemeKey = pair.lexemeId || pair.lexemeSlug || pair.lexemeKey;
+   const lexemeId = pair.lexemeId || pair.lexemeKey; // temporary fallback
    ```
 
-2. **Строка 131-132:** в возвращаемом сегменте:
+2. В возвращаемом сегменте:
    ```js
-   lexemeKey,           // оставить для обратной совместимости
-   lexemeId: pair.lexemeId || pair.lexemeKey,  // канонический ключ
+   lexemeId,
+   lexemeKey: pair.lexemeKey || pair.lexemeSlug || lexemeId, // temporary compatibility
    ```
 
-3. **Строка 173:** `const key = entry.lexemeKey || entry.lexemeId || entry.id;` →
+3. Dictionary lookup:
+   ```js
+   const dictEntry = dictByLexemeId.get(lexemeId);
+   ```
+
+4. `buildDictByLexemeKey` переименовать или продублировать как `buildDictByLexemeId`; приоритет ключей:
    ```js
    const key = entry.lexemeId || entry.lexemeKey || entry.id;
    ```
-   (приоритет: lexemeId первый)
+
+5. `q="u"` и `q="x"` не рендерить как греческие вставки. Если pair не имеет span, пропускать до обращения к `pair.span`.
+
+6. В `compose.js`:
+   - заменить импорт `buildDictByLexemeKey` на `buildDictByLexemeId`;
+   - локальную переменную `dictByLexemeKey` заменить на `dictByLexemeId`;
+   - JSDoc “Synodal/Russian verse text” заменить на BSB/source verse text;
+   - JSDoc token/alignment fixtures описывать как `{lexemeId, lexemeKey?}`.
 
 ### Коммит
 
 ```bash
-git add src/engine/form-layer.js
+git add src/engine/form-layer.js src/engine/compose.js
 git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexemeKey"
 ```
 
@@ -182,12 +202,18 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
 
 3. **`data-lexeme-key` атрибут (строка 409):**
    ```js
-   span.setAttribute('data-lexeme-key', token.lexemeId || token.lexemeSlug || token.lexemeKey || '');
+   span.setAttribute('data-lexeme-id', token.lexemeId || '');
+   span.setAttribute('data-lexeme-key', token.lexemeSlug || token.lexemeKey || token.lexemeId || '');
    ```
 
 4. **`coreByIdCache` (строки 602-603):**
    ```js
-   coreByIdCache = new Map((coreLexicon || []).map(l => [l.lexemeId || l.id || l.lexemeKey, l]));
+   coreByIdCache = new Map((coreLexicon || []).map(l => [l.lexemeId, l]).filter(([key]) => key));
+   const coreByLegacyKey = new Map((coreLexicon || []).flatMap(l =>
+     [l.lexemeKey, l.lexemeSlug, ...(l.legacyKeys || [])]
+       .filter(Boolean)
+       .map(k => [k, l])
+   ));
    ```
 
 5. **`freqByKeyCache` (строки 608-609):**
@@ -205,9 +231,22 @@ git commit -m "refactor(engine): prefer lexemeId in form-layer, fallback to lexe
 
 8. **Функция `collectWordData` (строка 914):**
    ```js
-   const lexemeIdFromAttr = span.getAttribute('data-lexeme-key');
-   // искать по lexemeId в dictionary
+   const lexemeIdFromAttr = span.getAttribute('data-lexeme-id');
+   const legacyKeyFromAttr = span.getAttribute('data-lexeme-key');
+   const lookupKey = lexemeIdFromAttr || legacyKeyFromAttr;
+   const core = lexemeIdFromAttr
+     ? coreByIdCache.get(lexemeIdFromAttr)
+     : coreByLegacyKey.get(legacyKeyFromAttr);
    ```
+
+9. **Graceful degradation:**
+   - если `bookData` загрузилась, но `alignmentBookData` отсутствует или битая, не показывать white screen;
+   - рендерить BSB plain text + letter layer fallback;
+   - показать fail-soft toast только если настройки требуют греческий слой.
+
+10. **Греческий режим:**
+   - подсказка под стихом становится source hint BSB;
+   - внутреннее имя можно оставить `ruHint` только временно, но UI label должен быть “Показывать английский текст BSB под стихом”.
 
 ### Поиск и замена строк про Синодальный перевод
 
@@ -220,6 +259,14 @@ grep -n "Синодал\|русск.*текст\|ruHint\|Synodal\|bibles/syn" sr
 - «Синодальный перевод» → «Berean Standard Bible»
 - `ruHint` — оставить как имя переменной (это hint на ЯЗЫКЕ перевода, не обязательно русский)
 - Или переименовать `ruHint` → `sourceHint`
+
+### Дополнительные UI-файлы с текстом
+
+Также обновить:
+- `src/ui/components/top-bar.js`: “Показать обычный русский текст” → “Показать обычный текст BSB”; “Вернуть греческий слой” оставить.
+- `src/ui/components/mode-widget.js`: “чистый русский”, “русский перевод под стихом” → BSB/source wording.
+- `src/ui/components/word-card.js`: “из Синодального перевода”, JSDoc “исходное русское слово” → “исходное слово перевода”.
+- `src/ui/screens/dictionary.js`: “русско-греческое соответствие” → “проверенное соответствие в тексте”.
 
 ### Коммит
 
@@ -271,7 +318,7 @@ git commit -m "refactor(ui): update about screen with BSB and CC-BY attributions
 
 ---
 
-## Task 6: `src/ui/render.js` — `data-lexeme-key` атрибут
+## Task 6: `src/ui/render.js` — lexeme DOM attributes
 
 ### Файл
 
@@ -284,8 +331,11 @@ git commit -m "refactor(ui): update about screen with BSB and CC-BY attributions
 span.setAttribute('data-lexeme-key', seg.lexemeKey || seg.lexemeId);
 
 // Стало:
-span.setAttribute('data-lexeme-key', seg.lexemeId || seg.lexemeKey);
+span.setAttribute('data-lexeme-id', seg.lexemeId || '');
+span.setAttribute('data-lexeme-key', seg.lexemeKey || seg.lexemeSlug || seg.lexemeId || '');
 ```
+
+`data-lexeme-id` — canonical runtime key. `data-lexeme-key` остаётся legacy/display fallback на время миграции.
 
 ### Коммит
 
@@ -305,76 +355,109 @@ git commit -m "refactor(ui): prefer lexemeId in render data-lexeme-key"
 ### Логика миграции
 
 ```
-1. После загрузки core.json:
-   - Построить Map: legacyKey → lexemeId
-     (из поля legacyKeys каждой записи core.json)
-   - Сохранить как legacyKeyMap
+1. После загрузки core.json построить Map legacyKey → lexemeId из:
+   - item.legacyKeys
+   - item.lexemeSlug
+   - item.lexemeKey
+   Только однозначные keys попадают в map.
 
-2. Для каждой записи в IndexedDB store 'dictionary':
-   - Если ключ уже является lexemeId (начинается с 'grc-') — пропустить
-   - Если ключ найден в legacyKeyMap — переместить запись под новый ключ (lexemeId),
-     старый ключ удалить
-   - Если ключ НЕ найден в legacyKeyMap — оставить как есть,
-     добавить флаг `_legacy: true`, записать предупреждение в `_migrationWarnings`
+2. Для каждой записи dictionary:
+   - если ключ уже есть среди core.lexemeId — оставить как есть
+   - если ключ найден в legacyKeyMap — переместить/смержить запись под lexemeId
+   - если ключ НЕ найден — оставить под старым ключом, добавить `_legacy: true`,
+     записать warning в отдельный IndexedDB key `dictionary_migration_warnings`
 
-3. Для progress.wordsToday.added — та же логика
+3. Для progress.wordsToday.added применить ту же key mapping.
 
-4. Сохранить обновлённый dictionary и wordsToday в IndexedDB
+4. Сохранить обновлённые `dictionary`, `progress` и `dictionary_migration_warnings`
+   только через обёртки `src/storage/db.js` / state helpers. Не открывать
+   `indexedDB.transaction` напрямую из UI/state-кода.
 
-5. Миграция идемпотентна: при повторном запуске уже мигрированные записи не трогаются
+5. Миграция идемпотентна: повторный запуск не меняет уже мигрированные записи.
 ```
 
 ### Реализация
 
 ```js
-// В dictionary.js, после загрузки coreLexicon:
+const DICTIONARY_MIGRATION_WARNINGS_KEY = 'dictionary_migration_warnings';
 
 function buildLegacyKeyMap(coreLexicon) {
   const map = new Map();
+  const conflicts = new Set();
   for (const item of coreLexicon) {
-    const keys = item.legacyKeys || [];
-    // Также добавить lexemeSlug как legacy-ключ
-    if (item.lexemeSlug) keys.push(item.lexemeSlug);
+    const keys = [
+      ...(item.legacyKeys || []),
+      item.lexemeSlug,
+      item.lexemeKey
+    ].filter(Boolean);
     for (const k of keys) {
-      if (!map.has(k)) map.set(k, item.lexemeId);
+      if (map.has(k) && map.get(k) !== item.lexemeId) {
+        conflicts.add(k);
+      } else {
+        map.set(k, item.lexemeId);
+      }
     }
   }
+  for (const k of conflicts) map.delete(k);
   return map;
 }
 
-async function migrateDictionaryKeys(db, legacyKeyMap) {
-  const store = db.transaction('app_state', 'readwrite').objectStore('app_state');
-  const dictReq = store.get('dictionary');
-  const dict = (await promisify(dictReq)) || {};
+function mergeDictionaryEntry(existing, incoming) {
+  const statusOrder = { known: 3, learning: 2, new: 1 };
+  const existingTime = Date.parse(existing.updatedAt || existing.addedAt || '') || 0;
+  const incomingTime = Date.parse(incoming.updatedAt || incoming.addedAt || '') || 0;
+
+  const fresher = incomingTime > existingTime ? incoming : existing;
+  const strongerStatus = (statusOrder[incoming.status] || 0) > (statusOrder[existing.status] || 0)
+    ? incoming.status
+    : existing.status;
+
+  return {
+    ...existing,
+    ...incoming,
+    ...fresher,
+    status: incomingTime !== existingTime ? fresher.status : strongerStatus,
+    showInText: existing.showInText === false || incoming.showInText === false ? false : fresher.showInText,
+    addedAt: [existing.addedAt, incoming.addedAt].filter(Boolean).sort()[0] || fresher.addedAt
+  };
+}
+
+export function migrateDictionaryData(dict, progress, coreLexicon) {
+  const legacyKeyMap = buildLegacyKeyMap(coreLexicon);
+  const knownLexemeIds = new Set(coreLexicon.map(i => i.lexemeId).filter(Boolean));
+  const nextDict = {};
   const warnings = [];
 
   for (const [key, entry] of Object.entries(dict)) {
-    if (key.startsWith('grc-')) continue; // уже новый формат
-    const newKey = legacyKeyMap.get(key);
-    if (newKey && newKey !== key) {
-      // Мержим: если оба ключа существуют
-      if (dict[newKey]) {
-        // strongest status wins
-        const statusOrder = { known: 3, learning: 2, new: 1 };
-        const keep = (statusOrder[dict[newKey].status] || 0) >= (statusOrder[entry.status] || 0)
-          ? dict[newKey] : entry;
-        dict[newKey] = keep;
-      } else {
-        dict[newKey] = entry;
-      }
-      delete dict[key];
-    } else if (!newKey) {
-      entry._legacy = true;
-      warnings.push({ key, lexemeSlug: key, reason: 'no-mapping' });
+    const newKey = knownLexemeIds.has(key) ? key : legacyKeyMap.get(key);
+    if (newKey) {
+      nextDict[newKey] = nextDict[newKey]
+        ? mergeDictionaryEntry(nextDict[newKey], entry)
+        : { ...entry };
+    } else {
+      nextDict[key] = { ...entry, _legacy: true };
+      warnings.push({ key, reason: 'no-safe-mapping' });
     }
   }
 
-  if (warnings.length > 0) {
-    store.put({ _migrationWarnings: warnings }, '_migrationWarnings');
-  }
-  store.put(dict, 'dictionary');
+  const wordsToday = progress.wordsToday || { date: '', added: [] };
+  const added = (wordsToday.added || []).map(key => legacyKeyMap.get(key) || key);
+  const nextProgress = {
+    ...progress,
+    wordsToday: { ...wordsToday, added: [...new Set(added)] }
+  };
+
+  return { dictionary: nextDict, progress: nextProgress, warnings };
 }
 ```
+
+The caller persists results fail-soft:
+- save `dictionary` under key `dictionary`
+- save `progress` under key `progress`
+- save warnings under key `dictionary_migration_warnings`
+- `console.warn` once if warnings are non-empty
+
+Unknown legacy entries are technical debt. They remain in IndexedDB but do not participate in text replacement. Add a v1.2 follow-up for a small maintenance UI or export/debug path if warnings appear in real user data.
 
 ### Верификация
 
@@ -382,7 +465,8 @@ async function migrateDictionaryKeys(db, legacyKeyMap) {
 # Открыть приложение, проверить IndexedDB в DevTools:
 # - В dictionary ключи должны быть формата grc-*
 # - Старые ключи (logos, freq-3056) должны мигрировать или получить _legacy: true
-# - _migrationWarnings должен содержать записи без маппинга
+# - dictionary_migration_warnings должен содержать записи без safe mapping
+# - progress.wordsToday.added не содержит старых legacy keys, если для них есть mapping
 ```
 
 ### Коммит
@@ -394,45 +478,102 @@ git commit -m "feat(state): add IndexedDB dictionary key migration"
 
 ---
 
-## Task 8: `vite.config.js` — PWA-кеширование новых путей
+## Task 8: `vite.config.js` + `src/app.js` — PWA-кеширование новых путей
 
-### Файл
+### Файлы
 
-`vite.config.js` — обновить Workbox runtime-кеширование.
+- `vite.config.js` — обновить Workbox runtime-кеширование и precache policy.
+- `src/app.js` — добавить fail-soft cleanup старых data caches после регистрации service worker.
 
 ### Что изменить
 
-Добавить правило для новых data-путей:
+1. **Не precache'ить тяжёлые data packs.**
+
+Текущий `globPatterns: ['**/*.{js,css,html,woff2,svg,json}']` захватывает JSON,
+поэтому новые `data/bibles/**`, `data/align/**`, `data/lexicon/**` должны быть
+исключены через `globIgnores`, иначе production SW попробует precache'ить крупные
+книги/alignments.
+
+```js
+workbox: {
+  cleanupOutdatedCaches: true,
+  globPatterns: ['**/*.{js,css,html,woff2,svg,json}'],
+  globIgnores: [
+    '**/data/originals/**',
+    '**/data/translations/**',
+    '**/data/align/**',
+    '**/data/bibles/**',
+    '**/data/lexicon/**'
+  ],
+  // ...
+}
+```
+
+2. **Runtime cache для новых путей.**
 
 ```js
 // В vite.config.js, в настройках vite-plugin-pwa:
 workbox: {
   runtimeCaching: [
     {
-      urlPattern: /\/data\/(bibles|align|lexicon)\/.*\.json$/,
-      handler: 'CacheFirst',
+      // Book packs and alignments are content-addressed by manifest version.
+      urlPattern: /\/data\/(bibles|align)\/.*\.json(?:\?.*)?$/,
+      handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'book-packs-v2',
         expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 }
+      }
+    },
+    {
+      urlPattern: /\/data\/lexicon\/.*\.json(?:\?.*)?$/,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'lexicon-data-v2',
+        expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 }
       }
     }
   ]
 }
 ```
 
-Удалить старые правила для `data/originals/`, `data/translations/`, `data/align/syn--sblgnt-macula/`.
+Удалить или заменить старое runtime-правило для `data/originals/`,
+`data/translations/`, `data/align/syn--sblgnt-macula/`.
+
+3. **Cleanup старых runtime caches.**
+
+`cleanupOutdatedCaches` чистит старые Workbox precache buckets, но не гарантирует
+удаление кастомных runtime caches `book-packs`/`lexicon-data`. После успешной
+регистрации SW в `src/app.js` добавить fail-soft cleanup:
+
+```js
+async function cleanupOldDataCaches() {
+  if (!('caches' in window)) return;
+  const keep = new Set(['book-packs-v2', 'lexicon-data-v2']);
+  const oldPrefixes = ['book-packs', 'lexicon-data'];
+  const names = await caches.keys();
+  await Promise.all(names.map(name => {
+    const isOldDataCache = oldPrefixes.some(prefix => name === prefix || name.startsWith(`${prefix}-`));
+    return isOldDataCache && !keep.has(name) ? caches.delete(name) : false;
+  }));
+}
+```
+
+Вызвать внутри `try/catch`; ошибка cleanup не должна ломать запуск приложения.
 
 ### Верификация
 
 ```bash
 npm run build
-# Проверить сгенерированный sw.js: должен содержать кеширование для /data/bibles/
+# Проверить dist/sw.js:
+# - нет precache entries для data/bibles/*.json и data/align/*.json
+# - есть runtimeCaching для /data/bibles/, /data/align/, /data/lexicon/
+# Ручной smoke: обновление с v1.0.x не оставляет приложение на старых data caches
 ```
 
 ### Коммит
 
 ```bash
-git add vite.config.js
+git add vite.config.js src/app.js
 git commit -m "fix(pwa): update Workbox caching for v2 data paths"
 ```
 
@@ -446,6 +587,8 @@ git commit -m "fix(pwa): update Workbox caching for v2 data paths"
 tests/form-layer.test.js   — обновить field names в фикстурах
 tests/compose.test.js      — проверить field names
 tests/lexicon.test.js      — проверить формат данных
+tests/dictionary.test.js   — покрыть миграцию dictionary/progress keys
+tests/frequency-data.test.js — перейти с top1000.core.json на core.json
 tests/morphology.test.js   — проверить morph/morphs
 tests/letter-layer.test.js — без изменений (работает с surface-формами)
 ```
@@ -470,7 +613,42 @@ tests/letter-layer.test.js — без изменений (работает с su
    { lexemeId: 'grc-arche-abc123', lexemeKey: 'arche', status: 'known', intensityPct: 100, forms: 'form' }
    ```
 
-4. Обновить assertions: `find(s => s.lexemeKey === 'euangelion')` → `find(s => s.lexemeKey === 'euangelion' || s.lexemeId === 'grc-euangelion-...')`
+4. Обновить assertions: искать сначала по `lexemeId`, `lexemeKey` использовать
+   только в compatibility cases.
+
+### Что изменить в `tests/compose.test.js`
+
+- Обновить JSDoc/fixtures: verse text теперь BSB/source text, не Synodal.
+- В Greek token fixtures добавить `lexemeId`; старый `lexemeKey` оставить только
+  там, где тестируется fallback.
+- Alignment fixtures должны содержать `method` (`gloss-exact`, `manual`, etc.)
+  и `q`; `q="u"`/`q="x"` не должны приводить к form-segment replacement.
+
+### Что изменить в `tests/lexicon.test.js` и `tests/frequency-data.test.js`
+
+- Старый путь `assets/data/lexicon/top1000.core.json` заменить на
+  `assets/data/lexicon/core.json`.
+- Проверять уникальность `lexemeId`, наличие `lexemeSlug`, `legacyKeys` без
+  конфликтов, и что curated top1000 entries мапятся на существующий `lexemeId`.
+- Locale overlay `locales/ru/top1000.json` остаётся source-data concern; runtime
+  тесты не должны ожидать его в `assets/data/lexicon/`.
+
+### Что добавить в `tests/dictionary.test.js`
+
+- `migrateDictionaryData`:
+  - переносит `lexemeKey`/`lexemeSlug` entry под `lexemeId`;
+  - idempotent при повторном запуске;
+  - conflict legacy keys не мапятся и дают warning;
+  - unknown legacy entry остаётся с `_legacy: true`;
+  - merge сохраняет сильнейший/fresher статус, `showInText:false` и ранний `addedAt`;
+  - мигрирует `progress.wordsToday.added`.
+
+### Что проверить в state/UI tests
+
+- `countActiveWords(dict, coreLexicon, frequencyList)` должен индексировать
+  `coreLexicon` по `lexemeId || id`, а не только по старому `id`.
+- `frequencyList` fallback должен искать `lexemeId` первым, `lexemeKey` — только
+  для compatibility fixtures.
 
 ### Запуск тестов
 
@@ -493,7 +671,7 @@ git commit -m "test: update test fixtures for v2 field names"
 ### Команда
 
 ```bash
-rg -n "Синод|русск|ruHint|Synodal|syn--sblgnt|исходное русское|bibles/syn" src tests
+rg -n "Синод|русск|ruHint|Synodal|syn--sblgnt|исходное русское|русско-греческ|bibles/syn|top1000\\.core" src tests
 ```
 
 ### Ожидаемые хиты и действия
@@ -503,13 +681,28 @@ rg -n "Синод|русск|ruHint|Synodal|syn--sblgnt|исходное рус�
 | `Синодальный` в about.js | Заменён в Task 5 |
 | `ruHint` в reading.js | Оставить как имя переменной или переименовать в `sourceHint` |
 | `исходное русское слово` в word-card.js | Заменить на «исходное слово перевода» |
+| `русско-греческое соответствие` в dictionary.js | Заменить на «проверенное соответствие в тексте» |
 | `syn--sblgnt-macula` | Не должно остаться — все заменены в Tasks 1-4 |
 | `bibles/syn` | Не должно остаться |
+| `top1000.core` в runtime/tests | Не должно остаться, кроме source-data pipeline/docs |
+
+Обязательные файлы аудита:
+- `src/ui/screens/reading.js`
+- `src/ui/screens/about.js`
+- `src/ui/screens/dictionary.js`
+- `src/ui/components/top-bar.js`
+- `src/ui/components/mode-widget.js`
+- `src/ui/components/word-card.js`
+- `src/engine/compose.js`
+- `src/engine/form-layer.js`
+- `src/data/lexicon-loader.js`
+- `tests/lexicon.test.js`
+- `tests/frequency-data.test.js`
 
 ### Коммит
 
 ```bash
-git add src/ui/components/word-card.js
+git add src/ui/components/word-card.js src/ui/components/top-bar.js src/ui/components/mode-widget.js src/ui/screens/dictionary.js
 git commit -m "chore(ui): replace Russian-source wording with neutral wording"
 ```
 
@@ -538,6 +731,9 @@ npm run build        # Vite production build
 - [ ] Тёмная/светлая тема
 - [ ] Режим офлайн (отключить сеть, перезагрузить)
 - [ ] About screen показывает лицензии
+- [ ] About screen видимо показывает BSB/SBLGNT/MACULA/Cherith attribution
+- [ ] При битом/отсутствующем alignment приложение не падает и показывает BSB fallback
+- [ ] IndexedDB migration не теряет dictionary/progress entries
 
 ### Production build
 
@@ -575,13 +771,14 @@ netlify deploy --prod --dir=dist
  3. form-layer.js        — lexemeId предпочтение
  4. reading.js           — BSB вместо Синодального
  5. about.js             — лицензии
- 6. render.js            — data-lexeme-key
+ 6. render.js            — data-lexeme-id + compatibility key
  7. dictionary.js        — миграция ключей
- 8. vite.config.js       — PWA-кеширование
+ 8. vite.config.js/app.js — PWA-кеширование и cleanup
  9. tests/               — обновление фикстур
-10. word-card.js         — нейтральный wording
+10. UI wording           — нейтральный BSB/source wording
 11. End-to-end проверка
 12. Деплой
 ```
 
-Каждый коммит — независимый, с проходящими тестами.
+Коммиты 1-10 должны компилироваться и проходить unit-тесты. Полная ручная
+проверка чтения требует уже сгенерированных v2 data packs из `IMPL-PIPELINE.md`.

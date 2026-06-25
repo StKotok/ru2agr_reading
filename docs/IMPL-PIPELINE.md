@@ -12,6 +12,10 @@
 
 Создаём 6 скриптов в `scripts/` (директория не существует — её нужно создать):
 
+App-ready данные коммитятся только после полного `npm run build:data` и зелёного
+`verify:data`. В промежуточных task-коммитах коммитятся скрипты, тесты и
+документация, но не частично сгенерированный `assets/data/`.
+
 ```
 scripts/
 ├── build-bibles.mjs        ← греческие книги + BSB
@@ -113,13 +117,14 @@ const NT_BOOKS = [
       | token.surface            | s                 | как есть                                        |
       | token.lemma              | lemma             | как есть                                        |
       | token.lexemeId           | lexemeId          | как есть                                        |
-      | token.lexemeId → slug    | lexemeSlug        | извлечь часть после 'grc-' и до последнего '-'  |
-      |                          |                   | Пример: grc-biblos-9adfa6 → biblos              |
-      | token.transliteration    | translit          | если объект → .value; если строка → как есть    |
+      | token.lexemeId → slug    | lexemeSlug        | из curated map maculaLexemeId→lexemeKey;        |
+      |                          |                   | fallback: извлечь из lexemeId                   |
+      | token.transliteration    | translit          | строка в enriched-токенах; защитно поддержать   |
+      |                          |                   | объект через .value только для будущих форматов |
       | token.morphology.code    | morph             | извлечь .code из объекта morphology             |
       | token.morphology.labelRu | morphLabelRu      | извлечь .labelRu из morphology                  |
       | token.strong             | strongs           | как есть (массив строк)                         |
-      | token.pos.primary        | pos               | извлечь .primary; fallback: pos.source          |
+      | token.pos.source         | pos               | в enriched-токенах нет pos.primary              |
       | token.pos.labelRu        | posLabelRu        | извлечь .labelRu из pos                         |
       | token.glossEn            | glossBerean       | как есть                                        |
       | token.english            | glossCherith      | как есть                                        |
@@ -132,15 +137,17 @@ const NT_BOOKS = [
       {
         schema: "original-book-v2",
         bookId,
-        title: TITLES[bookId],
+        title: loadGreekTitle(bookId),
         chapters: [{ n, verses: [{ n, ref, tokens }] }]
       }
       где ref = `${bookId} ${chapter}:${verse}`
-      где TITLES — маппинг bookId → греческое название (взять из старых originals)
+      где title берётся из originals/sblgnt-macula/books/{bookId}.json
    е. Записать в assets/data/bibles/grc/{bookId}.json (mkdir -p)
 ```
 
-### Извлечение lexemeSlug из lexemeId
+### Извлечение lexemeSlug
+
+Основной источник `lexemeSlug` — curated-словарь `docs/source-data/lexicon/top1000.core.json`, поле `maculaLexemeId → lexemeKey`. Это даёт обратную совместимость для 1000 curated-лемм. Для остальных лемм fallback — парсинг `lexemeId`.
 
 ```js
 function lexemeIdToSlug(lexemeId) {
@@ -154,25 +161,18 @@ function lexemeIdToSlug(lexemeId) {
 }
 ```
 
+Важно: slug не является каноническим ключом и может быть коротким (`o`, `en`) или нечитаемым. При генерации `legacyKeys` нужно детектить коллизии slug/Strong's fallback и не создавать неоднозначный legacy mapping.
+
 ### Греческие названия книг (TITLES)
 
-Извлечь из `docs/source-data/originals/sblgnt-macula/books/{book}.json` → поле `title`. Скрипт может либо загрузить все 27 файлов и взять `title`, либо использовать захардкоженный маппинг:
+Извлечь из `docs/source-data/originals/sblgnt-macula/books/{book}.json` → поле `title`. Если файла или `title` нет — падать с явной ошибкой. Не поддерживать параллельно hardcoded mapping и source extraction, чтобы не было двух источников правды.
 
 ```js
-const TITLES = {
-  matthew: 'ΚΑΤΑ ΜΑΘΘΑΙΟΝ', mark: 'ΚΑΤΑ ΜΑΡΚΟΝ', luke: 'ΚΑΤΑ ΛΟΥΚΑΝ',
-  john: 'ΚΑΤΑ ΙΩΑΝΝΗΝ', acts: 'ΠΡΑΞΕΙΣ ΑΠΟΣΤΟΛΩΝ',
-  romans: 'ΠΡΟΣ ΡΩΜΑΙΟΥΣ', '1corinthians': 'ΠΡΟΣ ΚΟΡΙΝΘΙΟΥΣ Α´',
-  '2corinthians': 'ΠΡΟΣ ΚΟΡΙΝΘΙΟΥΣ Β´', galatians: 'ΠΡΟΣ ΓΑΛΑΤΑΣ',
-  ephesians: 'ΠΡΟΣ ΕΦΕΣΙΟΥΣ', philippians: 'ΠΡΟΣ ΦΙΛΙΠΠΗΣΙΟΥΣ',
-  colossians: 'ΠΡΟΣ ΚΟΛΟΣΣΑΕΙΣ', '1thessalonians': 'ΠΡΟΣ ΘΕΣΣΑΛΟΝΙΚΕΙΣ Α´',
-  '2thessalonians': 'ΠΡΟΣ ΘΕΣΣΑΛΟΝΙΚΕΙΣ Β´', '1timothy': 'ΠΡΟΣ ΤΙΜΟΘΕΟΝ Α´',
-  '2timothy': 'ΠΡΟΣ ΤΙΜΟΘΕΟΝ Β´', titus: 'ΠΡΟΣ ΤΙΤΟΝ',
-  philemon: 'ΠΡΟΣ ΦΙΛΗΜΟΝΑ', hebrews: 'ΠΡΟΣ ΕΒΡΑΙΟΥΣ',
-  james: 'ΙΑΚΩΒΟΥ', '1peter': 'ΠΕΤΡΟΥ Α´', '2peter': 'ΠΕΤΡΟΥ Β´',
-  '1john': 'ΙΩΑΝΝΟΥ Α´', '2john': 'ΙΩΑΝΝΟΥ Β´', '3john': 'ΙΩΑΝΝΟΥ Γ´',
-  jude: 'ΙΟΥΔΑ', revelation: 'ΑΠΟΚΑΛΥΨΙΣ ΙΩΑΝΝΟΥ'
-};
+function loadGreekTitle(bookId) {
+  const source = readJson(`docs/source-data/originals/sblgnt-macula/books/${bookId}.json`);
+  if (!source.title) throw new Error(`Missing Greek title for ${bookId}`);
+  return source.title;
+}
 ```
 
 ### Верификация
@@ -201,7 +201,7 @@ console.log('first token:', JSON.stringify(v1.tokens[0], null, 2));
 ### Коммит
 
 ```bash
-git add scripts/build-bibles.mjs assets/data/bibles/grc/
+git add scripts/build-bibles.mjs
 git commit -m "feat(pipeline): build-bibles.mjs — generate Greek book packs"
 ```
 
@@ -253,37 +253,44 @@ const BSB_TO_BOOKID = {
           - строки конкатенировать
           - объекты с полем noteId — пропустить (сноски)
           - объекты с полем lineBreak — заменить на пробел
+          - объекты с полем text — извлечь text и конкатенировать
+            (BSB использует {text, poem} для поэтической/генеалогической разметки)
           - нормализовать пробелы: заменить /\s+/g на ' ', убрать trim
           - сгенерировать words: токенизировать text на слова,
             для каждого слова вычислить { i, text: слово, start, end }
-            где start/end — байтовые (!) позиции в итоговом text
+            где start/end — UTF-16 code unit offsets в итоговом text
         * type === "heading" — пропустить
         * type === "line_break" на верхнем уровне — пропустить
       - Сформировать verses: [{ ref, n, text, words }]
         ref = `${bookId} ${chapterNumber}:${verseNumber}`
    в. Записать { schema, translationId, bookId, title, short, license,
-        attribution, chapters: [{ n, verses }] }
+        attribution, normalizationVersion, chapters: [{ n, verses }] }
       - title: взять из bsb-объекта книги (поле name или commonName)
       - short: взять из bsb-объекта книги (поле id)
       - license: "Public domain"
       - attribution: "Berean Standard Bible, https://berean.bible/"
+      - normalizationVersion: "bsb-text-v1"
 ```
 
-### Токенизация в words (ВАЖНО — байтовые офсеты)
+### Нормализация и токенизация в words
+
+`normalizationVersion` — часть data contract. Любое изменение правил сборки `text` требует:
+- bump `normalizationVersion`;
+- полной регенерации всех `bibles/eng/*`;
+- полной регенерации всех `align/grc-eng/*`;
+- verify-ошибки при смешанных версиях.
+
+Офсеты `words.start/end` — **UTF-16 code unit offsets**, потому runtime использует JS `text.slice(start, end)`. Не называть их байтовыми offsets.
 
 ```js
 function tokenizeWords(text) {
-  // Разбить текст на слова, сохраняя байтовые позиции
+  // Разбить текст на слова, сохраняя UTF-16 code unit offsets.
   // Слово = последовательность букв (Unicode letter), цифр или апострофа
   // Пунктуация и пробелы НЕ включаются в слова
   const words = [];
   const wordPattern = /[\p{L}\p{N}']+/gu;
   let match;
   while ((match = wordPattern.exec(text)) !== null) {
-    // В JS .index возвращает кодовые единицы (UTF-16), не байты.
-    // Для ASCII-текста BSB это одно и то же.
-    // Для совместимости с engine используем UTF-16 offset,
-    // потому что JS .slice() работает с кодовыми единицами.
     words.push({
       i: words.length,
       text: match[0],
@@ -294,6 +301,8 @@ function tokenizeWords(text) {
   return words;
 }
 ```
+
+После токенизации `text` больше не мутируется. Проверка `text.slice(start, end) === word.text` выполняется для каждого слова в каждом стихе.
 
 ### Верификация
 
@@ -314,7 +323,7 @@ console.log('offset check:', v1.text.slice(v1.words[0].start, v1.words[0].end));
 ### Коммит
 
 ```bash
-git add scripts/build-bibles.mjs assets/data/bibles/eng/
+git add scripts/build-bibles.mjs
 git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
 ```
 
@@ -333,8 +342,8 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
 - `docs/source-data/strongs/strongs-dictionary.json` — Strong's (массив `[{strong, ...}]`)
 - `docs/source-data/strongs/strongs-ru-alignment.json` — рус. соответствия (массив)
 - `docs/source-data/lexicon/top1000.core.json` — проект-курация (объект `{schema, items: [...]}`)
-- `docs/source-data/lexicon/locales/ru/core.json` — рус. данные (массив)
-- `docs/source-data/lexicon/locales/ru/top1000.json` — рус. данные топ-1000 (массив)
+- `docs/source-data/lexicon/locales/ru/core.json` — рус. данные (`{schema, localeId, items}`)
+- `docs/source-data/lexicon/locales/ru/top1000.json` — рус. данные топ-1000 (`{schema, localeId, items}`)
 
 ### Выход
 
@@ -374,10 +383,10 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
 ```
 1. Загрузить все входные файлы
 2. Построить индекс: strongNumber → { ruPrimary, ruTopWords } из strongs-ru-alignment.json
-3. Построить индекс: lemma → top1000-запись из lexicon/top1000.core.json
+3. Построить индекс: maculaLexemeId → top1000-запись из lexicon/top1000.core.json
 4. Для каждой лемы из lexemes.json:
    а. Базовые поля из lexemes.json: lexemeId(=id), lemma, transliteration(=transliteration.value),
-      pos(=pos.primary), strongs(=strong), allRefs, attestedForms,
+      pos(=lexeme.pos.primary), strongs(=strong), allRefs, attestedForms,
       glossesBerean(=glossesEn), glossesCherith(=englishGlosses),
       isFunctionWord, freqRank(=frequency.rank)
    б. lexemeSlug: извлечь из lexemeId (см. Task 1)
@@ -387,11 +396,16 @@ git commit -m "feat(pipeline): add BSB conversion to build-bibles.mjs"
    е. Если есть strongs и strongNumber есть в strongs-ru-alignment:
       - ruGloss = ruPrimary
       - ruTopWords = ruTopWords
-   ж. Если lemma есть в top1000-словаре:
+   ж. Если lexeme.id есть в top1000.maculaLexemeId:
       - ruMatches, ruExclude, refs — взять из top1000
    з. legacyKeys: [lexemeSlug] + (если есть strong: ['freq-' + strongNumber] для каждого)
-5. Записать core.json
-6. Для dictionary.json — переупаковать strongs-dictionary в объект { [strongNumber]: { definition, greek, translit, ruPrimary, ruTopWords } }
+      но только если legacyKey однозначно указывает на одну lexemeId
+5. После сборки всех записей проверить legacyKey collisions:
+   - если legacyKey встречается у нескольких lexemeId, удалить его из legacyKeys всех конфликтующих записей
+   - записать конфликт в build-report/verify output
+   - не создавать неоднозначный auto-migration mapping
+6. Записать core.json
+7. Для dictionary.json — переупаковать strongs-dictionary в объект { [strongNumber]: { definition, greek, translit, ruPrimary, ruTopWords } }
 ```
 
 ### Верификация
@@ -410,7 +424,7 @@ console.log('biblos:', JSON.stringify(biblos, null, 2).substring(0, 500));
 ### Коммит
 
 ```bash
-git add scripts/build-lexicon.mjs assets/data/lexicon/
+git add scripts/build-lexicon.mjs
 git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
 ```
 
@@ -427,6 +441,7 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
 - `assets/data/bibles/grc/{book}.json` — результат Task 1
 - `assets/data/bibles/eng/{book}.json` — результат Task 2
 - `docs/source-data/enriched/lexemes.json` — для лемма-глоссов
+- `docs/source-data/alignments/grc-eng/manual-alignments.json` — optional ручные overrides (если файл существует)
 
 ### Выход
 
@@ -444,28 +459,33 @@ git commit -m "feat(pipeline): build-lexicon.mjs — generate lexicon packs"
       - altGloss: нормализовать glossCherith (lowercase)
       - splitGlosses: разбить primaryGloss на отдельные слова,
         если primaryGloss содержит пробел
-      - lemmaGlosses: из lexemes.json → englishGlosses (Cherith) и glossesEn (Berean)
-   б. Для каждого BSB-слова найти best match score:
-      - exact match normalized word ↔ normalized BSB word: score 10
-      - bracket-optional: Berean '[The] book' → ищем 'the' и 'book'
-        среди BSB слов: score 8 за каждое
-      - case-insensitive + strip punctuation: score 5
-      - lemma-level gloss match: score 3
-   в. Разрешить конфликты (несколько токенов претендуют на одно BSB слово):
-      - Выигрывает кандидат с максимальным score
-      - При равных score — monotonic order bonus (+1 если
-        греческий порядок совпадает с английским)
-      - При всё ещё равных — distance penalty (-1 за каждый шаг
-        отклонения от монотонного порядка)
-   г. Если score >= 3: создать alignment pair с q="a" и method=лучший метод
-      Если score >= 1 но < 3: q="f", пары не показываются в режиме 4
-      Если нет совпадения: q="u" (unaligned)
-   д. Для function words (fw=true): q="x" (excluded)
+      - lemmaGlosses: из lexemes.json → englishGlosses и glossesEn
+   б. Сопоставить с BSB-словами детерминированными v1-проходами:
+      - exact normalized single-word match → q="a", method="gloss-exact"
+      - bracket-optional single-word match → q="a", method="bracket-optional"
+      - normalized phrase over adjacent BSB words → q="a", method="phrase"
+      - simple fuzzy: lowercase, strip punctuation, normalize apostrophes → q="f", method="fuzzy"
+   в. Если на одно BSB-слово претендуют несколько токенов:
+      - принять только однозначный match
+      - неоднозначные повторы не угадывать; записать warning и оставить token unaligned
+   г. Для function words (fw=true): не создавать visible pair по умолчанию;
+      если есть уверенный span, можно записать q="x" для диагностики
+   д. Невыровненные meaningful tokens записать в warningsByRef/report как q="u"
 
-4. Отсортировать pairs по span[0], затем tokenId
-5. Проверить: нет дублирующихся span без groupId
-6. Записать pairsByRef[ref] = [отсортированные пары]
+4. Применить manual-alignments overrides:
+   - override обязан указывать ref, tokenId, span, method="manual"
+   - verify обязан проверить, что tokenId существует в том же ref, span валиден,
+     text.slice(span[0], span[1]) непустой
+   - manual pair побеждает алгоритмическую пару для того же tokenId
+   - количество manual пар попадает в build-report.json
+
+5. Отсортировать pairs по span[0], затем tokenId
+6. Проверить: нет дублирующихся span
+7. Записать pairsByRef[ref] = [отсортированные пары со span]
+8. Записать warningsByRef[ref] = [unaligned/ambiguous diagnostics без span]
 ```
+
+`pairsByRef` содержит только записи со span, которые runtime может безопасно обработать. `q="u"` хранится в `warningsByRef`/report, не как span-less pair в `pairsByRef`.
 
 ### Правила нормализации
 
@@ -490,20 +510,21 @@ function normalizeBerean(gloss) {
 {
   "generatedAt": "2026-06-25T...",
   "totalTokens": 137740,
-  "alignedTokens": 123000,
-  "unalignedTokens": 14740,
-  "alignedNonFunctionTokens": 110000,
+  "alignedTokens": 126900,
+  "unalignedTokens": 10840,
+  "alignedNonFunctionTokens": 114125,
   "totalNonFunctionTokens": 125000,
-  "coveragePercent": 89.3,
-  "nonFunctionCoveragePercent": 88.0,
+  "coveragePercent": 92.1,
+  "nonFunctionCoveragePercent": 91.3,
   "versesWithZeroPairs": 12,
   "duplicateSpanCount": 0,
   "ambiguousCandidateCount": 340,
   "topUnalignedLexemes": [
     {"lexemeId": "grc-...", "lemma": "δέ", "count": 1500, "glossBerean": "and/but"}
   ],
+  "manualPairCount": 0,
   "thresholds": {
-    "nonFunctionCoverageMin": 85,
+    "nonFunctionCoverageMin": 90,
     "versesWithPairsMin": 95
   }
 }
@@ -515,9 +536,9 @@ function normalizeBerean(gloss) {
 - 27 alignment book files exist
 - 0 invalid token ids
 - 0 spans outside verse.text length
-- 0 duplicate spans without groupId
+- 0 duplicate spans
 - 0 pairs referencing wrong verse
-- non-function-token coverage >= 85%
+- non-function-token coverage >= 90%
 - >= 95% verses have at least one accepted pair
 ```
 
@@ -540,7 +561,7 @@ pairs.slice(0, 3).forEach(p => console.log(JSON.stringify(p)));
 ### Коммит
 
 ```bash
-git add scripts/build-align.mjs assets/data/align/
+git add scripts/build-align.mjs
 git commit -m "feat(pipeline): build-align.mjs — generate alignment packs"
 ```
 
@@ -573,12 +594,19 @@ git commit -m "feat(pipeline): build-align.mjs — generate alignment packs"
   "dataTypes": ["grc-bible", "eng-bible", "alignment", "lexicon-core", "lexicon-dict", "alphabet", "books"],
   "files": [
     { "path": "bibles/grc/matthew.json", "type": "grc-bible", "size": 12345, "sha256": "abc..." },
+    { "path": "align/grc-eng/build-report.json", "type": "alignment-report", "size": 12345, "sha256": "abc..." },
     ...
   ]
 }
 ```
 
-Для хеширования использовать `crypto.createHash('sha256')`.
+Для хеширования использовать Node.js crypto в ESM:
+
+```js
+import { createHash } from 'crypto';
+```
+
+Manifest должен включать `align/grc-eng/build-report.json`; иначе `verify:data` обязан падать.
 
 ### Верификация
 
@@ -591,7 +619,7 @@ ls assets/data/alphabet.json assets/data/books.json assets/data/data-manifest.js
 ### Коммит
 
 ```bash
-git add scripts/build-app-config.mjs assets/data/alphabet.json assets/data/books.json assets/data/data-manifest.json
+git add scripts/build-app-config.mjs
 git commit -m "feat(pipeline): build-app-config.mjs — generate config files"
 ```
 
@@ -630,12 +658,14 @@ git commit -m "feat(pipeline): build-app-config.mjs — generate config files"
 import { execSync } from 'child_process';
 import { mkdirSync, rmSync, renameSync, existsSync } from 'fs';
 
-const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, '-');
+const TIMESTAMP = Date.now();
 const TMP_DIR = `assets/.data-tmp-${TIMESTAMP}`;
 
 try {
+  if (existsSync(TMP_DIR)) {
+    rmSync(TMP_DIR, { recursive: true, force: true });
+  }
   mkdirSync(TMP_DIR, { recursive: true });
-  process.env.BUILD_DATA_DIR = TMP_DIR;
 
   const scripts = [
     'build-bibles.mjs',
@@ -646,20 +676,26 @@ try {
 
   for (const script of scripts) {
     console.log(`\n=== ${script} ===`);
-    execSync(`node scripts/${script}`, { stdio: 'inherit' });
+    execSync(`node scripts/${script}`, {
+      stdio: 'inherit',
+      env: { ...process.env, BUILD_DATA_DIR: TMP_DIR }
+    });
   }
 
   console.log('\n=== verify-data.mjs ===');
-  execSync(`node scripts/verify-data.mjs`, { stdio: 'inherit' });
+  execSync(`node scripts/verify-data.mjs`, {
+    stdio: 'inherit',
+    env: { ...process.env, BUILD_DATA_DIR: TMP_DIR }
+  });
 
   if (existsSync('assets/data')) {
-    rmSync('assets/data', { recursive: true });
+    rmSync('assets/data', { recursive: true, force: true });
   }
   renameSync(TMP_DIR, 'assets/data');
   console.log('\n✓ Atomic generation complete');
 } catch (err) {
   if (existsSync(TMP_DIR)) {
-    rmSync(TMP_DIR, { recursive: true });
+    rmSync(TMP_DIR, { recursive: true, force: true });
   }
   console.error('\n✗ Generation failed, old data preserved');
   process.exit(1);
@@ -667,6 +703,8 @@ try {
 ```
 
 Каждый дочерний скрипт читает `process.env.BUILD_DATA_DIR` и пишет туда. Если переменная не задана — пишет в `assets/data/` (для ручного запуска отдельного скрипта).
+
+`TMP_DIR` создаётся внутри `assets/`, чтобы `renameSync(TMP_DIR, 'assets/data')` не пересекал filesystem boundary. Если rename падает из-за lock/permission, скрипт должен оставить старый `assets/data` нетронутым и вывести понятную ошибку.
 
 ### Коммит
 
@@ -683,46 +721,60 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
 
 Проверить целостность сгенерированных данных.
 
-### Проверки (13 обязательных)
+### Проверки (обязательные)
 
 ```
 1.  Все 27 книг NT_BOOKS существуют в:
     {DATA_DIR}/bibles/grc/, {DATA_DIR}/bibles/eng/, {DATA_DIR}/align/grc-eng/
 
-2.  Для каждой eng-книги: количество стихов === ожидаемому
+2.  Для каждой grc/eng-книги: количество глав и стихов === ожидаемому
     (сверка с books.json из source-data/app-config/)
 
-3.  Каждый eng-стих имеет ref, n, text, words
+3.  Ref-согласованность grc ↔ eng:
+    для каждой книги набор refs в grc и eng идентичен
 
-4.  Для каждого eng-стиха: text.slice(w.start, w.end) === w.text (все слова)
+4.  Каждый eng-стих имеет ref, n, text, words, normalizationVersion
 
-5.  Греческих токенов в grc-книге === enriched-токенов для того же bookId
+5.  Для каждого eng-стиха: text.slice(w.start, w.end) === w.text (все слова)
+
+6.  Все eng-книги имеют один normalizationVersion;
+    каждый alignment pack имеет тот же normalizationVersion, что eng-книга
+
+7.  Греческих токенов в grc-книге === enriched-токенов для того же bookId
     (ни один токен не потерян при группировке)
 
-6.  Каждый греческий токен имеет обязательные поля:
+8.  token.id уникальны в пределах всего NT corpus
+
+9.  Каждый греческий токен имеет обязательные поля:
     id, s, lemma, lexemeId, morph, strongs, fw
 
-7.  core.json содержит 5468 записей
+10. core.json содержит 5468 записей
 
-8.  Каждая curated RU запись (top1000.core.json) либо мапится
+11. Каждая curated RU запись (top1000.core.json) либо мапится
     на существующий lexemeId, либо перечислена в migrationWarnings
 
-9.  Каждая alignment-пара ссылается на существующий греческий токен
+12. Каждая alignment-пара ссылается на существующий греческий токен
     (проверка: tokenId существует в grc-книге того же стиха)
 
-10. Каждый alignment-span валиден:
+13. Каждый alignment-span валиден:
     span[0] >= 0 && span[1] <= engVerse.text.length
+    и engVerse.text.slice(span[0], span[1]).trim() !== ''
 
-11. Alignment quality thresholds:
-    non-function-token coverage >= 85%
+14. Alignment quality thresholds:
+    non-function-token coverage >= 90%
     verses with >=1 pair >= 95%
 
-12. data-manifest.json: все перечисленные файлы существуют
-    и их размеры совпадают с реальными
+15. data-manifest.json: все перечисленные файлы существуют,
+    размеры и sha256 совпадают с реальными; build-report.json включён
 
-13. Ни один сгенерированный файл не содержит полей:
-    semantic, louwNida, domain, domainCode, ln
+16. Ни один app-ready файл не содержит source-only/UBS-полей:
+    semantic, louwNida, domain, domainCode, ln,
+    sourceId, sourceRef, maculaSource, accent,
+    surfaceNfc, surfaceSearch, normalized, lemmaSearch
     (проверка grep-ом по JSON-ключам)
+
+17. Общий размер assets/data находится в ожидаемом диапазоне
+    (warning при > 60 MB, error при > 100 MB)
 ```
 
 ### Вывод
@@ -736,9 +788,8 @@ git commit -m "feat(pipeline): build-data.mjs — atomic data generation"
 ✓ token counts: enriched = generated (0 lost)
 ✓ core.json: 5468/5468 lexemes
 ✓ alignment spans valid (0 errors)
-✓ thresholds: coverage 89.3% >= 85%, verses 100% >= 95%
-✗ MISSING FILES IN MANIFEST: align/grc-eng/build-report.json
-  (добавить файл в манифест или исключить из проверки)
+✓ thresholds: coverage 91.3% >= 90%, verses 100% >= 95%
+✓ manifest includes build-report.json
 ```
 
 ### Коммит
@@ -762,7 +813,7 @@ npm run build:data
 
 - `assets/data/` создана
 - Все 27×3 + lexicon + config файлов на месте
-- Verify прошёл (все 13 проверок зелёные)
+- Verify прошёл (все обязательные проверки зелёные)
 - Общий размер `assets/data/`: ~35–50 MB
 
 ### Финальный коммит
