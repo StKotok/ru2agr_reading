@@ -77,9 +77,10 @@ h3 {
 
 .screen-container {
   flex: 1;
-  padding: 16px;
+  padding: 0;
   width: 100%;
   overflow-y: auto;
+  background: var(--surface-read);
 }
 
 /* Desktop: контент между сайдбаром и инспектором */
@@ -91,11 +92,9 @@ h3 {
   .screen-container {
     max-width: none;
     margin: 0;
-    padding: 0;
     display: flex;
     flex: 1;
     min-width: 0;
-    background: var(--surface-read);
   }
 }
 
