@@ -453,17 +453,18 @@ input[type="checkbox"] {
 
 /* Контейнер текста */
 .scripture-text {
-  font-family: 'Gentium Plus', serif;
-  font-size: 1.156rem;          /* 18.5px */
-  line-height: 1.72;
-  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fsVerse);
+  line-height: var(--lhVerse);
+  color: var(--ink);
   padding: 18px 22px 60px;
+  overflow-y: auto;
 }
 
 /* Заголовок главы — как chapter label в прототипе */
 .scripture-text h2 {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 0.6875rem;         /* 11px */
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -472,13 +473,12 @@ input[type="checkbox"] {
   padding: 0;
   background: transparent;
   border: none;
-  position: static;
 }
 
 /* Метка главы — как в прототипе: «Евангелие от Иоанна · глава 1» */
 .chapter-label {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 0.6875rem;         /* 11px */
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -534,14 +534,25 @@ input[type="checkbox"] {
     flex: 1;
     min-width: 0;
     min-height: 0;
+    background: var(--read);
   }
 
   .scripture-text {
     flex: 1;
-    max-width: 700px;
+    max-width: var(--contentWidth);
     margin: 0 auto;
     padding: 34px 44px 70px;
-    font-size: 1.1875rem;       /* 19px */
+    font-size: var(--fsVerse);
+    overflow-y: auto;
+  }
+
+  .inspector-panel {
+    display: block;
+    width: var(--inspWidth);
+    flex: 0 0 auto;
+    background: var(--paper);
+    border-left: 1px solid var(--line);
+    padding: 16px;
     overflow-y: auto;
   }
 
@@ -676,55 +687,61 @@ p, h2, h3, span {
   word-break: break-word;
 }
 
-/* === Top Bar === */
-.top-bar {
+/* === Top Header (reading screen) === */
+.top-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 52px;
-  padding: 0 22px;
-  border-bottom: 1px solid var(--border);
+  padding: 9px 18px 11px;
+  border-bottom: 1px solid var(--line);
   position: sticky;
   top: 0;
-  background: var(--surface-titlebar);
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  backdrop-filter: blur(6px);
   z-index: 20;
 }
 
-.top-bar-btn {
-  min-width: 44px;
-  min-height: 36px;
-  padding: 6px 12px;
-  font-size: 0.8125rem;
-  border-radius: var(--radius-md);
-}
-
-/* Book selector */
-.book-selector {
+.top-header-book {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  font-family: var(--font-greek);
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  background: transparent;
+  gap: 4px;
+  background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 0;
+  font-family: var(--font-serif);
+  color: var(--ink);
+  padding: 0;
 }
 
-/* Simple-view (eye) button */
-.top-bar-btn[aria-pressed="true"] {
-  background: var(--greek-word-bg);
-  color: var(--greek-word);
-  border-color: var(--greek-word);
+.top-header-book-name {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-.top-bar-placeholder {
-  font-size: 0.8125rem;
-  color: var(--muted);
-  padding: 6px 4px;
+.top-header-book-chapter {
+  font-size: 18px;
+  color: var(--inkSoft);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.top-header-eye {
+  width: 36px; height: 36px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.top-header-eye.active {
+  border-color: var(--terra);
+  background: color-mix(in srgb, var(--terra) 12%, transparent);
 }
 
 /* Book dropdown */

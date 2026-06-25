@@ -1,76 +1,74 @@
 import { loadBooks } from '../../data/bible-loader.js';
 import { navigate } from '../../router.js';
-import { iconEye, iconEyeOff } from './icons.js';
+import { iconEye, iconEyeOff, iconChevron } from './icons.js';
 
 /**
- * Верхняя панель экрана чтения.
- * Книга ▾ | виджет режима (снаружи) | глаз
+ * Top header для экрана чтения.
+ * Слева: книга, глава ▾ | центр: mode-widget чип (вставляется снаружи) | справа: глаз
  */
 export function createTopBar(ctx) {
   const { store, onEyeToggle } = ctx;
-  const bar = document.createElement('div');
-  bar.className = 'top-bar';
+  const bar = document.createElement('header');
+  bar.className = 'top-header';
 
-  // Селектор книги
+  // ── Книга + глава ──
   const bookBtn = document.createElement('button');
-  bookBtn.className = 'btn top-bar-btn book-selector';
+  bookBtn.className = 'top-header-book';
   bookBtn.setAttribute('aria-haspopup', 'listbox');
+  bookBtn.innerHTML = `
+    <span class="top-header-book-name">…</span>
+    <span class="top-header-book-chapter">1</span>
+    <span style="transform:translateY(2px);flex:0 0 auto">${iconChevron(14)}</span>
+  `;
   bar.appendChild(bookBtn);
 
+  // ── Выпадашка книг ──
   const bookList = document.createElement('div');
   bookList.className = 'book-dropdown';
   bookList.setAttribute('role', 'listbox');
   bookList.hidden = true;
   bar.appendChild(bookList);
 
-  // Кнопка «глаз» — plain view
+  // ── Кнопка «глаз» ──
+  let plainView = false;
   const eyeBtn = document.createElement('button');
-  eyeBtn.className = 'btn top-bar-btn';
+  eyeBtn.className = 'top-header-eye';
   eyeBtn.innerHTML = iconEye(18);
-  eyeBtn.setAttribute('aria-label', 'Показать обычный текст BSB');
-  eyeBtn.title = 'Показать обычный текст BSB';
-  eyeBtn.setAttribute('aria-pressed', 'false');
+  eyeBtn.setAttribute('aria-label', 'Простой вид');
   eyeBtn.addEventListener('click', () => {
-    const pressed = eyeBtn.getAttribute('aria-pressed') === 'true';
-    const newPressed = !pressed;
-    eyeBtn.setAttribute('aria-pressed', String(newPressed));
-    eyeBtn.innerHTML = newPressed ? iconEyeOff(18) : iconEye(18);
-    eyeBtn.setAttribute('aria-label', newPressed ? 'Вернуть греческий слой' : 'Показать обычный текст BSB');
-    eyeBtn.title = newPressed ? 'Вернуть греческий слой' : 'Показать обычный текст BSB';
-    if (onEyeToggle) onEyeToggle(newPressed);
+    plainView = !plainView;
+    eyeBtn.classList.toggle('active', plainView);
+    eyeBtn.innerHTML = plainView ? iconEyeOff(18) : iconEye(18);
+    eyeBtn.setAttribute('aria-label', plainView ? 'Вернуть греческий слой' : 'Простой вид');
+    if (onEyeToggle) onEyeToggle(plainView);
   });
   bar.appendChild(eyeBtn);
 
-  // Загрузка списка книг
+  // ── Загрузка книг ──
   let books = [];
-  loadBooks().then(b => {
-    books = b;
-    renderBookButton();
-  });
+  loadBooks().then(b => { books = b; updateBookLabel(); });
 
-  function renderBookButton() {
+  function updateBookLabel() {
     const state = store.get();
-    const currentBook = books.find(b => b.id === state.book) || { short: 'Ин' };
-    bookBtn.textContent = currentBook.short + ' ▾';
+    const book = books.find(b => b.id === state.book);
+    bookBtn.querySelector('.top-header-book-name').textContent = book ? book.short + ',' : 'Ин,';
+    bookBtn.querySelector('.top-header-book-chapter').textContent = '1';
   }
 
-  // Строим выпадашку книг
   function renderBookList() {
     const groups = {
-      'Евангелия': books.filter(b => ['matthew', 'mark', 'luke', 'john'].includes(b.id)),
+      'Евангелия': books.filter(b => ['matthew','mark','luke','john'].includes(b.id)),
       'Деяния': books.filter(b => b.id === 'acts'),
-      'Послания': books.filter(b => !['matthew', 'mark', 'luke', 'john', 'acts', 'revelation'].includes(b.id)),
+      'Послания': books.filter(b => !['matthew','mark','luke','john','acts','revelation'].includes(b.id)),
       'Откровение': books.filter(b => b.id === 'revelation'),
     };
-
     bookList.innerHTML = '';
     for (const [group, items] of Object.entries(groups)) {
       if (items.length === 0) continue;
-      const header = document.createElement('div');
-      header.className = 'book-dropdown-group';
-      header.textContent = group;
-      bookList.appendChild(header);
-
+      const h = document.createElement('div');
+      h.className = 'book-dropdown-group';
+      h.textContent = group;
+      bookList.appendChild(h);
       for (const book of items) {
         const btn = document.createElement('button');
         btn.className = 'book-dropdown-item';
@@ -86,33 +84,22 @@ export function createTopBar(ctx) {
   }
 
   bookBtn.addEventListener('click', async () => {
-    if (books.length === 0) {
-      books = await loadBooks();
-    }
+    if (books.length === 0) books = await loadBooks();
     renderBookList();
     bookList.hidden = !bookList.hidden;
     if (!bookList.hidden) bookList.querySelector('button')?.focus();
   });
 
-  // Закрытие выпадашки по клику вне
   document.addEventListener('click', (e) => {
-    if (!bar.contains(e.target)) {
-      bookList.hidden = true;
-    }
+    if (!bar.contains(e.target)) bookList.hidden = true;
   });
 
-  // Закрытие выпадашки по Escape
   bookList.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !bookList.hidden) {
-      bookList.hidden = true;
-      bookBtn.focus();
-    }
+    if (e.key === 'Escape' && !bookList.hidden) { bookList.hidden = true; bookBtn.focus(); }
   });
 
-  store.subscribe(['book'], () => renderBookButton());
+  store.subscribe(['book'], () => updateBookLabel());
+  updateBookLabel();
 
-  // Изначальная отрисовка
-  renderBookButton();
-
-  return { bar, eyeBtn };
+  return { bar, eyeBtn, bookBtn };
 }
