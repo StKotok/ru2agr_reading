@@ -76,6 +76,14 @@ for (const item of strongsRuAlign) {
   }
 }
 
+// strongs dict index: Map<number, entry> for detail lookup per lexeme
+const strongsDictByNum = new Map();
+for (const entry of strongsDict) {
+  if (entry.strong != null) {
+    strongsDictByNum.set(entry.strong, entry);
+  }
+}
+
 // curated ru index: Map<lexemeKey, {ruMatches, ruExclude, refs}>
 const curatedRuIndex = new Map();
 for (const item of ruCoreItems) {
@@ -138,6 +146,23 @@ for (const lex of allLexemes) {
     }
   }
 
+  // Detail from Strong's dictionary (definition, derivation, pronunciation)
+  let detail = null;
+  for (const s of strongs) {
+    const num = Number(s);
+    if (!Number.isNaN(num)) {
+      const sd = strongsDictByNum.get(num);
+      if (sd) {
+        detail = {
+          definition: sd.strongs_def || null,
+          derivation: sd.strongs_derivation || null,
+          pronunciation: sd.pronunciation || null
+        };
+        break;
+      }
+    }
+  }
+
   // RU display from curated top1000 (приоритетнее Strong's)
   if (slug) {
     const ruDisplay = ruDisplayIndex.get(slug);
@@ -189,7 +214,8 @@ for (const lex of allLexemes) {
     ruExclude,
     refs,
     legacyKeys,
-    isFunctionWord
+    isFunctionWord,
+    detail
   });
 }
 
@@ -243,6 +269,8 @@ for (const entry of strongsDict) {
 
   dictObj[strongKey] = {
     definition: entry.strongs_def || null,
+    derivation: entry.strongs_derivation || null,
+    pronunciation: entry.pronunciation || null,
     greek: entry.lemma || null,
     translit: entry.translit || null,
     ruPrimary: ruHit?.ruPrimary || null,
