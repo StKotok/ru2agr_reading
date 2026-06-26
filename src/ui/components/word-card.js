@@ -6,6 +6,7 @@
 import { formatMorphShort, formatMorphFull } from '../../engine/morphology.js';
 import { stripDiacritics } from '../../engine/rules.js';
 import { loadCardSettings, saveCardSettings, CARD_SECTIONS } from '../../state/card-settings.js';
+import { renderWordStatusActions } from './word-status.js';
 
 function sepDot() {
   const span = document.createElement('span');
@@ -384,41 +385,9 @@ export function renderWordCard(data, callbacks = {}) {
 
 
   // --- Учебный статус ---
-  const statusRow = document.createElement('div');
-  statusRow.className = 'word-card-status';
+  const statusRow = renderWordStatusActions(status, { lexemeId, onMarkStatus: callbacks.onMarkStatus });
   sectionEls.set('status', statusRow);
   if (!cardSettings.status) statusRow.style.display = 'none';
-
-  const statuses = [
-    { key: 'new', label: 'Не помню', cls: 'status-new' },
-    { key: 'learning', label: 'Учу', cls: 'status-learning' },
-    { key: 'known', label: 'Знаю', cls: 'status-known' }
-  ];
-
-  for (const st of statuses) {
-    const btn = document.createElement('button');
-    btn.className = 'btn status-btn';
-    btn.textContent = status === st.key ? `✓ ${st.label}` : st.label;
-    btn.classList.add(st.cls);
-    if (status === st.key) {
-      btn.classList.add('active');
-    }
-    btn.addEventListener('click', () => {
-      if (callbacks.onMarkStatus && lexemeId) {
-        callbacks.onMarkStatus(lexemeId, st.key);
-        // Визуальная реакция: обновляем все кнопки
-        const allBtns = statusRow.querySelectorAll('.status-btn');
-        allBtns.forEach(b => {
-          b.classList.remove('active');
-          b.textContent = b.textContent.replace('✓ ', '');
-        });
-        btn.classList.add('active');
-        btn.textContent = `✓ ${st.label}`;
-      }
-    });
-    statusRow.appendChild(btn);
-  }
-
   card.appendChild(statusRow);
 
   // --- Определение ---

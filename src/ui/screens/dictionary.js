@@ -3,6 +3,7 @@ import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 import { rankBucket } from '../components/word-card.js';
+import { renderWordStatusActions, renderWordStatusPill } from '../components/word-status.js';
 import { createPageHeader } from '../components/page-header.js';
 import { getInspectorPanel, showInInspector } from '../components/inspector.js';
 
@@ -498,8 +499,6 @@ function renderBatch(list, filtered) {
     }
 
     const isActive = false; // active row tracking done via click
-    const hasStatus = entry && entry.status;
-    const statusLabel = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry?.status] || '';
     const checked = entry && entry.showInText !== false;
     const gloss = lex ? (lex.ruGloss || lex.glossesBerean?.[0] || '') : '';
 
@@ -517,11 +516,18 @@ function renderBatch(list, filtered) {
         </div>
         ${gloss ? `<div class="dict-gloss">${gloss}</div>` : ''}
       </div>
-      ${hasStatus ? `<span class="dict-status-pill badge-${entry.status}">${statusLabel}</span>` : ''}
+      <span class="dict-status-pill-slot"></span>
       ${available
         ? `<button class="dict-cbx${checked ? ' on' : ''}" aria-label="${checked ? 'Убрать из текста' : 'Показывать в тексте'}" title="${checked ? 'Убрать из текста' : 'Показывать в тексте'}">${checked ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' : ''}</button>`
         : `<span class="dict-cbx-na" title="Нет соответствия в тексте">–</span>`}
     `;
+
+    // Replace status pill slot with unified widget
+    const pillSlot = row.querySelector('.dict-status-pill-slot');
+    if (pillSlot) {
+      const pill = renderWordStatusPill(entry?.status || null);
+      pillSlot.replaceWith(pill);
+    }
 
     // Checkbox toggle
     const cbxBtn = row.querySelector('.dict-cbx');
@@ -566,19 +572,14 @@ function updateRow(item) {
   const dictId = lex ? lex.id : `freq-${item.strong}`;
   const entry = dict[dictId];
 
-  // Status pill
-  const pill = row.querySelector('.dict-status-pill');
-  if (entry) {
-    if (!pill) {
-      // Create pill if it doesn't exist (was empty before)
-      const pillEl = document.createElement('span');
-      pillEl.className = `dict-status-pill badge-${entry.status || 'new'}`;
-      pillEl.textContent = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое';
-      row.querySelector('.dict-word-col')?.after(pillEl);
-    } else {
-      pill.className = `dict-status-pill badge-${entry.status || 'new'}`;
-      pill.textContent = { new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое';
-    }
+  // Status pill — replace with unified widget
+  const oldPill = row.querySelector('.dict-status-pill');
+  const newPill = renderWordStatusPill(entry?.status || null);
+  if (oldPill) {
+    oldPill.replaceWith(newPill);
+  } else if (entry) {
+    // Pill didn't exist before (no status), insert it
+    row.querySelector('.dict-word-col')?.after(newPill);
   }
 
   // Custom checkbox
@@ -652,14 +653,7 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
       </div>
     </div>` : ''}
     ${!hasAlignment ? '<p class="word-card-warning">Нет проверенного соответствия в тексте — слово пока не участвует в подстановках</p>' : ''}
-    <section>
-      <h3>Статус изучения</h3>
-      <div class="word-card-actions">
-        <button class="btn${status === 'new' ? ' btn-primary' : ''}" data-status="new">Новое</button>
-        <button class="btn${status === 'learning' ? ' btn-learning' : ''}" data-status="learning">Учу</button>
-        <button class="btn${status === 'known' ? ' btn-known' : ''}" data-status="known">Знаю</button>
-      </div>
-    </section>
+    <div class="word-card-status-placeholder"></div>
     <div class="word-card-toggle">
       <div>
         <div class="word-card-toggle-label">${inDict ? 'Показывать в тексте' : 'Добавить в словарь'}</div>
@@ -671,22 +665,26 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
     </div>
   `;
 
-  // Status buttons
-  card.querySelectorAll('.word-card-actions .btn, .word-card-actions .btn-learning, .word-card-actions .btn-known').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const s = btn.dataset.status;
-      if (!dict[dictId]) {
-        dict = addWord(dictId, dict);
-        progress = trackNewWord(dictId, progress);
-        saveProgress(progress);
+  // Status widget — единый виджет статуса изучения
+  const statusPlaceholder = card.querySelector('.word-card-status-placeholder');
+  if (statusPlaceholder) {
+    const statusWidget = renderWordStatusActions(status, {
+      lexemeId: dictId,
+      onMarkStatus: async (id, s) => {
+        if (!dict[id]) {
+          dict = addWord(id, dict);
+          progress = trackNewWord(id, progress);
+          saveProgress(progress);
+        }
+        dict = setWordStatus(id, s, dict);
+        await saveDictionary(dict);
+        store.update(s2 => ({ ...s2, dictionary: dict }));
+        updateRow(item);
+        refreshCard(card, item, dict[id], id);
       }
-      dict = setWordStatus(dictId, s, dict);
-      await saveDictionary(dict);
-      store.update(s2 => ({ ...s2, dictionary: dict }));
-      updateRow(item);
-      refreshCard(card, item, dict[dictId], dictId);
     });
-  });
+    statusPlaceholder.replaceWith(statusWidget);
+  }
 
   // Toggle switch
   const toggleBtn = card.querySelector('.word-card-toggle-switch');

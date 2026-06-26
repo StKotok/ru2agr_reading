@@ -1636,9 +1636,9 @@ section[data-chapter] {
 }
 
 .status-btn.status-new.active {
-  background: color-mix(in srgb, var(--ink) 5%, transparent);
-  color: var(--inkSoft);
-  border-color: var(--border-accent);
+  background: var(--blueBg);
+  color: var(--blueTx);
+  border-color: var(--blue);
 }
 
 .status-btn.status-learning.active {
