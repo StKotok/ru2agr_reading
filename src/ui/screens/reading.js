@@ -216,7 +216,7 @@ export async function mount(container, ctx) {
   container.appendChild(skeleton);
 
   // Top bar
-  const { bar } = createTopBar({
+  const { bar, chipSlot } = createTopBar({
     store,
     onEyeToggle: (pressed) => {
       plainView = pressed;
@@ -228,7 +228,7 @@ export async function mount(container, ctx) {
   // Mode widget (чип + попап)
   const modeWidget = createModeWidget({ store });
   destroyModeWidget = modeWidget.destroy;
-  bar.appendChild(modeWidget.chip);
+  chipSlot.appendChild(modeWidget.chip);
 
   // Семантический заголовок страницы (скрыт визуально, доступен скринридерам)
   const pageHeading = document.createElement('h1');

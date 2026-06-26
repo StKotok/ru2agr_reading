@@ -658,7 +658,7 @@ input[type="checkbox"] {
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 30px;
+    padding: 0 30px;
     gap: 14px;
   }
 
@@ -788,7 +788,7 @@ p, h2, h3, span {
 .top-header-book {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 8px;
   background: none;
   border: none;
   cursor: pointer;
@@ -828,12 +828,27 @@ p, h2, h3, span {
   background: color-mix(in srgb, var(--terra) 12%, transparent);
 }
 
+/* Desktop: eye button 40×40 (prototype desktop top panel) */
+@media (min-width: 900px) {
+  .top-header-eye {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 /* Divider between book name and mode chip (prototype: 1×26px, line) */
 .top-header-divider {
   width: 1px;
   height: 26px;
   background: var(--line);
   flex: 0 0 auto;
+}
+
+/* Slot that centers the mode chip (prototype: flex:1, justify-content:center) */
+.top-header-chip-slot {
+  flex: 1;
+  display: flex;
+  justify-content: center;
 }
 
 /* Book dropdown */
@@ -1099,6 +1114,11 @@ section[data-chapter] {
   animation: sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
+}
+
+/* Word card inside bottom sheet: match prototype sheet content padding */
+.bottom-sheet .word-card {
+  padding: 8px 24px 30px;
 }
 
 @keyframes sheet-up {
@@ -1657,7 +1677,6 @@ section[data-chapter] {
   border-left: 1px solid var(--border);
   padding: 16px;
   min-width: 260px;
-  max-width: 360px;
   display: none;
   overflow-y: auto;
 }
@@ -1673,7 +1692,7 @@ section[data-chapter] {
   color: var(--muted);
   font-size: 0.875rem;
   text-align: center;
-  padding: 32px 8px;
+  padding: 0 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2763,7 +2782,7 @@ section[data-chapter] {
 
 .word-card-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .word-card-actions .btn {
@@ -3098,6 +3117,7 @@ section[data-chapter] {
 
   .settings-section-label {
     letter-spacing: 0.15em;
+    margin-top: 24px;
     margin-bottom: 12px;
   }
 

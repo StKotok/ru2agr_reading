@@ -34,6 +34,11 @@ export function createTopBar(ctx) {
   divider.className = 'top-header-divider';
   bar.appendChild(divider);
 
+  // ── Слот для mode-widget чипа (центрируется) ──
+  const chipSlot = document.createElement('div');
+  chipSlot.className = 'top-header-chip-slot';
+  bar.appendChild(chipSlot);
+
   // ── Кнопка «глаз» ──
   let plainView = false;
   const eyeBtn = document.createElement('button');
@@ -106,5 +111,5 @@ export function createTopBar(ctx) {
   store.subscribe(['book'], () => updateBookLabel());
   updateBookLabel();
 
-  return { bar, eyeBtn, bookBtn };
+  return { bar, eyeBtn, bookBtn, chipSlot };
 }
