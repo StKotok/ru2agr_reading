@@ -1153,16 +1153,11 @@ function collectWordData(span) {
   // Русское значение — отдельно, не смешиваем с английскими глоссами
   const ruGloss = core?.ruGloss || null;
   const ruTopWords = core?.ruTopWords || null;
-  // Английские глоссы для «также означает»
-  const gloss = core?.glossesBerean?.[0] || core?.glossesCherith?.[0] || null;
-  const shortGloss = core?.shortGloss || null;
+  // Английские глоссы для «также означает» — только из массивов (gloss = null, core.gloss не используется)
+  const gloss = null;
   const senses = core?.senses || null;
   const detail = core?.detail || null;
   const pos = core?.pos || core?.posLabelRu || null;
-  const posLabelRu = core?.posLabelRu || null;
-  const ref = core?.ref || null;
-  const allRefs = core?.allRefs || null;
-  const allRefsCount = core?.allRefsCount || null;
   const glossesBerean = core?.glossesBerean || null;
   const glossesCherith = core?.glossesCherith || null;
   const autoSelectedRefs = core?.autoSelectedRefs || null;
@@ -1183,14 +1178,9 @@ function collectWordData(span) {
     ruGloss,
     ruTopWords,
     gloss,
-    shortGloss,
     senses,
     detail,
     pos,
-    posLabelRu,
-    ref,
-    allRefs,
-    allRefsCount,
     glossesBerean,
     glossesCherith,
     autoSelectedRefs,
