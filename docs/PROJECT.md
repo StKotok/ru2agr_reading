@@ -73,8 +73,8 @@ assets/data/
 ├── bibles/eng/{book}.json        BSB: text + words[] (UTF-16 offsets) (translation-book-v2)
 ├── align/grc-eng/{book}.json     пары + exclusionsByRef (alignment-book-v3)
 ├── align/grc-eng/build-report.json   метрики + topUnalignedLexemes (backlog)
-├── lexicon/core.json             5468 лемм
-├── lexicon/dictionary.json       Strong's + рус. соответствия
+├── lexicon/core.json             5468 лемм (+ detail из Strong's)
+├── lexicon/dictionary.json       Strong's + рус. соответствия (5624 записи)
 ├── alphabet.json, books.json, data-manifest.json
 ```
 

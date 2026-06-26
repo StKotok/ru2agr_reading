@@ -87,13 +87,15 @@ docs/source-data/
 
 `core.json = { schema, items: [...] }`, item: `lexemeId`, `lexemeSlug`, `lemma`, `translit`, `pos`,
 `strongs[]`, `freqRank`, `glossesBerean[]` (с bracket-формами `"[The] book"`), `glossesCherith[]`
-(чистые формы `"book"`), `attestedForms[]`, `ruGloss`, `legacyKeys[]`, `isFunctionWord`.
+(чистые формы `"book"`), `attestedForms[]`, `ruGloss`, `legacyKeys[]`, `isFunctionWord`,
+`detail` (`{ definition, derivation, pronunciation }` — из Strong's, 5463/5468 лемм).
 
 **Гоча:** `attestedForms[]` тянул source-only поля `normalized`/`surfaceSearch` (по 19 428) → утечка
 в `core.json`. Фикс: `.map(({normalized, surfaceSearch, ...keep}) => keep)`. verify Check 19 теперь
 рекурсит в массивы и сканирует core.json, поэтому подобные утечки ловятся.
 
-`dictionary.json` — Strong's определения + русские соответствия (5624 записи).
+`dictionary.json` — Strong's: определение, происхождение, транскрипция + русские соответствия
+(5624 записи).
 
 ## 6. Выравнивание (`build-align.mjs`)
 

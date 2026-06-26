@@ -26,6 +26,7 @@ data-manifest      lexemeId — канонический ключ везде
   Адаптация lexemeId-first: `core.json` индексируется по `lexemeId`, с fallback на
   `lexemeSlug`/legacy-ключи. Cache-busting через `?v=` из `data-manifest.json`.
   `loadCoreLexicon` добавляет `id=lexemeId` и `lexemeKey=lexemeSlug` для совместимости.
+  Каждый элемент содержит `detail` (`{ definition, derivation, pronunciation }`) из Strong's.
   `loadFrequency` отдаёт `strong` как скаляр (`strongs[0]`), `count` (частота),
   `hasAlignment` (через `loadAlignedLexemes()` → `aligned-lexemes.json`), сортирует
   по возрастанию ранга (самые частотные первыми). `loadAlignedLexemes` — новый загрузчик,
