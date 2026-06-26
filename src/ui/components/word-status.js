@@ -6,7 +6,7 @@
  *   renderWordStatusActions(status, { lexemeId, onMarkStatus, heading })
  *     — три кнопки выбора, опционально в <section> с заголовком
  *   renderWordStatusPill(status)
- *     — компактный pill-бейдж (пустая text node если статуса нет)
+ *     — компактный pill-бейдж (пустой span если статуса нет, скрыт через CSS)
  */
 
 /** @type {Record<string, string>} */
@@ -82,10 +82,10 @@ export function renderWordStatusActions(currentStatus, opts = {}) {
 /**
  * Компактный pill-бейдж текущего статуса — для строк списка Словаря.
  * Использует CSS-классы .dict-status-pill + .badge-{status} (см. app.css).
- * Если статуса нет — возвращает пустой текстовый узел (не занимает места в флоу).
+ * Если статуса нет — возвращает пустой &lt;span&gt; (скрыт через CSS :not(.badge-*)).
  *
  * @param {string|null} status — 'new' | 'learning' | 'known' | null
- * @returns {Node}
+ * @returns {HTMLElement}
  */
 export function renderWordStatusPill(status) {
   const pill = document.createElement('span');

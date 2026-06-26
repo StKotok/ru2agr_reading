@@ -2874,6 +2874,10 @@ section[data-chapter] {
   line-height: 1.2;
 }
 
+.dict-status-pill:not(.badge-new):not(.badge-learning):not(.badge-known) {
+  display: none;
+}
+
 .badge-new { background: var(--blueBg); color: var(--blueTx); }
 .badge-learning { background: var(--terraSoft); color: var(--terra); }
 .badge-known { background: var(--greenBg); color: var(--greenDk); }

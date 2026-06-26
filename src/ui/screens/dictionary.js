@@ -208,11 +208,16 @@ function renderPersonalDictionaryFallback() {
       <span class="dict-lemma">${lemma}</span>
       <span class="dict-translit">${translit}</span>
       <span class="dict-freq">${pseudoItem.count || '–'}</span>
-      ${entry ? `<span class="dict-status-pill badge-${entry.status || 'new'}">${STATUS_LABEL[entry.status] || 'Новое'}</span>` : '<span class="dict-status-pill"></span>'}
       <label class="dict-check" title="Показывать в тексте">
         <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} aria-label="Показывать ${lemma} в тексте">
       </label>
     `;
+
+    // Insert status pill via shared component (not inline HTML)
+    const freqEl = row.querySelector('.dict-freq');
+    if (freqEl) {
+      freqEl.after(renderWordStatusPill(entry?.status || null));
+    }
 
     // Чекбокс
     const checkbox = row.querySelector('input[type="checkbox"]');
