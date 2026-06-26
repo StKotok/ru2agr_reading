@@ -31,6 +31,15 @@ function render() {
   title.textContent = 'Настройки';
   container.appendChild(title);
 
+  // Контент с отступами
+  const content = document.createElement('div');
+  content.className = 'settings-content';
+  container.appendChild(content);
+
+  // Перенаправляем container на content для секций
+  const outer = container;
+  container = content;
+
   // Тема
   renderThemeSection();
 
@@ -42,6 +51,9 @@ function render() {
 
   // Сброс
   renderResetSection();
+
+  // Восстанавливаем исходный container
+  container = outer;
 }
 
 // === Секция: тема ===

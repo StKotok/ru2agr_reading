@@ -6,7 +6,7 @@ const TABS = [
   { id: 'reading',    label: 'Чтение',    icon: iconRead,    hash: '#/read/john' },
   { id: 'dictionary', label: 'Словарь',   icon: iconWords,   hash: '#/dictionary' },
   { id: 'progress',   label: 'Прогресс',  icon: iconProgress, hash: '#/progress' },
-  { id: 'settings',   label: 'Ещё',       icon: iconGear,    hash: '#/settings' },
+  { id: 'settings',   label: 'Настройки', icon: iconGear,    hash: '#/settings' },
 ];
 
 const THEME_OPTIONS = [
@@ -38,7 +38,7 @@ export function createNav(store) {
     const btn = document.createElement('button');
     btn.className = 'nav-tab';
     btn.setAttribute('aria-label', t.label);
-    btn.innerHTML = `<span class="nav-tab-icon">${t.icon(20)}</span><span class="nav-tab-label">${t.label}</span>`;
+    btn.innerHTML = `<span class="nav-tab-icon">${t.icon()}</span><span class="nav-tab-label">${t.label}</span>`;
     btn.addEventListener('click', () => navigate(t.hash));
     tabContainer.appendChild(btn);
     buttons.push({ btn, id: t.id });

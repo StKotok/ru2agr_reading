@@ -271,7 +271,7 @@ h3 {
 .nav-tab.active,
 .nav-tab[aria-current="page"] {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .nav-tab:focus-visible {
@@ -656,7 +656,7 @@ input[type="checkbox"] {
   .reading-content .top-header {
     flex: 0 0 auto;
     position: static;
-    background: transparent;
+    background: var(--surface);
     backdrop-filter: none;
   }
 
@@ -2028,7 +2028,7 @@ section[data-chapter] {
   border: none;
   background: transparent;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
@@ -2052,6 +2052,7 @@ section[data-chapter] {
 /* ---- Body panels ---- */
 .mode-widget-body {
   padding: 16px;
+  font-weight: 600;
 }
 
 /* ---- Slider ---- */
@@ -2951,11 +2952,15 @@ section[data-chapter] {
   font-weight: 700;
   color: var(--text);
   margin: 0;
-  padding: 18px 0 14px;
+  padding: 18px 20px 14px;
   position: sticky;
   top: 0;
   background: var(--surface-read);
   z-index: 10;
+}
+
+.settings-content {
+  padding: 0 20px 60px;
 }
 
 .settings-section-label {
@@ -3148,7 +3153,11 @@ section[data-chapter] {
 @media (min-width: 900px) {
   .settings-title {
     font-size: 1.625rem;          /* 26px */
-    padding-bottom: 22px;
+    padding: 34px 44px 22px;
+  }
+
+  .settings-content {
+    padding: 0 44px 70px;
   }
 
   .settings-section-label {
