@@ -923,7 +923,7 @@ p, h2, h3, span {
 }
 
 .top-header-eye {
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--ink) 3%, transparent);
@@ -939,11 +939,11 @@ p, h2, h3, span {
   background: color-mix(in srgb, var(--terra) 12%, transparent);
 }
 
-/* Desktop: eye button — same height as mode-widget chip (40px) */
+/* Desktop: eye button — 44px for AGENTS.md touch-target compliance */
 @media (min-width: 900px) {
   .top-header-eye {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -977,7 +977,7 @@ p, h2, h3, span {
 
 /* ── Page header eye button ── */
 .page-header-eye {
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--ink) 3%, transparent);
@@ -995,8 +995,8 @@ p, h2, h3, span {
 
 @media (min-width: 900px) {
   .page-header-eye {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
   }
 }
 
