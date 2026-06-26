@@ -32,6 +32,18 @@
   --contentWidth: 700px;
   --navWidth: 236px;
   --inspWidth: 364px;
+  /* Унифицированные отступы контента страниц */
+  --pageContentPad: 18px 20px 60px;
+  --pageContentPadDesktop: 34px 44px 70px;
+}
+
+/* ── Surface tokens (resolved from bases, adjusted by contrast below) ── */
+:root {
+  --paper: var(--paper-base);
+  --paper2: var(--paper2-base);
+  --sidebar: var(--sidebar-base);
+  --read: var(--read-base);
+  --titlebar: var(--titlebar-base);
 }
 
 /* ── Shadows (light default) ── */
@@ -45,14 +57,17 @@
   --overlayDimBase: #15140f;
   --overlayDimAlpha: 0.34;
   --overlayDimAlphaLight: 0.18;
+  /* Множители контраста (по умолчанию = «Чёткий») */
+  --contrast-shadow: 1;
+  --contrast-line: 1;
   /* Составной оверлей (из --overlayDimBase + --overlayDimAlpha) */
   --overlay-bg: rgba(21, 20, 15, 0.34);
   --toastBg: #26221c;
   --toastTx: #f3eee2;
-  /* Составные тени (используют --shadowBase для авто-адаптации к тёмным темам) */
-  --shadow-overlay: 0 24px 50px -16px rgba(var(--shadowBase), 0.45);
-  --shadow-raised: 0 1px 2px rgba(var(--shadowBase), 0.1);
-  --shadow-elevated: 0 16px 38px -12px rgba(var(--shadowBase), 0.42);
+  /* Составные тени (используют --shadowBase и --contrast-shadow) */
+  --shadow-overlay: 0 24px 50px -16px rgba(var(--shadowBase), calc(0.45 * var(--contrast-shadow)));
+  --shadow-raised: 0 1px 2px rgba(var(--shadowBase), calc(0.1 * var(--contrast-shadow)));
+  --shadow-elevated: 0 16px 38px -12px rgba(var(--shadowBase), calc(0.42 * var(--contrast-shadow)));
   /* Алиасы из прототипа */
   --blueHead: var(--blue);
 }
@@ -62,11 +77,11 @@
    ============================================================ */
 :root,
 [data-theme="pergament"] {
-  --paper: #ECE7DD;
-  --paper2: #E3DDD0;
-  --sidebar: #E3DDD0;
-  --read: #F6F3EE;
-  --titlebar: #E2DBCB;
+  --paper-base: #ECE7DD;
+  --paper2-base: #E3DDD0;
+  --sidebar-base: #E3DDD0;
+  --read-base: #F6F3EE;
+  --titlebar-base: #E2DBCB;
   --ink: #272320;
   --inkSoft: #4a463e;
   --muted: #9a9488;
@@ -88,11 +103,11 @@
 
 /* ── Сепия ── */
 [data-theme="sepia"] {
-  --paper: #E9DFC8;
-  --paper2: #E2D6BB;
-  --sidebar: #E2D6BB;
-  --read: #F4ECD9;
-  --titlebar: #DBCEB0;
+  --paper-base: #E9DFC8;
+  --paper2-base: #E2D6BB;
+  --sidebar-base: #E2D6BB;
+  --read-base: #F4ECD9;
+  --titlebar-base: #DBCEB0;
   --ink: #36291a;
   --inkSoft: #574630;
   --muted: #998966;
@@ -114,11 +129,11 @@
 
 /* ── Слоновая кость ── */
 [data-theme="ivory"] {
-  --paper: #FAF8F3;
-  --paper2: #F1EEE6;
-  --sidebar: #F1EEE6;
-  --read: #FFFFFF;
-  --titlebar: #EFEBE1;
+  --paper-base: #FAF8F3;
+  --paper2-base: #F1EEE6;
+  --sidebar-base: #F1EEE6;
+  --read-base: #FFFFFF;
+  --titlebar-base: #EFEBE1;
   --ink: #2a2722;
   --inkSoft: #514c43;
   --muted: #9b9488;
@@ -140,11 +155,11 @@
 
 /* ── Туман ── */
 [data-theme="fog"] {
-  --paper: #E8E8EB;
-  --paper2: #DFDFE3;
-  --sidebar: #DFDFE3;
-  --read: #F4F4F7;
-  --titlebar: #DBDBDF;
+  --paper-base: #E8E8EB;
+  --paper2-base: #DFDFE3;
+  --sidebar-base: #DFDFE3;
+  --read-base: #F4F4F7;
+  --titlebar-base: #DBDBDF;
   --ink: #25262b;
   --inkSoft: #45474e;
   --muted: #8a8c95;
@@ -166,11 +181,11 @@
 
 /* ── Море ── */
 [data-theme="sea"] {
-  --paper: #E2ECF0;
-  --paper2: #D7E4EA;
-  --sidebar: #D7E4EA;
-  --read: #F0F7F9;
-  --titlebar: #D1E0E7;
+  --paper-base: #E2ECF0;
+  --paper2-base: #D7E4EA;
+  --sidebar-base: #D7E4EA;
+  --read-base: #F0F7F9;
+  --titlebar-base: #D1E0E7;
   --ink: #1f2a30;
   --inkSoft: #3c4b53;
   --muted: #7f939c;
@@ -192,11 +207,11 @@
 
 /* ── Лес ── */
 [data-theme="forest"] {
-  --paper: #E6EADD;
-  --paper2: #DCE2D0;
-  --sidebar: #DCE2D0;
-  --read: #F2F5EC;
-  --titlebar: #D7DEC8;
+  --paper-base: #E6EADD;
+  --paper2-base: #DCE2D0;
+  --sidebar-base: #DCE2D0;
+  --read-base: #F2F5EC;
+  --titlebar-base: #D7DEC8;
   --ink: #232a1f;
   --inkSoft: #424a39;
   --muted: #899078;
@@ -218,11 +233,11 @@
 
 /* ── Роза ── */
 [data-theme="rose"] {
-  --paper: #F1E4E1;
-  --paper2: #EBD8D5;
-  --sidebar: #EBD8D5;
-  --read: #FAF1EF;
-  --titlebar: #E7D1CD;
+  --paper-base: #F1E4E1;
+  --paper2-base: #EBD8D5;
+  --sidebar-base: #EBD8D5;
+  --read-base: #FAF1EF;
+  --titlebar-base: #E7D1CD;
   --ink: #2e2422;
   --inkSoft: #54443f;
   --muted: #a08c87;
@@ -244,11 +259,11 @@
 
 /* ── Лаванда ── */
 [data-theme="lavender"] {
-  --paper: #E9E5F0;
-  --paper2: #E1DBEC;
-  --sidebar: #E1DBEC;
-  --read: #F5F2FA;
-  --titlebar: #DDD6EB;
+  --paper-base: #E9E5F0;
+  --paper2-base: #E1DBEC;
+  --sidebar-base: #E1DBEC;
+  --read-base: #F5F2FA;
+  --titlebar-base: #DDD6EB;
   --ink: #28242e;
   --inkSoft: #494456;
   --muted: #908aa0;
@@ -270,11 +285,11 @@
 
 /* ── Закат ── */
 [data-theme="sunset"] {
-  --paper: #F0E2D4;
-  --paper2: #E9D6C3;
-  --sidebar: #E9D6C3;
-  --read: #FBEFE0;
-  --titlebar: #E5CEB5;
+  --paper-base: #F0E2D4;
+  --paper2-base: #E9D6C3;
+  --sidebar-base: #E9D6C3;
+  --read-base: #FBEFE0;
+  --titlebar-base: #E5CEB5;
   --ink: #34261c;
   --inkSoft: #5a4632;
   --muted: #a4876c;
@@ -296,11 +311,11 @@
 
 /* ── Тёмная ── */
 [data-theme="dark"] {
-  --paper: #26231d;
-  --paper2: #2e2a23;
-  --sidebar: #2e2a23;
-  --read: #201d18;
-  --titlebar: #322d25;
+  --paper-base: #26231d;
+  --paper2-base: #2e2a23;
+  --sidebar-base: #2e2a23;
+  --read-base: #201d18;
+  --titlebar-base: #322d25;
   --ink: #ece6da;
   --inkSoft: #c4bdae;
   --muted: #8f897b;
@@ -326,11 +341,11 @@
 
 /* ── Ночь ── */
 [data-theme="night"] {
-  --paper: #1b2230;
-  --paper2: #222b3b;
-  --sidebar: #222b3b;
-  --read: #161c28;
-  --titlebar: #25303f;
+  --paper-base: #1b2230;
+  --paper2-base: #222b3b;
+  --sidebar-base: #222b3b;
+  --read-base: #161c28;
+  --titlebar-base: #25303f;
   --ink: #e3e9f2;
   --inkSoft: #b3bdcd;
   --muted: #7e879a;
@@ -355,11 +370,11 @@
 
 /* ── Уголь ── */
 [data-theme="coal"] {
-  --paper: #1f1f21;
-  --paper2: #28282b;
-  --sidebar: #28282b;
-  --read: #19191b;
-  --titlebar: #2c2c2f;
+  --paper-base: #1f1f21;
+  --paper2-base: #28282b;
+  --sidebar-base: #28282b;
+  --read-base: #19191b;
+  --titlebar-base: #2c2c2f;
   --ink: #ededee;
   --inkSoft: #c2c2c4;
   --muted: #8d8d90;
@@ -385,21 +400,87 @@
 /* ============================================================
    Contrast levels
    ============================================================ */
-:root {
-  --contrast-line-alpha: 1.0;
-  --contrast-line2-alpha: 1.0;
-}
+
+/* ── Sharp (default) — LV_TABLE['Чёткий']: elv=0.08, lineAlpha=0.10, line2Alpha=0.18, shadowAlpha=0.14 ── */
 [data-contrast="sharp"] {
-  --contrast-line-alpha: 1.0;
-  --contrast-line2-alpha: 1.0;
+  --contrast-shadow: 1;
+  --contrast-line: 1;
+  /* Lines */
+  --line:   color-mix(in srgb, var(--ink) 10%, transparent);
+  --line2:  color-mix(in srgb, var(--ink) 18%, transparent);
+  /* Surfaces (light mode: mix with black for paper/paper2/sidebar/titlebar, with white for read) */
+  --paper:    color-mix(in srgb, var(--paper-base), #000 1.2%);
+  --paper2:   color-mix(in srgb, var(--paper2-base), #000 5.6%);
+  --sidebar:  color-mix(in srgb, var(--sidebar-base), #000 5.6%);
+  --read:     color-mix(in srgb, var(--read-base), #fff 8%);
+  --titlebar: color-mix(in srgb, var(--titlebar-base), #000 7%);
 }
+
+/* ── Soft — LV_TABLE['Мягкий']: elv=0.03, lineAlpha=0.06, line2Alpha=0.10, shadowAlpha=0.04 ── */
 [data-contrast="soft"] {
-  --contrast-line-alpha: 0.65;
-  --contrast-line2-alpha: 0.65;
+  --contrast-shadow: 0.55;
+  --contrast-line: 0.65;
+  /* Lines */
+  --line:   color-mix(in srgb, var(--ink) 6%, transparent);
+  --line2:  color-mix(in srgb, var(--ink) 10%, transparent);
+  /* Surfaces */
+  --paper:    color-mix(in srgb, var(--paper-base), #000 0.45%);
+  --paper2:   color-mix(in srgb, var(--paper2-base), #000 2.1%);
+  --sidebar:  color-mix(in srgb, var(--sidebar-base), #000 2.1%);
+  --read:     color-mix(in srgb, var(--read-base), #fff 3%);
+  --titlebar: color-mix(in srgb, var(--titlebar-base), #000 3%);
 }
+
+/* ── Maximum — LV_TABLE['Максимальный']: elv=0.16, lineAlpha=0.16, line2Alpha=0.28, shadowAlpha=0.26 ── */
 [data-contrast="maximum"] {
-  --contrast-line-alpha: 1.3;
-  --contrast-line2-alpha: 1.3;
+  --contrast-shadow: 1.35;
+  --contrast-line: 1.3;
+  /* Lines */
+  --line:   color-mix(in srgb, var(--ink) 16%, transparent);
+  --line2:  color-mix(in srgb, var(--ink) 28%, transparent);
+  /* Surfaces */
+  --paper:    color-mix(in srgb, var(--paper-base), #000 2.4%);
+  --paper2:   color-mix(in srgb, var(--paper2-base), #000 12%);
+  --sidebar:  color-mix(in srgb, var(--sidebar-base), #000 12%);
+  --read:     color-mix(in srgb, var(--read-base), #fff 17%);
+  --titlebar: color-mix(in srgb, var(--titlebar-base), #000 14%);
+}
+
+/* ── Dark-theme overrides: paper/read lighten (mix with white), lines ×0.8 (less prominent on dark) ── */
+[data-theme="dark"][data-contrast="sharp"],
+[data-theme="night"][data-contrast="sharp"],
+[data-theme="coal"][data-contrast="sharp"] {
+  --line:   color-mix(in srgb, var(--ink) 8%, transparent);
+  --line2:  color-mix(in srgb, var(--ink) 14%, transparent);
+  --paper:    color-mix(in srgb, var(--paper-base), #fff 1.2%);
+  --read:     color-mix(in srgb, var(--read-base), #fff 3.2%);
+  --paper2:   color-mix(in srgb, var(--paper2-base), #000 4%);
+  --sidebar:  color-mix(in srgb, var(--sidebar-base), #000 4%);
+  --titlebar: color-mix(in srgb, var(--titlebar-base), #000 5.6%);
+}
+
+[data-theme="dark"][data-contrast="soft"],
+[data-theme="night"][data-contrast="soft"],
+[data-theme="coal"][data-contrast="soft"] {
+  --line:   color-mix(in srgb, var(--ink) 5%, transparent);
+  --line2:  color-mix(in srgb, var(--ink) 8%, transparent);
+  --paper:    color-mix(in srgb, var(--paper-base), #fff 0.45%);
+  --read:     color-mix(in srgb, var(--read-base), #fff 1.2%);
+  --paper2:   color-mix(in srgb, var(--paper2-base), #000 1.5%);
+  --sidebar:  color-mix(in srgb, var(--sidebar-base), #000 1.5%);
+  --titlebar: color-mix(in srgb, var(--titlebar-base), #000 2.4%);
+}
+
+[data-theme="dark"][data-contrast="maximum"],
+[data-theme="night"][data-contrast="maximum"],
+[data-theme="coal"][data-contrast="maximum"] {
+  --line:   color-mix(in srgb, var(--ink) 13%, transparent);
+  --line2:  color-mix(in srgb, var(--ink) 22%, transparent);
+  --paper:    color-mix(in srgb, var(--paper-base), #fff 2.4%);
+  --read:     color-mix(in srgb, var(--read-base), #fff 6%);
+  --paper2:   color-mix(in srgb, var(--paper2-base), #000 9%);
+  --sidebar:  color-mix(in srgb, var(--sidebar-base), #000 9%);
+  --titlebar: color-mix(in srgb, var(--titlebar-base), #000 10%);
 }
 
 /* ============================================================

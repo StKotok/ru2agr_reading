@@ -35,6 +35,15 @@ function render() {
   const { bar: header } = createPageHeader({ title: 'Прогресс' });
   container.appendChild(header);
 
+  // Контент с отступами
+  const content = document.createElement('div');
+  content.className = 'page-content';
+  container.appendChild(content);
+
+  // Перенаправляем container на content для секций
+  const outer = container;
+  container = content;
+
   // Блок «Буквы»
   renderLettersSection();
 
@@ -43,6 +52,9 @@ function render() {
 
   // Блок «Чтение»
   renderReadingSection();
+
+  // Восстанавливаем container
+  container = outer;
 }
 
 function renderWordsSection() {
