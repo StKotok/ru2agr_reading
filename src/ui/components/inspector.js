@@ -220,6 +220,8 @@ function swapPageCard(newPage) {
     }
     if (savedCard) {
       content.appendChild(savedCard);
+    } else {
+      showEmptyState();
     }
   }
 }

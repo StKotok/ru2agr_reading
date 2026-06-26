@@ -4,7 +4,7 @@ import { loadBooks } from '../../data/bible-loader.js';
 import { isDictionaryEntry } from '../../state/dictionary.js';
 import { renderLetterCard } from '../components/word-card.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
-import { showInInspector, getInspectorPanel } from '../components/inspector.js';
+import { showInInspector, getInspectorPanel, setInspectorPage } from '../components/inspector.js';
 import { showToast } from '../components/toast.js';
 import { createPageHeader } from '../components/page-header.js';
 
@@ -35,10 +35,18 @@ function render() {
   const { bar: header } = createPageHeader({ title: 'Прогресс' });
   container.appendChild(header);
 
+  // Layout wrapper (для десктопного инспектора)
+  const layout = document.createElement('div');
+  layout.className = 'reading-layout';
+  container.appendChild(layout);
+
   // Контент с отступами
   const content = document.createElement('div');
   content.className = 'page-content';
-  container.appendChild(content);
+  layout.appendChild(content);
+
+  // Инспектор (desktop: панель справа)
+  getInspectorPanel(layout, 'progress');
 
   // Перенаправляем container на content для секций
   const outer = container;

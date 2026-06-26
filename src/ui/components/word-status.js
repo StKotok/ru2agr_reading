@@ -58,8 +58,9 @@ export function renderWordStatusActions(currentStatus, opts = {}) {
         });
         btn.classList.add('active');
         btn.textContent = `✓ ${STATUS_LABEL[key]}`;
-      } catch (_) {
-        // Ошибку уже обработал колбэк (тост и т.п.) — UI не меняем
+      } catch (err) {
+        console.warn('word-status: ошибка сохранения статуса', err);
+        // UI не меняем — сохраняем предыдущее состояние
       }
     });
     btn.dataset.statusKey = key;
@@ -87,9 +88,11 @@ export function renderWordStatusActions(currentStatus, opts = {}) {
  * @returns {Node}
  */
 export function renderWordStatusPill(status) {
-  if (!status) return document.createTextNode('');
   const pill = document.createElement('span');
-  pill.className = 'dict-status-pill badge-' + status;
-  pill.textContent = STATUS_LABEL[status] || 'Новое';
+  pill.className = 'dict-status-pill';
+  if (status) {
+    pill.classList.add('badge-' + status);
+    pill.textContent = STATUS_LABEL[status] || 'Новое';
+  }
   return pill;
 }

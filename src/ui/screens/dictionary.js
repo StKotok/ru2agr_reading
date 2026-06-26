@@ -208,7 +208,7 @@ function renderPersonalDictionaryFallback() {
       <span class="dict-lemma">${lemma}</span>
       <span class="dict-translit">${translit}</span>
       <span class="dict-freq">${pseudoItem.count || '–'}</span>
-      ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${STATUS_LABEL[entry.status] || 'Новое'}</span>` : '<span class="dict-badge-placeholder"></span>'}
+      ${entry ? `<span class="dict-status-pill badge-${entry.status || 'new'}">${STATUS_LABEL[entry.status] || 'Новое'}</span>` : '<span class="dict-status-pill"></span>'}
       <label class="dict-check" title="Показывать в тексте">
         <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} aria-label="Показывать ${lemma} в тексте">
       </label>
@@ -570,22 +570,11 @@ function updateRow(item) {
   const dictId = lex ? lex.id : `freq-${item.strong}`;
   const entry = dict[dictId];
 
-  // Status pill — mutate in-place (no DOM replacement)
+  // Status pill — mutate in-place (always a <span> element from renderWordStatusPill)
   const pill = row.querySelector('.dict-status-pill');
-  if (entry?.status) {
-    const cls = 'dict-status-pill badge-' + entry.status;
-    const label = STATUS_LABEL[entry.status] || 'Новое';
-    if (pill) {
-      pill.className = cls;
-      pill.textContent = label;
-    } else {
-      // Pill was a text node or missing — create and insert
-      const newPill = renderWordStatusPill(entry.status);
-      row.querySelector('.dict-word-col')?.after(newPill);
-    }
-  } else if (pill) {
-    // Status removed — replace pill with empty text node
-    pill.replaceWith(document.createTextNode(''));
+  if (pill) {
+    const newPill = renderWordStatusPill(entry?.status || null);
+    pill.replaceWith(newPill);
   }
 
   // Custom checkbox
@@ -604,7 +593,17 @@ function updateRow(item) {
  */
 function refreshCard(card, item, dictEntry, dictId) {
   const fresh = buildWordCard(item, coreById().get(item.strong), dictEntry, dictId);
-  card.replaceWith(fresh);
+  if (card.isConnected) {
+    card.replaceWith(fresh);
+  } else {
+    // Card was already detached (e.g. replaced by a previous status change) —
+    // find it in the inspector or bottom-sheet and replace there.
+    const container = document.querySelector('.inspector-content') || document.querySelector('.bottom-sheet-body');
+    if (container && container.firstElementChild) {
+      container.firstElementChild.replaceWith(fresh);
+    }
+  }
+  return fresh;
 }
 
 function coreById() {
@@ -633,12 +632,23 @@ function computeBucketCoverage(list) {
 function buildWordCard(item, lexeme, dictEntry, dictId) {
   const card = document.createElement('div');
   card.className = 'card word-card';
+  const cardRef = { current: card }; // mutable ref — closures use cardRef.current
 
   const status = dictEntry?.status || null;
   const inDict = !!dictEntry;
   const ruGloss = lexeme?.ruGloss || lexeme?.glossesBerean?.[0] || '';
   const strongNum = lexeme?.strongs?.[0] || '';
   const hasAlignment = item.hasAlignment;
+  const autoSelectedRefs = lexeme?.autoSelectedRefs || null;
+  const reasonLabel = {
+    'first-occurrence': 'первое появление',
+    'common-surface-form': 'частая форма',
+    'different-book': 'другая книга',
+    'distinct-morphology': 'другая морфология'
+  };
+  const refsHtml = autoSelectedRefs && autoSelectedRefs.length > 0
+    ? `<div class="word-card-info-block"><div class="word-card-info-label">в Новом Завете</div><div class="word-card-info-text">${autoSelectedRefs.slice(0, 5).map(e => `${e.ref} (${reasonLabel[e.reason] || e.reason})`).join(', ')}</div></div>`
+    : '';
 
   // Header (close button is provided by popover / bottom-sheet)
   card.innerHTML = `
@@ -659,6 +669,7 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
       </div>
     </div>` : ''}
     ${!hasAlignment ? '<p class="word-card-warning">Нет проверенного соответствия в тексте — слово пока не участвует в подстановках</p>' : ''}
+    ${refsHtml}
     <div class="word-card-status-placeholder"></div>
     <div class="word-card-toggle">
       <div>
@@ -687,7 +698,7 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
         await saveDictionary(dict);
         store.update(s2 => ({ ...s2, dictionary: dict }));
         updateRow(item);
-        refreshCard(card, item, dict[id], id);
+        cardRef.current = refreshCard(cardRef.current, item, dict[id], id);
       }
     });
     statusPlaceholder.replaceWith(statusWidget);
@@ -707,7 +718,7 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
       await saveDictionary(dict);
       store.update(s => ({ ...s, dictionary: dict }));
       updateRow(item);
-      refreshCard(card, item, dict[dictId], dictId);
+      cardRef.current = refreshCard(cardRef.current, item, dict[dictId], dictId);
     });
   }
 
