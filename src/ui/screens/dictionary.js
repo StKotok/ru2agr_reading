@@ -595,14 +595,10 @@ function refreshCard(card, item, dictEntry, dictId) {
   const fresh = buildWordCard(item, coreById().get(item.strong), dictEntry, dictId);
   if (card.isConnected) {
     card.replaceWith(fresh);
-  } else {
-    // Card was already detached (e.g. replaced by a previous status change) —
-    // find it in the inspector or bottom-sheet and replace there.
-    const container = document.querySelector('.inspector-content') || document.querySelector('.bottom-sheet-body');
-    if (container && container.firstElementChild) {
-      container.firstElementChild.replaceWith(fresh);
-    }
   }
+  // If detached, the card is no longer visible (another word's card was opened
+  // or the screen changed). Don't try to find it — replacing whatever is in
+  // the inspector now would overwrite a different word's card.
   return fresh;
 }
 
@@ -633,6 +629,7 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
   const card = document.createElement('div');
   card.className = 'card word-card';
   const cardRef = { current: card }; // mutable ref — closures use cardRef.current
+  let _saving = false;              // guards against concurrent async status changes
 
   const status = dictEntry?.status || null;
   const inDict = !!dictEntry;
@@ -689,16 +686,22 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
       lexemeId: dictId,
       heading: 'Статус изучения',
       onMarkStatus: async (id, s) => {
-        if (!dict[id]) {
-          dict = addWord(id, dict);
-          progress = trackNewWord(id, progress);
-          await saveProgress(progress);
+        if (_saving) return;
+        _saving = true;
+        try {
+          if (!dict[id]) {
+            dict = addWord(id, dict);
+            progress = trackNewWord(id, progress);
+            await saveProgress(progress);
+          }
+          dict = setWordStatus(id, s, dict);
+          await saveDictionary(dict);
+          store.update(s2 => ({ ...s2, dictionary: dict }));
+          updateRow(item);
+          cardRef.current = refreshCard(cardRef.current, item, dict[id], id);
+        } finally {
+          _saving = false;
         }
-        dict = setWordStatus(id, s, dict);
-        await saveDictionary(dict);
-        store.update(s2 => ({ ...s2, dictionary: dict }));
-        updateRow(item);
-        cardRef.current = refreshCard(cardRef.current, item, dict[id], id);
       }
     });
     statusPlaceholder.replaceWith(statusWidget);
@@ -708,17 +711,23 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
   const toggleBtn = card.querySelector('.word-card-toggle-switch');
   if (toggleBtn) {
     toggleBtn.addEventListener('click', async () => {
-      if (!dict[dictId]) {
-        dict = addWord(dictId, dict);
-        progress = trackNewWord(dictId, progress);
-        saveProgress(progress);
+      if (_saving) return;
+      _saving = true;
+      try {
+        if (!dict[dictId]) {
+          dict = addWord(dictId, dict);
+          progress = trackNewWord(dictId, progress);
+          saveProgress(progress);
+        }
+        const newShow = !(dict[dictId]?.showInText !== false);
+        dict = setWordSetting(dictId, 'showInText', newShow, dict);
+        await saveDictionary(dict);
+        store.update(s => ({ ...s, dictionary: dict }));
+        updateRow(item);
+        cardRef.current = refreshCard(cardRef.current, item, dict[dictId], dictId);
+      } finally {
+        _saving = false;
       }
-      const newShow = !(dict[dictId]?.showInText !== false);
-      dict = setWordSetting(dictId, 'showInText', newShow, dict);
-      await saveDictionary(dict);
-      store.update(s => ({ ...s, dictionary: dict }));
-      updateRow(item);
-      cardRef.current = refreshCard(cardRef.current, item, dict[dictId], dictId);
     });
   }
 
