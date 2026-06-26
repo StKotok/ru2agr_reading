@@ -543,7 +543,8 @@ input[type="checkbox"] {
     max-width: var(--contentWidth);
     margin: 0 auto;
     padding: 34px 44px 70px;
-    font-size: var(--fsVerse);
+    font-size: 19px;
+    line-height: 1.78;
     overflow-y: auto;
   }
 
@@ -1583,15 +1584,16 @@ section[data-chapter] {
   padding: 5px 11px;
   border: 1px solid var(--border-accent);
   border-radius: 10px;            /* TK.radius */
-  background: transparent;
+  background: color-mix(in srgb, var(--ink) 4.5%, transparent);
   cursor: pointer;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.84375rem;          /* 13.5px */
   font-weight: 600;
   line-height: 1;
   user-select: none;
   min-height: 30px;
   color: var(--text);
+  white-space: nowrap;
   transition: transform 0.1s ease;
   touch-action: manipulation;
   white-space: nowrap;
