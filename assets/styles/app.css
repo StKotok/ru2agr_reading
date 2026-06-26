@@ -2848,9 +2848,8 @@ section[data-chapter] {
 @media (min-width: 900px) {
   .dict-list-scroll { padding: 0 18px; }
 }
-}
 
-/* === v1.1 BSB data notice === 
+/* === v1.1 BSB data notice === */
 .data-notice {
   display: flex;
   align-items: flex-start;
