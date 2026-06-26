@@ -165,12 +165,14 @@ async function handleRoute(route) {
   switchScreen(route.screen, route.params);
 }
 
-// Начальная загрузка
-handleRoute(parse(location.hash));
-
-// Если дефолтного хеша нет — редиректим
-if (!location.hash) {
-  location.hash = '#/read/john';
-}
-
-onChange(handleRoute);
+// Начальная загрузка — регистрируем слушатель до первого маршрута,
+// чтобы не пропустить hashchange, и дожидаемся завершения handleRoute
+// перед синхронной установкой location.hash (избегаем гонки).
+(async () => {
+  onChange(handleRoute);
+  await handleRoute(parse(location.hash));
+  // Если дефолтного хеша нет — редиректим
+  if (!location.hash) {
+    location.hash = '#/read/john';
+  }
+})();

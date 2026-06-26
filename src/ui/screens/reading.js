@@ -44,6 +44,7 @@ let scrollTimer = null;
 let chapterPlaceholders = [];
 let chaptersEls = [];            // обновляется в renderWindowed и reRenderWindowed
 let observer = null;
+let chapterObserver = null;
 let reRenderFn = null;
 let destroyModeWidget = null;
 let plainView = false;
@@ -236,11 +237,11 @@ export async function mount(container, ctx) {
       loadPromises.push(loadBook('grc', bookId));
       loadPromises.push(loadAlignment(bookId));
     }
-    const results = await Promise.all(loadPromises);
-    bookData = results[0];
+    const results = await Promise.allSettled(loadPromises);
+    bookData = results[0].status === 'fulfilled' ? results[0].value : null;
     if (needsGreek) {
-      grcBookData = results[1] || null;
-      alignmentBookData = results[2] || null;
+      grcBookData = (results[1]?.status === 'fulfilled' ? results[1].value : null) || null;
+      alignmentBookData = (results[2]?.status === 'fulfilled' ? results[2].value : null) || null;
       if (grcBookData) {
         buildGrcVerseMap();
         setGrcStatus('available');
@@ -431,7 +432,7 @@ function createSkeleton() {
 
 function restoreScroll(bookId) {
   if (progress.reading.lastBook === bookId && progress.reading.lastScroll > 0) {
-    const targetScroll = progress.reading.lastScroll * document.documentElement.scrollHeight;
+    const targetScroll = progress.reading.lastScroll * (document.documentElement.scrollHeight - window.innerHeight);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.scrollTo({ top: targetScroll, behavior: 'instant' });
@@ -497,6 +498,8 @@ function onScroll() {
     progress.reading.lastScroll = Math.max(0, Math.min(1, scrollPos));
     progress.reading.lastBook = bookData.id;
     saveProgress(progress);
+    // Уведомляем подписчиков store — progress меняется в debounced-режиме без store.update
+    if (storeRef) storeRef.update(s => ({ ...s, progress }));
   }, DEBOUNCE_MS);
 }
 
@@ -624,7 +627,7 @@ function setupChapterTracking() {
     progress.reading.books?.[bookData.id]?.chaptersRead || []
   );
 
-  const chapterObserver = new IntersectionObserver((entries) => {
+  chapterObserver = new IntersectionObserver((entries) => {
     let changed = false;
     for (const entry of entries) {
       if (entry.isIntersecting) {
@@ -641,6 +644,8 @@ function setupChapterTracking() {
       if (!progress.reading.books[bookData.id]) progress.reading.books[bookData.id] = {};
       progress.reading.books[bookData.id].chaptersRead = [...readChapters];
       saveProgress(progress);
+      // Уведомляем подписчиков store
+      if (storeRef) storeRef.update(s => ({ ...s, progress }));
     }
   }, { threshold: 0.5 });
 
@@ -744,7 +749,7 @@ function reRenderWindowed() {
     if (!ch) continue;
 
     // Перестраиваем стихи
-    const heading = section.querySelector('h2');
+    const heading = section.querySelector('.chapter-label');
     section.innerHTML = '';
     if (heading) section.appendChild(heading);
 
@@ -787,6 +792,12 @@ function reRenderWindowed() {
 
       section.appendChild(p);
     }
+    // Восстанавливаем sentinel для отслеживания прочитанных глав
+    const sentinel = document.createElement('div');
+    sentinel.className = 'chapter-end-sentinel';
+    sentinel.setAttribute('data-chapter-end', String(ch.n));
+    sentinel.style.height = '1px';
+    section.appendChild(sentinel);
     // Синхронизируем chaptersEls — клонируем свежий DOM для будущей ленивой загрузки
     if (chaptersEls[chN - 1]) {
       chaptersEls[chN - 1] = section.cloneNode(true);
@@ -1048,7 +1059,8 @@ function handleWordTap(span) {
   const card = renderWordCard(wordData, {
     onMarkStatus: async (lexemeId, newStatus) => {
       // Добавляем в словарь если ещё нет
-      if (!dictionary[lexemeId]) {
+      const wasNewWord = !dictionary[lexemeId];
+      if (wasNewWord) {
         dictionary = addWord(lexemeId, dictionary);
         progress = trackNewWord(lexemeId, progress);
         saveProgress(progress);
@@ -1068,7 +1080,10 @@ function handleWordTap(span) {
       });
 
       buildWordEntries();
-      reRenderWindowed();
+      // Статус уже обновлён точечной мутацией классов выше.
+      // Полный перерендер нужен только когда слово добавили впервые
+      // (изменился набор заменяемых слов).
+      if (wasNewWord) reRenderWindowed();
     },
     onShowDetails: (lexemeId) => {
       showToast('Подробная карточка появится в следующем обновлении');
@@ -1112,9 +1127,12 @@ function handleLetterTap(letterChar, span) {
 export function unmount() {
   window.removeEventListener('scroll', onScroll);
   if (observer) observer.disconnect();
+  if (chapterObserver) { chapterObserver.disconnect(); chapterObserver = null; }
   if (scrollTimer) clearTimeout(scrollTimer);
+  if (longPressTimer) clearTimeout(longPressTimer);
   observer = null;
   scrollTimer = null;
+  longPressTimer = null;
   bookData = null;
   reRenderFn = null;
   chaptersEls = [];

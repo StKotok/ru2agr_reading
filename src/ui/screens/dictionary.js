@@ -17,6 +17,7 @@ let renderedCount = 0;
 let lastDividerBucket = 0;
 let bucketCoverage = {};
 let dictObserver = null;       // IntersectionObserver для ленивой подгрузки
+let _dropdownOutsideHandler = null;  // document click listener для закрытия дропдаунов
 const PAGE_SIZE = 100;
 
 // Группировка частей речи для фильтра
@@ -132,7 +133,12 @@ function statusCount(statusValue) {
   const q = searchQuery.trim().toLowerCase();
   return frequencyList.filter(item => {
     if (filterPOS !== 'all' && item.posGroup !== filterPOS) return false;
-    if (filterStatus === 'checked' && !(dict[coreByIdMap.get(item.strong)?.id || `freq-${item.strong}`]?.showInText !== false)) return false;
+    if (filterStatus === 'checked') {
+      const lex = coreByIdMap.get(item.strong);
+      const dictId = lex ? lex.id : `freq-${item.strong}`;
+      const entry = dict[dictId];
+      if (!entry || entry.showInText === false) return false;
+    }
     if (q && !item.lemma.toLowerCase().includes(q) && !(item.transliteration || '').toLowerCase().includes(q)) return false;
     if (statusValue !== 'all') {
       const lex = coreByIdMap.get(item.strong);
@@ -441,11 +447,16 @@ function render() {
     posMenuOpen = false; posMenu.hidden = true;
   }
 
-  document.addEventListener('click', (e) => {
+  // Убираем старый обработчик перед добавлением нового (render() вызывается многократно)
+  if (_dropdownOutsideHandler) {
+    document.removeEventListener('click', _dropdownOutsideHandler);
+  }
+  _dropdownOutsideHandler = (e) => {
     if (!statusDD.contains(e.target) && !posDD.contains(e.target)) {
       closeAllDropdowns();
     }
-  });
+  };
+  document.addEventListener('click', _dropdownOutsideHandler);
 
   // --- Show-in-text toggle ---
   const isChecked = filterStatus === 'checked';
@@ -476,8 +487,10 @@ function render() {
   // Render first PAGE_SIZE, rest via Observer
   renderBatch(list, filtered);
 
+  // Всегда отключаем старый observer (может остаться от предыдущего render с >200 результатов)
+  if (dictObserver) { dictObserver.disconnect(); dictObserver = null; }
+
   if (filtered.length > PAGE_SIZE * 2) {
-    if (dictObserver) dictObserver.disconnect();
     const sentinel = document.createElement('div');
     sentinel.className = 'dict-sentinel';
     listScroll.appendChild(sentinel);
@@ -756,4 +769,9 @@ function showWordCard(item, lexeme, dictEntry, dictId, anchorEl) {
   }
 }
 
-export function unmount() { closePopover(); if (dictObserver) { dictObserver.disconnect(); dictObserver = null; } container = null; }
+export function unmount() {
+  closePopover();
+  if (dictObserver) { dictObserver.disconnect(); dictObserver = null; }
+  if (_dropdownOutsideHandler) { document.removeEventListener('click', _dropdownOutsideHandler); _dropdownOutsideHandler = null; }
+  container = null;
+}

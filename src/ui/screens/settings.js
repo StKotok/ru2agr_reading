@@ -6,6 +6,7 @@ let settings = null;
 let progress = null;
 let container = null;
 let store = null;
+let _galleryClickHandler = null;  // document click для закрытия галереи
 
 export async function mount(cnt, ctx) {
   container = cnt;
@@ -75,10 +76,10 @@ function renderThemeSection() {
       } else {
         newTheme = DARK_THEMES.includes(settings.theme) ? settings.theme : 'dark';
       }
-      settings.theme = newTheme;
+      settings = { ...settings, theme: newTheme };
       applyTheme(newTheme);
       saveSettings(settings);
-      store.update(s => ({ ...s, settings: { ...settings } }));
+      store.update(s => ({ ...s, settings }));
       render();
     });
     modeBar.appendChild(btn);
@@ -127,10 +128,10 @@ function renderThemeSection() {
         ${slug === currentTheme ? '<span class="settings-gallery-check">✓</span>' : ''}
       `;
       card.addEventListener('click', () => {
-        settings.theme = slug;
+        settings = { ...settings, theme: slug };
         applyTheme(slug);
         saveSettings(settings);
-        store.update(s => ({ ...s, settings: { ...settings } }));
+        store.update(s => ({ ...s, settings }));
         closeGallery();
         render();
       });
@@ -159,11 +160,17 @@ function renderThemeSection() {
     });
   });
 
-  document.addEventListener('click', (e) => {
-    if (galleryType && !container.contains(e.target)) {
+  // Убираем старый обработчик перед добавлением нового
+  if (_galleryClickHandler) {
+    document.removeEventListener('click', _galleryClickHandler);
+  }
+  _galleryClickHandler = (e) => {
+    if (!container || !galleryType) return;  // защита после unmount
+    if (!container.contains(e.target)) {
       closeGallery();
     }
-  }, { once: false });
+  };
+  document.addEventListener('click', _galleryClickHandler);
 }
 
 // === Секция: контраст ===
@@ -181,10 +188,10 @@ function renderContrastSection() {
     btn.className = 'settings-seg-btn' + (level === current ? ' active' : '');
     btn.textContent = CONTRAST_LABELS[level];
     btn.addEventListener('click', () => {
-      settings.contrast = level;
+      settings = { ...settings, contrast: level };
       applyContrast(level);
       saveSettings(settings);
-      store.update(s => ({ ...s, settings: { ...settings } }));
+      store.update(s => ({ ...s, settings }));
       render();
     });
     bar.appendChild(btn);
@@ -208,10 +215,9 @@ function renderDisplaySection() {
     cb.type = 'checkbox';
     cb.checked = settings.show?.[key] ?? (key === 'ruHint');
     cb.addEventListener('change', () => {
-      if (!settings.show) settings.show = {};
-      settings.show[key] = cb.checked;
+      settings = { ...settings, show: { ...settings.show, [key]: cb.checked } };
       saveSettings(settings);
-      store.update(s => ({ ...s, settings: { ...settings } }));
+      store.update(s => ({ ...s, settings }));
     });
     cbLabel.appendChild(cb);
     cbLabel.appendChild(document.createTextNode(' ' + text));
@@ -294,5 +300,9 @@ function buildThemeSlot(type, currentTheme, themeList) {
 }
 
 export function unmount() {
+  if (_galleryClickHandler) {
+    document.removeEventListener('click', _galleryClickHandler);
+    _galleryClickHandler = null;
+  }
   container = null;
 }
