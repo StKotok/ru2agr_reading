@@ -1,12 +1,13 @@
 import { navigate } from '../../router.js';
 import { saveSettings, resolveEffectiveTheme, applyTheme, THEMES, LIGHT_THEMES, DARK_THEMES } from '../../state/settings.js';
-import { iconRead, iconWords, iconProgress, iconGear } from './icons.js';
+import { iconRead, iconWords, iconProgress, iconGear, iconInfo } from './icons.js';
 
 const TABS = [
   { id: 'reading',    label: 'Чтение',    icon: iconRead,    hash: '#/read/john' },
   { id: 'dictionary', label: 'Словарь',   icon: iconWords,   hash: '#/dictionary' },
   { id: 'progress',   label: 'Прогресс',  icon: iconProgress, hash: '#/progress' },
   { id: 'settings',   label: 'Настройки', icon: iconGear,    hash: '#/settings' },
+  { id: 'about',      label: 'О приложении', icon: iconInfo,  hash: '#/about' },
 ];
 
 /**
@@ -132,9 +133,8 @@ export function createNav(store) {
   }
 
   function updateActive(screen) {
-    const activeId = screen === 'about' ? 'settings' : screen;
     buttons.forEach(({ btn, id }) => {
-      const isActive = id === activeId;
+      const isActive = id === screen;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-current', isActive ? 'page' : 'false');
     });

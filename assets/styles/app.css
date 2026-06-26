@@ -923,7 +923,7 @@ p, h2, h3, span {
 }
 
 .top-header-eye {
-  width: 36px; height: 36px;
+  width: 30px; height: 30px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--ink) 3%, transparent);
@@ -939,11 +939,11 @@ p, h2, h3, span {
   background: color-mix(in srgb, var(--terra) 12%, transparent);
 }
 
-/* Desktop: eye button 40×40 (prototype desktop top panel) */
+/* Desktop: eye button — same height as mode-widget chip (30px) */
 @media (min-width: 900px) {
   .top-header-eye {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
   }
 }
 
@@ -977,7 +977,7 @@ p, h2, h3, span {
 
 /* ── Page header eye button ── */
 .page-header-eye {
-  width: 36px; height: 36px;
+  width: 30px; height: 30px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--ink) 3%, transparent);
@@ -995,8 +995,8 @@ p, h2, h3, span {
 
 @media (min-width: 900px) {
   .page-header-eye {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
   }
 }
 
@@ -3401,4 +3401,78 @@ section[data-chapter] {
     font-size: 0.875rem;
     border-radius: 8px;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   About page
+   ═══════════════════════════════════════════════════════════════ */
+
+.about-page {
+  padding: 26px 22px 60px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .about-page {
+    padding: 34px 44px 70px;
+  }
+}
+
+.about-hero {
+  margin-bottom: 24px;
+}
+
+.about-title {
+  font-family: 'Gentium Plus', serif;
+  font-size: 1.625rem;   /* 26px */
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 4px;       /* gap to version */
+}
+
+.about-version {
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  font-size: 0.84375rem; /* 13.5px */
+  color: var(--muted);
+  margin: 0;
+}
+
+.about-section {
+  margin-bottom: 20px;
+}
+
+.about-section h3 {
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  font-size: 0.6875rem;   /* 11px */
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.about-section h4 {
+  font-family: 'Gentium Plus', serif;
+  font-size: 1rem;        /* 16px */
+  font-weight: 700;
+  color: var(--ink);
+  margin: 14px 0 2px;
+}
+
+.about-section p {
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  font-size: 0.8125rem;   /* 13px */
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0 0 4px;
+}
+
+.about-section a {
+  color: var(--greek);
+  text-decoration: none;
+}
+
+.about-section a:hover {
+  text-decoration: underline;
 }

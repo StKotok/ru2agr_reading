@@ -342,7 +342,7 @@ export async function mount(container, ctx) {
   readingContent.appendChild(textArea);
 
   // Инспектор (desktop: панель справа 364px, mobile: скрыт)
-  getInspectorPanel(readingLayout);
+  getInspectorPanel(readingLayout, 'reading');
 
   // Загружаем книгу (и греческий текст + alignment если нужен для словарного слоя)
   if (!_mounted) return;

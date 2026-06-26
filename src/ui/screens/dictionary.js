@@ -4,7 +4,7 @@ import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.j
 import { openBottomSheet } from '../components/bottom-sheet.js';
 import { rankBucket } from '../components/word-card.js';
 import { createPageHeader } from '../components/page-header.js';
-import { getInspectorPanel, showInInspector, showEmptyState } from '../components/inspector.js';
+import { getInspectorPanel, showInInspector } from '../components/inspector.js';
 
 let dict = {};
 let lexicon = [];
@@ -81,7 +81,7 @@ export async function mount(cnt, ctx) {
   leftCol.appendChild(listContainer);
 
   // Инспектор (правый, desktop only)
-  getInspectorPanel(layout);
+  getInspectorPanel(layout, 'dictionary');
 
   render();
 }
