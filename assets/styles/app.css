@@ -548,20 +548,10 @@ input[type="checkbox"] {
   }
 
   .inspector-panel {
-    display: block;
     width: var(--inspWidth);
     flex: 0 0 auto;
-    background: var(--paper);
-    border-left: 1px solid var(--line);
-    padding: 16px;
-    overflow-y: auto;
-  }
-
-  .reading-inspector {
-    width: 364px;
-    flex: 0 0 auto;
-    border-left: 1px solid var(--border);
     background: var(--surface);
+    border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -894,7 +884,8 @@ section[data-chapter] {
 
 @media (min-width: 900px) {
   .inspector-panel {
-    display: block;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -1570,7 +1561,8 @@ section[data-chapter] {
 
 @media (min-width: 900px) {
   .inspector-panel {
-    display: block;
+    display: flex;
+    flex-direction: column;
   }
 }
 
