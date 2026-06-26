@@ -6,6 +6,7 @@ import { renderLetterCard } from '../components/word-card.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 import { showInInspector, getInspectorPanel } from '../components/inspector.js';
 import { showToast } from '../components/toast.js';
+import { createPageHeader } from '../components/page-header.js';
 
 let progress = null;
 let alphabet = null;
@@ -30,10 +31,9 @@ function render() {
   if (!container) return;
   container.innerHTML = '';
 
-  // Заголовок
-  const h2 = document.createElement('h2');
-  h2.textContent = 'Прогресс';
-  container.appendChild(h2);
+  // Page header
+  const { bar: header } = createPageHeader({ title: 'Прогресс' });
+  container.appendChild(header);
 
   // Блок «Буквы»
   renderLettersSection();

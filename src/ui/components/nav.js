@@ -1,5 +1,5 @@
 import { navigate } from '../../router.js';
-import { saveSettings } from '../../state/settings.js';
+import { saveSettings, resolveEffectiveTheme, applyTheme, THEMES, LIGHT_THEMES, DARK_THEMES } from '../../state/settings.js';
 import { iconRead, iconWords, iconProgress, iconGear } from './icons.js';
 
 const TABS = [
@@ -9,10 +9,16 @@ const TABS = [
   { id: 'settings',   label: 'Настройки', icon: iconGear,    hash: '#/settings' },
 ];
 
-const THEME_OPTIONS = [
-  { label: 'Светлая', key: 'Пергамент' },
-  { label: 'Тёмная',  key: 'Тёмная' },
-  { label: 'Авто',    key: 'Пергамент' },
+/**
+ * Три режима темы. Каждая кнопка может быть в трёх состояниях:
+ *   - нет класса (не активна)
+ *   - 'active' (явно выбрана)
+ *   - 'active-auto' (активна через Авто — когда выбран режим auto и OS-тема совпадает)
+ */
+const THEME_MODES = [
+  { id: 'light', label: 'Светлая' },
+  { id: 'dark',  label: 'Тёмная' },
+  { id: 'auto',  label: 'Авто' },
 ];
 
 export function createNav(store) {
@@ -56,29 +62,72 @@ export function createNav(store) {
   themeSection.innerHTML = '<div class="nav-theme-label">Тема</div>';
   const themeSwitcher = document.createElement('div');
   themeSwitcher.className = 'nav-theme-switcher';
-  THEME_OPTIONS.forEach(pair => {
+
+  const themeBtns = [];
+  THEME_MODES.forEach(mode => {
     const btn = document.createElement('button');
     btn.className = 'nav-theme-btn';
-    btn.textContent = pair.label;
+    btn.textContent = mode.label;
     btn.addEventListener('click', () => {
       const st = store.get();
-      const ns = { ...st.settings, theme: pair.key };
+      let newTheme;
+      if (mode.id === 'auto') {
+        newTheme = 'auto';
+      } else if (mode.id === 'light') {
+        // Выбрать светлую тему по умолчанию (или текущую светлую)
+        const cur = st.settings?.theme;
+        newTheme = (cur && cur !== 'auto' && LIGHT_THEMES.includes(cur)) ? cur : 'pergament';
+      } else {
+        // Выбрать тёмную тему по умолчанию (или текущую тёмную)
+        const cur = st.settings?.theme;
+        newTheme = (cur && cur !== 'auto' && DARK_THEMES.includes(cur)) ? cur : 'dark';
+      }
+      const ns = { ...st.settings, theme: newTheme };
+      applyTheme(newTheme);
       saveSettings(ns);
       store.update(s => ({ ...s, settings: ns }));
       updateThemeActive();
     });
     themeSwitcher.appendChild(btn);
+    themeBtns.push({ btn, id: mode.id });
   });
   themeSection.appendChild(themeSwitcher);
   nav.appendChild(themeSection);
 
   function updateThemeActive() {
     const st = store.get();
-    const activeTheme = st.settings?.theme || 'Пергамент';
-    const btns = themeSwitcher.querySelectorAll('.nav-theme-btn');
-    btns.forEach((btn, i) => {
-      const pair = THEME_OPTIONS[i];
-      btn.classList.toggle('active', pair.key === activeTheme);
+    const themeSetting = st.settings?.theme || 'auto';
+
+    // Определяем эффективную тему для индикатора auto-active
+    const effectiveTheme = resolveEffectiveTheme(themeSetting);
+    const effectiveIsDark = DARK_THEMES.includes(effectiveTheme);
+
+    themeBtns.forEach(({ btn, id }) => {
+      // Сброс
+      btn.classList.remove('active', 'active-auto');
+
+      if (id === 'auto') {
+        // Авто активно когда settings.theme === 'auto'
+        if (themeSetting === 'auto') {
+          btn.classList.add('active');
+        }
+      } else if (id === 'light') {
+        if (themeSetting !== 'auto' && LIGHT_THEMES.includes(themeSetting)) {
+          // Явно выбрана светлая тема
+          btn.classList.add('active');
+        } else if (themeSetting === 'auto' && !effectiveIsDark) {
+          // Авто + система светлая → auto-active
+          btn.classList.add('active-auto');
+        }
+      } else if (id === 'dark') {
+        if (themeSetting !== 'auto' && DARK_THEMES.includes(themeSetting)) {
+          // Явно выбрана тёмная тема
+          btn.classList.add('active');
+        } else if (themeSetting === 'auto' && effectiveIsDark) {
+          // Авто + система тёмная → auto-active
+          btn.classList.add('active-auto');
+        }
+      }
     });
   }
 

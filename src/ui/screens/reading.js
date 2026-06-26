@@ -6,14 +6,15 @@ import { loadAlphabet } from '../../data/bible-loader.js';
 import { loadDictionary, setWordStatus, saveDictionary, addWord, countActiveWords, isDictionaryEntry, migrateDictionaryData, saveMigrationResults } from '../../state/dictionary.js';
 import { composeVerse } from '../../engine/compose.js';
 import { segmentsToFragment } from '../render.js';
-import { createTopBar } from '../components/top-bar.js';
+import { loadBooks } from '../../data/bible-loader.js';
 import { createModeWidget } from '../components/mode-widget.js';
-import { getInspectorPanel } from '../components/inspector.js';
+import { getInspectorPanel, showInInspector, hideInspector } from '../components/inspector.js';
 import { renderLetterCard, renderWordCard } from '../components/word-card.js';
 import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
 import { showToast } from '../components/toast.js';
 import { navigate } from '../../router.js';
-import { iconX } from '../components/icons.js';
+import { iconX, iconEye, iconEyeOff, iconChevron } from '../components/icons.js';
+import { createPageHeader } from '../components/page-header.js';
 
 const DEBOUNCE_MS = 500;
 const WINDOW_SIZE = 3;
@@ -231,20 +232,108 @@ export async function mount(container, ctx) {
   readingContent.className = 'reading-content';
   readingLayout.appendChild(readingContent);
 
-  // Top bar — внутри reading-content, чтобы инспектор был с ним на одном уровне
-  const { bar, chipSlot } = createTopBar({
-    store,
-    onEyeToggle: (pressed) => {
-      plainView = pressed;
-      reRenderWindowed();
-    }
+  // ── Загрузка книг для селектора ──
+  let books = [];
+  loadBooks().then(b => { books = b; updateBookLabel(); });
+
+  // ── Кнопка выбора книги (left) ──
+  const bookBtn = document.createElement('button');
+  bookBtn.className = 'page-header-book-btn';
+  bookBtn.setAttribute('aria-haspopup', 'listbox');
+  bookBtn.innerHTML = `
+    <span class="page-header-book-name">…</span>
+    <span class="page-header-book-chapter">1</span>
+    <span style="display:flex;align-items:center;flex:0 0 auto">${iconChevron(14)}</span>
+  `;
+
+  // Выпадашка книг
+  const bookList = document.createElement('div');
+  bookList.className = 'book-dropdown';
+  bookList.setAttribute('role', 'listbox');
+  bookList.hidden = true;
+
+  bookBtn.addEventListener('click', async () => {
+    if (books.length === 0) books = await loadBooks();
+    renderBookList();
+    bookList.hidden = !bookList.hidden;
+    if (!bookList.hidden) bookList.querySelector('button')?.focus();
   });
+
+  document.addEventListener('click', (e) => {
+    if (!bookBtn.contains(e.target) && !bookList.contains(e.target)) bookList.hidden = true;
+  });
+
+  bookList.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !bookList.hidden) { bookList.hidden = true; bookBtn.focus(); }
+  });
+
+  function renderBookList() {
+    const groups = {
+      'Евангелия': books.filter(b => ['matthew','mark','luke','john'].includes(b.id)),
+      'Деяния': books.filter(b => b.id === 'acts'),
+      'Послания': books.filter(b => !['matthew','mark','luke','john','acts','revelation'].includes(b.id)),
+      'Откровение': books.filter(b => b.id === 'revelation'),
+    };
+    bookList.innerHTML = '';
+    for (const [group, items] of Object.entries(groups)) {
+      if (items.length === 0) continue;
+      const h = document.createElement('div');
+      h.className = 'book-dropdown-group';
+      h.textContent = group;
+      bookList.appendChild(h);
+      for (const book of items) {
+        const btn = document.createElement('button');
+        btn.className = 'book-dropdown-item';
+        btn.textContent = book.short + ' — ' + book.title;
+        btn.setAttribute('role', 'option');
+        btn.addEventListener('click', () => {
+          navigate(`#/read/${book.id}`);
+          bookList.hidden = true;
+        });
+        bookList.appendChild(btn);
+      }
+    }
+  }
+
+  function updateBookLabel() {
+    const state = store.get();
+    const book = books.find(b => b.id === state.book);
+    const nameEl = bookBtn.querySelector('.page-header-book-name');
+    if (nameEl) nameEl.textContent = book ? book.short + ',' : 'Ин,';
+    const chEl = bookBtn.querySelector('.page-header-book-chapter');
+    if (chEl) chEl.textContent = '1';
+  }
+
+  store.subscribe(['book'], () => updateBookLabel());
+
+  // ── Кнопка «глаз» (right) ──
+  const eyeBtn = document.createElement('button');
+  eyeBtn.className = 'page-header-eye';
+  eyeBtn.innerHTML = iconEye(18);
+  eyeBtn.setAttribute('aria-label', 'Простой вид');
+  eyeBtn.addEventListener('click', () => {
+    plainView = !plainView;
+    eyeBtn.classList.toggle('active', plainView);
+    eyeBtn.innerHTML = plainView ? iconEyeOff(18) : iconEye(18);
+    eyeBtn.setAttribute('aria-label', plainView ? 'Вернуть греческий слой' : 'Простой вид');
+    reRenderWindowed();
+  });
+
+  // ── Page header (reading) ──
+  const { bar, centerSlot } = createPageHeader({
+    title: bookData ? (bookData.short + ',') : 'Ин,',
+    left: bookBtn,
+    right: eyeBtn,
+  });
+  // Убираем дефолтный title (заменён bookBtn)
+  bar.querySelector('.page-header-title')?.remove();
+  bar.appendChild(bookList);
   readingContent.appendChild(bar);
 
   // Mode widget (чип + попап)
   const modeWidget = createModeWidget({ store });
   destroyModeWidget = modeWidget.destroy;
-  chipSlot.appendChild(modeWidget.chip);
+  centerSlot.appendChild(modeWidget.chip);
 
   // Контейнер текста
   const textArea = document.createElement('div');
@@ -1133,9 +1222,6 @@ function handleWordTap(span) {
       });
 
       buildWordEntries();
-      // Статус уже обновлён точечной мутацией классов выше.
-      // Полный перерендер нужен только когда слово добавили впервые
-      // (изменился набор заменяемых слов).
       if (wasNewWord) reRenderWindowed();
     },
     onShowDetails: (lexemeId) => {
@@ -1144,7 +1230,7 @@ function handleWordTap(span) {
   });
 
   if (window.innerWidth >= 900) {
-    showPopover(card, span);
+    showInInspector(card);
   } else {
     openBottomSheet(card);
   }
@@ -1163,15 +1249,14 @@ function handleLetterTap(letterChar, span) {
     await saveProgress(progress);
     const updatedCard = renderLetterCard(letterData, progress.letters[ch], () => {});
     if (window.innerWidth >= 900) {
-      closePopover();
-      showPopover(updatedCard, span);
+      showInInspector(updatedCard);
     } else if (isSheetOpen()) {
       openBottomSheet(updatedCard);
     }
   });
 
   if (window.innerWidth >= 900) {
-    showPopover(card, span);
+    showInInspector(card);
   } else {
     openBottomSheet(card);
   }

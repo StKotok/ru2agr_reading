@@ -3,12 +3,15 @@ import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 import { rankBucket } from '../components/word-card.js';
+import { createPageHeader } from '../components/page-header.js';
+import { getInspectorPanel, showInInspector, showEmptyState } from '../components/inspector.js';
 
 let dict = {};
 let lexicon = [];
 let frequencyList = [];
 let progress = null;
-let container = null;
+let container = null;          // внешний контейнер (корень экрана)
+let listContainer = null;      // контейнер списка слов
 let store = null;
 let filterStatus = 'all';
 let filterPOS = 'all';
@@ -36,77 +39,6 @@ function classifyPOS(rawPos) {
   return 'func';
 }
 
-// Поповер для десктопа
-let popoverEl = null;
-let popoverOutsideHandler = null;
-
-function closePopover() {
-  if (popoverOutsideHandler) {
-    document.removeEventListener('click', popoverOutsideHandler);
-    popoverOutsideHandler = null;
-  }
-  if (popoverEl) {
-    popoverEl.remove();
-    popoverEl = null;
-  }
-}
-
-function showPopover(card, anchorEl) {
-  closePopover();
-
-  popoverEl = document.createElement('div');
-  popoverEl.className = 'popover-card';
-  popoverEl.setAttribute('role', 'dialog');
-  popoverEl.setAttribute('aria-label', 'Карточка слова');
-
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'popover-close';
-  closeBtn.setAttribute('aria-label', 'Закрыть');
-  closeBtn.textContent = '×';
-  closeBtn.addEventListener('click', closePopover);
-  popoverEl.appendChild(closeBtn);
-
-  popoverEl.appendChild(card);
-  document.body.appendChild(popoverEl);
-
-  const rect = anchorEl.getBoundingClientRect();
-  const pw = 360;
-  let top = rect.bottom + 8;
-  let left = rect.left;
-
-  if (left + pw > window.innerWidth - 16) {
-    left = window.innerWidth - pw - 16;
-  }
-  if (left < 16) left = 16;
-
-  const ph = popoverEl.offsetHeight || 200;
-  if (top + ph > window.innerHeight - 16) {
-    top = rect.top - ph - 8;
-  }
-  if (top < 16) top = 16;
-
-  // Ограничение высоты, чтобы карточка не выходила за экран
-  const spaceBelow = window.innerHeight - top - 16;
-  const maxH = Math.max(200, spaceBelow);
-  popoverEl.style.maxHeight = maxH + 'px';
-  card.style.maxHeight = 'none';
-  card.style.overflowY = 'auto';
-
-  popoverEl.style.position = 'fixed';
-  popoverEl.style.top = top + 'px';
-  popoverEl.style.left = left + 'px';
-
-  popoverOutsideHandler = (e) => {
-    if (!popoverEl) return;
-    if (!popoverEl.contains(e.target) && e.target !== anchorEl) {
-      closePopover();
-    }
-  };
-  requestAnimationFrame(() => {
-    document.addEventListener('click', popoverOutsideHandler);
-  });
-}
-
 export async function mount(cnt, ctx) {
   container = cnt;
   store = ctx.store;
@@ -126,6 +58,31 @@ export async function mount(cnt, ctx) {
   filterStatus = 'all';
   filterPOS = 'all';
   searchQuery = '';
+
+  container.innerHTML = '';
+
+  // ── Layout: левая колонка + инспектор (desktop) ──
+  const layout = document.createElement('div');
+  layout.className = 'dict-layout';
+  container.appendChild(layout);
+
+  // Левая колонка
+  const leftCol = document.createElement('div');
+  leftCol.className = 'dict-left-col';
+  layout.appendChild(leftCol);
+
+  // Page header — внутри левой колонки, между навом и инспектором
+  const { bar: header } = createPageHeader({ title: 'Словарь' });
+  leftCol.appendChild(header);
+
+  // Контейнер списка
+  listContainer = document.createElement('div');
+  listContainer.className = 'dict-list-panel';
+  leftCol.appendChild(listContainer);
+
+  // Инспектор (правый, desktop only)
+  getInspectorPanel(layout);
+
   render();
 }
 
@@ -201,19 +158,19 @@ function renderPersonalDictionaryFallback() {
   const info = document.createElement('div');
   info.className = 'card';
   info.innerHTML = '<p>Частотный список недоступен — показан личный словарь.</p>';
-  container.appendChild(info);
+  listContainer.appendChild(info);
 
   if (entries.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'card';
     empty.innerHTML = '<p>Частотный список недоступен. Личный словарь пока пуст.</p>';
-    container.appendChild(empty);
+    listContainer.appendChild(empty);
     return;
   }
 
   const list = document.createElement('div');
   list.className = 'dict-list';
-  container.appendChild(list);
+  listContainer.appendChild(list);
 
   for (const [dictId, entry] of entries) {
     const core = coreByIdMap.get(dictId);
@@ -283,9 +240,8 @@ function renderPersonalDictionaryFallback() {
 }
 
 function render() {
-  if (!container) return;
-  closePopover();
-  container.innerHTML = '';
+  if (!listContainer) return;
+  listContainer.innerHTML = '';
   renderedCount = 0;
   lastDividerBucket = 0;
 
@@ -297,12 +253,11 @@ function render() {
     return;
   }
 
-  // ═══ Header: Словарь + N слов ═══
+  // ═══ Header: поиск + фильтры + кол-во слов ═══
   const header = document.createElement('div');
   header.className = 'dict-header';
   header.innerHTML = `
     <div class="dict-title-row">
-      <span class="dict-title">Словарь</span>
       <span class="dict-title-count">${filtered.length}&nbsp;слов</span>
     </div>
   `;
@@ -475,7 +430,7 @@ function render() {
   filterRow.appendChild(showToggle);
 
   header.appendChild(filterRow);
-  container.appendChild(header);
+  listContainer.appendChild(header);
 
   // ═══ Word list ═══
   const listScroll = document.createElement('div');
@@ -484,7 +439,7 @@ function render() {
   const list = document.createElement('div');
   list.className = 'dict-list';
   listScroll.appendChild(list);
-  container.appendChild(listScroll);
+  listContainer.appendChild(listScroll);
 
   // Render first PAGE_SIZE, rest via Observer
   renderBatch(list, filtered);
@@ -603,8 +558,8 @@ function renderBatch(list, filtered) {
  * Точечное обновление строки словаря (бейдж + чекбокс) без перерендера.
  */
 function updateRow(item) {
-  if (!container) return;
-  const row = container.querySelector(`.dict-row[data-strong="${item.strong}"]`);
+  if (!listContainer) return;
+  const row = listContainer.querySelector(`.dict-row[data-strong="${item.strong}"]`);
   if (!row) return;
   const coreByIdMap = coreById();
   const lex = coreByIdMap.get(item.strong);
@@ -757,15 +712,15 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
 function showWordCard(item, lexeme, dictEntry, dictId, anchorEl) {
   const card = buildWordCard(item, lexeme, dictEntry, dictId);
   if (window.innerWidth >= 900) {
-    showPopover(card, anchorEl);
+    showInInspector(card);
   } else {
     openBottomSheet(card);
   }
 }
 
 export function unmount() {
-  closePopover();
   if (dictObserver) { dictObserver.disconnect(); dictObserver = null; }
   if (_dropdownOutsideHandler) { document.removeEventListener('click', _dropdownOutsideHandler); _dropdownOutsideHandler = null; }
   container = null;
+  listContainer = null;
 }

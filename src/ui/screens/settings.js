@@ -1,6 +1,7 @@
 import { loadSettings, saveSettings, applyTheme, applyContrast, THEMES, LIGHT_THEMES, DARK_THEMES, CONTRAST_LEVELS, CONTRAST_LABELS } from '../../state/settings.js';
 import { loadProgress, saveProgress } from '../../state/progress.js';
 import { db } from '../../storage/db.js';
+import { createPageHeader } from '../components/page-header.js';
 
 let settings = null;
 let progress = null;
@@ -25,11 +26,9 @@ function render() {
   if (!container) return;
   container.innerHTML = '';
 
-  // Заголовок — как в прототипе
-  const title = document.createElement('div');
-  title.className = 'settings-title';
-  title.textContent = 'Настройки';
-  container.appendChild(title);
+  // Page header
+  const { bar: header } = createPageHeader({ title: 'Настройки' });
+  container.appendChild(header);
 
   // Контент с отступами
   const content = document.createElement('div');
