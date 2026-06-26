@@ -19,18 +19,22 @@ export const CARD_SECTIONS = [
   { key: 'pron',       label: 'произношение' },
   { key: 'lemma',      label: 'словарная форма (текст → лемма)' },
   { key: 'inline',     label: 'перевод в этом стихе' },
+  { key: 'ruGloss',    label: 'русское значение' },
   { key: 'senses',     label: 'также означает' },
+  { key: 'refs',       label: 'где встречается' },
   { key: 'definition', label: 'определение' },
   { key: 'derivation', label: 'происхождение' },
   { key: 'status',     label: 'статус (не помню / учу / знаю)' },
 ];
 
-const DEFAULT_ORDER = ['grammar', 'pron', 'lemma', 'inline', 'senses', 'definition', 'derivation', 'status'];
+const DEFAULT_ORDER = ['grammar', 'pron', 'lemma', 'inline', 'ruGloss', 'senses', 'refs', 'definition', 'derivation', 'status'];
 
 const DEFAULTS = {
   lemma: true,
   inline: true,
+  ruGloss: true,
   senses: true,
+  refs: true,
   definition: true,
   derivation: true,
   grammar: true,

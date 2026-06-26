@@ -129,12 +129,17 @@ export function renderWordCard(data, callbacks = {}) {
     surfaceForm = '',
     lemma = '',
     translit = null,
+    ruGloss = null,
+    ruTopWords = null,
     gloss = null,
     senses = null,
+    glossesBerean = null,
+    glossesCherith = null,
     detail = null,
     pos = null,
     allRefs = null,
     allRefsCount = null,
+    autoSelectedRefs = null,
     morph = null,
     freq = null,
     dictEntry = null,
@@ -283,16 +288,55 @@ export function renderWordCard(data, callbacks = {}) {
     card.appendChild(inlineSection);
   }
 
+  // --- Русское значение ---
+  if (ruGloss) {
+    const ruSection = document.createElement('div');
+    ruSection.className = 'word-card-info-block';
+    sectionEls.set('ruGloss', ruSection);
+    if (!cardSettings.ruGloss) ruSection.style.display = 'none';
+
+    const ruLabel = document.createElement('div');
+    ruLabel.className = 'word-card-info-label';
+    ruLabel.textContent = 'русское значение';
+    ruSection.appendChild(ruLabel);
+
+    const ruText = document.createElement('div');
+    ruText.className = 'word-card-info-text';
+    const parts = [ruGloss];
+    if (ruTopWords && ruTopWords.length > 0) {
+      for (const w of ruTopWords) {
+        if (w && w !== ruGloss) parts.push(w);
+      }
+    }
+    // Dedup keeping order
+    const seen = new Set();
+    ruText.textContent = parts.filter(w => { const ok = !seen.has(w); seen.add(w); return ok; }).join(', ');
+    ruSection.appendChild(ruText);
+
+    card.appendChild(ruSection);
+  }
+
   // --- Другие значения (gloss из core.json + UBS senses) ---
   {
     const alreadyShown = original ? original.toLowerCase().trim() : '';
 
     const candidates = [];
-    if (gloss) {
-      for (const part of gloss.split(/[,;]\s*/)) {
+    // Collect all unique glosses from all sources
+    const glossSources = [];
+    if (gloss) glossSources.push(gloss);
+    if (glossesBerean) glossSources.push(...glossesBerean);
+    if (glossesCherith) glossSources.push(...glossesCherith);
+
+    const glossSeen = new Set();
+    for (const g of glossSources) {
+      for (const part of g.split(/[,;]\s*/)) {
         const w = part.trim();
-        if (w && w.toLowerCase() !== alreadyShown) {
-          candidates.push({ gloss: w, comment: 'словарное значение' });
+        // Normalise: strip bracket artefacts like "[The] book" → "book"
+        const clean = w.replace(/^\[.*?\]\s*/, '').trim();
+        const key = clean.toLowerCase();
+        if (clean && key !== alreadyShown && !glossSeen.has(key)) {
+          glossSeen.add(key);
+          candidates.push({ gloss: clean, comment: 'словарное значение' });
         }
       }
     }
@@ -332,6 +376,38 @@ export function renderWordCard(data, callbacks = {}) {
 
       card.appendChild(block);
     }
+  }
+
+  // --- Где встречается (autoSelectedRefs) ---
+  if (autoSelectedRefs && autoSelectedRefs.length > 0) {
+    const reasonLabel = {
+      'first-occurrence': 'первое появление',
+      'common-surface-form': 'частая форма',
+      'different-book': 'другая книга',
+      'distinct-morphology': 'другая морфология'
+    };
+
+    const refsSection = document.createElement('div');
+    refsSection.className = 'word-card-info-block';
+    sectionEls.set('refs', refsSection);
+    if (!cardSettings.refs) refsSection.style.display = 'none';
+
+    const refsLabel = document.createElement('div');
+    refsLabel.className = 'word-card-info-label';
+    refsLabel.textContent = 'в Новом Завете';
+    refsSection.appendChild(refsLabel);
+
+    const list = document.createElement('div');
+    list.className = 'word-card-info-text';
+    const items = [];
+    for (const entry of autoSelectedRefs.slice(0, 5)) {
+      const reason = reasonLabel[entry.reason] || entry.reason;
+      items.push(`${entry.ref} (${reason})`);
+    }
+    list.textContent = items.join(', ');
+    refsSection.appendChild(list);
+
+    card.appendChild(refsSection);
   }
 
   // --- Лемма (только когда форма отличается) ---

@@ -284,7 +284,8 @@ export async function mount(container, ctx) {
       for (const book of items) {
         const btn = document.createElement('button');
         btn.className = 'book-dropdown-item';
-        btn.textContent = book.short + ' — ' + book.title;
+        const countStr = book.lexemeCount ? ` · ${book.lexemeCount} слов` : '';
+        btn.textContent = book.short + ' — ' + book.title + countStr;
         btn.setAttribute('role', 'option');
         btn.addEventListener('click', () => {
           navigate(`#/read/${book.id}`);
@@ -1149,7 +1150,11 @@ function collectWordData(span) {
     : null;
 
   const translit = core?.translit || freq?.translit || freq?.transliteration || null;
-  const gloss = core?.ruGloss || core?.gloss || null;
+  // Русское значение — отдельно, не смешиваем с английскими глоссами
+  const ruGloss = core?.ruGloss || null;
+  const ruTopWords = core?.ruTopWords || null;
+  // Английские глоссы для «также означает»
+  const gloss = core?.glossesBerean?.[0] || core?.glossesCherith?.[0] || null;
   const shortGloss = core?.shortGloss || null;
   const senses = core?.senses || null;
   const detail = core?.detail || null;
@@ -1160,6 +1165,7 @@ function collectWordData(span) {
   const allRefsCount = core?.allRefsCount || null;
   const glossesBerean = core?.glossesBerean || null;
   const glossesCherith = core?.glossesCherith || null;
+  const autoSelectedRefs = core?.autoSelectedRefs || null;
 
   // Словарная запись: канонический lexemeId первым
   let dictEntry = null;
@@ -1174,6 +1180,8 @@ function collectWordData(span) {
     surfaceForm,
     lemma,
     translit,
+    ruGloss,
+    ruTopWords,
     gloss,
     shortGloss,
     senses,
@@ -1185,6 +1193,7 @@ function collectWordData(span) {
     allRefsCount,
     glossesBerean,
     glossesCherith,
+    autoSelectedRefs,
     morph,
     freq: freq ? { rank: freq.rank, count: freq.count || freq.tokenCount } : null,
     dictEntry,
