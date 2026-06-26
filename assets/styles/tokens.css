@@ -45,6 +45,8 @@
   --overlayDimBase: #15140f;
   --overlayDimAlpha: 0.34;
   --overlayDimAlphaLight: 0.18;
+  /* Составной оверлей (из --overlayDimBase + --overlayDimAlpha) */
+  --overlay-bg: rgba(21, 20, 15, 0.34);
   --toastBg: #26221c;
   --toastTx: #f3eee2;
   /* Составные тени (используют --shadowBase для авто-адаптации к тёмным темам) */
