@@ -138,11 +138,10 @@ h3 {
     bottom: 0; left: 0; right: 0;
     flex-direction: row;
     justify-content: space-around;
-    height: 64px;
     border-top: 1px solid var(--line);
-    backdrop-filter: blur(6px);
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    padding-bottom: env(safe-area-inset-bottom);
+    backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--paper) 96%, transparent);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 18px);
   }
 }
 
@@ -154,9 +153,24 @@ h3 {
     flex-direction: column;
     width: var(--navWidth);
     border-right: 1px solid var(--line);
-    padding: 24px 12px;
-    gap: 2px;
+    padding: 26px 16px 20px;
+    gap: 4px;
     background: var(--sidebar);
+  }
+
+  .nav-title-section {
+    display: block;
+    padding: 0 8px 26px;
+  }
+
+  .nav-theme-section {
+    display: block;
+    padding: 0 6px;
+  }
+
+  .nav-spacer {
+    display: block;
+    flex: 1;
   }
 
   .nav-tab {
@@ -164,15 +178,26 @@ h3 {
     justify-content: flex-start;
     gap: 12px;
     width: 100%;
-    padding: 10px 16px;
-    font-size: 14px;
+    padding: 11px 12px;
+    font-size: 14.5px;
     flex: 0 0 auto;
-    height: 44px;
-    min-height: 44px;
+    height: auto;
+    min-height: auto;
   }
 
   .nav-tab.active {
-    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(40,34,22,0.08);
+    font-weight: 700;
+  }
+}
+
+/* Hide title/theme on mobile */
+@media (max-width: 899px) {
+  .nav-title-section,
+  .nav-theme-section,
+  .nav-spacer {
+    display: none;
   }
 }
 
@@ -200,8 +225,15 @@ h3 {
 @media (max-width: 899px) {
   .nav-tab {
     flex-direction: column;
-    font-size: 10px;
-    padding: 6px 4px;
+    font-size: 11px;
+    padding: 11px 0 4px;
+    gap: 3px;
+    color: var(--muted2);
+  }
+
+  .nav-tab.active {
+    font-weight: 700;
+    color: var(--ink);
   }
 }
 
@@ -230,9 +262,68 @@ h3 {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
-  .nav-tab[aria-current="page"] {
-    background: var(--greek-bg);
-  }
+
+/* ── Nav title (desktop) ── */
+.nav-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+}
+
+.nav-subtitle {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Nav theme switcher (desktop) ── */
+.nav-theme-label {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 8px;
+}
+
+.nav-theme-switcher {
+  display: flex;
+  gap: 3px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.nav-theme-btn {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.12s, color 0.12s;
+}
+
+.nav-theme-btn.active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(40,34,22,0.1);
+}
+
+/* ── Nav tab container ── */
+.nav-tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
 }
 
 /* === Кнопки === */
@@ -301,17 +392,18 @@ h3 {
 /* === Тост === */
 .toast {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--toast-bg);
   color: var(--toast-text);
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  padding: 11px 18px;
+  border-radius: 13px;
+  font-size: 13.5px;
   z-index: 1000;
   max-width: 90vw;
   text-align: center;
+  box-shadow: 0 14px 34px -10px rgba(0,0,0,0.5);
   animation: toast-in 0.3s ease;
 }
 
@@ -744,7 +836,7 @@ p, h2, h3, span {
   min-width: 220px;
   background: var(--surface);
   border: 1px solid var(--border-accent);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radiusLg);
   box-shadow: var(--shadow-elevated);
   z-index: 30;
   padding: 8px;
@@ -766,7 +858,7 @@ p, h2, h3, span {
   width: 100%;
   padding: 8px 10px;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radiusSm);
   background: transparent;
   color: var(--text);
   font-family: inherit;
@@ -1034,9 +1126,9 @@ section[data-chapter] {
 /* Bottom sheet handle */
 .bottom-sheet-handle {
   width: 36px;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
+  height: 4.5px;
+  background: var(--border-accent);
+  border-radius: 3px;
   margin: 0 auto 12px;
 }
 
@@ -1173,10 +1265,12 @@ section[data-chapter] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   padding: 4px;
-  border: none;
+  border: 1px solid var(--border-accent);
   border-radius: 50%;
   background: transparent;
   font-size: 1rem;
@@ -1289,6 +1383,7 @@ section[data-chapter] {
   font-family: system-ui, -apple-system, sans-serif;
   color: var(--muted2);
   font-size: 1.125rem;          /* 18px */
+  line-height: 26px;
 }
 
 .word-card-lemma-label {
@@ -1318,10 +1413,10 @@ section[data-chapter] {
   flex: 1;
   min-width: 0;
   min-height: 40px;
-  padding: 9px 4px;
+  padding: 9px 0;
   border-radius: 10px;
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
@@ -1343,9 +1438,9 @@ section[data-chapter] {
 }
 
 .status-btn.status-new.active {
-  background: var(--text);
-  color: var(--surface);
-  border-color: var(--text);
+  background: var(--border-accent);
+  color: var(--inkSoft);
+  border-color: var(--border-accent);
 }
 
 .status-btn.status-learning.active {
@@ -1366,22 +1461,21 @@ section[data-chapter] {
 
 /* --- Шестерёнка настроек --- */
 .card-gear-btn {
-  position: absolute;
-  top: 8px;
-  right: 40px;
-  z-index: 2;
+  position: static;
+  width: 32px;
+  height: 32px;
   min-width: 32px;
   min-height: 32px;
-  border: none;
+  border: 1px solid var(--line);
   background: transparent;
   font-size: 1rem;
   color: var(--muted);
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.5;
+  opacity: 1;
   transition: opacity 0.15s;
 }
 
@@ -1449,9 +1543,6 @@ section[data-chapter] {
   accent-color: var(--primary);
   flex-shrink: 0;
 }
-  color: var(--muted);
-  border-color: var(--border);
-}
 
 .status-btn.status-learning {
   background: var(--selection);
@@ -1505,25 +1596,26 @@ section[data-chapter] {
 /* --- Карточка буквы --- */
 .word-card-letter {
   font-family: 'Gentium Plus', serif;
-  font-size: 2.5rem;
+  font-size: 62px;
+  font-weight: 400;
   color: var(--greek);
-  line-height: 1.2;
+  line-height: 1.05;
 }
 
 .word-card-name {
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   margin: 4px 0;
 }
 
 .word-card-sound {
-  font-size: 0.875rem;
+  font-size: 18px;
   color: var(--muted);
   margin-bottom: 8px;
 }
 
 .word-card-equiv {
-  font-size: 0.875rem;
+  font-size: 18px;
   margin-bottom: 12px;
 }
 
@@ -2740,7 +2832,7 @@ section[data-chapter] {
 }
 
 .word-card-close {
-  width: 32px; height: 32px;
+  width: 36px; height: 36px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: none;
@@ -2758,16 +2850,7 @@ section[data-chapter] {
 }
 }
 
-.word-card-warning {
-  font-size: 0.8rem;
-  color: var(--warning-text);
-  margin-top: 4px;
-  padding: 4px 8px;
-  background: var(--warning-bg);
-  border-radius: 4px;
-}
-
-/* === v1.1 BSB data notice === */
+/* === v1.1 BSB data notice === 
 .data-notice {
   display: flex;
   align-items: flex-start;
