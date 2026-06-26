@@ -1369,7 +1369,7 @@ section[data-chapter] {
   text-align: left;
 }
 
-.word-card-lemma {
+.word-card-lemma-grid .word-card-lemma {
   font-family: 'Gentium Plus', serif;
   font-size: 1.625rem;          /* 26px как в прототипе */
   color: var(--greek);
@@ -1403,10 +1403,10 @@ section[data-chapter] {
 .morph-chip {
   display: inline-block;
   font-size: 0.8125rem;        /* 13px */
-  color: var(--text);
-  background: var(--selection);
-  padding: 2px 8px;
-  border-radius: 6px;
+  color: var(--on-greek);
+  background: var(--greek-bg);
+  padding: 3px 10px;
+  border-radius: 7px;
   line-height: 1.5;
 }
 
@@ -1446,7 +1446,7 @@ section[data-chapter] {
 }
 
 .status-btn.status-new.active {
-  background: var(--border-accent);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
   color: var(--inkSoft);
   border-color: var(--border-accent);
 }
@@ -1454,7 +1454,6 @@ section[data-chapter] {
 .status-btn.status-learning.active {
   background: var(--primary);
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--greek-bg);
 }
 
 .status-btn.status-known.active {
@@ -1499,10 +1498,10 @@ section[data-chapter] {
   right: 8px;
   z-index: 5;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 8px 4px;
-  box-shadow: var(--shadow-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: 14px;
+  padding: 10px 8px;
+  box-shadow: 0 20px 44px -14px rgba(var(--shadowBase), 0.5);
   min-width: 220px;
 }
 
@@ -1546,9 +1545,12 @@ section[data-chapter] {
 }
 
 .card-gear-row input[type="checkbox"] {
-  min-width: 20px;
-  min-height: 20px;
-  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  border-radius: 5px;
+  accent-color: var(--terra);
   flex-shrink: 0;
 }
 
@@ -1651,7 +1653,7 @@ section[data-chapter] {
 
 /* Inspector */
 .inspector-panel {
-  background: var(--surface-card);
+  background: var(--surface);
   border-left: 1px solid var(--border);
   padding: 16px;
   min-width: 260px;
