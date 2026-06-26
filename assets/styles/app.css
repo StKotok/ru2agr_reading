@@ -395,7 +395,7 @@ h3 {
   bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--toast-bg);
+  background: color-mix(in srgb, var(--toast-bg) 96%, transparent);
   color: var(--toast-text);
   padding: 11px 18px;
   border-radius: 13px;
@@ -828,6 +828,14 @@ p, h2, h3, span {
   background: color-mix(in srgb, var(--terra) 12%, transparent);
 }
 
+/* Divider between book name and mode chip (prototype: 1×26px, line) */
+.top-header-divider {
+  width: 1px;
+  height: 26px;
+  background: var(--line);
+  flex: 0 0 auto;
+}
+
 /* Book dropdown */
 .book-dropdown {
   position: absolute;
@@ -1087,7 +1095,7 @@ section[data-chapter] {
   max-height: 88dvh;
   overflow-y: auto;
   width: 100%;
-  box-shadow: 0 -16px 50px -10px rgba(0,0,0,0.3);
+  box-shadow: 0 -16px 50px -10px rgba(var(--shadowBase), 0.4);
   animation: sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
@@ -1923,18 +1931,19 @@ section[data-chapter] {
   width: 320px;
   max-width: calc(100vw - 16px);
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radiusLg);
   box-shadow: var(--shadow-overlay);
   opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: translateY(-6px) scale(0.98);
+  transition: opacity 0.16s ease, transform 0.16s ease;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .mode-widget-popup-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
@@ -1971,7 +1980,7 @@ section[data-chapter] {
 
 .mode-widget-tab.active {
   color: var(--text);
-  border-bottom-color: var(--primary);
+  border-bottom-color: var(--terra);
 }
 
 .mode-widget-tab:hover {
@@ -2006,7 +2015,7 @@ section[data-chapter] {
 
 .mode-widget-body input[type="range"] {
   width: 100%;
-  accent-color: var(--primary);
+  accent-color: var(--terra);
   margin: 0 0 4px 0;
 }
 
@@ -2034,7 +2043,7 @@ section[data-chapter] {
 
 .mode-widget-toggle {
   display: flex;
-  background: var(--surface-card);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
@@ -2055,7 +2064,7 @@ section[data-chapter] {
 }
 
 .mode-widget-toggle-btn.active {
-  background: var(--surface);
+  background: var(--surface-read);
   color: var(--text);
   font-weight: 500;
   box-shadow: var(--shadow-raised);
