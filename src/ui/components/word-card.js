@@ -42,6 +42,14 @@ export function rankBucket(rank) {
   return 1000;
 }
 
+/** Причины выбора референсов для секции «в Новом Завете» */
+export const REASON_LABEL = {
+  'first-occurrence': 'первое появление',
+  'common-surface-form': 'частая форма',
+  'different-book': 'другая книга',
+  'distinct-morphology': 'другая морфология'
+};
+
 /**
  * Строит tooltip для частотности.
  * @param {object} freq
@@ -378,13 +386,6 @@ export function renderWordCard(data, callbacks = {}) {
 
   // --- Где встречается (autoSelectedRefs) ---
   if (autoSelectedRefs && autoSelectedRefs.length > 0) {
-    const reasonLabel = {
-      'first-occurrence': 'первое появление',
-      'common-surface-form': 'частая форма',
-      'different-book': 'другая книга',
-      'distinct-morphology': 'другая морфология'
-    };
-
     const refsSection = document.createElement('div');
     refsSection.className = 'word-card-info-block';
     sectionEls.set('refs', refsSection);
@@ -399,7 +400,7 @@ export function renderWordCard(data, callbacks = {}) {
     list.className = 'word-card-info-text';
     const items = [];
     for (const entry of autoSelectedRefs.slice(0, 5)) {
-      const reason = reasonLabel[entry.reason] || entry.reason;
+      const reason = REASON_LABEL[entry.reason] || entry.reason;
       items.push(`${entry.ref} (${reason})`);
     }
     list.textContent = items.join(', ');

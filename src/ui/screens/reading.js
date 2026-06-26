@@ -10,7 +10,7 @@ import { loadBooks } from '../../data/bible-loader.js';
 import { createModeWidget } from '../components/mode-widget.js';
 import { getInspectorPanel, showInInspector, hideInspector } from '../components/inspector.js';
 import { renderLetterCard, renderWordCard } from '../components/word-card.js';
-import { openBottomSheet, closeBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
+import { openBottomSheet, isOpen as isSheetOpen } from '../components/bottom-sheet.js';
 import { showToast } from '../components/toast.js';
 import { navigate } from '../../router.js';
 import { iconX, iconEye, iconEyeOff, iconChevron } from '../components/icons.js';

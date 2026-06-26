@@ -2,7 +2,7 @@ import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting,
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
-import { rankBucket } from '../components/word-card.js';
+import { rankBucket, REASON_LABEL } from '../components/word-card.js';
 import { renderWordStatusActions, renderWordStatusPill, STATUS_LABEL } from '../components/word-status.js';
 import { createPageHeader } from '../components/page-header.js';
 import { getInspectorPanel, showInInspector } from '../components/inspector.js';
@@ -642,14 +642,8 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
   const strongNum = lexeme?.strongs?.[0] || '';
   const hasAlignment = item.hasAlignment;
   const autoSelectedRefs = lexeme?.autoSelectedRefs || null;
-  const reasonLabel = {
-    'first-occurrence': 'первое появление',
-    'common-surface-form': 'частая форма',
-    'different-book': 'другая книга',
-    'distinct-morphology': 'другая морфология'
-  };
   const refsHtml = autoSelectedRefs && autoSelectedRefs.length > 0
-    ? `<div class="word-card-info-block"><div class="word-card-info-label">в Новом Завете</div><div class="word-card-info-text">${autoSelectedRefs.slice(0, 5).map(e => `${e.ref} (${reasonLabel[e.reason] || e.reason})`).join(', ')}</div></div>`
+    ? `<div class="word-card-info-block"><div class="word-card-info-label">в Новом Завете</div><div class="word-card-info-text">${autoSelectedRefs.slice(0, 5).map(e => `${e.ref} (${REASON_LABEL[e.reason] || e.reason})`).join(', ')}</div></div>`
     : '';
 
   // Header (close button is provided by popover / bottom-sheet)
