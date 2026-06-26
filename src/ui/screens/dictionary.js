@@ -3,7 +3,7 @@ import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 import { rankBucket } from '../components/word-card.js';
-import { renderWordStatusActions, renderWordStatusPill } from '../components/word-status.js';
+import { renderWordStatusActions, renderWordStatusPill, STATUS_LABEL } from '../components/word-status.js';
 import { createPageHeader } from '../components/page-header.js';
 import { getInspectorPanel, showInInspector } from '../components/inspector.js';
 
@@ -208,7 +208,7 @@ function renderPersonalDictionaryFallback() {
       <span class="dict-lemma">${lemma}</span>
       <span class="dict-translit">${translit}</span>
       <span class="dict-freq">${pseudoItem.count || '–'}</span>
-      ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${{ new: 'Новое', learning: 'Учу', known: 'Знаю' }[entry.status] || 'Новое'}</span>` : '<span class="dict-badge-placeholder"></span>'}
+      ${entry ? `<span class="dict-badge badge-${entry.status || 'new'}">${STATUS_LABEL[entry.status] || 'Новое'}</span>` : '<span class="dict-badge-placeholder"></span>'}
       <label class="dict-check" title="Показывать в тексте">
         <input type="checkbox" ${entry && entry.showInText !== false ? 'checked' : ''} aria-label="Показывать ${lemma} в тексте">
       </label>
@@ -516,17 +516,15 @@ function renderBatch(list, filtered) {
         </div>
         ${gloss ? `<div class="dict-gloss">${gloss}</div>` : ''}
       </div>
-      <span class="dict-status-pill-slot"></span>
       ${available
         ? `<button class="dict-cbx${checked ? ' on' : ''}" aria-label="${checked ? 'Убрать из текста' : 'Показывать в тексте'}" title="${checked ? 'Убрать из текста' : 'Показывать в тексте'}">${checked ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' : ''}</button>`
         : `<span class="dict-cbx-na" title="Нет соответствия в тексте">–</span>`}
     `;
 
-    // Replace status pill slot with unified widget
-    const pillSlot = row.querySelector('.dict-status-pill-slot');
-    if (pillSlot) {
-      const pill = renderWordStatusPill(entry?.status || null);
-      pillSlot.replaceWith(pill);
+    // Insert status pill after word-col (empty text node if no status)
+    const wordCol = row.querySelector('.dict-word-col');
+    if (wordCol) {
+      wordCol.after(renderWordStatusPill(entry?.status || null));
     }
 
     // Checkbox toggle
@@ -572,14 +570,22 @@ function updateRow(item) {
   const dictId = lex ? lex.id : `freq-${item.strong}`;
   const entry = dict[dictId];
 
-  // Status pill — replace with unified widget
-  const oldPill = row.querySelector('.dict-status-pill');
-  const newPill = renderWordStatusPill(entry?.status || null);
-  if (oldPill) {
-    oldPill.replaceWith(newPill);
-  } else if (entry) {
-    // Pill didn't exist before (no status), insert it
-    row.querySelector('.dict-word-col')?.after(newPill);
+  // Status pill — mutate in-place (no DOM replacement)
+  const pill = row.querySelector('.dict-status-pill');
+  if (entry?.status) {
+    const cls = 'dict-status-pill badge-' + entry.status;
+    const label = STATUS_LABEL[entry.status] || 'Новое';
+    if (pill) {
+      pill.className = cls;
+      pill.textContent = label;
+    } else {
+      // Pill was a text node or missing — create and insert
+      const newPill = renderWordStatusPill(entry.status);
+      row.querySelector('.dict-word-col')?.after(newPill);
+    }
+  } else if (pill) {
+    // Status removed — replace pill with empty text node
+    pill.replaceWith(document.createTextNode(''));
   }
 
   // Custom checkbox
@@ -670,11 +676,12 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
   if (statusPlaceholder) {
     const statusWidget = renderWordStatusActions(status, {
       lexemeId: dictId,
+      heading: 'Статус изучения',
       onMarkStatus: async (id, s) => {
         if (!dict[id]) {
           dict = addWord(id, dict);
           progress = trackNewWord(id, progress);
-          saveProgress(progress);
+          await saveProgress(progress);
         }
         dict = setWordStatus(id, s, dict);
         await saveDictionary(dict);

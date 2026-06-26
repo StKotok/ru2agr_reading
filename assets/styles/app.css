@@ -3038,8 +3038,6 @@ section[data-chapter] {
 }
 
 .word-card-actions .btn-primary { border-color: var(--blue); background: var(--blueBg); color: var(--blueTx); }
-.word-card-actions .btn-learning { border-color: var(--terra); background: var(--terraSoft); color: var(--terra); }
-.word-card-actions .btn-known { border-color: var(--green); background: var(--greenBg); color: var(--greenDk); }
 
 .word-card-toggle {
   display: flex;

@@ -3,8 +3,10 @@
  * Переиспользуется в карточках слова (Чтение + Словарь) и в строках списка Словаря.
  *
  * Две функции:
- *   renderWordStatusActions(status, { lexemeId, onMarkStatus }) — три кнопки выбора
- *   renderWordStatusPill(status)                              — компактный pill-бейдж
+ *   renderWordStatusActions(status, { lexemeId, onMarkStatus, heading })
+ *     — три кнопки выбора, опционально в <section> с заголовком
+ *   renderWordStatusPill(status)
+ *     — компактный pill-бейдж (пустая text node если статуса нет)
  */
 
 /** @type {Record<string, string>} */
@@ -14,47 +16,63 @@ export const STATUS_LABEL = {
   known: 'Знаю'
 };
 
-/** @type {Array<{ key: string, cls: string }>} */
-const STATUSES = [
-  { key: 'new', cls: 'status-new' },
-  { key: 'learning', cls: 'status-learning' },
-  { key: 'known', cls: 'status-known' }
-];
+const STATUS_KEYS = ['new', 'learning', 'known'];
 
 /**
  * Три кнопки выбора статуса — для карточек слова.
  * Использует CSS-классы .word-card-status > .status-btn (см. app.css).
  *
+ * Колбэк onMarkStatus вызывается с await — UI обновляется только после успеха.
+ * При ошибке сохраняется предыдущее состояние (никакого визуального отката).
+ *
  * @param {string|null} currentStatus — 'new' | 'learning' | 'known' | null
- * @param {{ lexemeId: string|null, onMarkStatus: (lexemeId: string, newStatus: string) => void }} callbacks
+ * @param {object} [opts]
+ * @param {string|null} [opts.lexemeId]
+ * @param {(lexemeId: string, newStatus: string) => void|Promise<void>} [opts.onMarkStatus]
+ * @param {string} [opts.heading] — если задан, виджет оборачивается в <section><h3>
  * @returns {HTMLElement}
  */
-export function renderWordStatusActions(currentStatus, { lexemeId, onMarkStatus } = {}) {
+export function renderWordStatusActions(currentStatus, opts = {}) {
+  const { lexemeId = null, onMarkStatus = null, heading = null } = opts || {};
+
   const row = document.createElement('div');
   row.className = 'word-card-status';
 
-  for (const st of STATUSES) {
+  for (const key of STATUS_KEYS) {
+    const cls = 'status-' + key;
     const btn = document.createElement('button');
-    btn.className = 'btn status-btn ' + st.cls;
-    btn.textContent = currentStatus === st.key ? `✓ ${STATUS_LABEL[st.key]}` : STATUS_LABEL[st.key];
-    if (currentStatus === st.key) {
+    btn.className = 'btn status-btn ' + cls;
+    btn.textContent = currentStatus === key ? `✓ ${STATUS_LABEL[key]}` : STATUS_LABEL[key];
+    if (currentStatus === key) {
       btn.classList.add('active');
     }
-    btn.addEventListener('click', () => {
-      if (onMarkStatus && lexemeId) {
-        onMarkStatus(lexemeId, st.key);
-        // Визуальная обратная связь внутри виджета
+    btn.addEventListener('click', async () => {
+      if (!onMarkStatus || !lexemeId) return;
+      try {
+        await onMarkStatus(lexemeId, key);
+        // UI-обновление только после успешного сохранения
         const allBtns = row.querySelectorAll('.status-btn');
         allBtns.forEach(b => {
           b.classList.remove('active');
           b.textContent = STATUS_LABEL[b.dataset.statusKey];
         });
         btn.classList.add('active');
-        btn.textContent = `✓ ${STATUS_LABEL[st.key]}`;
+        btn.textContent = `✓ ${STATUS_LABEL[key]}`;
+      } catch (_) {
+        // Ошибку уже обработал колбэк (тост и т.п.) — UI не меняем
       }
     });
-    btn.dataset.statusKey = st.key;
+    btn.dataset.statusKey = key;
     row.appendChild(btn);
+  }
+
+  if (heading) {
+    const section = document.createElement('section');
+    const h3 = document.createElement('h3');
+    h3.textContent = heading;
+    section.appendChild(h3);
+    section.appendChild(row);
+    return section;
   }
 
   return row;
@@ -63,16 +81,15 @@ export function renderWordStatusActions(currentStatus, { lexemeId, onMarkStatus 
 /**
  * Компактный pill-бейдж текущего статуса — для строк списка Словаря.
  * Использует CSS-классы .dict-status-pill + .badge-{status} (см. app.css).
+ * Если статуса нет — возвращает пустой текстовый узел (не занимает места в флоу).
  *
  * @param {string|null} status — 'new' | 'learning' | 'known' | null
- * @returns {HTMLElement}
+ * @returns {Node}
  */
 export function renderWordStatusPill(status) {
+  if (!status) return document.createTextNode('');
   const pill = document.createElement('span');
-  pill.className = 'dict-status-pill';
-  if (status) {
-    pill.classList.add('badge-' + status);
-    pill.textContent = STATUS_LABEL[status] || status;
-  }
+  pill.className = 'dict-status-pill badge-' + status;
+  pill.textContent = STATUS_LABEL[status] || 'Новое';
   return pill;
 }
