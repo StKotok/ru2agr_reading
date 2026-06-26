@@ -54,6 +54,16 @@ html {
 .scroll-none::-webkit-scrollbar { width: 0; height: 0; }
 .scroll-none { scrollbar-width: none; }
 
+/* Global scrollbar theme (follows --line2 token) */
+html {
+  scrollbar-color: var(--line2) transparent;
+  scrollbar-width: thin;
+}
+html::-webkit-scrollbar { width: 6px; height: 6px; }
+html::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 3px; }
+html::-webkit-scrollbar-corner { background: transparent; }
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -176,6 +186,7 @@ h3 {
   .nav-tab {
     flex-direction: row;
     justify-content: flex-start;
+    text-align: left;
     gap: 12px;
     width: 100%;
     padding: 11px 12px;
@@ -189,6 +200,11 @@ h3 {
     background: var(--surface);
     box-shadow: 0 1px 3px rgba(40,34,22,0.08);
     font-weight: 700;
+  }
+
+  .nav-tab-container {
+    width: 100%;
+    align-items: stretch;
   }
 }
 
@@ -630,6 +646,20 @@ input[type="checkbox"] {
     background: var(--read);
   }
 
+  .reading-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .reading-content .top-header {
+    flex: 0 0 auto;
+    position: static;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
   .scripture-text {
     flex: 1;
     max-width: var(--contentWidth);
@@ -1027,6 +1057,9 @@ section[data-chapter] {
   flex: 1 1 auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 /* WebKit: тонкий постоянный скроллбар */
@@ -1116,9 +1149,12 @@ section[data-chapter] {
   flex-direction: column;
 }
 
-/* Word card inside bottom sheet: match prototype sheet content padding */
+/* Word card inside bottom sheet: match prototype sheet content padding, no double background */
 .bottom-sheet .word-card {
   padding: 8px 24px 30px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 @keyframes sheet-up {

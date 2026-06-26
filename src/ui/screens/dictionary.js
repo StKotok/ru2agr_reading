@@ -2,7 +2,6 @@ import { loadDictionary, saveDictionary, addWord, setWordStatus, setWordSetting,
 import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
-import { iconX } from '../components/icons.js';
 import { rankBucket } from '../components/word-card.js';
 
 let dict = {};
@@ -679,14 +678,13 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
   const strongNum = lexeme?.strongs?.[0] || '';
   const hasAlignment = item.hasAlignment;
 
-  // Close button + header
+  // Header (close button is provided by popover / bottom-sheet)
   card.innerHTML = `
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
       <div>
         <div class="word-card-lemma">${item.lemma}</div>
         <div class="word-card-translit">${item.transliteration || ''}</div>
       </div>
-      <button class="word-card-close" aria-label="Закрыть" onclick="this.closest('.popover-card, .bottom-sheet')?.querySelector('.popover-close, .bottom-sheet-close')?.click()">${iconX(18)}</button>
     </div>
     ${ruGloss ? `
     <div class="word-card-gloss">

@@ -215,21 +215,6 @@ export async function mount(container, ctx) {
   const skeleton = createSkeleton();
   container.appendChild(skeleton);
 
-  // Top bar
-  const { bar, chipSlot } = createTopBar({
-    store,
-    onEyeToggle: (pressed) => {
-      plainView = pressed;
-      reRenderWindowed();
-    }
-  });
-  container.appendChild(bar);
-
-  // Mode widget (чип + попап)
-  const modeWidget = createModeWidget({ store });
-  destroyModeWidget = modeWidget.destroy;
-  chipSlot.appendChild(modeWidget.chip);
-
   // Семантический заголовок страницы (скрыт визуально, доступен скринридерам)
   const pageHeading = document.createElement('h1');
   pageHeading.className = 'visually-hidden';
@@ -241,11 +226,31 @@ export async function mount(container, ctx) {
   readingLayout.className = 'reading-layout';
   container.appendChild(readingLayout);
 
+  // Колонка контента (top-header + scripture-text)
+  const readingContent = document.createElement('div');
+  readingContent.className = 'reading-content';
+  readingLayout.appendChild(readingContent);
+
+  // Top bar — внутри reading-content, чтобы инспектор был с ним на одном уровне
+  const { bar, chipSlot } = createTopBar({
+    store,
+    onEyeToggle: (pressed) => {
+      plainView = pressed;
+      reRenderWindowed();
+    }
+  });
+  readingContent.appendChild(bar);
+
+  // Mode widget (чип + попап)
+  const modeWidget = createModeWidget({ store });
+  destroyModeWidget = modeWidget.destroy;
+  chipSlot.appendChild(modeWidget.chip);
+
   // Контейнер текста
   const textArea = document.createElement('div');
   textArea.className = 'scripture-text';
   textArea.id = 'scripture-text';
-  readingLayout.appendChild(textArea);
+  readingContent.appendChild(textArea);
 
   // Инспектор (desktop: панель справа 364px, mobile: скрыт)
   getInspectorPanel(readingLayout);
