@@ -3,6 +3,7 @@ import { loadCoreLexicon, loadFrequency } from '../../data/lexicon-loader.js';
 import { loadProgress, saveProgress, trackNewWord } from '../../state/progress.js';
 import { openBottomSheet } from '../components/bottom-sheet.js';
 import { iconX } from '../components/icons.js';
+import { rankBucket } from '../components/word-card.js';
 
 let dict = {};
 let lexicon = [];
@@ -115,9 +116,11 @@ export async function mount(cnt, ctx) {
   ]);
   // Обогащаем частотный список POS-категориями из core-словаря
   const coreByStrong = coreById();
-  for (const item of frequencyList) {
-    const core = coreByStrong.get(item.strong);
-    item.posGroup = core ? classifyPOS(core.pos) : null;
+  if (frequencyList) {
+    for (const item of frequencyList) {
+      const core = coreByStrong.get(item.strong);
+      item.posGroup = core ? classifyPOS(core.pos) : null;
+    }
   }
   bucketCoverage = computeBucketCoverage(frequencyList);
   renderedCount = 0;
@@ -161,7 +164,7 @@ function getFilteredList() {
     const q = searchQuery.trim().toLowerCase();
     filtered = filtered.filter(item =>
       item.lemma.toLowerCase().includes(q) ||
-      item.translit.toLowerCase().includes(q)
+      (item.transliteration || '').toLowerCase().includes(q)
     );
   }
 
@@ -555,7 +558,7 @@ function renderBatch(list, filtered) {
       <div class="dict-word-col">
         <div class="dict-word-line1">
           <span class="dict-lemma">${item.lemma}</span>
-          <span class="dict-translit">${item.translit}</span>
+          <span class="dict-translit">${item.transliteration || ''}</span>
           <span class="dict-freq">${item.count}&nbsp;в НЗ</span>
         </div>
         ${gloss ? `<div class="dict-gloss">${gloss}</div>` : ''}
@@ -647,13 +650,6 @@ function coreById() {
   return new Map((lexicon || []).map(l => [l.strongs?.[0], l]));
 }
 
-function rankBucket(rank) {
-  if (rank <= 10) return 10;
-  if (rank <= 50) return 50;
-  if (rank <= 100) return 100;
-  return Math.ceil(rank / 100) * 100;
-}
-
 function computeBucketCoverage(list) {
   // Реальный объём греческого НЗ (NA28) ≈ 137 741 слово
   const TOTAL_NT_WORDS = 137741;
@@ -688,9 +684,9 @@ function buildWordCard(item, lexeme, dictEntry, dictId) {
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
       <div>
         <div class="word-card-lemma">${item.lemma}</div>
-        <div class="word-card-translit">${item.translit}</div>
+        <div class="word-card-translit">${item.transliteration || ''}</div>
       </div>
-      <button class="word-card-close" aria-label="Закрыть" onclick="this.closest('.popover-card, .bottom-sheet-content')?.querySelector('.popover-close, .bottom-sheet-close')?.click()">${iconX(18)}</button>
+      <button class="word-card-close" aria-label="Закрыть" onclick="this.closest('.popover-card, .bottom-sheet')?.querySelector('.popover-close, .bottom-sheet-close')?.click()">${iconX(18)}</button>
     </div>
     ${ruGloss ? `
     <div class="word-card-gloss">

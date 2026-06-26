@@ -77,7 +77,7 @@ function renderLettersSection() {
   section.appendChild(h3);
 
   // Мотивирующая строка
-  const knownLetters = alphabet.filter(l => {
+  const knownLetters = (alphabet || []).filter(l => {
     const e = progress.letters[l.lower];
     return e && (e.status === 'known' || e.status === 'learning');
   });
@@ -105,7 +105,7 @@ function renderLettersSection() {
   const grid = document.createElement('div');
   grid.className = 'letter-grid';
 
-  for (const l of alphabet) {
+  for (const l of (alphabet || [])) {
     const cell = document.createElement('button');
     cell.className = 'letter-cell';
     const entry = progress.letters[l.lower];

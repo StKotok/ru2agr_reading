@@ -31,7 +31,7 @@ export function formatFrequency(freq) {
   return `${formatted}× в НЗ`;
 }
 
-function rankBucket(rank) {
+export function rankBucket(rank) {
   if (rank <= 10) return 10;
   if (rank <= 20) return 20;
   if (rank <= 50) return 50;

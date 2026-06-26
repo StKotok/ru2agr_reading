@@ -1,0 +1,92 @@
+[
+  {
+    "file": "src/ui/screens/dictionary.js",
+    "line": 164,
+    "summary": "getFilteredList accesses item.translit but loadFrequency returns items with field transliteration — TypeError crash on dictionary search",
+    "failure_scenario": "User types a search query (e.g., 'logos') in the dictionary search bar. getFilteredList iterates frequencyList items which have 'transliteration' field. When item.lemma doesn't match the query, item.translit.toLowerCase() throws TypeError: Cannot read properties of undefined (reading 'toLowerCase'). The dictionary screen crashes and becomes unresponsive."
+  },
+  {
+    "file": "src/ui/screens/dictionary.js",
+    "line": 693,
+    "summary": "Word card close button references non-existent CSS class .bottom-sheet-content — close button is a no-op on mobile",
+    "failure_scenario": "User opens a word card on mobile (inside bottom sheet). Taps the × close button. The onclick handler 'this.closest('.popover-card, .bottom-sheet-content')' returns null because bottom-sheet.js uses class 'bottom-sheet', not 'bottom-sheet-content'. The close button silently does nothing. User is stuck with the card open."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 119,
+    "summary": "async mount() continues executing after unmount() — store state and DOM corrupted on rapid screen transitions",
+    "failure_scenario": "User navigates reading → dictionary quickly. reading.unmount() nulls storeRef/bookData and screenContainer.innerHTML = '' clears the DOM. But reading.mount()'s Promise.all (line 127, 5+ IndexedDB reads) resolves after unmount. Post-await code (lines 137-323) writes old reading's data to the store, appends DOM to the cleared container, and subscribes with stale references — corrupting the dictionary screen's state."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 498,
+    "summary": "onScroll and setupChapterTracking mutate progress in-place but pass same reference to store — subscribers of ['progress'] are never notified",
+    "failure_scenario": "User scrolls or reads a chapter. The code mutates progress.reading.lastScroll (line 498) and progress.reading.books[].chaptersRead (line 645) in-place, then calls storeRef.update(s => ({...s, progress})) with the same progress reference. In store.js line 26, prev['progress'] !== state['progress'] evaluates to false (same object). The ['progress'] subscriber at reading.js:318 never fires. reRenderWindowed is never triggered. UI goes stale."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 1066,
+    "summary": "saveProgress(progress) called without await in word tap handler — fire-and-forget causes data loss race",
+    "failure_scenario": "User taps a word and marks it 'known'. handleWordTap.onMarkStatus (an async function) calls saveProgress(progress) at line 1066 without await, then await saveDictionary(dictionary) at line 1069. The dictionary write completes before the progress write. If the user navigates away before the un-awaited progress write finishes, the new-word tracking (wordsToday) is silently lost. Compare with handleLetterTap at line 1110 which correctly uses await saveProgress."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 435,
+    "summary": "restoreScroll calculates scroll position using scrollHeight of only 2 rendered chapters + placeholders, not the full book",
+    "failure_scenario": "User returns to a book they were halfway through (lastScroll = 0.5). renderWindowed() renders only 2 chapters + 200px placeholders for the rest, so scrollHeight ≈ 2000px. restoreScroll computes targetScroll = 0.5 * (2000 - windowHeight) ≈ 400px — landing in chapter 1, not the actual halfway point of the 21-chapter book (~10000px away). User must manually scroll to find their place."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 753,
+    "summary": "reRenderWindowed destroys chapter-end sentinels via innerHTML = '' but never re-observes new ones — chapter read tracking silently stops after any settings change",
+    "failure_scenario": "User changes intensity or toggles word layer. reRenderWindowed() clears section.innerHTML = '' (line 753), destroying the .chapter-end-sentinel divs that chapterObserver was watching. New sentinels are created (lines 796-799) but chapterObserver.observe() is never called on them. After this, scrolling past chapter boundaries no longer tracks chapters as read. All subsequent reading progress is lost."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 728,
+    "summary": "reRenderWindowed never preserves scroll position — user's reading place lost on every settings-driven re-render",
+    "failure_scenario": "User is reading chapter 5, toggles the word layer from 'lemma' to 'form'. reRenderWindowed() rebuilds the visible chapter HTML from scratch (line 753) but never captures window.scrollY before or restores after. The text length changes and the viewport jumps to an arbitrary position, losing the user's reading place."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 614,
+    "summary": "setupChapterTracking creates new IntersectionObserver without disconnecting the previous one — observer leak",
+    "failure_scenario": "If renderWindowed() is called more than once per mount (edge case), setupChapterTracking at line 630 creates a new IntersectionObserver without calling chapterObserver?.disconnect() first. The old observer continues watching detached DOM elements and holds stale closure references to readChapters and progress. Compare with the scroll observer at line 510 which correctly disconnects before reassigning."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 369,
+    "summary": "Text area event listeners (touchstart, mousedown, touchend, mouseup, mouseleave, click, keydown) added in mount are never removed in unmount",
+    "failure_scenario": "Currently safe because screenContainer.innerHTML = '' in app.js destroys the DOM subtree. But any refactoring that reuses the textArea element across mounts (e.g., preserving scroll state) would leak 7 closures with stale references to storeRef, alphabet, progress, and longPressTarget — a latent memory leak."
+  },
+  {
+    "file": "src/ui/screens/dictionary.js",
+    "line": 118,
+    "summary": "frequencyList iterated without null guard in mount — crash when loadFrequency returns null",
+    "failure_scenario": "User opens the dictionary screen while offline and core.json is not cached. loadFrequency() returns null (lexicon-loader.js:114). mount() at line 118 does 'for (const item of frequencyList)' without null guard — throws 'TypeError: frequencyList is not iterable'. The entire dictionary screen crashes with a blank page. Note: getFilteredList() at line 154 correctly guards with 'if (!frequencyList)'."
+  },
+  {
+    "file": "src/ui/screens/progress.js",
+    "line": 108,
+    "summary": "alphabet iterated without null guard in renderLettersSection — crash when loadAlphabet returns null",
+    "failure_scenario": "User opens the Progress screen while offline and alphabet.json is not cached. loadAlphabet() returns null (bible-loader.js:134). renderLettersSection() at line 108 does 'for (const l of alphabet)' without null guard — throws TypeError. The progress screen crashes, preventing any progress data from rendering."
+  },
+  {
+    "file": "src/ui/screens/dictionary.js",
+    "line": 558,
+    "summary": "item.translit renders literal string 'undefined' in every dictionary row and word card — transliteration column permanently broken",
+    "failure_scenario": "Same root cause as finding #1: loadFrequency() uses field name 'transliteration', but template literals at lines 558 and 691 access item.translit which is undefined. Every dictionary row shows 'undefined' in the transliteration column. Every word card shows 'undefined' for the transliteration field."
+  },
+  {
+    "file": "src/ui/components/word-card.js",
+    "line": 34,
+    "summary": "rankBucket algorithm differs between word-card.js (granular: 10,20,50,100,200,500,1000) and dictionary.js (coarse: 10,50,100,ceil/100*100) — inconsistent frequency labels across screens",
+    "failure_scenario": "A word ranked 25 shows 'Top-20' in the word card but 'Top-50' in the dictionary list. A word ranked 750 shows 'Top-500' in the word card but 'Top-800' in the dictionary. Users see conflicting frequency information depending on which screen they view."
+  },
+  {
+    "file": "src/ui/screens/reading.js",
+    "line": 180,
+    "summary": "Settings subscriber calls reRenderWindowed for ALL settings changes including theme/contrast — violates AGENTS.md rule that full re-render only happens when replacement picture changes",
+    "failure_scenario": "User changes theme from 'pergament' to 'dark' in mode-widget. The settings subscriber at line 174 fires, calls reRenderWindowed() which does full innerHTML wipe and rebuild of all visible chapters. Theme and contrast are CSS custom properties that cascade automatically — the full DOM rebuild is unnecessary and causes visible flicker. Violates AGENTS.md: 'Полный перерендер глав — только когда меняется картина замен'."
+  }
+]

@@ -50,6 +50,12 @@ let destroyModeWidget = null;
 let plainView = false;
 let longPressTimer = null;
 let longPressTarget = null;
+// Ссылки на обработчики textArea для очистки в unmount
+let _onPressStart = null;
+let _onPressEnd = null;
+let _onMouseLeave = null;
+let _onClick = null;
+let _onKeyDown = null;
 let dictionary = {};
 let coreLexicon = [];
 let frequencyList = null;
@@ -58,6 +64,8 @@ let grcLoadPromise = null;
 let alignmentBookData = null;
 // Безопасная ссылка на store для модульных функций (ensureGreekBookLoaded и др.)
 let storeRef = null;
+// Флаг монтирования — защита от продолжения async-кода после unmount
+let _mounted = false;
 
 /** Сбрасывает всё модульное состояние греческой книги.
  *  Защита от устаревших результатов — capture bookId перед загрузкой
@@ -119,6 +127,7 @@ async function ensureGreekBookLoaded(showToastOnFail = true) {
 export async function mount(container, ctx) {
   const { store } = ctx;
   storeRef = store;
+  _mounted = true;
 
   // Сбрасываем греческое состояние от предыдущего монтирования
   resetGreekBookState();
@@ -132,6 +141,9 @@ export async function mount(container, ctx) {
     loadCoreLexicon(),
     loadFrequency()
   ]);
+
+  // Защита от гонки: если экран размонтирован во время загрузки — выходим
+  if (!_mounted) return;
 
   // Миграция словаря: перенос legacy-ключей → lexemeId (идемпотентно).
   if (dictionary && coreLexicon && Object.keys(dictionary).length > 0) {
@@ -175,9 +187,19 @@ export async function mount(container, ctx) {
     progress = store.get().progress || progress;
     const newSettings = store.get().settings;
     if (newSettings && newSettings !== settings) {
+      const oldSettings = settings;
       settings = newSettings;
       if (bookData) {
-        reRenderWindowed();
+        // Пропускаем полный перерендер для чисто визуальных изменений (тема, контраст)
+        const renderingChanged =
+          newSettings.readingMode !== oldSettings.readingMode ||
+          newSettings.wordLayer !== oldSettings.wordLayer ||
+          newSettings.intensity !== oldSettings.intensity ||
+          newSettings.show?.diacritics !== oldSettings.show?.diacritics ||
+          newSettings.show?.strongs !== oldSettings.show?.strongs;
+        if (renderingChanged) {
+          reRenderWindowed();
+        }
         if (shouldLoadGreek(settings, getActiveWordCount()) && !grcBookData) {
           ensureGreekBookLoaded().then(ok => { if (ok) reRenderWindowed(); });
         }
@@ -229,6 +251,7 @@ export async function mount(container, ctx) {
   getInspectorPanel(readingLayout);
 
   // Загружаем книгу (и греческий текст + alignment если нужен для словарного слоя)
+  if (!_mounted) return;
   try {
     const needsGreek = shouldLoadGreek(settings, getActiveWordCount());
     const loadPromises = [loadBook('eng', bookId)];
@@ -311,8 +334,14 @@ export async function mount(container, ctx) {
   reRenderFn = () => renderWindowed();
   renderWindowed();
 
-  // Восстановление позиции скролла
-  restoreScroll(bookId);
+  // Восстановление позиции скролла — откладываем до раскрытия lazy-глав
+  // (renderWindowed рендерит только 2 главы; IntersectionObserver расширяет
+  // окно асинхронно в следующем кадре).
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      restoreScroll(bookId);
+    });
+  });
 
   // Подписка на изменения прогресса (буквы)
   unsubProgress = store.subscribe(['progress'], () => {
@@ -327,7 +356,8 @@ export async function mount(container, ctx) {
 
   // Долгий тап (≥500ms) — показать оригинал
   // Используем touchstart/mousedown для универсальности
-  const onPressStart = (e) => {
+  // Сохраняем ссылки на обработчики для очистки в unmount
+  _onPressStart = (e) => {
     const span = e.target.closest('span.gr');
     if (!span) return;
     longPressTarget = span;
@@ -344,7 +374,7 @@ export async function mount(container, ctx) {
     }, 500);
   };
 
-  const onPressEnd = (e) => {
+  _onPressEnd = (e) => {
     if (longPressTimer) clearTimeout(longPressTimer);
     longPressTimer = null;
 
@@ -366,11 +396,7 @@ export async function mount(container, ctx) {
     longPressTarget = null;
   };
 
-  textArea.addEventListener('touchstart', onPressStart, { passive: true });
-  textArea.addEventListener('mousedown', onPressStart);
-  textArea.addEventListener('touchend', onPressEnd);
-  textArea.addEventListener('mouseup', onPressEnd);
-  textArea.addEventListener('mouseleave', () => {
+  _onMouseLeave = () => {
     if (longPressTimer) clearTimeout(longPressTimer);
     longPressTimer = null;
     if (longPressTarget && longPressTarget.classList.contains('show-original')) {
@@ -380,10 +406,9 @@ export async function mount(container, ctx) {
       longPressTarget._wasLongPress = false;
     }
     longPressTarget = null;
-  });
+  };
 
-  // Обычный клик — открываем карточку
-  textArea.addEventListener('click', (e) => {
+  _onClick = (e) => {
     const span = e.target.closest('span.gr');
     if (!span) return;
     // Если был долгий тап — не открываем карточку
@@ -401,10 +426,10 @@ export async function mount(container, ctx) {
       handleWordTap(span);
       return;
     }
-  });
+  };
 
   // Клавиатурная доступность
-  textArea.addEventListener('keydown', (e) => {
+  _onKeyDown = (e) => {
     if (e.key === 'Enter') {
       const span = e.target.closest('span.gr');
       if (!span) return;
@@ -418,7 +443,15 @@ export async function mount(container, ctx) {
         handleWordTap(span);
       }
     }
-  });
+  };
+
+  textArea.addEventListener('touchstart', _onPressStart, { passive: true });
+  textArea.addEventListener('mousedown', _onPressStart);
+  textArea.addEventListener('touchend', _onPressEnd);
+  textArea.addEventListener('mouseup', _onPressEnd);
+  textArea.addEventListener('mouseleave', _onMouseLeave);
+  textArea.addEventListener('click', _onClick);
+  textArea.addEventListener('keydown', _onKeyDown);
 
   window.addEventListener('scroll', onScroll, { passive: true });
 }
@@ -495,10 +528,13 @@ function onScroll() {
     if (!bookData) return;
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
     const scrollPos = scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
-    progress.reading.lastScroll = Math.max(0, Math.min(1, scrollPos));
-    progress.reading.lastBook = bookData.id;
+    // Создаём новый объект progress (не мутируем in-place),
+    // чтобы store.update увидел изменение ссылки и уведомил подписчиков.
+    progress = {
+      ...progress,
+      reading: { ...progress.reading, lastScroll: Math.max(0, Math.min(1, scrollPos)), lastBook: bookData.id }
+    };
     saveProgress(progress);
-    // Уведомляем подписчиков store — progress меняется в debounced-режиме без store.update
     if (storeRef) storeRef.update(s => ({ ...s, progress }));
   }, DEBOUNCE_MS);
 }
@@ -627,6 +663,8 @@ function setupChapterTracking() {
     progress.reading.books?.[bookData.id]?.chaptersRead || []
   );
 
+  if (chapterObserver) { chapterObserver.disconnect(); chapterObserver = null; }
+
   chapterObserver = new IntersectionObserver((entries) => {
     let changed = false;
     for (const entry of entries) {
@@ -639,12 +677,11 @@ function setupChapterTracking() {
       }
     }
     if (changed) {
-      // Сохраняем прочитанные главы
-      if (!progress.reading.books) progress.reading.books = {};
-      if (!progress.reading.books[bookData.id]) progress.reading.books[bookData.id] = {};
-      progress.reading.books[bookData.id].chaptersRead = [...readChapters];
+      // Сохраняем прочитанные главы — новый объект для корректного уведомления подписчиков store.
+      const books = { ...(progress.reading.books || {}) };
+      books[bookData.id] = { ...(books[bookData.id] || {}), chaptersRead: [...readChapters] };
+      progress = { ...progress, reading: { ...progress.reading, books } };
       saveProgress(progress);
-      // Уведомляем подписчиков store
       if (storeRef) storeRef.update(s => ({ ...s, progress }));
     }
   }, { threshold: 0.5 });
@@ -730,6 +767,9 @@ function reRenderWindowed() {
   const textArea = document.getElementById('scripture-text');
   if (!textArea || !bookData) return;
 
+  // Сохраняем позицию скролла до перестроения DOM
+  const savedScrollY = window.scrollY;
+
   buildWordEntries();
   const composeCtx = {
     mode: deriveComposeMode(settings, wordEntries.length),
@@ -802,6 +842,14 @@ function reRenderWindowed() {
     if (chaptersEls[chN - 1]) {
       chaptersEls[chN - 1] = section.cloneNode(true);
     }
+  }
+  // Заново наблюдаем sentinel'ы — старые были уничтожены через innerHTML = ''.
+  setupChapterTracking();
+  // Восстанавливаем позицию скролла
+  if (savedScrollY > 0) {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+    });
   }
 }
 
@@ -1063,7 +1111,7 @@ function handleWordTap(span) {
       if (wasNewWord) {
         dictionary = addWord(lexemeId, dictionary);
         progress = trackNewWord(lexemeId, progress);
-        saveProgress(progress);
+        await saveProgress(progress);
       }
       dictionary = setWordStatus(lexemeId, newStatus, dictionary);
       await saveDictionary(dictionary);
@@ -1126,6 +1174,17 @@ function handleLetterTap(letterChar, span) {
 
 export function unmount() {
   window.removeEventListener('scroll', onScroll);
+  // Очищаем обработчики textArea (защита на случай, если DOM ещё не удалён)
+  const textArea = document.getElementById('scripture-text');
+  if (textArea) {
+    textArea.removeEventListener('touchstart', _onPressStart);
+    textArea.removeEventListener('mousedown', _onPressStart);
+    textArea.removeEventListener('touchend', _onPressEnd);
+    textArea.removeEventListener('mouseup', _onPressEnd);
+    textArea.removeEventListener('mouseleave', _onMouseLeave);
+    textArea.removeEventListener('click', _onClick);
+    textArea.removeEventListener('keydown', _onKeyDown);
+  }
   if (observer) observer.disconnect();
   if (chapterObserver) { chapterObserver.disconnect(); chapterObserver = null; }
   if (scrollTimer) clearTimeout(scrollTimer);
@@ -1137,6 +1196,7 @@ export function unmount() {
   reRenderFn = null;
   chaptersEls = [];
   storeRef = null;
+  _mounted = false;
   if (unsubProgress) { unsubProgress(); unsubProgress = null; }
   if (unsubSettings) { unsubSettings(); unsubSettings = null; }
   if (destroyModeWidget) { destroyModeWidget(); destroyModeWidget = null; }
