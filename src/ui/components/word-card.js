@@ -256,8 +256,8 @@ export function renderWordCard(data, callbacks = {}) {
   audioBtn.className = 'word-card-audio';
   audioBtn.setAttribute('aria-label', `Прослушать произношение слова ${surfaceForm || lemma}`);
   audioBtn.setAttribute('disabled', '');
-  audioBtn.textContent = '🔊';
   audioBtn.title = 'Произношение пока недоступно';
+  audioBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   pronRow.appendChild(audioBtn);
 
   card.appendChild(pronRow);
@@ -464,7 +464,7 @@ export function renderWordCard(data, callbacks = {}) {
   const gearBtn = document.createElement('button');
   gearBtn.className = 'card-gear-btn';
   gearBtn.setAttribute('aria-label', 'Настройки карточки');
-  gearBtn.textContent = '⚙';
+  gearBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
   gearBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const existing = card.querySelector('.card-gear-dropdown');

@@ -29,6 +29,11 @@ export function createTopBar(ctx) {
   bookList.hidden = true;
   bar.appendChild(bookList);
 
+  // ── Разделитель книга–чип (из прототипа) ──
+  const divider = document.createElement('div');
+  divider.className = 'top-header-divider';
+  bar.appendChild(divider);
+
   // ── Кнопка «глаз» ──
   let plainView = false;
   const eyeBtn = document.createElement('button');
