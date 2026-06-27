@@ -1,12 +1,21 @@
+import { createPageHeader } from '../components/page-header.js';
+
 /**
  * Экран «О приложении» — общая информация, описание, лицензии и атрибуция.
  * Соответствует прототипу (readerRenderAbout) и дополнен актуальными данными.
  */
 export async function mount(container, _ctx) {
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
+  container.innerHTML = '';
 
-  container.innerHTML = `
-    <div class="about-page">
+  // ── Page header ──
+  const { bar: header } = createPageHeader({ title: 'О приложении' });
+  container.appendChild(header);
+
+  // ── Контент ──
+  const content = document.createElement('div');
+  content.className = 'about-page';
+  content.innerHTML = `
       <div class="about-hero">
         <h2 class="about-title">О приложении</h2>
         <p class="about-version">Версия ${version} · работает офлайн (PWA)</p>
@@ -55,6 +64,7 @@ export async function mount(container, _ctx) {
       </section>
     </div>
   `;
+  container.appendChild(content);
 }
 
 export function unmount() {}

@@ -14,6 +14,8 @@ html, body {
   color: var(--canvas-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 /* === Font faces: текст Писания === */
@@ -79,7 +81,6 @@ html::-webkit-scrollbar-corner { background: transparent; }
 }
 
 body {
-  min-height: 100dvh;
   background-color: var(--surface);
   color: var(--text);
 }
@@ -104,13 +105,15 @@ h3 {
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
   background: var(--paper);
 }
 
 .screen-container {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
   background: var(--read);
 }
 
@@ -166,6 +169,7 @@ h3 {
     padding: 26px 16px 20px;
     gap: 4px;
     background: var(--sidebar);
+    overflow-y: auto;
   }
 
   .nav-title-section {
@@ -667,13 +671,19 @@ input[type="checkbox"] {
 }
 
 /* Desktop: центрированная колонка чтения + инспектор справа */
+.reading-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--read);
+}
+
 @media (min-width: 900px) {
   .reading-layout {
-    display: flex;
+    flex-direction: row;
     flex: 1;
     min-width: 0;
-    min-height: 0;
-    background: var(--read);
   }
 
   .reading-content {
@@ -707,7 +717,7 @@ input[type="checkbox"] {
     border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
     position: relative;
   }
 
@@ -841,7 +851,9 @@ p, h2, h3, span {
   background: var(--titlebar);
   flex: 0 0 auto;
   min-height: 48px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .page-header-title {
@@ -1315,12 +1327,6 @@ section[data-chapter] {
   animation: sheet-down 0.25s ease forwards;
 }
 
-@media (min-width: 900px) {
-  .bottom-sheet-overlay {
-    display: none;
-  }
-}
-
 /* Bottom sheet handle */
 .bottom-sheet-handle {
   width: 36px;
@@ -1617,16 +1623,16 @@ section[data-chapter] {
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
   text-align: center;
   white-space: nowrap;
-  background: transparent;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
   color: var(--muted);
   border: 1.5px solid var(--border);
 }
 
 .status-btn:hover {
-  background: var(--surface-card);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
   color: var(--text);
 }
 
@@ -1644,11 +1650,13 @@ section[data-chapter] {
 .status-btn.status-learning.active {
   background: var(--primary);
   border-color: var(--primary);
+  color: #fff;
 }
 
 .status-btn.status-known.active {
   background: var(--status-known);
   border-color: var(--status-known);
+  color: #fff;
 }
 
 /* --- Скрытие секций карточки --- */
@@ -1744,33 +1752,6 @@ section[data-chapter] {
   flex-shrink: 0;
 }
 
-.status-btn.status-learning {
-  background: var(--selection);
-  color: var(--primary);
-  border: 1px solid transparent;
-}
-
-.status-btn.status-learning:hover,
-.status-btn.status-learning.active {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--greek-bg);
-}
-
-.status-btn.status-known {
-  background: var(--progress);
-  color: var(--on-primary);
-  border: 1px solid var(--progress);
-}
-
-.status-btn.status-known:hover {
-  opacity: 0.9;
-}
-
-.status-btn.status-known.active {
-  background: var(--progress);
-  color: var(--on-primary);
-}
-
 /* --- Подробнее --- */
 .word-card-details-btn {
   display: block;
@@ -1847,7 +1828,7 @@ section[data-chapter] {
   border-left: 1px solid var(--border);
   min-width: 260px;
   display: none;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
 }
 
@@ -1894,7 +1875,7 @@ section[data-chapter] {
 .inspector-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 8px 16px 16px;
   display: flex;
   flex-direction: column;
 }
@@ -3114,30 +3095,40 @@ section[data-chapter] {
   color: var(--inkSoft);
 }
 
+/* ── Dict layout: полновысотный flex, независимые зоны скролла ── */
+.dict-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.dict-left-col {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dict-list-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
 /* Desktop: dict layout — список + инспектор */
 @media (min-width: 900px) {
   .dict-list-scroll { padding: 0 18px; }
 
   .dict-layout {
-    display: flex;
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
+    flex-direction: row;
   }
 
   .dict-left-col {
-    flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .dict-list-panel {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
   }
 }
 
