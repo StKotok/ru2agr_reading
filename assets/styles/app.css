@@ -166,20 +166,21 @@ h3 {
     flex-direction: column;
     width: var(--navWidth);
     border-right: 1px solid var(--line);
-    padding: 26px 16px 20px;
+    padding: 26px 0 20px 16px;
     gap: 4px;
     background: var(--sidebar);
     overflow-y: auto;
+    scrollbar-gutter: stable;
   }
 
   .nav-title-section {
     display: block;
-    padding: 0 8px 26px;
+    padding: 0 16px 26px;
   }
 
   .nav-theme-section {
     display: block;
-    padding: 0 6px;
+    padding: 0 16px;
   }
 
   .nav-spacer {
