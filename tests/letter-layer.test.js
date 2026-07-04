@@ -94,6 +94,18 @@ describe('applyLetterLayer', () => {
       expect(text).toBe('Σλοβο');
     });
 
+    it('"б" → "β": "брат" → "βρατ"', () => {
+      const segments = applyLetterLayer('брат', cyrOpts());
+      const text = segments.map(s => s.greek || s.plain || '').join('');
+      expect(text).toBe('βρατ');
+    });
+
+    it('"Б" (capital) → "Β": "Бог" → "Βογ"', () => {
+      const segments = applyLetterLayer('Бог', cyrOpts());
+      const text = segments.map(s => s.greek || s.plain || '').join('');
+      expect(text).toBe('Βογ');
+    });
+
     it('inactive letter is not replaced', () => {
       const active = new Set(['α', 'ο']);
       const segments = applyLetterLayer('слова', cyrOpts({ activeLetters: active }));
@@ -105,6 +117,24 @@ describe('applyLetterLayer', () => {
       const segments = applyLetterLayer('такси', cyrOpts());
       const text = segments.map(s => s.greek || s.plain || '').join('');
       expect(text).toBe('ταξι');
+    });
+
+    it('digraph "ай" → "αι": "рай" → "ραι"', () => {
+      const segments = applyLetterLayer('рай', cyrOpts());
+      const text = segments.map(s => s.greek || s.plain || '').join('');
+      expect(text).toBe('ραι');
+    });
+
+    it('digraph "эй" → "ει": "сэй" → "σει"', () => {
+      const segments = applyLetterLayer('сэй', cyrOpts());
+      const text = segments.map(s => s.greek || s.plain || '').join('');
+      expect(text).toBe('σει');
+    });
+
+    it('digraph "ой" → "οι": "бой" → "βοι"', () => {
+      const segments = applyLetterLayer('бой', cyrOpts());
+      const text = segments.map(s => s.greek || s.plain || '').join('');
+      expect(text).toBe('βοι');
     });
 
     it('intensity 0 returns no replacements', () => {
